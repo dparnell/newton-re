@@ -1,5 +1,0 @@
-@@ 0x5ad065
-func() begin
-	GetUserConfig(configPath)
-end
-@@end

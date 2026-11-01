@@ -1,5 +1,0 @@
-@@ 0x1000a7d
-func(a1) begin
-	UnDefGlobalVar('|Newton Devices:NIE_TapActionFunc|)
-end
-@@end

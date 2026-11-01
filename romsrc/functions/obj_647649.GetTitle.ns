@@ -1,5 +1,0 @@
-@@ 0x47b6d5
-func() begin
-	GetRoot().(appSymbol).title
-end
-@@end

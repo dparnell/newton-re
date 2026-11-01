@@ -1,5 +1,0 @@
-@@ 0x4bce59
-func() begin
-	(if scrollerView then scrollerView:AdjustArrows())
-end
-@@end

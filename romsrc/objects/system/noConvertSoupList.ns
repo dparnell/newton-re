@@ -1,0 +1,5 @@
+// noConvertSoupList (@578): the soups that converting a Newton 1.x store
+// (|Convert1.XStoreData|, builtinFunctions) leaves alone - only the "Packages"
+// soup (extrasSoupName), whose entries |Convert1.XPackages| converts itself.
+
+noConvertSoupList := [|Array|: extrasSoupName];

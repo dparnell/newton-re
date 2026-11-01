@@ -1,0 +1,6 @@
+// The delete key of the phone keypad. A 1-bit bitmap frame (bits, bounds), 21 x 20 pixels.
+
+dtmfDel := {
+	bits: bitmap('bits, "resources/bits/3d80b1.png", "0000000000040062006200890076009e", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 20}
+};

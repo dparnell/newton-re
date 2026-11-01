@@ -1,0 +1,19 @@
+// newtroNumView: the read-only NewtApp slot view for a number (the NPR's newtRONumView),
+// shown with FormattedNumberStr and format.
+//
+// This file holds newtroNumView and what only it reaches.
+
+newtroNumView := {
+	_proto: @newtroTextView,
+	format: g, // "%.10g"
+	// for the editable newtNumView: round what is written to an integer
+	integerOnly: true,
+	// the text for target.(path), "" when there is no entry, path or value
+	TargetData: func() begin
+		(if (if (if target then path) then target.(path)) then FormattedNumberStr(target.(path), format) else "")
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TargetData_code := same("newtroNumView.TargetData.instructions");

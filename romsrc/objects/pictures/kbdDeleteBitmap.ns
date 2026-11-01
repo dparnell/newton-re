@@ -1,0 +1,7 @@
+// The delete key of the keyboard. A 1-bit bitmap frame (bits, bounds), 17 x 6 pixels. Magic
+// pointer @752. Used by alphaKeys.
+
+kbdDeleteBitmap := {
+	bits: bitmap('bits, "resources/bits/3d7851.png", "00000000000400de00de007500e40086", 1),
+	bounds: {left: 0, top: 0, right: 17, bottom: 6}
+};

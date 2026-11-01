@@ -1,5 +1,0 @@
-@@ 0x48fccd
-func() begin
-	(self.viewValue := (prefsCache.packageType = 'all))
-end
-@@end

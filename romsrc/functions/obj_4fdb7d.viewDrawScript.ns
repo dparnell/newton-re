@@ -1,5 +1,0 @@
-@@ 0x4fdb3d
-func() begin
-	(if iconShape then self:DrawShape(iconShape, transformStyle))
-end
-@@end

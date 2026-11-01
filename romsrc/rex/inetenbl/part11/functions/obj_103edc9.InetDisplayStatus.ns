@@ -1,5 +1,0 @@
-@@ 0x103f8b5
-func(a1, a2, a3) begin
-	InetStartUp():MDisplayStatus(a1, a2, a3)
-end
-@@end

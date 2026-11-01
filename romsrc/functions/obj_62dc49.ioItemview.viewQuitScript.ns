@@ -1,5 +1,0 @@
-@@ 0x4c16e1
-func() begin
-	(newtAppBase.syncAlso := nil)
-end
-@@end

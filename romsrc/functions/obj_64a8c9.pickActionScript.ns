@@ -1,6 +1,0 @@
-@@ 0x4e502d
-func(a1) begin
-	self:PenSizeChanged(popup[a1].value);
-	self:hilite(nil)
-end
-@@end

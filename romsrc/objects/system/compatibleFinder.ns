@@ -1,0 +1,98 @@
+// compatibleFinder: magic pointer @359, a finder (the object Find keeps for each
+// application's results) for results that are not soup entries but frames in
+// an array, items.  An application's Find method makes one, _proto'd to this,
+// when it finds things itself; ShowFakeEntry shows one of them in the owner
+// application.  Time Zones, NewtApp and books use it.
+
+compatibleFinder := {
+	currentItem: 0,
+	selected: nil,
+	// The number of items found.
+	count: func() begin
+		Length(items)
+	end,
+	// Starts again at the first item.
+	ReSync: func() begin
+		(currentItem := 0)
+	end,
+	// shows item itemIndex: sent to the owner as OpenTo(item, finder) when it has
+	// one, else the owner is opened and sent ShowFoundItem (with the finder too
+	// when its ShowFoundItem takes two arguments)
+	ShowFakeEntry: func(itemIndex) begin
+		local item, convertToSoupEntry;
+		currentItem := itemIndex;
+		convertToSoupEntry := self:ConvertToSoupEntry((item := items[itemIndex]));
+		if item.EntryHit then begin
+				self.EntryHit := item.EntryHit
+			end;
+		(if owner.OpenTo then owner:OpenTo(convertToSoupEntry, self) else begin
+				if (owner.viewCObject = nil) then begin
+						owner:?viewPreOpenScript(items[itemIndex]);
+						owner:Open()
+					end;
+				(if owner.viewCObject then (if (GetFunctionArgCount(owner.ShowFoundItem) = 2) then owner:ShowFoundItem(convertToSoupEntry, self) else owner:ShowFoundItem(convertToSoupEntry)))
+			end)
+	end,
+	// an item as the soup entry the owner is to show: the item itself here
+	ConvertToSoupEntry: func(a1) begin
+		a1
+	end,
+	// Shows found item a1 (ShowFakeEntry with its index).
+	ShowFoundItem: func(a1) begin
+		self:ShowFakeEntry(a1.itemIndex)
+	end,
+	// the overview's first/prev/next: a symbol is made an index first
+	ShowOrdinalItem: func(a1) begin
+		if (a1 = 'first) then begin
+				a1 := 0
+			end else begin
+				if (a1 = 'prev) then begin
+						a1 := max((currentItem - 1), 0)
+					end else begin
+						if (a1 = 'Next) then begin
+								a1 := min((currentItem + 1), (Length(items) - 1))
+							end
+					end
+			end;
+		self:ShowFakeEntry(a1)
+	end,
+	// a found item for the overview: a protoFindItem with the item's slots, whose
+	// finder is this one
+	MakeFoundItem: func(a1, owner) begin
+		frame2 := {_proto: @protoFindItem, finder: self, itemIndex: nil};
+		local frame2;
+		(foreach key, value in a1 do begin
+				frame2.(key) := value
+			end);
+		frame2
+	end,
+	// adds up to a3 found items to the array a1, starting after the first a2 items;
+	// returns how many it added
+	AddFoundItems: func(a1, a2, a3) begin
+		l1 := a2;
+		local l1;
+		(foreach key, value in items do begin
+				local foundItem;
+				if (l1 > 0) then begin
+						l1 := (l1 - 1)
+					end else begin
+						if ((key - a2) >= a3) then begin
+								break
+							end;
+						(foundItem := self:MakeFoundItem(value, nil)).selected := self:isSelected({_uniqueID: foundItem.entryID, _storeID: foundItem.storeID});
+						foundItem.itemIndex := key;
+						AddArraySlot(a1, foundItem)
+					end
+			end);
+		(key - a2)
+	end,
+	// the routing and selection methods are shared with the soup finders
+	FileAs: FileAs,
+	MoveTo: MoveTo,
+	delete: delete_5,
+	isSelected: isSelected_2,
+	SelectItem: SelectItem_2,
+	ForEachSelected: ForEachSelected_2,
+	GetTarget: GetTarget,
+	FileAndMove: FileAndMove
+};

@@ -1,0 +1,15 @@
+// The crumpling-paper sound of throwing an item away. A 'codec sound frame whose samples
+// the tIMACodec codec decompresses (IMA ADPCM) when it is played. Magic pointer @62. Used
+// by globalHeapvarwannabes.
+
+crumple := {
+	sndFrameType: 'codec,
+	samplingRate: fixed('fixed, 14000.0),
+	codecName: tIMACodec,
+	dataType: 16,
+	bufferSize: 10240,
+	bufferCount: 4,
+	compressionType: 6,
+	compressionRatio: compressionRatio,
+	samples: imasound('samples, "resources/samples/3d022d.wav")
+};

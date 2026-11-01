@@ -1,6 +1,0 @@
-@@ 0x42d2e1
-func() begin
-	allCollapsed := (not allCollapsed);
-	roll:RedoChildren()
-end
-@@end

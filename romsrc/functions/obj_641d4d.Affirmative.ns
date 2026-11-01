@@ -1,5 +1,0 @@
-@@ 0x431f3d
-func() begin
-	context:?pickActionScript(Time)
-end
-@@end

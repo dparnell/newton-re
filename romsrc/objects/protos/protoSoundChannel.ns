@@ -1,0 +1,56 @@
+// protoSoundChannel: a sound channel - sounds (protoSoundFrame frames) are
+// scheduled on it and played in order, with pause, stop and volume; a
+// channel made by NewRecording records instead, into input blocks. Most
+// methods are natives (class #132 frames). A channel must be closed: it is
+// not freed by garbage collection.
+
+protoSoundChannel := {
+	// Schedule(soundFrame): queues a sound; its Callback is sent when done
+	schedule: {class: #132, funcPtr: 7018715, numArgs: 1},
+	getInputGain: {class: #132, funcPtr: 7046194, numArgs: 0},
+	// NewRecording(): a channel like this one that records
+	newRecording: func() begin
+		local frame2;
+		(frame2 := {_proto: self, direction: 'record})
+	end,
+	// Pause(): pauses or resumes the channel
+	pause: {class: #132, funcPtr: 7018713, numArgs: 0},
+	Open: {class: #132, funcPtr: 7018712, numArgs: 0},
+	Close: {class: #132, funcPtr: 7018709, numArgs: 0},
+	GetVolume: {class: #132, funcPtr: 7046191, numArgs: 0},
+	outputDevice: nil,
+	// NewInputBlock(callback): a sound frame to record into - a VBO of
+	// inputBlockSize bytes on recordingStore (or the default store) - with
+	// 8-bit samples (dataType 8), compressionType 1 and a sampling rate of
+	// 10800
+	newInputBlock: func(fn) begin
+		local recordingStore, frame2;
+		if (not (recordingStore := self.recordingStore)) then begin
+				recordingStore := GetDefaultStore()
+			end;
+		(frame2 := {_proto: @protoSoundFrame, samples: recordingStore:NewVBO('samples, inputBlockSize), callback: fn, dataType: 8, compressionType: 1, samplingRate: 10800})
+	end,
+	inputDevice: nil,
+	// the size of a recording block, in bytes (64K)
+	inputBlockSize: 65536,
+	SetInputGain: {class: #132, funcPtr: 7046193, numArgs: 1},
+	// Stop(): stops all scheduled sounds (their callbacks get
+	// kSoundAborted)
+	stop: {class: #132, funcPtr: 7018717, numArgs: 0},
+	isPaused: {class: #132, funcPtr: 7018711, numArgs: 0},
+	// IsOpen(): whether the channel has its native channel
+	IsOpen: func() begin
+		return (_channel <> nil)
+	end,
+	SetVolume: {class: #132, funcPtr: 7046190, numArgs: 1},
+	inputGain: nil,
+	// IsActive(): whether the channel is playing or paused
+	isActive: {class: #132, funcPtr: 7018710, numArgs: 0},
+	// the native channel, while open
+	_channel: nil,
+	// 'play, or 'record for a recording channel
+	direction: 'play,
+	// Start(async): starts playing; with async nil, returns only when the
+	// queue is empty
+	start: {class: #132, funcPtr: 7018716, numArgs: 1}
+};

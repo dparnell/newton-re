@@ -1,0 +1,20 @@
+// protoParagraph: the template of a paragraph (a text paragraph in a Notes
+// or similar edit view) - a paragraph view in handwriting font that the edit
+// view creates for typed or recognised text; text, styles and tabs are
+// filled in per paragraph.
+
+protoParagraph := {
+	// clParagraphView marked as a data template (clDataTemplate)
+	viewClass: clParagraphView + clDataTemplate,
+	viewFlags: vVisible + vCalculateBounds + vNoScripts,
+	viewFormat: 0,
+	viewJustify: 0,
+	viewTransferMode: modeOr,
+	textFlags: 4,
+	text: nil,
+	viewFont: tsHWFont + tsSize(18),
+	// the text's style runs (pairs of a length and a font) and tab stops
+	styles: nil,
+	tabs: nil,
+	debug: 21708
+};

@@ -1,0 +1,29 @@
+// Objects several of the Formulas panels share (naturalize.py put them here).
+
+// The Clear button at the foot of a solving panel (protoTextButton).
+clear := {
+	// Clears every field, with an undo action (UndoClear) that puts back the
+	// values the fields had and the field that was solved for.
+	buttonClickScript: func() begin
+		frame2 := {solvedFor: solvedFor, values: [Array: ]};
+		local frame2;
+		(foreach item in FSViews do begin
+				AddArraySlot(frame2.values, item:GetNumericValue())
+			end);
+		AddUndoAction('UndoClear, [Array: frame2]);
+		self:ClearAllFields()
+	end,
+	text: "Clear",
+	viewBounds: {top: -16, left: 0, right: 60, bottom: -5},
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjParentBottomV + oneLineOnly,
+	// Sizes the button to its text, 13 pixels high, 5 above the panel's foot.
+	viewSetupFormScript: func() begin
+		(viewBounds := Clone(viewBounds)).bottom := -5;
+		viewBounds.top := (viewBounds.bottom - 13);
+		viewBounds.left := 0;
+		(viewBounds.right := StdButtonWidth(text))
+	end,
+	_proto: @protoTextButton
+};
+
+export111Item := {_proto: @protoCancelButton};

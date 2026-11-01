@@ -1,0 +1,4 @@
+// The check box images protoListView draws a topic's check box with: [unchecked, checked].
+// An array of images. Magic pointer @11. Used by protoListView.
+
+checkBitmaps := [|Array|: CheckOff, CheckOn];

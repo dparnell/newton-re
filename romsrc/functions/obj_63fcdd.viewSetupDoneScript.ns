@@ -1,5 +1,0 @@
-@@ 0x429ca1
-func() begin
-	self:UpdateBitmap()
-end
-@@end

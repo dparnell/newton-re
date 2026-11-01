@@ -1,6 +1,0 @@
-@@ 0x3c63b1
-func(a1) begin
-	RemoveSlot(StoreChangeRegistry, a1);
-	nil
-end
-@@end

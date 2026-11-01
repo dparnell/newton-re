@@ -1,0 +1,53 @@
+// newtFilter: the root of the NewtApp filters, the objects a newtProtoLine input line
+// names in its flavor slot (NPR 2.0 "Labelled Input-Line Slot View Protos").  The line
+// clones its flavor into its filter slot, with _parent the line itself, so a filter
+// reads the line's target, path, labelCommands and so on by inheritance.  A filter
+// says how the line recognises (recFlags, recTextFlags, recConfig, dictionaries), turns
+// the slot's value into text and back (PathToText, TextToPath), what picker its label
+// offers, and how it looks up matches as the user writes (PreQuery, PathQuery,
+// QueryItem, ResolveItem).  This one does nothing; newtTextFilter is the working base.
+//
+// This file holds newtFilter and what only it reaches.
+
+newtFilter := {
+	// set to the input line when the line clones the filter (newtProtoLineBase)
+	_parent: nil,
+	// what newtProtoLine copies into its entry line: viewFlags, textFlags, recConfig, dictionaries
+	recFlags: nil,
+	recTextFlags: nil,
+	recConfig: nil,
+	dictionaries: nil,
+	// the text the line shows for target.(path)
+	PathToText: func() begin
+		nil
+	end,
+	// the value to store in target.(path) for the text a1 the user wrote
+	TextToPath: func(a1) begin
+		nil
+	end,
+	// a method that opens a picker for the value (the "Other" item of the label's
+	// popup and a tap on the label call it); nil for none
+	picker: nil,
+	// a cursor over the entries that match a1 (what PreQuery made of the text);
+	// the line runs it from its viewIdleScript as the user writes
+	PathQuery: func(a1) begin
+		nil
+	end,
+	// a label popup item {item, id: an entry alias} for an entry the query found, or nil
+	QueryItem: func(entry, preQuery) begin
+		nil
+	end,
+	// the user picked a popup item that QueryItem made (one with an id)
+	ResolveItem: func(a1) begin
+		nil
+	end,
+	// set target.(path) from another soup entry (the line's jamFromEntry)
+	EntryToPath: func(resolveEntryAlias) begin
+		nil
+	end,
+	// the user picked labelCommands[index]: non-nil if the filter took care of it,
+	// nil to have the line put the item's text in
+	ChooseItem: func(index) begin
+		nil
+	end
+};

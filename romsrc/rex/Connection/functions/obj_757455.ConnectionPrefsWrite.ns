@@ -1,5 +1,0 @@
-@@ 0x7576b5
-func(a1, a2) begin
-	(prefsFrame.(a1) := a2)
-end
-@@end

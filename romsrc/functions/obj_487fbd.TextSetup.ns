@@ -1,5 +1,0 @@
-@@ 0x487f7d
-func() begin
-	Clone(oldName)
-end
-@@end

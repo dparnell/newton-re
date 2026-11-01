@@ -1,5 +1,0 @@
-@@ 0x768ca1
-func() begin
-	self:UpdateScrollers()
-end
-@@end

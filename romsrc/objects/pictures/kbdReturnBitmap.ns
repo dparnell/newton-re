@@ -1,0 +1,7 @@
+// The return key of the keyboard. A 1-bit bitmap frame (bits, bounds), 10 x 9 pixels. Magic
+// pointer @747. Used by alphaKeys.
+
+kbdReturnBitmap := {
+	bits: bitmap('bits, "resources/bits/3d7631.png", "000000000004008c008c00eb009500f5", 1),
+	bounds: {left: 0, top: 0, right: 10, bottom: 9}
+};

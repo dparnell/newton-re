@@ -1,5 +1,0 @@
-@@ 0x55092d
-func() begin
-	(extras.legalese := nil)
-end
-@@end

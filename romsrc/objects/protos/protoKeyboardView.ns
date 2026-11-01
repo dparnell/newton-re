@@ -1,0 +1,5 @@
+// protoKeyboardView: the bare keyboard view class (clKeyboardView) on
+// protoView - a view that draws keys from keyDefinitions and sends what is
+// tapped to a receiving view. protoKeypad is the configured one.
+
+protoKeyboardView := {viewClass: clKeyboardView, _proto: @protoView};

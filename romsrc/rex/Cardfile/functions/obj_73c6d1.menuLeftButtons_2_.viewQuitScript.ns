@@ -1,6 +1,0 @@
-@@ 0x73cda9
-func() begin
-	RemoveSlot(newtAppBase, keyButton);
-	inherited:?viewQuitScript()
-end
-@@end

@@ -1,9 +1,0 @@
-@@ 0x1012e9d
-func(a1) begin
-	local l1;
-	(l1 := fsm_private_context).pendingState := a1;
-	l1.pendingEventQueue:Reset();
-	l1.pendingParamsQueue:Reset();
-	nil
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x47f501
-func(a1) begin
-	return ((a1.state = 'InLog) or (a1.state = 'OutLog))
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x5ad5a9
-func() begin
-	SetHiliteIndex(hiliteIndex)
-end
-@@end

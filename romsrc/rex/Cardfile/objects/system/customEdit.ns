@@ -1,0 +1,79 @@
+// The Custom Field Labels slip (@8217): ten lines, one per custom field, whose
+// text is the field's label; the labels are kept in the Names soup's info
+// (SetCustomInfo).
+
+customEdit := {
+	viewBounds: {left: 0, top: 10, right: 200, bottom: 240},
+	viewFlags: vApplication + vFloating,
+	name: custom_2,
+	symbol: 'customEdit,
+	type: 'custom,
+	stepChildren: [stepChildren:
+		{
+			text: "Custom Field Labels",
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+			viewJustify: vjCenterH + vjParentFullH + oneLineOnly,
+			_proto: @protoStaticText
+		},
+		{
+			viewBounds: {left: 0, top: 20, right: 0, bottom: 0},
+			viewLineSpacing: 32,
+			editHeight: 50,
+			editWidth: 180,
+			lines: [|Array|:
+				{_proto: @8239, path: 'custom1},
+				{_proto: @8239, path: 'custom2},
+				{_proto: @8239, path: 'custom3},
+				{_proto: @8239, path: 'custom4},
+				{_proto: @8239, path: 'custom5},
+				{_proto: @8239, path: 'custom6},
+				{_proto: @8239, path: 'custom7},
+				{_proto: @8239, path: 'custom8},
+				{_proto: @8239, path: 'custom9},
+				{_proto: @8239, path: 'custom10}
+			],
+			numLines: 10,
+			viewJustify: vjParentFullH + vjParentFullV,
+			// On closing: keeps the labels (with an undo) and, when a label was just
+			// written, opens the edit slip on that custom field.
+			viewQuitScript: func() begin
+				appBase:AddUndoAction('UndoCustomChange, [Array: customInfo]);
+				appBase:SetCustomInfo(target);
+				(if lastChanged then (if (if (if target then target.(lastChanged)) then StrFilled(target.(lastChanged).label)) then AddDeferredSend(appBase, func(a1, a2) begin
+							(if self.viewCObject then self:ShowEditSlip(a1, a2, nil, true, nil))
+						end, [Array: 'custom, [pathExpr: lastChanged]])))
+			end,
+			indent: 15,
+			// Starts on the first line with no label.
+			viewSetupFormScript: func() begin
+				if (target := customInfo) then begin
+						firstLine := nil;
+						local key;
+						local value;
+						local path;
+						(foreach key, value in lines do begin
+								path := value.path;
+								if ((not target.(path)) or (not StrFilled(target.(path).label))) then begin
+										firstLine := key;
+										break
+									end
+							end)
+					end else begin
+						firstLine := 0
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			target: nil,
+			lastChanged: nil,
+			_proto: @protoExpandoShell
+		},
+		{_proto: @protoCancelButton}
+	],
+	ReorientToScreen: @defRotateFunc,
+	// Redraws the card for the new labels.
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript();
+		newtAppBase.layout:Retarget(true)
+	end,
+	_proto: @protoFloater
+};

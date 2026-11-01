@@ -1,0 +1,6 @@
+// trig, and what only it reaches
+//
+// The trigram table (how likely each three-letter sequence is) that the
+// handwriting recognition uses, a text table under resources/Trigrams/.
+
+trig := texttable('Trigrams, "resources/Trigrams/5ba4b1.txt");

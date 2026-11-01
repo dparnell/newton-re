@@ -1,0 +1,74 @@
+// faxHeader: magic pointer @82, the line at the top of every faxed page:
+// the sender's name and fax and voice numbers (from the current owner card),
+// "Page n of m" and the date and time.  protoPrintForm puts it above the page's
+// format when the item goes by fax.
+
+faxHeader := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewJustify: vjParentFullH,
+	viewBounds: {left: 20, top: 0, right: -20, bottom: 20},
+	viewFormat: vfNone,
+	viewChildren: [|Array|:
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjCenterH + vjParentFullH,
+			viewFont: tsFancy + tsSize(9),
+			// the sender: the routing frame's fromFrame name, then the owner's work fax
+			// and phone numbers, or failing those the home fax and phone numbers
+			viewSetupFormScript: func() begin
+				local currentPersona, faxPhone;
+				self.text := fromFrame.name;
+				if IsEntryAlias((currentPersona := GetUserConfig('currentPersona))) then begin
+						currentPersona := ResolveEntryAlias(currentPersona)
+					end;
+				if (not currentPersona) then begin
+						return nil
+					end;
+				if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'faxPhone)) then StrFilled(faxPhone[0])) then begin
+						self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(faxPhone[0])]);
+						if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'workPhone)) then StrFilled(faxPhone[0])) then begin
+								self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(faxPhone[0])])
+							end;
+						return nil
+					end;
+				(if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'homefaxPhone)) then StrFilled(faxPhone[0])) then begin
+						self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(faxPhone[0])]);
+						(if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'homePhone)) then StrFilled(faxPhone[0])) then (self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(faxPhone[0])])))
+					end)
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+			viewJustify: vjRightH + vjParentFullH,
+			viewFont: tsFancy + tsSize(9),
+			// "Page n of m": the template is remembered as _pageTurner, so the printing
+			// code can send it TurnPage for each page
+			TurnPage: func() begin
+				(self.text := ParamStr("Page ^0 of ^1", [Array: fields.pageNumber, fields.pageCount]))
+			end,
+			// The page turner is this view; "Page n of m".
+			viewSetupFormScript: func() begin
+				_pageTurner := self;
+				self:TurnPage()
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+			viewJustify: vjParentFullH,
+			viewFont: tsFancy + tsSize(9),
+			// The date and time.
+			viewSetupFormScript: func() begin
+				(self.text := DateNTime(Time()))
+			end,
+			_proto: @protoStaticText
+		}
+	]
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_14 := same("faxHeader.viewChildren[1].viewSetupFormScript.instructions");

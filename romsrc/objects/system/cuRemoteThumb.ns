@@ -1,0 +1,69 @@
+// cuRemoteThumb: a reduced picture of a book page - a clRemoteView (a view
+// that shows another view's drawing scaled into its own bounds) round a copy of
+// the page's form, built with stub scripts so that nothing of the page runs but
+// its drawing.  The book reader uses it for page thumbnails
+// (src/books/Pages.cpp).
+
+cuRemoteThumb := {
+	viewClass: clRemoteView,
+	viewBounds: {left: 0, top: 0, right: 60, bottom: 80},
+	viewFlags: vVisible,
+	viewJustify: 0,
+	viewFormat: vfNone,
+	protoRemotee: {
+		viewClass: clView,
+		viewFlags: vVisible,
+		viewChildren: [|Array|: ],
+		// The page's size.
+		viewSetupFormScript: func() begin
+			(self.viewBounds := pageBounds)
+		end
+	},
+	viewChildren: [|Array|: ],
+	contentArea: nil,
+	// the page's scripts that must not run in a thumbnail, made to do nothing
+	protoStubby: {
+		// Do nothing (see above).
+		viewSetupFormScript: func() begin
+			true
+		end,
+		viewSetupDoneScript: func() begin
+			true
+		end,
+		viewShowScript: func() begin
+			true
+		end,
+		viewDrawScript: func() begin
+			true
+		end,
+		viewSetupChildrenScript: func() begin
+			true
+		end
+	},
+	form: [|Array|: ],
+	scripts: [|Array|: ],
+	bookmarking: true,
+	pagesShowing: 1,
+	isbn: nil,
+	// builds the page: the stub frame over the content area, then the scripts the
+	// book gives in scripts (pairs of slot name and function), with the page's
+	// form as its children, inside two remotee views the page's size
+	viewSetupChildrenScript: func() begin
+		(copy := Clone(protoStubby))._proto := contentArea;
+		frame2 := {_proto: copy, preallocatedContext: nil, isbn: isbn, viewChildren: form};
+		local script;
+		local i;
+		local copy;
+		local frame2;
+		(for i := 0 to (Length(scripts) - 1) by 2 do begin
+				script := scripts[i];
+				frame2.(script) := scripts[(i + 1)]
+			end);
+		(self.viewChildren := [Array: {_proto: protoRemotee, viewChildren: [Array: {_proto: protoRemotee, viewChildren: [Array: frame2]}]}])
+	end,
+	debug: 85068
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupChildrenScript_literal10 := same("cuRemoteThumb.viewSetupChildrenScript.literals[10]");

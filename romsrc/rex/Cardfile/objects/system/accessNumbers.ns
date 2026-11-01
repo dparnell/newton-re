@@ -1,0 +1,189 @@
+// The Access Numbers edit view of a worksite card (@8223): a dial-in network
+// (from the system's DialinNetworkRegistry), one of its access numbers for the
+// worksite's city and the baud rate; elements of the card's mailAccess array.
+
+accessNumbers := {
+	symbol: 'accessNumbers,
+	name: accessNumber,
+	type: 'editor,
+	infoFrame: {
+		checkPrefix: [|Array|: nil, [pathExpr: 'mailAccess]],
+		checkPaths: [|Array|: 'mailPhone, 'baud, 'mailNetwork],
+		// "Access Number: number [baud]" and the network's name on a second line.
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			local text2, text;
+			if (ClassOf((text := v20_wwwwwwwwwwvvvvvv[1])) = 'int) then begin
+					text := NumberStr(text)
+				end;
+			text2 := ParamStr("^?0Access Number: ^0||^?1 [^1]||", [Array: v20_wwwwwwwwwwvvvvvv[0], text]);
+			if (if v20_wwwwwwwwwwvvvvvv[2] then GlobalVarExists('DialinNetworkRegistry)) then begin
+					text2 := Stringer([Array: text2, ParamStr("\n Network: ^0", [Array: DialinNetworkRegistry.(v20_wwwwwwwwwwvvvvvv[2]).title])])
+				end;
+			text2
+		end
+	},
+	usePhoneKeys: true,
+	protection: 'private,
+	stepChildren: [stepChildren: network, accessNumbersItem, baudRate],
+	fieldOrder: nil,
+	// Starts on the card's network, or the first network there is.
+	viewSetupChildrenScript: func() begin
+		local l1;
+		inherited:?viewSetupChildrenScript();
+		allNetworks := GetAllDialinNetworks();
+		if (not (l1 := target.(networkChooser.path))) then begin
+				l1 := (target.(networkChooser.path) := allNetworks[0].id)
+			end;
+		self:UpdateNetwork(l1)
+	end,
+	allNetworks: nil,
+	// Network a1 picked: offers its access numbers for the worksite's city and
+	// country, and takes the first number's baud rate.
+	UpdateNetwork: func(a1) begin
+		numbersArray := nil;
+		baudArray := nil;
+		l3 := appBase:GetCity(target);
+		l4 := target.countrySymbol;
+		if a1 then begin
+				if (l1 := DialinNetworkRegistry.(a1):?GetAccessNumbers(nil, l3)) then begin
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						numbersArray := (foreach l5 in l1 collect {item: l5.mailPhone, country: l4});
+						l2 := (foreach l5 in l1 collect l5.mailPhone);
+						baudArray := (foreach l5 in l1 collect l5.baud)
+					end
+			end;
+		if numberChooser.viewCObject then begin
+				numberChooser:JamFromEntry({phones: l2});
+				numberChooser:Retarget()
+			end;
+		(if (if (if baudChooser.viewCObject then l1) then (Length(l1) > 0)) then begin
+				target.(baudChooser.path) := l1[0].baud;
+				baudChooser:UpdateText(NumberStr(l1[0].baud));
+				self:StartFlush();
+				baudChooser:Retarget()
+			end)
+	end,
+	numbersArray: nil,
+	baudArray: nil,
+	_proto: @8240,
+	networkChooser: nil,
+	stepAllocateContext: [|Array|: 'networkChooser, network, 'numberChooser, accessNumbersItem, 'baudChooser, baudRate],
+	numberChooser: nil,
+	baudChooser: nil
+};
+
+accessNumber := "Access Number";
+
+// The network picker.
+network := {
+	labelCommands: nil,
+	text: "Network",
+	viewBounds: {left: 0, top: 15, right: 0, bottom: 37},
+	// A network picked: kept in the card and its numbers offered.
+	labelActionScript: func(index) begin
+		local id;
+		id := allNetworks[index].id;
+		target.(path) := id;
+		self:StartFlush();
+		self:UpdateNetwork(id)
+	end,
+	// The card's network's name (the first network's when it has none).
+	textSetup: func() begin
+		title := (if labelCommands then labelCommands[0] else "");
+		local title;
+		(foreach item in allNetworks do begin
+				if (item.id = target.(path)) then begin
+						break (title := item.title)
+					end
+			end);
+		title
+	end,
+	// The dial-in networks' names.
+	viewSetupFormScript: func() begin
+		labelCommands := [Array: ];
+		labelCommands := GetDialinNetworkSlot('title);
+		inherited:?viewSetupFormScript()
+	end,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	addPath: 'mailNetwork,
+	path: nil,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'networkChooser
+};
+
+// The access number line, with the network's numbers in its popup.
+accessNumbersItem := {
+	label: accessNumber,
+	// A number emptied takes the network and baud rate with it.
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript();
+		(if (not StrFilled(target.(path))) then begin
+				target.(networkChooser.path) := nil;
+				target.(baudChooser.path) := nil;
+				(target.(path) := nil)
+			end)
+	end,
+	addPath: 'mailPhone,
+	path: nil,
+	// A number picked brings its baud rate.
+	pickActionScript: func(index) begin
+		inherited:pickActionScript(index);
+		(if (if baudArray then (Length(baudArray) > 0)) then begin
+				target.(baudChooser.path) := baudArray[index];
+				self:StartFlush();
+				baudChooser:Retarget()
+			end)
+	end,
+	// Offers the network's numbers, the first one taken when the card has none.
+	viewSetupFormScript: func() begin
+		labelCommands := numbersArray;
+		if (if (if (not target.(path)) then labelCommands) then (Length(labelCommands) > 0)) then begin
+				target.(path) := labelCommands[0].item
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @newtLabelPhoneInputLine,
+	preAllocatedContext: 'numberChooser
+};
+
+// The baud rate picker (BaudTypes' rates).
+baudRate := {
+	labelCommands: nil,
+	text: "Baud Rate",
+	viewBounds: {left: 0, top: 6, right: 0, bottom: 28},
+	// A rate picked: kept in the card.
+	labelActionScript: func(index) begin
+		target.(path) := labelCommands[index].baudRate;
+		self:StartFlush()
+	end,
+	// The card's rate's name (the first rate when it has none, which is then kept).
+	textSetup: func() begin
+		item2 := (if labelCommands then labelCommands[0].item else "");
+		local item2;
+		(foreach item in labelCommands do begin
+				if (item.baudRate = target.(path)) then begin
+						break (item2 := item.item)
+					end
+			end);
+		if (if (not target.(path)) then labelCommands) then begin
+				target.(path) := labelCommands[0].baudRate
+			end;
+		item2
+	end,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	// The rates and their names.
+	viewSetupFormScript: func() begin
+		labelCommands := [Array: ];
+		(for i := 0 to (Length(BaudTypes.baudRates) - 1) do begin
+				AddArraySlot(labelCommands, {item: BaudTypes.baudText[i], baudRate: BaudTypes.baudRates[i]})
+			end);
+		inherited:?viewSetupFormScript()
+	end,
+	addPath: 'baud,
+	path: nil,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'baudChooser
+};

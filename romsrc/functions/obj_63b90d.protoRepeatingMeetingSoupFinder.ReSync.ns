@@ -1,5 +1,0 @@
-@@ 0x4eddb5
-func() begin
-	self:Initialize()
-end
-@@end

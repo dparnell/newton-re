@@ -1,5 +1,0 @@
-@@ 0x4551fd
-func() begin
-	BuildContext({_proto: self})
-end
-@@end

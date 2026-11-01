@@ -1,0 +1,10 @@
+// protoUSStatesTextPicker: a protoMapTextPicker that picks one of the
+// United States from a map of North America; the picked state's name is the
+// result.
+
+protousStatesTextPicker := {
+	// what protoMapTextPicker shows: the places (the US states' soup), the map
+	// to zoom to and which slot of the picked entry is the result
+	params: {spots: @usStateSoupName, zoomer: 'northAmerica, result: 'name},
+	_proto: @protoMapTextPicker
+};

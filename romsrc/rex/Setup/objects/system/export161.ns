@@ -1,0 +1,53 @@
+// export161: the proto of Setup's pages (the page base: the title, description, Continue
+// and go-back buttons, closer and feedback line of nameItem). A page's own step children
+// after the first are kept aside in fSonOfStepChildren. The file holds it and what only
+// it reaches.
+
+export161 := {
+	viewFlags: 0,
+	viewFormat: vfFillWhite + vfPen(1),
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	stepChildren: [stepChildren: nameItem],
+	// viewSetupFormScript: keeps only the first step child (the page frame, nameItem) and
+	// puts the rest aside in fSonOfStepChildren; in the wide format the title is one line.
+	viewSetupFormScript: func() begin
+		local stepChildren, l2;
+		if ((l2 := (Length((stepChildren := self.stepChildren)) - 1)) > 0) then begin
+				ArrayMunger((fSonOfStepChildren := Array(l2, nil)), 0, nil, stepChildren, 1, l2);
+				self.stepChildren := [Array: stepChildren[0]]
+			end;
+		if (fformat = 'wide) then begin
+				titleTExt := StringFilter(titleTExt, "\n", 'rejectAll)
+			end;
+		SetKeyView(self, 0)
+	end,
+	fSonOfStepChildren: [|Array|: ],
+	// SetFeedback(text): shows text in the feedback line.
+	SetFeedback: func(text) begin
+		vFeedback:SetText(text)
+	end,
+	// AllowContinue(allow): shows or hides the Continue button.
+	AllowContinue: func(a1) begin
+		(if a1 then _defaultButton:Open() else _defaultButton:Hide())
+	end,
+	// viewQuitScript: records the page as completed, under its debug name in fCompleted.
+	viewQuitScript: func() begin
+		(if fCompleted then (fCompleted.(Intern(debug)) := true))
+	end,
+	_proto: @protoContainerView,
+	_defaultButton: nil,
+	stepAllocateContext: [|Array|:
+		'_defaultButton,
+		nameItem_2,
+		'vGoBackButton,
+		nameItem_3,
+		'vCloser,
+		nameItem_4,
+		'vFeedback,
+		nameItem_5
+	],
+	vGoBackButton: nil,
+	vCloser: nil,
+	vFeedback: nil
+};

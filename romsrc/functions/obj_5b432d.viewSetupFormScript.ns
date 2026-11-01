@@ -1,6 +1,0 @@
-@@ 0x5b42ed
-func() begin
-	inherited:?viewSetupFormScript();
-	(viewValue := GetUserConfig('AlarmVolumeEqualsSystem))
-end
-@@end

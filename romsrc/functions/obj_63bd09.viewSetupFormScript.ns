@@ -1,5 +1,0 @@
-@@ 0x506e8d
-func() begin
-	(if (not HasSlot(self, 'fakeTemplate)) then (fakeTemplate := Clone(fakeTemplate)))
-end
-@@end

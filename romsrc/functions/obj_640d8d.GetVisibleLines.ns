@@ -1,5 +1,0 @@
-@@ 0x439825
-func() begin
-	return viewLines
-end
-@@end

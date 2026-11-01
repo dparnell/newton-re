@@ -1,0 +1,257 @@
+// protoDictionary: a word list the recognizer can use (a user or custom
+// dictionary), presented as if it were a soup: words can be added, removed
+// and looked up, and cursors (protoDictionaryCursor) walk it.  The heavy
+// lifting is native (class #132: a C function pointer and its argument
+// count).  A word's attribute carries two case bits: 128 capitalized, 64
+// all upper case; words are stored with their case and diacritics folded
+// (the Encode... methods) and the bits record what was folded.
+//   dictID      the recognizer's id of the dictionary once registered
+//   cursors     the cursors open on it
+//   count, limit   (optional slots) its word count and the most it may hold
+// LookupWord answers 2 or 3 for a word found, -6 or 1 for one not found (as
+// the methods below treat its results).
+
+protoDictionary := {
+	name: "Custom Dictionary",
+	dict: nil,
+	dictID: nil,
+	ROMDictID: nil,
+	reverseDictID: nil,
+	localDictSlot: nil,
+	localDictIDSlot: nil,
+	domainType: nil,
+	dictType: 0,
+	order: 0,
+	status: 1,
+	cursors: nil,
+	type: {class: #132, funcPtr: 6994395, numArgs: 0},
+	// LookupEncodedWord(word): looks word up as written; if it is not
+	// there, looks up its folded form - for an all-capitals word first
+	// capitalized, then in lower case; for a capitalized one, in lower case.
+	// Answers LookupWord's result.
+	LookupEncodedWord: func(a1) begin
+		local word, copy;
+		if (((word := self:LookupWord(a1, nil)) = -6) or (word = 1)) then begin
+				self:EncodeRecognitionWordDiacritsOK((copy := Clone(a1)));
+				if (StrLen(copy) > 0) then begin
+						if (StrExactCompare(Upcase(Clone(a1)), a1) = 0) then begin
+								if (((word := self:LookupWord(Capitalize(Downcase(Clone(copy))), nil)) = -6) or (word = 1)) then begin
+										word := self:LookupWord(Downcase(Clone(copy)), nil)
+									end
+							end else begin
+								if (StrExactCompare(Capitalize(Downcase(Clone(a1))), a1) = 0) then begin
+										word := self:LookupWord(Downcase(Clone(copy)), nil)
+									end
+							end
+					end
+			end;
+		return word
+	end,
+	result: {class: #132, funcPtr: 6995431, numArgs: 0},
+	// answers the dictionary's name
+	GetName: func() begin
+		name
+	end,
+	// DeleteWord(word): removes word, keeping count up to date (recounted by
+	// walking the dictionary if it goes negative); answers 0 on success or
+	// an error code
+	DeleteWord: func(copy) begin
+		local privateDeleteWord;
+		if ((privateDeleteWord := self:PrivateDeleteWord(copy)) = 0) then begin
+				if HasPath(self, 'count) then begin
+						if ((count := (count - 1)) < 0) then begin
+								count := self:Walk("", nil)
+							end
+					end
+			end;
+		return privateDeleteWord
+	end,
+	// MakeCursor(prefix, spec, loc): answers a new cursor over the words
+	MakeCursor: func(currentSoupSymbol, spec, loc) begin
+		local allocateCursor;
+		allocateCursor := self:AllocateCursor();
+		allocateCursor:Initialize(currentSoupSymbol, spec, loc);
+		return allocateCursor
+	end,
+	// the soup-like Add: adds an entry {word, attribute}
+	Add: func(a1) begin
+		self:AddWord(a1.word, a1.attribute)
+	end,
+	LookupWord: {class: #132, funcPtr: 6995428, numArgs: 2},
+	PrivateDeleteWord: {class: #132, funcPtr: 6994394, numArgs: 1},
+	Walk: {class: #132, funcPtr: 6995433, numArgs: 2},
+	// AddEncodedWord(word, update): adds word in its folded form (see
+	// AddOneEncodedWord); answers 0 on success, -13 when nothing is left of
+	// the word once folded, or another error code
+	AddEncodedWord: func(copy2, a2) begin
+		local copy, addOneEncodedWord, encodeRecognitionWord;
+		copy := Clone(copy2);
+		addOneEncodedWord := -13;
+		encodeRecognitionWord := self:EncodeRecognitionWord(copy);
+		if (StrLen(copy) > 0) then begin
+				addOneEncodedWord := self:AddOneEncodedWord(copy, encodeRecognitionWord, a2)
+			end;
+		return addOneEncodedWord
+	end,
+	AttributeSize: {class: #132, funcPtr: 6994391, numArgs: 0},
+	DeletePrefix: {class: #132, funcPtr: 6994393, numArgs: 1},
+	// the soup-like EntryRemoveFromSoup: removes the entry's word
+	EntryRemoveFromSoup: func(a1) begin
+		self:RemoveWord(a1.word)
+	end,
+	ChangeAttribute: {class: #132, funcPtr: 6994392, numArgs: 2},
+	AllocateCursor: {class: #132, funcPtr: 6994399, numArgs: 0},
+	// AddWord(word, attribute): adds word.  When count has reached limit it
+	// refuses with -15, telling the user if cursors are open (the word list
+	// is on screen).  A word with case bits is stored decoded, the bits
+	// cleared.  Answers 0 on success or an error code.
+	AddWord: func(word, a2) begin
+		local limit, count, privateAddWord;
+		if HasPath(self, 'limit) then begin
+				limit := self.limit
+			end;
+		if HasPath(self, 'count) then begin
+				count := self.count
+			end;
+		if (if (if limit then count) then (count >= limit)) then begin
+				if (if cursors then (Length(cursors) > 0)) then begin
+						GetRoot():Notify(kNotifyAlert, "Word List", "The word was not added because the word list is getting too full.  Please remove some words and try again.")
+					end;
+				return -15
+			end;
+		// looks like a ROM bug: BAnd answers an integer, and 0 is true in
+		// NewtonScript, so this runs for every word (harmlessly: the decode
+		// does nothing without the bits and clearing them changes nothing)
+		if BAnd(a2, 192) then begin
+				self:DecodeRecognitionWord((word := Clone(word)), a2);
+				// the attribute without its two case bits (128 and 64)
+				a2 := BAnd(a2, -193)
+			end;
+		if (if ((privateAddWord := self:PrivateAddWord(word, a2)) = 0) then count) then begin
+				self.count := (count + 1)
+			end;
+		return privateAddWord
+	end,
+	// the soup-like EntryRemoveable.  Looks like a ROM bug: it answers
+	// IsReadOnly, true just when the entries cannot be removed
+	EntryRemoveable: func() begin
+		self:IsReadOnly()
+	end,
+	// soup methods with nothing to do for a dictionary
+	flush: func() begin
+		nil
+	end,
+	// There is no soup behind it.
+	RealSoup: func() begin
+		nil
+	end,
+	protoDictionaryCursor: @protoDictionaryCursor,
+	Unregister: {class: #132, funcPtr: 6995432, numArgs: 0},
+	AddIndex: AddIndex,
+	protoQuery: @protoDictionaryCursor,
+	PrivateAddWord: {class: #132, funcPtr: 6994390, numArgs: 2},
+	Dispose: {class: #132, funcPtr: 6994396, numArgs: 0},
+	// DecodeRecognitionWord(word, attribute): restores the case the
+	// attribute records (128: capitalized, 64: all upper case); answers word
+	DecodeRecognitionWord: func(copy, attribute) begin
+		if (BAnd(attribute, 128) <> 0) then begin
+				Capitalize(copy)
+			end;
+		if (BAnd(attribute, 64) <> 0) then begin
+				Upcase(copy)
+			end;
+		return copy
+	end,
+	PrivateNew: {class: #132, funcPtr: 6995429, numArgs: 2},
+	// folds word in place as the recognizer stores it, keeping diacritics
+	EncodeRecognitionWordDiacritsOK: func(copy) begin
+		return StripRecognitionWordDiacritsOK(copy)
+	end,
+	// There is no store.
+	EntryStore: func(a1) begin
+		nil
+	end,
+	// the soup-like AddToDefaultStore: as Add
+	AddToDefaultStore: func(a1) begin
+		self:Add(a1)
+	end,
+	Register: {class: #132, funcPtr: 6995430, numArgs: 0},
+	// folds word in place as the recognizer stores it; answers the case
+	// attribute that records what was folded
+	EncodeRecognitionWord: func(copy) begin
+		return StripRecognitionWord(copy)
+	end,
+	RemoveIndex: AddIndex,
+	// the soup-like Query: a cursor from a query spec's prefix, pin and loc
+	Query: func(a1) begin
+		self:MakeCursor(a1.prefix, a1.pin, a1.loc)
+	end,
+	// DeleteEncodedWord(word): deletes the folded form of word; answers -6
+	// when nothing is left of it once folded
+	DeleteEncodedWord: func(word) begin
+		local copy, deleteWord, encodeRecognitionWordDiacritsOK;
+		copy := Clone(word);
+		deleteWord := -6;
+		encodeRecognitionWordDiacritsOK := self:EncodeRecognitionWordDiacritsOK(copy);
+		if (StrLen(copy) > 0) then begin
+				deleteWord := self:DeleteWord(copy)
+			end;
+		return deleteWord
+	end,
+	// whether the dictionary has been registered with the recognizer
+	IsRegistered: func() begin
+		(if (if (dictID exists) then dictID) then true)
+	end,
+	// read-only unless bit 8 of the native dictionary's type is set
+	IsReadOnly: func() begin
+		return (BAnd(self:PrivateType(), 8) = 0)
+	end,
+	// Its words are read-only.
+	EntryReadOnly: func(a1) begin
+		true
+	end,
+	// AddOneEncodedWord(word, attribute, update): adds a folded word.  If it
+	// is already there (2 or 3) the result says so, and with update set and
+	// a different attribute its stored attribute loses its case bits
+	// instead (answering 0).
+	AddOneEncodedWord: func(copy, encodeRecognitionWord, a3) begin
+		local addWord, frame2, word, bAnd2;
+		addWord := -13;
+		frame2 := {};
+		if (((word := self:LookupWord(copy, frame2)) = 2) or (word = 3)) then begin
+				addWord := word;
+				if (if a3 then (frame2.attribute <> encodeRecognitionWord)) then begin
+						bAnd2 := BAnd(frame2.attribute, -193);
+						self:ChangeAttribute(copy, bAnd2);
+						addWord := 0
+					end
+			end else begin
+				addWord := self:AddWord(copy, encodeRecognitionWord)
+			end;
+		return addWord
+	end,
+	// Initialize(kind, attrSize): makes the native dictionary; attrSize, the
+	// bytes of attribute per word, must be 0, 1, 2 or 4.  Throws
+	// |evt.ex.msg.dict| on a bad size or when the native call fails.
+	Initialize: func(a1, singleSelect) begin
+		local privateNew;
+		if (not SetContains('[Array: 0, 1, 2, 4], singleSelect)) then begin
+				Throw('|evt.ex.msg.dict|, Stringer([Array: "bad attrSize:", " ", singleSelect]))
+			end;
+		if ((privateNew := self:PrivateNew(a1, singleSelect)) < 0) then begin
+				Throw('|evt.ex.msg.dict|, SPrintObject(privateNew))
+			end;
+		return nil
+	end
+};
+
+// AddIndex and RemoveIndex: a dictionary has no indexes; nothing to do
+AddIndex := func(a1) begin
+	nil
+end;
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+EntryRemoveFromSoup_code := same("protoDictionary.EntryRemoveFromSoup.instructions");
+
+EncodeRecognitionWordDiacritsOK_code := same("protoDictionary.EncodeRecognitionWordDiacritsOK.instructions");

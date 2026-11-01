@@ -1,5 +1,0 @@
-@@ 0x5b3755
-func() begin
-	(labelCommands := GetModemPopUpList())
-end
-@@end

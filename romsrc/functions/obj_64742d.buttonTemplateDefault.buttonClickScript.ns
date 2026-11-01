@@ -1,6 +1,0 @@
-@@ 0x460c89
-func() begin
-	confirmedValue := buttonValue;
-	base:Close()
-end
-@@end

@@ -1,0 +1,19 @@
+// protoPrefInfo: the frame a transport's preferences use to describe what is
+// done with an item after it is sent: logChoices/logActions pair the
+// "File", "Log" and "Delete" choices with the actions 'save, 'log and nil,
+// and the file choices how a copy is kept ("File ^0 in", "copies"/"log
+// entries"). A transport's own frame overrides the slots it needs.
+
+protoPrefInfo := {
+	logText: nil,
+	logChoices: [|Array|: file, log, delete],
+	logConfig: nil,
+	// parallel to logChoices: what each choice does
+	logActions: [|Array|: 'save, 'log, nil],
+	fileText: fileIn,
+	fileChoices: [|Array|: "copies", logEntries, nil],
+	fileConfig: nil,
+	transport: nil,
+	testMethod: nil,
+	sibling: nil
+};

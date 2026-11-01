@@ -1,0 +1,9 @@
+// rcPrefsConfig: a recognition configuration that allows every kind of
+// recognition, leaving the choice to the user's preferences.
+
+rcPrefsConfig := {
+	allowTextRecognition: true,
+	allowShapeRecognition: true,
+	allowInkWordRecognition: true,
+	allowRawInkRecognition: true
+};

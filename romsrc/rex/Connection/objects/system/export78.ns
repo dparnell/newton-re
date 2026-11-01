@@ -1,0 +1,44 @@
+// The keyboard passthrough's waiting slip (@8270): "Waiting for desktop." with a
+// barber pole until the passthrough has stopped, then it closes and calls
+// doneCallback (which reopens the which-connection slip).
+
+export78 := {
+	// Leaves the open windows.
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self)
+	end,
+	// Every half second: closes once passthrough is off, else turns the pole.
+	viewIdleScript: func() begin
+		(if (not protoContext.keyPassthroughOn) then begin
+				AddDeferredSend(base, 'Close, nil);
+				if doneCallback then begin
+						call doneCallback with ()
+					end;
+				return 0
+			end else begin
+				self:updateIndicator(initialSetup);
+				500
+			end)
+	end,
+	viewBounds: {left: 0, top: 40, right: 180, bottom: 125},
+	initialSetup: {
+		name: 'vBarber,
+		values: {
+			statusText: dock,
+			titleText: "Waiting for desktop.",
+			icon: valuesIcon,
+			primary: nil,
+			closeBox: nil
+		},
+		appSymbol: 'kAppSymbol
+	},
+	// Joins the open windows and starts the idle.
+	viewSetupFormScript: func() begin
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		self:SetupIdle(500);
+		inherited:?viewSetupFormScript()
+	end,
+	protoContext: nil,
+	_proto: @protoStatusTemplate
+};

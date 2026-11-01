@@ -1,0 +1,29 @@
+// protoStatusIcon: the icon at the top left of a status slip
+// (protoStatusTemplate). Its picture comes from the icon slot of the values
+// given to the template's ViewSet/UpdateIndicator (a bitmap frame), or else
+// from the icon of the application named by appSymbol.
+
+protoStatusIcon := {
+	debug: 628,
+	viewClass: clPictureView,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 3, top: 0, right: 35, bottom: 32},
+	icon: nil,
+	// the slot of the values frame this component shows
+	name: 'icon,
+	// viewSetupFormScript(): takes the icon from the values frame
+	// (self:path(), the template's valueData.values) if it has one, otherwise
+	// the icon of the base view of the application appSymbol names
+	viewSetupFormScript: func() begin
+		local path, root;
+		(if (if (path := self:path()) then HasSlot(path, name)) then (icon := path.(name)) else begin
+				root := GetRoot();
+				(if (if appSymbol then HasSlot(root, appSymbol)) then (icon := root.(appSymbol).icon))
+			end)
+	end,
+	// viewUpdateFormScript(): sent by UpdateIndicator; shows the new icon
+	viewUpdateFormScript: func() begin
+		SetValue(self, 'icon, self:path().(name))
+	end
+};

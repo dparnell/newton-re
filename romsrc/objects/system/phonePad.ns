@@ -1,0 +1,46 @@
+// phonePad (@676): the telephone keypad slip children - the touch-tone digits,
+// a column of phone keys beside them and a row of tab, space and arrow keys -
+// used by the convert-ink and validate slips for phone fields.
+
+phonePad := {
+	viewClass: clView,
+	viewBounds: {left: 0, top: 0, right: 121, bottom: 126},
+	viewFlags: vVisible,
+	viewChildren: [viewChildren:
+		{_proto: @touchtonePad},
+		{
+			viewBounds: {left: 5, top: 0, right: 45, bottom: 0},
+			viewJustify: vjSiblingRightH + vjSiblingFullV,
+			keyResultsAreKeycodes: nil,
+			keyDefinitions: [|Array|: phonePadItem, phonePadItem_2, phonePadItem_3, phonePadItem_4, phonePadItem_5],
+			_proto: @protoKeypad
+		},
+		{
+			viewBounds: {left: 0, top: 106, right: 120, bottom: 126},
+			keyResultsAreKeycodes: nil,
+			keyDefinitions: [|Array|:
+				[|Array|:
+					// a row: [rowHeight, rowMaxKeyHeight, then legend, result and descriptor
+					// per key]; descriptor 288360456 is 0x11300808, keyAutoHilite + keyFramed * 2
+					// + keyRoundingUnit * 3 + keyHUnit + keyVUnit; 288364552 the same three units
+					// wide (keyHUnit * 3)
+					8,
+					8,
+					@kbdTabBitmap,
+					$\u0009,
+					288360456,
+					$\u0020,
+					$\u0020,
+					288364552,
+					@kbdLeftBitmap,
+					$\u001c,
+					288360456,
+					@kbdRightBitmap,
+					$\u001d,
+					288360456
+				]
+			],
+			_proto: @protoKeypad
+		}
+	]
+};

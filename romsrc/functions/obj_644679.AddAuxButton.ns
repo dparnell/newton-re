@@ -1,5 +1,0 @@
-@@ 0x4d8225
-func(a1) begin
-	status:?RedoChildren()
-end
-@@end

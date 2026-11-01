@@ -1,6 +1,0 @@
-@@ 0x10436f9
-func() begin
-	local l1;
-	(if (l1 := self:MGetLinkDefaultEntry()) then l1.linkID)
-end
-@@end

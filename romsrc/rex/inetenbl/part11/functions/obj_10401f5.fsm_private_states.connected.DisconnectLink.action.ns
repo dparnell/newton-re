@@ -1,5 +1,0 @@
-@@ 0x104a045
-func() begin
-	self:DoEvent('ReleaseTimerExpired, nil)
-end
-@@end

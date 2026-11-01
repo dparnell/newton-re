@@ -1,0 +1,103 @@
+// recorderchassIs: the recorder engine as the recorder views use it (the
+// ROM's spelling). It adds to recorderEngine what a view needs: it follows
+// the user's input device setting, and keeps its record and play buttons,
+// status text and SoundProgressSlider (looked up by inheritance from the
+// view it is installed in) in step with the engine's state.
+
+recorderchassIs := {
+	_proto: @recorderEngine,
+	// the symbol it registered its user-config watcher under (RegUserConfigChange)
+	userConfigChangeSym: nil,
+	// Initialises the engine and registers for user-config changes, under a
+	// symbol made unique by the view's C object.
+	Init: func() begin
+		inherited:?Init();
+		self.userConfigChangeSym := Intern(Stringer([Array: "RecorderChassis.", viewCObject]));
+		RegUserConfigChange(userConfigChangeSym, func(a1) begin
+			self:HandleConfigChange(a1)
+		end)
+	end,
+	// Tears the engine down and unregisters the config watcher.
+	Done: func() begin
+		inherited:?Done();
+		UnRegUserConfigChange(userConfigChangeSym)
+	end,
+	// A user-config change: a new input device makes the views redraw their
+	// state.
+	HandleConfigChange: func(a1) begin
+		(if (a1 = 'inputDevice) then self:SetState(fSoundState))
+	end,
+	// Changes the engine's state and tells the record and play buttons and the
+	// status text (each SetState(oldState, newState, hasSoundFrames)).
+	SetState: func(fSoundState3) begin
+		local fSoundState2, hasSoundFrames;
+		fSoundState2 := fSoundState;
+		hasSoundFrames := self:HasSoundFrames();
+		inherited:SetState(fSoundState3);
+		if (recordButton exists) then begin
+				recordButton:SetState(fSoundState2, fSoundState3, hasSoundFrames)
+			end;
+		if (playButton exists) then begin
+				playButton:SetState(fSoundState2, fSoundState3, hasSoundFrames)
+			end;
+		(if (statusText exists) then statusText:SetState(fSoundState2, fSoundState3, hasSoundFrames))
+	end,
+	// When the last sound finished playing, the slider is run to the end and
+	// back to the start.
+	PlayCompletion: func(a1, a2) begin
+		inherited:PlayCompletion(a1, a2);
+		(if self:TestState(1) then begin
+				self:FastForward();
+				RefreshViews();
+				self:Rewind()
+			end)
+	end,
+	// Starts recording; a fresh (not resumed) recording resets the slider, and
+	// once recording has started the slider is started, updated every second
+	// (UpdateSlider) and the screen flushed after 200 ms.
+	record: func() begin
+		if (if (not self:TestState(16)) then SoundProgressSlider) then begin
+				SoundProgressSlider:ResetSlider()
+			end;
+		(if (if inherited:record() then SoundProgressSlider) then begin
+				SoundProgressSlider:SetRecordStart();
+				AddDelayedSend(base, 'UpdateSlider, [Array: ], 1000);
+				AddDelayedSend(base, 'FlushVBO, [Array: ], 200)
+			end)
+	end,
+	// When recording ends by itself (out of room), the slider goes back to the
+	// start.
+	RecordCompletion: func(sounds, a2) begin
+		inherited:RecordCompletion(sounds, a2);
+		(if self:TestState(1) then self:Rewind())
+	end,
+	// Starts playing; like record, but the slider is given the total playing
+	// time.
+	play: func() begin
+		if (if (not self:TestState(8)) then SoundProgressSlider) then begin
+				SoundProgressSlider:ResetSlider()
+			end;
+		(if (if inherited:play() then SoundProgressSlider) then begin
+				SoundProgressSlider:SetPlayStart(self:GetPlayingTime());
+				AddDelayedSend(base, 'UpdateSlider, [Array: ], 1000)
+			end)
+	end,
+	// pause, Rewind, FastForward: the engine's, with the slider kept in step.
+	pause: func() begin
+		(if (if inherited:pause() then SoundProgressSlider) then SoundProgressSlider:PauseSlider())
+	end,
+	// Rewinds, and the progress slider back to the start.
+	Rewind: func() begin
+		inherited:Rewind();
+		(if SoundProgressSlider then SoundProgressSlider:ResetSlider())
+	end,
+	// Fast forward, and the slider to the end.
+	FastForward: func() begin
+		inherited:FastForward();
+		(if SoundProgressSlider then SoundProgressSlider:SlideToRight())
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Rewind_code := same("recorderchassIs.Rewind.instructions");

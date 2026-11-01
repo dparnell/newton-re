@@ -1,8 +1,0 @@
-@@ 0x10140dd
-func() begin
-	local l1;
-	self.viewBounds := SetBounds((locIcon.viewBounds.right + 5), 0, -5, 0);
-	l1 := self:LocalBox();
-	(self.text := StyledStrTruncate(name, (l1.right - l1.left), self.viewFont))
-end
-@@end

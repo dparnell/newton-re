@@ -1,0 +1,8 @@
+// protoStrokesItem: an item of the corrector's list of alternatives for a
+// word that stands for the word's original ink (protoCorrector clones it,
+// fills it from the word's strokes and adds it to the list beside the text
+// interpretations).
+
+// bounds: the strokes' bounding box; strokelist: the strokes; pickable: the
+// corrector sets it true, so the ink can be chosen in place of the text
+protoStrokesItem := {bounds: nil, strokelist: nil, pickable: nil};

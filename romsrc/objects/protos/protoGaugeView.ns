@@ -1,0 +1,3 @@
+// protoGaugeView: the plain clGaugeView.
+
+protoGaugeView := {viewClass: clGaugeView, _proto: @protoView};

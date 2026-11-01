@@ -1,0 +1,61 @@
+// usDateFilter: the US locale's date template for the protoCharEdit corrector
+// (GetLocale().dateFilter): the fixed mm/dd/yy comb (usStdDateFilter) or any
+// format (usDefaultDateFilter), between which the corrector's popup switches.
+
+usDateFilter := {
+	item: "usDateFilter",
+	templateArray: [|Array|: @usStdDateFilter, @usDefaultDateFilter],
+	// Starts on the format the word is in.
+	Init: func(currentWord) begin
+		local parse;
+		self:SetTemplate((parse := self:Parse(currentWord)))
+	end,
+	// The fixed format if the word reads as a date with at least two of month,
+	// day and year; else any format.
+	Parse: func(currentWord) begin
+		local l1;
+		l1 := @usDefaultDateFilter;
+		if @usStdDateFilter:IsValid(currentWord) then begin
+				l1 := @usStdDateFilter
+			end;
+		return l1
+	end,
+	// The user chose format index: the fixed one only if the word fits it.
+	switch: func(index, wordForDisplay) begin
+		local templateArrayItem;
+		if (if ((templateArrayItem := templateArray[index]) = @usStdDateFilter) then (self:Parse(wordForDisplay) <> @usStdDateFilter)) then begin
+				self:Notify(kNotifyAlert, "Corrector", "Sorry, unable to switch to the requested format");
+				return nil
+			end;
+		self:SetTemplate(templateArray[index])
+	end,
+	// SetupString, CleanupString: the current format's, if it has them.
+	SetupString: func(currentWord) begin
+		(if HasPath(curTemplate, 'SetupString) then curTemplate:SetupString(currentWord) else currentWord)
+	end,
+	// The template's CleanupString, if it has one.
+	CleanupString: func(currentWord) begin
+		(if HasPath(curTemplate, 'CleanupString) then curTemplate:CleanupString(currentWord) else currentWord)
+	end,
+	// Makes a format current, copying its comb slots.
+	SetTemplate: func(templateArrayItem) begin
+		self.format := templateArrayItem.format;
+		self.string := templateArrayItem.string;
+		self.filters := templateArrayItem.filters;
+		self.bias := templateArrayItem.bias;
+		self.offsets := templateArrayItem.offsets;
+		(self.curTemplate := templateArrayItem)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+switch_literal2 := same("usDateFilter.switch.literals[2]");
+
+switch_literal3 := same("usDateFilter.switch.literals[3]");
+
+SetupString_code := same("usDateFilter.SetupString.instructions");
+
+Init_code := same("usDateFilter.Init.instructions");
+
+SetTemplate_code := same("usDateFilter.SetTemplate.instructions");

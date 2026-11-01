@@ -1,5 +1,0 @@
-@@ 0x42e729
-func() begin
-	AddDeferredAction(ExpandNone, [Array: ])
-end
-@@end

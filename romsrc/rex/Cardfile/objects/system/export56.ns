@@ -1,0 +1,19 @@
+// The title (honorific) line of a name (@8248): its recognition dictionaries
+// are the locale's honorifics.
+
+export56 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	label: title,
+	flavor: @newtCustomFilter,
+	newDictionaries: nil,
+	labelCommands: nil,
+	// Takes the locale's honorific dictionaries.
+	viewSetupFormScript: func() begin
+		newDictionaries := GetLocale().recogHonorificDictionaries;
+		inherited:?viewSetupFormScript()
+	end,
+	viewLineSpacing: 32,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
+	_proto: @newtLabelInputLine
+};

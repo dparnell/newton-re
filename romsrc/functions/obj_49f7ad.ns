@@ -1,6 +1,0 @@
-@@ 0x49f7ad
-func(a1, a2) begin
-	EntryUndoChanges((a1 := inherited:AddEntry(a1, a2)));
-	a1
-end
-@@end

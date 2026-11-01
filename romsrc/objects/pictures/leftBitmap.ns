@@ -1,0 +1,9 @@
+// A left arrow (a scroll-left button). A 1-bit bitmap frame (bits, bounds) with a mask, 10
+// x 12 pixels. Magic pointer @325. Used by canonicalCharCorrector, globalHeapvarwannabes,
+// part, protoDatepicker.
+
+leftBitmap := {
+	mask: bitmap('mask, "resources/mask/3d5e99.png", "000000000004018d018d00d5019900df", 1),
+	bits: bitmap('bits, "resources/bits/3d5ee5.png", "000000000004001f001f00bb002b00c5", 1),
+	bounds: {left: 0, top: 0, right: 10, bottom: 12}
+};

@@ -1,0 +1,522 @@
+// The Mac OS file browser (@8261): the desktop's folders and files to restore,
+// install or import from, with a popup of the folder path above the list (as a
+// Mac OS Open dialog has), and buttons to do it (labels[2]) or get a file's
+// info.  A folder or disk tapped is opened; the file picked goes to
+// callWhenDone(endpoint, cancelled, whichFiles, file, path).
+
+export69 := {
+	// Small icons by the desktop's item type: 0 desktop, 1 file, 2 folder, 3 disk
+	// and so on (shapes once the slip opens).
+	macIcons: [|Array|:
+		{bits: macIconsBits, bounds: {left: 0, top: 0, right: 18, bottom: 12}},
+		{bits: macIconsBits_2, bounds: {left: 0, top: 0, right: 12, bottom: 12}},
+		{
+			bits: bitmap('bits, "resources/bits/74d3a9.png", "000000000004000000000000000c000c", 1),
+			bounds: {left: 0, top: 0, right: 12, bottom: 12}
+		},
+		{
+			bits: bitmap('bits, "resources/bits/74d425.png", "000000000004000000000000000c000c", 1),
+			bounds: {left: 0, top: 0, right: 12, bottom: 12}
+		},
+		{
+			bits: bitmap('bits, "resources/bits/74d4a1.png", "00000000000400a600a601c800b001d4", 1),
+			bounds: {left: 0, top: 0, right: 12, bottom: 10}
+		},
+		{
+			bits: bitmap('bits, "resources/bits/74d515.png", "00000000000400b500b501c800bf01d1", 1),
+			bounds: {left: 0, top: 0, right: 9, bottom: 10}
+		},
+		{
+			bits: bitmap('bits, "resources/bits/74d589.png", "00000000000400c500c501c800cf01d1", 1),
+			bounds: {left: 0, top: 0, right: 9, bottom: 10}
+		},
+		{
+			bits: bitmap('bits, "resources/bits/74d5fd.png", "00000000000400d500d501c800df01d1", 1),
+			bounds: {left: 0, top: 0, right: 9, bottom: 10}
+		},
+		{
+			bits: bitmap('bits, "resources/bits/74d671.png", "00000000000400e500e501c800ef01d1", 1),
+			bounds: {left: 0, top: 0, right: 9, bottom: 10}
+		},
+		{
+			bits: bitmap('bits, "resources/bits/74d6e5.png", "0000000000040152015201b6015f01c2", 1),
+			bounds: {left: 0, top: 0, right: 12, bottom: 13}
+		}
+	],
+	getinfoButton: nil,
+	// Asks the desktop for the current folder's files (callReadCommand true: with
+	// the path set, 'spth') and lists them, each with its type's icon (an alias in
+	// italics); nil when the desktop sent none.  Commands from the desktop are not
+	// handled meanwhile (checkCommandsInIdle).
+	RebuildFileList: func(a1, callReadCommand) begin
+		fileList.listItems := [Array: ];
+		if aborting then begin
+				return true
+			end;
+		l1 := (if callReadCommand then "spth");
+		checkCommandsInIdle := nil;
+		newFiles := protoContext:GetNewFiles(endpoint, currentPath, l1, func(a1) begin
+			browseFolder:SetNewPath(a1)
+		end);
+		checkCommandsInIdle := true;
+		(if newFiles then begin
+				currentFiles := newFiles;
+				list := [Array: ];
+				fontAscent2 := FontAscent(fileList.viewFont);
+				local l1;
+				local newFiles;
+				local list;
+				local fontAscent2;
+				(foreach item in currentFiles do begin
+						local macIcon, copy, text, list2;
+						macIcon := macIcons[1];
+						if (if (item.type >= 0) then (item.type <= 9)) then begin
+								macIcon := macIcons[item.type]
+							end;
+						copy := DeepClone(macIcon);
+						text := MakeText(item.name, 16, 0, (StrFontWidth(item.name, fileList.viewFont) + 16), fontAscent2);
+						if HasPath(item, 'alias) then begin
+								list2 := [Array: copy, DeepClone(fileList.italicStyle), text]
+							end else begin
+								list2 := [Array: copy, text]
+							end;
+						AddArraySlot(list, list2)
+					end);
+				fileList.listItems := list;
+				fileList:SetupList();
+				if a1 then begin
+						fileList:RedoChildren()
+					end;
+				return true
+			end else return nil)
+	end,
+	doitButton: nil,
+	// Once open: when the start failed (aborting), tells the desktop and closes;
+	// otherwise idles the connection every 2 seconds.
+	viewSetupDoneScript: func() begin
+		if callWhenSetup then begin
+				call callWhenSetup with ()
+			end;
+		(if aborting then begin
+				if (if endpoint.connected then (aborting <> kCommErrRequestCanceled)) then begin
+						protoContext:SendCancelToDesktop(endpoint)
+					end;
+				protoContext:HandleErrorDuringStartup(endpoint, self, aborting);
+				(if endpoint.connected then (if (callWhenDone exists) then call callWhenDone with (endpoint, true, nil, nil, nil)))
+			end else endpoint:StartIdle(self, 2000))
+	end,
+	currentSelection: nil,
+	currentPath: nil,
+	macFile: {bits: macIconsBits_2, bounds: {left: 0, top: 0, right: 12, bottom: 12}},
+	// Ends the connection when the slip was closed some other way.
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self);
+		(if (not aborting) then (if (not closing) then endpoint:ConnectionDone(0)))
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	fileList: nil,
+	// Keeps the connection alive; when the desktop has finished, closes the
+	// browser and tells callWhenDone it was cancelled.
+	viewIdleScript: func() begin
+		local idleConnection;
+		if (if ((idleConnection := endpoint:IdleConnection(checkCommandsInIdle)) = 0) then (not endpoint.closingDown)) then begin
+				closing := true;
+				protoContext:FileBrowserClose(endpoint);
+				if (callWhenDone exists) then begin
+						call callWhenDone with (endpoint, true, nil, nil, nil)
+					end
+			end;
+		return idleConnection
+	end,
+	currentFiles: nil,
+	viewBounds: {left: 0, top: 40, right: 210, bottom: 250},
+	_proto: @protoFloater,
+	browseFolder: nil,
+	currentIndex: nil,
+	currentFolder: nil,
+	checkCommandsInIdle: true,
+	aborting: nil,
+	// An alias is checked with the desktop ('rali', answered 'alir' 1 when it
+	// resolves); an alert when it does not.
+	VerifyAlias: func(currentFile) begin
+		local l1, frame2;
+		l1 := true;
+		if currentFile.alias then begin
+				try begin
+						if HasPath(currentFile, 'whichVol) then begin
+								frame2 := {name: currentFile.name, whichVol: currentFile.whichVol}
+							end else begin
+								frame2 := currentFile.name
+							end;
+						checkCommandsInIdle := nil;
+						endpoint:WriteCommand("rali", frame2, true);
+						l1 := (protoContext:CallReadCommand(endpoint, "alir").data = 1);
+						checkCommandsInIdle := true
+					end onexception |evt.ex| do begin
+						l1 := nil
+					end
+			end;
+		if (not l1) then begin
+				AddDeferredSend(self, 'Notify, [Array: 5, "Dock", "The alias can\u2019\ut be resolved on the desktop."])
+			end;
+		return l1
+	end,
+	// Makes the slip close as it opens: error (-1 when none) is kept in aborting.
+	StopOpen: func(error) begin
+		if (not error) then begin
+				error := -1
+			end;
+		aborting := error;
+		endpoint:StopIdle(self)
+	end,
+	checks: nil,
+	macDesktop: {bits: macIconsBits, bounds: {left: 0, top: 0, right: 18, bottom: 12}},
+	stepAllocateContext: [|Array|:
+		'browseFolder,
+		export69Item,
+		'fileList,
+		export69Item_2,
+		'doitButton,
+		export69Item_3,
+		'getinfoButton,
+		export69Item_4
+	],
+	macOpenFolder: {
+		bits: bitmap('bits, "resources/bits/74eec5.png", "000000000004000000000000000c0012", 1),
+		bounds: {left: 0, top: 0, right: 18, bottom: 12}
+	},
+	closing: nil,
+	// Makes the icons shapes and asks the desktop for the current path ('dpth',
+	// answered 'path').
+	viewSetupFormScript: func() begin
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		self.closing := nil;
+		if IsReadOnly(macIcons) then begin
+				macIcons := Array(Length((macIcons2 := macIcons)), nil);
+				local macIcons2;
+				(foreach key, value in macIcons2 do begin
+						local callReadCommand;
+						macIcons[key] := MakeShape(macIcons2[key])
+					end)
+			end;
+		currentPath := [Array: ];
+		aborting := nil;
+		(try begin
+				endpoint:WriteCommand("dpth", nil, nil);
+				if (not IsArray((callReadCommand := protoContext:CallReadCommand(endpoint, "path")).data)) then begin
+						Throw('|evt.ex.error|, kDockErrDesktopError)
+					end;
+				(currentPath := callReadCommand.data)
+			end onexception |evt.ex| do begin
+				self:StopOpen(CurrentException().error)
+			end)
+	end,
+	stepChildren: [stepChildren:
+		{
+			text: nil,
+			viewBounds: {left: 5, top: 8, right: 200, bottom: 20},
+			viewJustify: vjSiblingBottomV + oneLineOnly,
+			// The kind of file (labels[1]).
+			viewSetupFormScript: func() begin
+				(self.text := labels[1])
+			end,
+			viewFont: @fontSystem10Bold,
+			_proto: @protoStaticText
+		},
+		export69Item,
+		export69Item_2,
+		{
+			// Cancel: tells the desktop ('opca') and closes the browser.
+			buttonClickScript: func() begin
+				closing := true;
+				endpoint:StopIdle(self:parent());
+				protoContext:SendCancelToDesktop(endpoint);
+				protoContext:FileBrowserClose(endpoint);
+				if (callWhenDone exists) then begin
+						call callWhenDone with (endpoint, true, nil, nil, nil)
+					end;
+				inherited:?buttonClickScript()
+			end,
+			_proto: @protoCancelButton
+		},
+		export69Item_3,
+		export69Item_4
+	],
+	macDisk: {
+		bits: bitmap('bits, "resources/bits/74f2a5.png", "000000000004000000000000000c0012", 1),
+		bounds: {left: 0, top: 0, right: 18, bottom: 12}
+	},
+	// The icon for a path item: desktop, open folder, disk or file.
+	GetIcon: func(currentPathItem) begin
+		local macDesktop2;
+		if (currentPathItem.type = 0) then begin
+				macDesktop2 := macDesktop
+			end else begin
+				if (currentPathItem.type = 2) then begin
+						macDesktop2 := macOpenFolder
+					end else begin
+						if (currentPathItem.type = 3) then begin
+								macDesktop2 := macDisk
+							end else begin
+								macDesktop2 := macFile
+							end
+					end
+			end;
+		return macDesktop2
+	end
+};
+
+macIconsBits := bitmap('bits, "resources/bits/74d2b1.png", "000000000004000000000000000c0012", 1);
+
+macIconsBits_2 := bitmap('bits, "resources/bits/74d32d.png", "000000000004000000000000000c000c", 1);
+
+// The path popup: the folders from the current one up.
+export69Item := {
+	// A folder picked: the path is cut back to it and the list made again.
+	labelActionScript: func(index) begin
+		count := Length(labelCommands);
+		local count;
+		(for i := index to (count - 1) do begin
+				labelCommands[(i - index)] := labelCommands[i]
+			end);
+		SetLength(labelCommands, (count - index));
+		SetLength(currentPath, (count - index));
+		fileList:UpdateAndRebuildFileList()
+	end,
+	indent: 0,
+	preAllocatedContext: 'browseFolder,
+	iconBounds: {left: 0, top: 0, right: 16, bottom: 12},
+	// A popup item: name and icon.
+	MakeListItem: func(a1, icon) begin
+		return {item: a1, icon: icon, fixedHeight: 16}
+	end,
+	// Shows a name and icon, re-centred.
+	MyUpdate: func(a1, icon) begin
+		self:UpdateText(a1);
+		self:UpdateIcon(icon);
+		self:ReCenter()
+	end,
+	viewBounds: {left: 0, top: 9, right: 173, bottom: 22},
+	_proto: @protoLabelPicker,
+	// Makes the popup from the path (a1, the desktop's new path, when given).
+	SetNewPath: func(a1) begin
+		if (a1 <> nil) then begin
+				currentPath := a1
+			end;
+		labelCommands := [Array: ];
+		(for i := (Length(currentPath) - 1) to 0 by -1 do begin
+				local l4;
+				AddArraySlot(labelCommands, self:MakeListItem(currentPath[i].name, self:GetIcon(currentPath[i])))
+			end);
+		(if (a1 <> nil) then begin
+				l4 := (Length(currentPath) - 1);
+				browseFolder:MyUpdate(currentPath[l4].name, self:GetIcon(currentPath[l4]))
+			end)
+	end,
+	// The text line's bounds.
+	GetEntryLineBounds: func() begin
+		local copy;
+		(copy := Clone(entryLine.viewBounds)).right := self:LocalBox().right;
+		return copy
+	end,
+	viewJustify: vjBottomV + vjParentCenterH + vjSiblingBottomV + oneLineOnly,
+	checkCurrentItem: nil,
+	savedViewBounds: nil,
+	labelCommands: nil,
+	iconIndent: 2,
+	// Makes the popup the first time.
+	viewSetupFormScript: func() begin
+		if (not savedViewBounds) then begin
+				self:SetNewPath(nil);
+				self.savedViewBounds := Clone(viewBounds)
+			end;
+		self.indent := (StrFontWidth(text, viewFont) + 3);
+		inherited:?viewSetupFormScript()
+	end,
+	// Sizes the popup to its text.
+	ReCenter: func() begin
+		local textBounds, entryLineBounds;
+		textBounds := self:GetTextBounds();
+		SetValue(self, 'viewBounds, textBounds);
+		entryLineBounds := self:GetEntryLineBounds();
+		SetValue(entryLine, 'viewBounds, entryLineBounds)
+	end,
+	// Picked: re-centred.
+	pickActionScript: func(index) begin
+		inherited:?pickActionScript(index);
+		self:ReCenter()
+	end,
+	text: "ﰁ",
+	// Sized to the text.
+	viewSetupChildrenScript: func() begin
+		inherited:?viewSetupChildrenScript();
+		SetValue(self, 'viewBounds, self:GetTextBounds());
+		(entryLine.viewBounds := self:GetEntryLineBounds())
+	end,
+	// As wide as its text, at most as wide as at first.
+	GetTextBounds: func() begin
+		local copy;
+		(copy := Clone(viewBounds)).right := min(savedViewBounds.right, (textIndent + StrFontWidth(entryLine.text, entryLine.viewFont)));
+		return copy
+	end
+};
+
+// The list of files.
+export69Item_2 := {
+	viewBounds: {left: 10, top: 4, right: 200, bottom: 135},
+	// Lists the files; the slip closes when there are none to list.
+	viewSetupFormScript: func() begin
+		if (not self:RebuildFileList(nil, nil)) then begin
+				self:StopOpen(kCommErrRequestCanceled)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewFont: @fontSystem10,
+	// A folder or disk tapped is opened (after checking an alias) and the list made
+	// again; a file is selected and the buttons shown.
+	buttonClickScript: func(a1) begin
+		local currentFile, l2, name, icon, frame2;
+		if (a1 >= Length(currentFiles)) then begin
+				return nil
+			end;
+		l2 := (currentFile := currentFiles[a1]).type;
+		name := currentFile.name;
+		(if ((l2 = 2) or (l2 = 3)) then (if self:VerifyAlias(currentFile) then begin
+					icon := self:GetIcon(currentFile);
+					ArrayInsert(browseFolder.labelCommands, browseFolder:MakeListItem(Clone(name), icon), 0);
+					frame2 := {name: Clone(name), type: l2};
+					if HasPath(currentFile, 'whichVol) then begin
+							frame2.whichVol := currentFile.whichVol
+						end;
+					AddArraySlot(currentPath, frame2);
+					browseFolder:MyUpdate(Clone(name), icon);
+					self:UpdateAndRebuildFileList()
+				end) else begin
+				currentSelection := name;
+				currentIndex := a1;
+				protoContext:ShowIfNotVisible(doitButton);
+				protoContext:ShowIfNotVisible(getinfoButton)
+			end)
+	end,
+	selection: nil,
+	italicStyle: {font: tsSystem + tsSize(10) + tsItalic},
+	useScrollers: true,
+	isShapeList: true,
+	// Makes the list again for the new folder, the buttons hidden.
+	UpdateAndRebuildFileList: func() begin
+		selection := nil;
+		self:SetOrigin(0, 0);
+		(if self:RebuildFileList(true, true) then begin
+				protoContext:HideIfVisible(getinfoButton);
+				protoContext:HideIfVisible(doitButton)
+			end)
+	end,
+	scrollAmounts: [|Array|: 1, 3, 5],
+	viewJustify: vjSiblingBottomV,
+	_proto: @protoTextList,
+	preAllocatedContext: 'fileList
+};
+
+// The do-it button (labels[2]: Restore, Install or Import): hands the file
+// picked and the path to callWhenDone.
+export69Item_3 := {
+	text: nil,
+	// Does it: the file picked (with its volume) and the path passed to
+	// callWhenDone, the browser closed.
+	buttonClickScript: func() begin
+		local currentFile, frame2;
+		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin
+					if HasPath(currentFile, 'whichVol) then begin
+							frame2 := {name: currentFile.name, whichVol: currentFile.whichVol}
+						end else begin
+							frame2 := currentFile.name
+						end;
+					closing := true;
+					protoContext:FileBrowserClose(endpoint);
+					(if (callWhenDone exists) then call callWhenDone with (endpoint, nil, whichFiles, frame2, currentPath))
+				end))
+	end,
+	viewBounds: {top: -18, left: -47, right: -7, bottom: -5},
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Its text, sized to it.
+	viewSetupFormScript: func() begin
+		self.text := labels[2];
+		(self.viewBounds := SetBounds(((viewBounds.right - StrWidth(text)) - 7), viewBounds.top, viewBounds.right, viewBounds.bottom))
+	end,
+	// Hidden until a file is picked.
+	viewSetupDoneScript: func() begin
+		self:Hide();
+		inherited:?viewSetupDoneScript()
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'doitButton
+};
+
+// File Info: asks the desktop for the file's info and shows it.
+export69Item_4 := {
+	text: fileInfo,
+	// File Info: the desktop asked for the file's info.
+	buttonClickScript: func() begin
+		local currentFile, frame2;
+		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin
+					if HasPath(currentFile, 'whichVol) then begin
+							frame2 := {name: currentFile.name, whichVol: currentFile.whichVol}
+						end else begin
+							frame2 := currentFile.name
+						end;
+					checkCommandsInIdle := nil;
+					protoContext:OpenGetInfoDialog(endpoint, frame2, currentSelection, currentPath);
+					AddDeferredCall(func() begin
+						(checkCommandsInIdle := true)
+					end, [Array: ])
+				end))
+	end,
+	viewBounds: {left: -51, top: -18, right: -7, bottom: -5},
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Hidden until a file is picked.
+	viewSetupDoneScript: func() begin
+		self:Hide();
+		inherited:?viewSetupDoneScript()
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'getinfoButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+RebuildFileList_literal4 := same("export69.RebuildFileList.literals[4]");
+
+RebuildFileList_code := same("export69.RebuildFileList.literals[8].instructions");
+
+viewQuitScript_code := same("export69.viewQuitScript.instructions");
+
+viewIdleScript_code_2 := same("export69.viewIdleScript.instructions");
+
+VerifyAlias_code := same("export69.VerifyAlias.instructions");
+
+VerifyAlias_literal4 := same("export69.VerifyAlias.literals[4]");
+
+VerifyAlias_literal6 := same("export69.VerifyAlias.literals[6]");
+
+VerifyAlias_literal9 := same("export69.VerifyAlias.literals[9]");
+
+VerifyAlias_literal15 := same("export69.VerifyAlias.literals[15]");
+
+StopOpen_code := same("export69.StopOpen.instructions");
+
+buttonClickScript_literal9 := same("export69Item_2.buttonClickScript.literals[9]");
+
+viewSetupFormScript_code_3 := same("export69Item_3.viewSetupFormScript.instructions");
+
+viewSetupDoneScript_code_2 := same("export69Item_3.viewSetupDoneScript.instructions");
+
+buttonClickScript_code_4 := same("export69Item_4.buttonClickScript.literals[12].instructions");
+
+viewSetupFormScript_literal12 := same("export69.viewSetupFormScript.literals[12]");
+
+viewSetupFormScript_literal15 := same("export69.viewSetupFormScript.literals[15]");
+
+viewSetupFormScript_code_4 := same("export69.stepChildren[0].viewSetupFormScript.instructions");
+
+buttonClickScript_code_5 := same("export69.stepChildren[3].buttonClickScript.instructions");

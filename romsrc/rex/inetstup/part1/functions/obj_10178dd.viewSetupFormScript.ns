@@ -1,5 +1,0 @@
-@@ 0x1018c59
-func() begin
-	(self.stepChildren := [Array: ])
-end
-@@end

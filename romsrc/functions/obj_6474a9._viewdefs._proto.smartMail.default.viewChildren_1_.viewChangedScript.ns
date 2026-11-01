@@ -1,5 +1,0 @@
-@@ 0x59c889
-func(a1, a2) begin
-	(if (a1 = 'text) then (fields.edited := true))
-end
-@@end

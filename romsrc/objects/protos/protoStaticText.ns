@@ -1,0 +1,19 @@
+// protoStaticText: a read-only paragraph view of one line of text in the
+// bold 9-point system font - a label. Set text (and viewBounds); styles and
+// tabs as for any clParagraphView.
+
+protoStaticText := {
+	viewClass: clParagraphView,
+	viewBounds: nil,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: 0,
+	// one line of text, no wrapping
+	viewJustify: oneLineOnly,
+	viewFont: @fontSystem9Bold,
+	viewTransferMode: modeOr,
+	styles: nil,
+	tabs: nil,
+	// the default text, a string the ROM shares with another object
+	text: uCardPositionAlertButton,
+	debug: 1448480
+};

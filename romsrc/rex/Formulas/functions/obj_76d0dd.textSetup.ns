@@ -1,5 +1,0 @@
-@@ 0x76d349
-func() begin
-	return labelCommands[defaultItem]
-end
-@@end

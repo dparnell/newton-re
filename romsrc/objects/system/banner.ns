@@ -1,0 +1,39 @@
+// banner: a heading for printed and faxed pages (magic pointer @489): its text
+// spread out letter by letter across the width of the view, in 18-point bold
+// Geneva, between two rules (above and below).  The memo print format and the
+// standard fax cover page use it.
+
+banner := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	drawPenSizeX: 1,
+	drawPenSizeY: 2,
+	text: nil,
+	viewFont: tsSimple + tsSize(18) + tsBold,
+	viewFormat: vfNone,
+	// each letter is centred on its share of the width; then a line at the top
+	// and one at the bottom, drawPenSizeX by drawPenSizeY pixels thick
+	viewDrawScript: func() begin
+		len := StrLen(text);
+		box := self:LocalBox();
+		copy := Clone(" ");
+		l4 := (((FontAscent(viewFont) + box.bottom) - FontDescent(viewFont)) div 2);
+		list := Array((len + 2), nil);
+		local len;
+		local box;
+		local copy;
+		local l4;
+		local list;
+		(for i := 0 to (len - 1) do begin
+				local l9;
+				copy[0] := text[i];
+				l9 := (((i * box.right) div len) - ((StrWidth(copy) - (box.right div len)) div 2));
+				list[i] := MakeText(copy, l9, (l4 - 20), box.right, l4)
+			end);
+		i := (box.right - drawPenSizeX);
+		list[len] := MakeLine(0, 0, i, 0);
+		l4 := (box.bottom - drawPenSizeY);
+		list[(len + 1)] := MakeLine(0, l4, i, l4);
+		self:DrawShape(list, {pensize: [Array: drawPenSizeX, drawPenSizeY], font: viewFont})
+	end
+};

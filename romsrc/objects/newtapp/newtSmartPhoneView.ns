@@ -1,0 +1,15 @@
+// newtSmartPhoneView: a phone number input line (newtAreacodePhoneLine) that looks
+// numbers up in the Names soup as the user writes (newtSmartPhoneFilter).  Not in
+// the NPR.
+//
+// This file holds newtSmartPhoneView and what only it reaches.
+
+newtSmartPhoneView := {
+	_proto: @newtAreacodePhoneLine,
+	flavor: @newtSmartPhoneFilter,
+	// what is written is stored and also looked up; memory 'phone: the numbers last
+	// chosen; label: no label text ("")
+	access: 'Query,
+	memory: 'phone,
+	label: uCardPositionAlertButton
+};

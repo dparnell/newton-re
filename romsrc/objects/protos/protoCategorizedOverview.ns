@@ -1,0 +1,231 @@
+// protoCategorizedOverview: an overview list whose items are grouped under
+// collapsible category headings, each item with a checkbox when its finder
+// can select items - the Find slip's list of results (one category per
+// finder, i.e. per application searched).  It draws the whole list as one
+// array of shapes (pieces) rather than as child views.
+//   categoryArray   the categories (finders), each a heading and its items
+//   items           the lines shown: heading frames and item frames
+//   caller          the Find slip that opened it; doUpdates: tell it
+//   lineHeight      the height of a line (14)
+
+protoCategorizedOverview := {
+	// AddCategoryItem(list, heading, skip, room): adds the heading's
+	// category's found items to list, skipping skip, at most room; answers
+	// how many lines it used (the category's AddFoundItems does the work)
+	AddCategoryItem: func(a1, a2, a3, a4) begin
+		a2.category:AddFoundItems(a1, a3, a4)
+	end,
+	// IsThisItemSelected(item): whether item is selected - asked of its
+	// finder if it has the method, else looked up in the finder's selected
+	// array by soup entry (the same _uniqueID on the same store)
+	IsThisItemSelected: compile(
+		constants: {
+			// the test that two entries are one (unique id and store)
+			kFunction_5610a1: func(a1, a2) begin
+				(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
+			end
+		},
+		func(item) begin
+			local frame2, pos;
+			(if item.finder.IsThisItemSelected then item.finder:IsThisItemSelected(item) else begin
+					frame2 := {_uniqueID: item.entryID, _storeID: item.storeID};
+					if item.finder.selected then begin
+							if (pos := ArrayPos(item.finder.selected, frame2, 0, kFunction_5610a1)) then begin
+									return true
+								end
+						end;
+					nil
+				end)
+		end),
+	// GetThisCategoryItem(line): answers the heading of the category the
+	// line belongs to, searching back from the line (l1: found)
+	GetThisCategoryItem: func(a1) begin
+		local l1, l2;
+		l1 := nil;
+		l2 := a1;
+		(while (not l1) do (if items[l2].category then (l1 := true) else (l2 := (l2 - 1))));
+		items[l2]
+	end,
+	// SelectItem(line): toggles the selection of the item on that line (a
+	// selectable item, not a heading) through its finder, then swaps the
+	// checkbox shape in pieces in place - the item's checkbox is the odd
+	// entry of its category's shapes - and redraws
+	SelectItem: func(a1) begin
+		local item, box, shape, thisCategoryItem;
+		(if (if (not (item := items[a1]).category) then GetVariable(item.finder, 'SelectItem)) then begin
+				item.finder:SelectItem(item);
+				(box := self:LocalBox()).bottom := ((box.top := (lineHeight * a1)) + lineHeight);
+				shape := MakeShape((if self:IsThisItemSelected(item) then CheckOn else CheckOff));
+				thisCategoryItem := self:GetThisCategoryItem(a1);
+				pieces[item.listIndex][(((item.itemIndex - thisCategoryItem.skip) * 2) + 1)] := OffsetShape(shape, (box.left + checkBoxHorzOffset), (box.top + checkBoxVertOffset));
+				self:Dirty();
+				RefreshViews()
+			end else self:Dirty())
+	end,
+	checkBoxHorzOffset: 2,
+	// CheckState(entry): 'NotCheckable for a heading or an item whose finder
+	// cannot select, else whether it is checked (the finder's CheckState if
+	// it has one)
+	CheckState: func(indexEntry) begin
+		(if (indexEntry.category or (not GetVariable(indexEntry.finder, 'SelectItem))) then 'NotCheckable else (if GetVariable(indexEntry.finder, 'CheckState) then indexEntry.finder:CheckState(indexEntry) else self:IsThisItemSelected(indexEntry)))
+	end,
+	viewFlags: vVisible + vApplication + vClipping + vClickable,
+	// GetIndexEntry(line): the frame of that line, nil when out of range
+	GetIndexEntry: func(indexEntry) begin
+		(if (if (indexEntry >= 0) then (indexEntry < Length(items))) then items[indexEntry])
+	end,
+	CheckOn: CheckOn,
+	viewBounds: {left: 5, top: 18, right: -5, bottom: -21},
+	_proto: @protoOverview,
+	// Scroller(lines): scrolls by lines (negative: up, never past the top;
+	// down only when there is more below) and rebuilds the list
+	Scroller: func(maxLines) begin
+		if ((maxLines < 0) or moreBelow) then begin
+				scrollOrigin := max((scrollOrigin + maxLines), 0)
+			end;
+		self:RedoChildren()
+	end,
+	lineHeight: 14,
+	viewJustify: vjParentFullH + vjParentFullV,
+	// setAndBump(text, indent, box): answers a text shape for one line in box
+	// (indented by indent) and moves box down a line
+	setAndBump: func(title, a2, a3) begin
+		local text;
+		text := MakeText(title, (a3.left + a2), a3.top, a3.right, (a3.bottom - 2));
+		a3.bottom := ((a3.top := a3.bottom) + lineHeight);
+		text
+	end,
+	// MakeCategoryFrame(finder): answers the heading frame for a finder: its
+	// title up to the first comma (or its owner's title) and its item count
+	MakeCategoryFrame: func(a1) begin
+		cat := {_proto: @protoFindCategory, skip: 0, title: nil, count: 0, category: a1};
+		if a1.title then begin
+				cat.title := Substr(a1.title, 0, StrPos(a1.title, ",", 0))
+			end else begin
+				cat.title := GetVariable(a1.owner, 'title)
+			end;
+		cat.count := a1:count();
+		cat
+	end,
+	CheckOff: CheckOff,
+	// HitItem(line, x, y): sent on a tap a line; unless protoOverview handled
+	// it (a checkbox), a heading is collapsed or expanded, and an item is
+	// shown: the other applications hidden and the Find slip's frontmost-app
+	// button named after its application (with doUpdates), the scroll
+	// position kept for next time, the item shown by its finder and the
+	// overview closed afterwards
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+		local item;
+		if (not inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2)) then begin
+				if (item := items[a1]).category then begin
+						if (item.category.collapsed := (not item.category.collapsed)) then begin
+								scrollOrigin := (((scrollOrigin - item.skip) div scrollAmount) * scrollAmount)
+							end;
+						self:RedoChildren()
+					end else begin
+						if doUpdates then begin
+								caller:HideOtherApps(item.finder.owner);
+								SetValue(caller.radioCluster.frontMostAppRadioButton, 'text, (if item.finder.owner.title then item.finder.owner.title else "Frontmost app"))
+							end;
+						base.savedScrollOrigin := scrollOrigin;
+						caller:ShowItem(item.finder, item);
+						AddDeferredSend(base, 'Close, nil)
+					end
+			end;
+		true
+	end,
+	doUpdates: true,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	checkBoxVertOffset: 2,
+	// before the children are made: builds items and pieces for the lines
+	// that fit, as protoCategoryRoll does (l4 counts down the lines scrolled
+	// off; negative, the items to skip in a category; l3 the room left; l1
+	// the box of the next line; l5 the index in pieces of the current
+	// category's shapes).  Each expanded category adds a shape array of a
+	// checkbox and a title per item.  The decompiler places the locals after
+	// their uses.
+	viewSetupChildrenScript: func() begin
+		l1 := self:LocalBox();
+		self.maxLines := (l1.bottom div lineHeight);
+		l1.bottom := lineHeight;
+		self.scrollAmount := (maxLines - 2);
+		self.pieces := [Array: '{font: tsSystem + tsSize(10) + tsBold}];
+		l2 := [Array: ];
+		l3 := maxLines;
+		l4 := scrollOrigin;
+		l5 := 0;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		(foreach l6 in categoryArray do begin
+				if doUpdates then begin
+						caller:SetStatus(nil)
+					end;
+				l8 := self:MakeCategoryFrame(l6);
+				if (l9 := l6.collapsed) then begin
+						l10 := 0
+					end else begin
+						l10 := l8.count
+					end;
+				if (l4 > 0) then begin
+						if l9 then begin
+								l10 := 0
+							end;
+						if (l10 > l4) then begin
+								l4 := (-l4)
+							end else begin
+								l4 := (l4 - l10)
+							end;
+						if (l4 = 0) then begin
+								l4 := 1
+							end
+					end;
+				if (l4 <= 0) then begin
+						l4 := (-l4);
+						l8.skip := l4;
+						l5 := (l5 + 2);
+						AddArraySlot(l2, l8);
+						AddArraySlot(pieces, self:setAndBump(l8.title, 0, l1));
+						l3 := (l3 - 1);
+						if (not l9) then begin
+								l11 := [Array: ];
+								l3 := (l3 - self:AddCategoryItem(l11, l8, l4, l3));
+								l12 := [Array: '{font: tsSystem + tsSize(9)}];
+								AddArraySlot(pieces, l12);
+								l13 := GetVariable(l6, 'SelectItem);
+								local l8;
+								local l9;
+								local l10;
+								local l11;
+								local l12;
+								local l13;
+								(foreach l14 in l11 do begin
+										local l16;
+										if l13 then begin
+												l16 := MakeShape((if l14.selected then CheckOn else CheckOff));
+												AddArraySlot(l12, OffsetShape(l16, (l1.left + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)));
+												l14.listIndex := l5
+											end;
+										AddArraySlot(l12, self:setAndBump(l14.title, 18, l1))
+									end);
+								ArrayMunger(l2, Length(l2), 0, l11, 0, nil)
+							end else begin
+								l5 := (l5 - 1)
+							end;
+						if (l3 <= 0) then begin
+								break
+							end;
+						l4 := 0
+					end else begin
+						l4 := (l4 - 1)
+					end
+			end);
+		self.moreBelow := (l3 <= 0);
+		self.items := l2;
+		(self.numLines := min(maxLines, Length(items)))
+	end,
+	scrollOrigin: 0,
+	autoDeselect: true
+};

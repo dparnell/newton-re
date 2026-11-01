@@ -1,0 +1,11 @@
+// vProgress, and what only it reaches
+//
+// A layout of protoStatusTemplate's status slips: status text, a progress
+// indicator (protoStatusProgress), a title and the default button. Named
+// 'vProgress by a transport's SetStatusDialog; height in pixels.
+
+vProgress := {
+	height: 132,
+	name: 'vProgress,
+	kids: [|Array|: @protoStatusText, @protoStatusProgress, @protoTitleText, @protoDefaultStatusButton]
+};

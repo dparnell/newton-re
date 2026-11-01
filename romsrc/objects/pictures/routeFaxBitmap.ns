@@ -1,0 +1,7 @@
+// The Action menu icon of Fax. A 1-bit bitmap frame (bits, bounds), 21 x 15 pixels. Magic
+// pointer @515. Used by globalHeapvarwannabes, part, viewRoot.
+
+routeFaxBitmap := {
+	bits: bitmap('bits, "resources/bits/3d5b75.png", "000000000004009f009f00cc00ae00e1", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 15}
+};

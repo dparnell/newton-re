@@ -1,0 +1,4 @@
+// numberFilter: ROM_numberFilter, the protoCharEdit corrector template for a
+// whole number of any length: digits only.
+
+numberFilter := {item: numbers, filters: [|Array|: digits]};

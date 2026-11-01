@@ -1,6 +1,0 @@
-@@ 0x104b35d
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(a1), 'Update);
-	self:DoEvent('ConnectLinkFailure, nil)
-end
-@@end

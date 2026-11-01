@@ -1,5 +1,0 @@
-@@ 0x4b8105
-func() begin
-	self:?TargetData()
-end
-@@end

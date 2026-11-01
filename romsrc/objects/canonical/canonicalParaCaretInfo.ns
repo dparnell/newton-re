@@ -1,0 +1,6 @@
+// canonicalParaCaretInfo, and what only it reaches
+//
+// A paragraph's selection as caret info (src/views/ParagraphView.cpp,
+// GetSelection): class 'paraCaret, the offset and length of the selection.
+
+canonicalParaCaretInfo := {class: 'paraCaret, offset: nil, length: nil};

@@ -1,0 +1,7 @@
+// GetWorksites (@8280): the user's worksites (the 'emporia user configuration),
+// or an empty array.
+
+export88 := func() begin
+	local emporia;
+	(if (emporia := GetUserConfig('emporia)) then return emporia else return '[Array: ])
+end;

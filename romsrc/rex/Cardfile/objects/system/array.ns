@@ -1,0 +1,4 @@
+// An empty array a compiled function holds as a literal (the sample cards' (AddWalletEntries) empty addresses);
+// the layout shares it (layout.tsv's alias lines).
+
+array := [|Array|: ];

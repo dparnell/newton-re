@@ -1,0 +1,7 @@
+// canonicalPopup, and what only it reaches
+//
+// The popup menu DoPopup opens (a protoPicker): its bounds, items, and the
+// context it calls back.  The reconstruction opens a plain picker instead
+// (src/views/ViewNatives.cpp, DEVIATION).
+
+canonicalPopup := {bounds: nil, pickItems: nil, callbackcontext: nil, _proto: @protoPicker};

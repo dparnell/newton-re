@@ -1,0 +1,285 @@
+// newtProtoLineBase, and what only it reaches: the base of NewtApp's labelled
+// input lines (NPR "newtProtoLine"; newtLabelInputLine, newtAreaCodePhoneLine
+// and the others are made from it).  It draws the label, offers the label's
+// picker (labelCommands, plus the items remembered under `memory` and an
+// "Other" item when the filter has a picker), and converts between the
+// target entry's slot (target.(path)) and the line's text through a filter
+// frame cloned from `flavor` (a newtFilter).
+
+newtProtoLineBase := {
+	// NPR: the filter proto (Table 3-1); do not change it in the built-in protos
+	flavor: @newtFilter,
+	// the label's width: where the input part starts
+	indent: nil,
+	viewFormat: 0,
+	viewLineSpacing: 25,
+	usePopup: true,
+	// 'readWrite, 'readOnly, 'pickOnly, 'Query or 'queryOnly (queries the soup as
+	// the user writes)
+	access: 'readWrite,
+	viewFlags: vVisible + vClickable + vStrokesAllowed,
+	// NPR: a symbol naming a list of the last items chosen (GetMemoryItems)
+	memory: nil,
+	// the label picker's last choice
+	lastPicked: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 32},
+	hack: nil,
+	oldLabelCommands: nil,
+	// set from indent: a given indent keeps the label's size
+	dontResizeLabel: nil,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	label: nil,
+	labelBox: nil,
+	height: nil,
+	filter: nil,
+	// NPR: the label picker's items (nil: no picker)
+	labelCommands: nil,
+	// the line's children reach it as baseLine
+	declareSelf: 'baseLine,
+	labelFont: tsSystem + tsSize(9) + tsBold,
+	viewClass: clView,
+	text: uCardPositionAlertButton,
+	pix: nil,
+	// NPR: the index of the picker item to check, if any
+	curLabelCommand: nil,
+	// Command-Return pops up the label's picker
+	_keyCommands: [|Array|:
+		{char: $\u000d, modifiers: kCommandModifier, keyMessage: '_popKeyScript, name: choose, category: nil}
+	],
+	// builds labelCommands: the given items, then the remembered ones, then "Other"
+	// when the filter has a picker; nothing for a read-only line
+	SetupCommands: func() begin
+		local memoryItems;
+		if (access = 'readOnly) then begin
+				return nil
+			end;
+		if (memoryItems := GetMemoryItems(memory)) then begin
+				if (not labelCommands) then begin
+						labelCommands := memoryItems
+					end else begin
+						AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
+						AddArraySlot(labelCommands, memoryItems[0])
+					end
+			end;
+		(if (if labelCommands then filter.picker) then begin
+				AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
+				AddArraySlot(labelCommands, "Other")
+			end)
+	end,
+	// the label's box in global coordinates
+	GlobalLabelBounds: func() begin
+		local offsetRect2;
+		(offsetRect2 := OffsetRect(self:GlobalBox(), labelBox.left, labelBox.top)).right := (offsetRect2.left + (labelBox.right - labelBox.left));
+		offsetRect2.bottom := (offsetRect2.top + (labelBox.bottom - labelBox.top));
+		offsetRect2
+	end,
+	// a line in a read-only or write-protected target view is read-only; makes the
+	// filter, the picker items and the label
+	viewSetupFormScript: func() begin
+		if (if (if (targetView exists) then targetView) then (BAnd(targetView.viewFlags, vReadOnly + vWriteProtected) <> 0)) then begin
+				access := 'readOnly
+			end;
+		(filter := Clone(flavor))._parent := self;
+		filter:?InitFilter();
+		self:SetupCommands();
+		dontResizeLabel := indent;
+		height := FontHeight(labelFont);
+		self:SetLabelText(label)
+	end,
+	// lets the filter clean up
+	viewQuitScript: func() begin
+		filter:?QuitFilter()
+	end,
+	// draws the label text
+	viewDrawScript: func() begin
+		(if pix then self:DrawShape(pix, {font: labelFont}))
+	end,
+	// highlights the label (an inverted round rectangle, fillPattern 5 black) while
+	// the pen is on it
+	viewHiliteScript: func(on) begin
+		self:DrawShape(MakeRoundRect(labelBox.left, labelBox.top, labelBox.right, (labelBox.top + height), 4), '{transferMode: modeXor, penPattern: vfNone, fillPattern: 5});
+		true
+	end,
+	// a tap on the label pops up its picker, the current item checked; a line with
+	// no picker items but a filter picker opens that instead
+	viewStrokeScript: func(unit) begin
+		local labelCommands2;
+		if (if ((((access = 'readWrite) or (access = 'Query)) or (access = 'queryOnly)) or (access = 'pickOnly)) then labelCommands) then begin
+				if self:TrackHilite(unit) then begin
+						if (curLabelCommand = nil) then begin
+								labelCommands2 := labelCommands
+							end else begin
+								(labelCommands2 := Clone(labelCommands))[curLabelCommand] := {item: labelCommands2[curLabelCommand], mark: $\uFC0B} // the check mark
+							end;
+						self:PopupMenu(labelCommands2, {bounds: labelBox})
+					end
+			end else begin
+				if (if filter.picker then (access <> 'readOnly)) then begin
+						if self:TrackHilite(unit) then begin
+								filter:picker()
+							end
+					end
+			end;
+		true
+	end,
+	// Command-Return: the picker as a tap on the label would show it
+	_popKeyScript: func(a1) begin
+		local labelCommands2;
+		if (if ((((access = 'readWrite) or (access = 'Query)) or (access = 'queryOnly)) or (access = 'pickOnly)) then labelCommands) then begin
+				if (curLabelCommand = nil) then begin
+						labelCommands2 := labelCommands
+					end else begin
+						(labelCommands2 := Clone(labelCommands))[curLabelCommand] := {item: labelCommands2[curLabelCommand], mark: $\uFC0B}
+					end;
+				self:PopupMenu(labelCommands2, {bounds: labelBox})
+			end else begin
+				if (if filter.picker then (access <> 'readOnly)) then begin
+						filter:picker()
+					end
+			end;
+		true
+	end,
+	// the target entry changed: nothing here; the input line protos override it
+	Retarget: func() begin
+		nil
+	end,
+	// NPR JamFromEntry(otherEntry): sets the slot from another entry through the
+	// filter (e.g. a name line from a Names entry)
+	jamFromEntry: func(resolveEntryAlias) begin
+		target.(path) := nil;
+		(if resolveEntryAlias then filter:EntryToPath(resolveEntryAlias))
+	end,
+	// a label picker choice: an item with an id is resolved by the filter, the
+	// last item is "Other" when the filter has a picker, else the filter's
+	// ChooseItem may take it; otherwise its text (value or item) replaces the line's
+	pickActionScript: func(index) begin
+		local labelCommand;
+		(if HasPath(labelCommands[index], 'id) then begin
+				filter:ResolveItem(labelCommands[index]);
+				self:hilite(nil)
+			end else (if (if filter.picker then (index = (Length(labelCommands) - 1))) then filter:picker() else (if (not filter:?ChooseItem(index)) then begin
+						if IsFrame((labelCommand := labelCommands[index])) then begin
+								labelCommand := (if labelCommand.value then labelCommand.value else labelCommand.item)
+							end;
+						lastPicked := labelCommand;
+						self:UpdateText(Clone(labelCommand));
+						self:hilite(nil)
+					end)))
+	end,
+	// the picker went away unused: unhighlight the label
+	pickCancelledScript: func() begin
+		self:hilite(nil)
+	end,
+	// NPR UpdateText(newText): sets the line's text (with undo); the input line
+	// protos define it
+	UpdateText: func(a1) begin
+		nil
+	end,
+	// the line as text: the label and the slot's text
+	TextScript: func() begin
+		Stringer([Array: label, " ", (if (if (if target then path) then target.(path)) then filter:PathToText() else "")])
+	end,
+	// makes the label's shape: the text after $\uFC01 (the picker diamond) when it
+	// has a picker and is writable, else after $\uFC02; sizes indent and labelBox
+	// unless dontResizeLabel; returns the label string
+	SetLabelText: func(a1) begin
+		local l1, box;
+		l1 := (if (if (labelCommands or filter.picker) then (access <> 'readOnly)) then Stringer([Array: $\uFC01, a1]) else Stringer([Array: $\uFC02, a1]));
+		if ((not dontResizeLabel) or (not indent)) then begin
+				indent := (StrFontWidth(l1, labelFont) + 6)
+			end;
+		if ((not dontResizeLabel) or (not labelBox)) then begin
+				box := self:LocalBox();
+				labelBox := RelBounds(0, ((viewLineSpacing - FontAscent(labelFont)) - 1), indent, height)
+			end;
+		pix := MakeText(l1, labelBox.left, labelBox.top, labelBox.right, (labelBox.top + FontAscent(labelFont)));
+		l1
+	end,
+	// replaces the picker items (sort; nil: the remembered items) and redraws the
+	// label if they changed
+	SetLabelCommands: func(sort) begin
+		local memoryItems;
+		(if (access <> 'readOnly) then begin
+				if (if (memoryItems := GetMemoryItems(memory)) then (not sort)) then begin
+						sort := memoryItems;
+						if filter.picker then begin
+								AddArraySlot((sort := Clone(sort)), 'pickseparator);
+								AddArraySlot(sort, "Other")
+							end
+					end;
+				(if (sort <> oldLabelCommands) then begin
+						labelCommands := sort;
+						self:SetLabelText(label);
+						self:Dirty();
+						(oldLabelCommands := labelCommands)
+					end)
+			end)
+	end,
+	// a querying line ('Query, 'queryOnly) half a second after the user wrote:
+	// queries the soup with the text; with usePopup the matches become the label's
+	// picker items (a 'queryOnly line takes the first), else the layout goes to the
+	// first match; an empty line gets its normal picker back.  Returns nil: once.
+	viewIdleScript: func() begin
+		local pathToText, preQuery, pathQuery, list, entry, queryItem;
+		(if StrFilled((pathToText := filter:PathToText())) then begin
+				pathQuery := filter:PathQuery((preQuery := filter:PreQuery(pathToText)));
+				if (if usePopup then pathQuery) then begin
+						list := nil;
+						entry := pathQuery:entry();
+						(loop begin
+								if (not entry) then begin
+										break
+									end;
+								if (queryItem := filter:QueryItem(entry, preQuery)) then begin
+										if (not list) then begin
+												list := [Array: ]
+											end;
+										self:?ChangePopup(queryItem, entry);
+										AddArraySlot(list, queryItem)
+									end;
+								(entry := pathQuery:Next())
+							end);
+						if (if list then (access = 'queryOnly)) then begin
+								filter:ResolveItem(list[0])
+							end;
+						if (if list then filter.picker) then begin
+								AddArraySlot(list, 'pickseparator);
+								AddArraySlot(list, "Other")
+							end;
+						self:SetLabelCommands(list)
+					end else begin
+						if pathQuery then begin
+								if (entry := pathQuery:entry()) then begin
+										dataCursor:Goto(entry);
+										self:DoRetarget()
+									end
+							end else begin
+								if (access = 'queryOnly) then begin
+										self:UpdateText("")
+									end
+							end
+					end;
+				nil
+			end else (if (access <> 'readOnly) then begin
+					labelCommands := nil;
+					self:SetupCommands();
+					nil
+				end))
+	end,
+	// the user changed the text: a querying line starts its query timer; a line
+	// that stores (not 'queryOnly) converts the text to the slot's value through
+	// the filter and starts the entry view's flush
+	viewChangedScript: func(slot, view) begin
+		local textToPath;
+		(if (slot = 'text) then begin
+				if ((access = 'Query) or (access = 'queryOnly)) then begin
+						self:SetupIdle(500)
+					end;
+				(if (access <> 'queryOnly) then begin
+						textToPath := filter:TextToPath(view:GetRichString());
+						target.(path) := (if StrFilled(view.text) then textToPath);
+						self:StartFlush()
+					end)
+			end)
+	end
+};

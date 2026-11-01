@@ -1,6 +1,0 @@
-@@ 0x101dd11
-func() begin
-	local l1, l2;
-	(if StrFilled((l2 := target.(path))) then (if (l1 := self:GetIndex(l2)) then labelCommands[l1].item else "<Unrecognized Card>") else "None Selected")
-end
-@@end

@@ -1,6 +1,0 @@
-@@ 0x5b9d91
-func() begin
-	cursor:Reset();
-	self:FillBuffer()
-end
-@@end

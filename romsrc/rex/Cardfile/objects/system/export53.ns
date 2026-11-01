@@ -1,0 +1,17 @@
+// A phone line with a popup of the phone types (@8245), from the global
+// phoneTypes.
+
+export53 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	// The phone classes the popup offers.
+	GetSymArray: func() begin
+		GetGlobals().phoneTypes.phoneClasses
+	end,
+	// Their names.
+	GetTextArray: func() begin
+		GetGlobals().phoneTypes.phoneText
+	end,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
+	_proto: @newtPopupEdit
+};

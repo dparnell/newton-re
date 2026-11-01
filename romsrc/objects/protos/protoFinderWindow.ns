@@ -1,0 +1,620 @@
+// protoFinderWindow: the window of icons (or list items, when overUp is set)
+// of the Extras Drawer and its folders - each child a protoExtrasIcon (or
+// protoExtrasListItem) for an item: a package's part, a soup, a 1.x part. It
+// makes the children for the visible part of the folder's items, keeps the
+// selection (the children's vSelected flag), handles the keyboard navigation
+// keys and type-selection, the highlight gesture, and drops of icons, which
+// reorder or refile them.
+
+protoFinderWindow := {
+	viewClass: clView,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	viewJustify: vjParentFullH + vjParentFullV,
+	// text flags 0xc400, undocumented; 0x4000 marks a view that takes keys
+	// (GetFrontCommandKeyView in src/views/View.h), for the navigation below
+	textFlags: 50176,
+	// set when the window draws on a background picture (protoExtrasIcon then
+	// highlights icons differently)
+	hasBackground: nil,
+	declareSelf: 'iconSpace,
+	// soups never shown as soup icons (the "Storage" folder, '_soups): the system's
+	// own; the soups of packages are added to it when the list is made
+	skipStarter: [|Array|: backupInfo, @metaSoupName, library, extrasSoupName, @systemSoupName, systemAlarmSoup],
+	viewChildren: nil,
+	// HandleNavKey(char, flags, icons): a key of NavKeys (not a command key)
+	// performs its command (shiftCommand with shift) with the selection and the
+	// icon views - with several icons selected only when the key allows it, else
+	// selecting the first or last of them; with none only when NoSelection says
+	// so. Returns true for a navigation key.
+	HandleNavKey: func(char3, flags, childIconViews) begin
+		local char2, selectedIconsAndIndexes, count, l4;
+		(if (if (char3 <> $\00) then (not IsCommandKeystroke(char3, flags))) then (if (char2 := BFetch(NavKeys, char3, '|chr<|, 'char)) then begin
+					count := Length((selectedIconsAndIndexes := self:GetSelectedIconsAndIndexes(childIconViews)).icons);
+					l4 := (if (if (BAnd(flags, kShiftModifier) <> 0) then char2.shiftCommand) then char2.shiftCommand else char2.command);
+					if (count = 1) then begin
+							Perform(self, l4, [Array: selectedIconsAndIndexes, childIconViews])
+						end else begin
+							if (count > 1) then begin
+									if (not char2.noMultiSelect) then begin
+											Perform(self, l4, [Array: selectedIconsAndIndexes, childIconViews])
+										end else begin
+											if (char2.noMultiSelect = 'first) then begin
+													self:ChangeSelection(selectedIconsAndIndexes.icons[0], selectedIconsAndIndexes.icons)
+												end else begin
+													if (char2.noMultiSelect = 'last) then begin
+															self:ChangeSelection(selectedIconsAndIndexes.icons[(count - 1)], selectedIconsAndIndexes.icons)
+														end
+												end
+										end
+								end else begin
+									if char2.NoSelection then begin
+											Perform(self, l4, [Array: selectedIconsAndIndexes, childIconViews])
+										end
+								end
+						end;
+					true
+				end))
+	end,
+	// viewGestureScript(unit, gesture): a highlight gesture selects the icons it
+	// covers (those that can be selected: no sequence or a non-negative one;
+	// list items are checked); a tap on the background deselects all
+	viewgesturescript: func(unit, gesture) begin
+		(if (gesture = aeHilite) then begin
+				self:HiliteViewChildren(unit);
+				self:LockScreen(true);
+				(foreach item in self:GetChildIconViews() do begin
+						local sequence;
+						if (if item.target then item.hilites) then begin
+								RemoveSlot(item, 'hilites);
+								if ((not (sequence := item.target.fentry.sequence)) or (sequence >= 0)) then begin
+										if overUp then begin
+												item:Checkit(true)
+											end else begin
+												item:hilite(true)
+											end
+									end
+							end
+					end);
+				self:LockScreen(nil)
+			end else (if (gesture = aeTap) then self:SelectNone()))
+	end,
+	// viewGetDropDataScript(type, dragRef): what is dropped - this window and
+	// the drag's reference (the entries dragged)
+	viewGetDropDataScript: func(a1, a2) begin
+		{fromFinder: iconSpace, dragRef: a2}
+	end,
+	// viewGetDropTypesScript: only icons can be dropped here
+	viewGetDropTypesScript: func(a1) begin
+		'[Array: icon]
+	end,
+	// NavKey<x>(selection, icons): the navigation commands - selection is
+	// GetSelectedIconsAndIndexes's frame, icons the child icon views. Launch
+	// opens the first selected icon.
+	NavKeyLaunch: func(a1, a2) begin
+		clicker();
+		a1.icons[0]:Launch()
+	end,
+	// NavKeyLeft: selects the icon before the selection, scrolling up from the
+	// first one (unless at the top); with none selected, the last
+	NavKeyLeft: func(a1, a2) begin
+		local l1, l2;
+		(if (Length(a1.icons) > 0) then (if ((l1 := (a1.indexes[0] - 1)) < 0) then (if ((l2 := (if overUp then topIndexText else topIndexIcon)) <> 0) then begin
+						base:viewScrollUpScript();
+						self:ChangeSelection((a2 := self:GetChildIconViews())[(Length(a2) - 1)], nil)
+					end) else self:ChangeSelection(a2[l1], a1.icons)) else self:ChangeSelection(a2[(Length(a2) - 1)], nil))
+	end,
+	// ChangeTagListAndLabels(entry, folder) (shared): files an entry in a folder
+	ChangeTagListAndLabels: ChangeTagListAndLabels,
+	// NavKeyDown: selects the icon a row below, scrolling down past the last row
+	// (to the same column, or the last icon); with none selected, the first
+	NavKeyDown: func(a1, a2) begin
+		local l1, indexe, l3, l4, l5;
+		(if (Length(a1.icons) > 0) then begin
+				l1 := (self:LocalBox().right div hSpacing);
+				(if ((l3 := ((indexe := a1.indexes[0]) + l1)) > (Length(a2) - 1)) then begin
+						l4 := (if overUp then topIndexText else topIndexIcon);
+						base:viewScrollDownScript();
+						l5 := (if overUp then topIndexText else topIndexIcon);
+						a2 := self:GetChildIconViews();
+						(if (l5 <> l4) then self:ChangeSelection(a2[min((indexe mod l1), (Length(a2) - 1))], nil) else self:ChangeSelection(a2[indexe], nil))
+					end else self:ChangeSelection(a2[l3], a1.icons))
+			end else self:ChangeSelection(a2[0], nil))
+	end,
+	// viewKeyDownScript(char, flags): navigation keys, then typing the start of
+	// an icon's name, then the inherited script; returns true when handled
+	viewKeyDownScript: func(char2, flags) begin
+		local childIconViews, l2;
+		if (Length((childIconViews := self:GetChildIconViews())) > 0) then begin
+				l2 := (self:HandleNavKey(char2, flags, childIconViews) or self:HandleTypeSelect(char2, flags, childIconViews))
+			end;
+		if (not l2) then begin
+				l2 := inherited:?viewKeyDownScript(char2, flags)
+			end;
+		l2
+	end,
+	// NavKeyDelete: asks to delete the selection (as a scrub does)
+	NavKeyDelete: func(a1, a2) begin
+		(if self:SetupFakeTarget() then self:DeleteActionScript(nil, self))
+	end,
+	// HandleTypeSelect(char, flags, icons): adds the key to the type-select
+	// string (NewTypeSelectKey) and selects the first icon whose name begins
+	// with it; returns true when the key took part. The `local` line after the
+	// use is the decompiler's layout.
+	HandleTypeSelect: func(char2, flags, childIconViews) begin
+		(if (typeSelectKey := self:NewTypeSelectKey(char2, flags)) then begin
+				local typeSelectKey;
+				(foreach item in childIconViews do begin
+						local shape, data, fentry;
+						if (shape := item.shape) then begin
+								if overUp then begin
+										data := shape[1].data
+									end else begin
+										data := shape[(Length(shape) - 1)][0].data
+									end
+							end else begin
+								data := (fentry := item.target.fentry).text;
+								if IsSoupEntry(fentry) then begin
+										EntryUndoChanges(fentry)
+									end
+							end;
+						if BeginsWith(data, typeSelectKey) then begin
+								self:ChangeSelection(item, childIconViews);
+								break
+							end
+					end);
+				true
+			end)
+	end,
+	// SetupFakeTarget(): makes the selection the target of a delete or routing
+	// action - nil (nothing) here; the Extras Drawer overrides it
+	SetupFakeTarget: func() begin
+		nil
+	end,
+	// NavKeyUp: selects the icon a row above, scrolling up from the first row
+	// (to the same column of the last row); with none selected, the last
+	NavKeyUp: func(a1, a2) begin
+		local l1, indexe, l3, l4, count, most;
+		(if (Length(a1.icons) > 0) then begin
+				l1 := (self:LocalBox().right div hSpacing);
+				(if ((l3 := ((indexe := a1.indexes[0]) - l1)) < 0) then (if ((l4 := (if overUp then topIndexText else topIndexIcon)) <> 0) then begin
+							base:viewScrollUpScript();
+							most := max(((count := Length((a2 := self:GetChildIconViews()))) - l1), 0);
+							self:ChangeSelection(a2[min((most + (indexe mod l1)), (count - 1))], nil)
+						end) else self:ChangeSelection(a2[l3], a1.icons))
+			end else self:ChangeSelection(a2[(Length(a2) - 1)], nil))
+	end,
+	// viewDropScript(type, dropFrame, point): icons dropped in the window. From
+	// another window (an external drop) they are filed in the folder shown (with
+	// a store filter, those on other stores are left and the user told so);
+	// in "All Icons" they are only filed - icons there are in name order, so a
+	// drop from this window is refused with a notice. Otherwise the drop point
+	// gives the place: the dropped entries get the sequence numbers after the
+	// icon left of the point, and the entries after them are renumbered (from a
+	// query for an external drop, else the icons shown after the place). Ends
+	// with a soup change notice for the Extras Drawer's soup "Packages".
+	viewDropScript: compile(
+		constants: {
+			kLiteral_5a74d1: "Packages"
+		},
+		func(a1, a2, a3) begin
+			local v6_ttssssssssss, v7_pooooooo, v9_yyyyxxxxxxxxxxxxx, v10_wwwwvvvvvvvvvvvvvvv, v12_jiiii, v13_yyyyyyyyyyyyyyxxxx, v14_yxxxxxxxxxxxxx, v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy, v21_zzzzzzzzzzzzyyyyyyy, v22_zzzyyyyy, v24_yyyyyyyxxxxxxxxxxxxxxxxxxxx, v25_xxxxxxxxxxxxxxxxxwwwwww, v26_wwwwwwwwwwwwwwwwwww, v27_vvvvvvvvvvvvvuu, v28_tttttttttts, v29_zzzzzzzzzzzzzzzzzzzyyyyy, v30_zzzzzzzzzzzzzzzzzzzy, v31_zzyyy, v32_yyyyyyyxxxxxxxxxxxx;
+			v21_zzzzzzzzzzzzyyyyyyy := a2.dragRef.droppedEntries;
+			v22_zzzyyyyy := (iconSpace <> a2.fromFinder);
+			a2.dragRef.externalDrop := v22_zzzyyyyy;
+			if (if v22_zzzyyyyy then storesFilter) then begin
+					v28_tttttttttts := Length(v21_zzzzzzzzzzzzyyyyyyy);
+					// looks like a ROM bug: removing elements from the array being iterated
+					// over shifts the next one into the slot just visited, so of two entries
+					// in a row on another store the second is kept
+					(foreach v8_zyy, v16_ttttts in v21_zzzzzzzzzzzzyyyyyyy do begin
+							if (EntryStore(v16_ttttts) <> storesFilter) then begin
+									RemoveSlot(v21_zzzzzzzzzzzzyyyyyyy, v8_zyy)
+								end
+						end);
+					if (Length(v21_zzzzzzzzzzzzyyyyyyy) < v28_tttttttttts) then begin
+							if (Length(v21_zzzzzzzzzzzzyyyyyyy) > 0) then begin
+									v25_xxxxxxxxxxxxxxxxxwwwwww := "Some of the icons were not moved. Select \u201C\uAll Stores\u201D\u from the folder tab in the Extras Drawer and try again."
+								end else begin
+									if (v28_tttttttttts > 1) then begin
+											v25_xxxxxxxxxxxxxxxxxwwwwww := "The icons were not moved. Select \u201C\uAll Stores\u201D\u from the folder tab in the Extras Drawer and try again."
+										end else begin
+											v25_xxxxxxxxxxxxxxxxxwwwwww := "The icon was not moved. Select \u201C\uAll Stores\u201D\u from the folder tab in the Extras Drawer and try again."
+										end
+								end;
+							self:Notify(kNotifyAlert, title, v25_xxxxxxxxxxxxxxxxxwwwwww);
+							if (Length(v21_zzzzzzzzzzzzyyyyyyy) = 0) then begin
+									return nil
+								end
+						end
+				end;
+			v6_ttssssssssss := (if (labelsFilter <> '_all) then labelsFilter);
+			(if (labelsFilter = '_all) then (if v22_zzzyyyyy then begin
+						(foreach v16_ttttts in v21_zzzzzzzzzzzzyyyyyyy do begin
+								self:ChangeTagListAndLabels(v16_ttttts, v6_ttssssssssss);
+								EntryChange(v16_ttttts)
+							end);
+						XmitSoupChange(kLiteral_5a74d1, 'ExtrasDrawer, 'whatThe, nil)
+					end else self:Notify(kNotifyAlert, title, "You may not reorder icons while viewing \u201C\uAll Icons.\u201D\u They are arranged alphabetically by name.")) else begin
+					v30_zzzzzzzzzzzzzzzzzzzy := ((v9_yyyyxxxxxxxxxxxxx := Length((v26_wwwwwwwwwwwwwwwwwww := iconSpace:GetChildIconViews()))) - 1);
+					v13_yyyyyyyyyyyyyyxxxx := a3.x;
+					v31_zzyyy := a3.y;
+					(foreach v8_zyy, v18_vvvvvvvvvvuuuuuu in v26_wwwwwwwwwwwwwwwwwww do begin
+							v29_zzzzzzzzzzzzzzzzzzzyyyyy := v18_vvvvvvvvvvuuuuuu:GlobalBox();
+							if (if (v31_zzyyy > v29_zzzzzzzzzzzzzzzzzzzyyyyy.top) then (v31_zzyyy <= v29_zzzzzzzzzzzzzzzzzzzyyyyy.bottom)) then begin
+									v27_vvvvvvvvvvvvvuu := v29_zzzzzzzzzzzzzzzzzzzyyyyy.left;
+									v7_pooooooo := v29_zzzzzzzzzzzzzzzzzzzyyyyy.right;
+									v24_yyyyyyyxxxxxxxxxxxxxxxxxxxx := ((v27_vvvvvvvvvvvvvuu + v7_pooooooo) div 2);
+									if (if (v27_vvvvvvvvvvvvvuu < v13_yyyyyyyyyyyyyyxxxx) then (v13_yyyyyyyyyyyyyyxxxx <= v24_yyyyyyyxxxxxxxxxxxxxxxxxxxx)) then begin
+											v30_zzzzzzzzzzzzzzzzzzzy := (v8_zyy - 1);
+											break
+										end else begin
+											if (if (v24_yyyyyyyxxxxxxxxxxxxxxxxxxxx < v13_yyyyyyyyyyyyyyxxxx) then (v13_yyyyyyyyyyyyyyxxxx <= v7_pooooooo)) then begin
+													v30_zzzzzzzzzzzzzzzzzzzy := v8_zyy;
+													break
+												end
+										end
+								end
+						end);
+					(while (if (v30_zzzzzzzzzzzzzzzzzzzy > 0) then (not v26_wwwwwwwwwwwwwwwwwww[v30_zzzzzzzzzzzzzzzzzzzy].target.fentry.sequence)) do (v30_zzzzzzzzzzzzzzzzzzzy := (v30_zzzzzzzzzzzzzzzzzzzy - 1)));
+					if (v30_zzzzzzzzzzzzzzzzzzzy > 0) then begin
+							v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy := (v32_yyyyyyyxxxxxxxxxxxx := v26_wwwwwwwwwwwwwwwwwww[v30_zzzzzzzzzzzzzzzzzzzy].target.fentry).sequence
+						end else begin
+							if (if (v9_yyyyxxxxxxxxxxxxx > 0) then v26_wwwwwwwwwwwwwwwwwww[0].target.fentry.sequence) then begin
+									v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy := (v26_wwwwwwwwwwwwwwwwwww[0].target.fentry.sequence - 1)
+								end else begin
+									v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy := -1
+								end
+						end;
+					if (v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy < -1) then begin
+							v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy := -1;
+							v32_yyyyyyyxxxxxxxxxxxx := nil
+						end;
+					v10_wwwwvvvvvvvvvvvvvvv := v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy;
+					(foreach v16_ttttts in v21_zzzzzzzzzzzzyyyyyyy do begin
+							if v22_zzzyyyyy then begin
+									self:ChangeTagListAndLabels(v16_ttttts, v6_ttssssssssss)
+								end;
+							v16_ttttts.sequence := (v10_wwwwvvvvvvvvvvvvvvv := (v10_wwwwvvvvvvvvvvvvvvv + 1));
+							EntryChange(v16_ttttts)
+						end);
+					if v22_zzzyyyyy then begin
+							if (v12_jiiii := (if storesFilter then storesFilter:GetSoup(kLiteral_5a74d1) else GetUnionSoup(kLiteral_5a74d1))) then begin
+									v14_yxxxxxxxxxxxxx := v12_jiiii:Query(self:GetQuerySpec(v6_ttssssssssss));
+									if v32_yyyyyyyxxxxxxxxxxxx then begin
+											v14_yxxxxxxxxxxxxx:Goto(v32_yyyyyyyxxxxxxxxxxxx);
+											v14_yxxxxxxxxxxxxx:Next()
+										end else begin
+											v14_yxxxxxxxxxxxxx:GotoKey((v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy + 1))
+										end;
+									(foreach v16_ttttts in MapCursor(v14_yxxxxxxxxxxxxx, nil) do begin
+											if (if (if (if v16_ttttts.sequence then (v16_ttttts.sequence >= 0)) then (not SetContains(v21_zzzzzzzzzzzzyyyyyyy, v16_ttttts))) then (not EntryStore(v16_ttttts):IsReadOnly())) then begin
+													v16_ttttts.sequence := (v10_wwwwvvvvvvvvvvvvvvv := (v10_wwwwvvvvvvvvvvvvvvv + 1));
+													EntryChange(v16_ttttts)
+												end
+										end)
+								end;
+							GetRoot().buttons.saturationCheck := true
+						end else begin
+							(for v8_zyy := (v30_zzzzzzzzzzzzzzzzzzzy + 1) to (v9_yyyyxxxxxxxxxxxxx - 1) do begin
+									if (if (if (if (v16_ttttts := v26_wwwwwwwwwwwwwwwwwww[v8_zyy].target.fentry).sequence then (v16_ttttts.sequence >= 0)) then (not SetContains(v21_zzzzzzzzzzzzyyyyyyy, v16_ttttts))) then (not EntryStore(v16_ttttts):IsReadOnly())) then begin
+											v16_ttttts.sequence := (v10_wwwwvvvvvvvvvvvvvvv := (v10_wwwwvvvvvvvvvvvvvvv + 1));
+											EntryChange(v16_ttttts)
+										end
+								end)
+						end;
+					XmitSoupChange(kLiteral_5a74d1, 'ExtrasDrawer, 'whatThe, nil)
+				end)
+		end),
+	// GetSelectedIconsAndIndexes(icons): {icons, indexes} of the selected icon
+	// views (vSelected set) and where they are in icons
+	GetSelectedIconsAndIndexes: func(childIconViews) begin
+		list := [Array: ];
+		list2 := [Array: ];
+		local list;
+		local list2;
+		(foreach key, value in childIconViews do begin
+				if (BAnd(GetViewFlags(value), vSelected) <> 0) then begin
+						AddArraySlot(list, value);
+						AddArraySlot(list2, key)
+					end
+			end);
+		{icons: list, indexes: list2}
+	end,
+	// NavKeyRight: selects the icon after the selection, scrolling down from the
+	// last one (to the first icon if it scrolled); with none selected, the first
+	NavKeyRight: func(a1, a2) begin
+		local l1, l2, l3;
+		(if (Length(a1.icons) > 0) then (if ((l1 := (a1.indexes[0] + 1)) > (Length(a2) - 1)) then begin
+					l2 := (if overUp then topIndexText else topIndexIcon);
+					base:viewScrollDownScript();
+					l3 := (if overUp then topIndexText else topIndexIcon);
+					a2 := self:GetChildIconViews();
+					(if (l3 <> l2) then self:ChangeSelection(a2[0], nil) else self:ChangeSelection(a2[(Length(a2) - 1)], nil))
+				end else self:ChangeSelection(a2[l1], a1.icons)) else self:ChangeSelection(a2[0], nil))
+	end,
+	// SelectNone(): deselects (unchecks, in the list view) every icon
+	SelectNone: func() begin
+		self:LockScreen(true);
+		(foreach item in self:GetChildIconViews() do begin
+				if (BAnd(GetViewFlags(item), vSelected) <> 0) then begin
+						if overUp then begin
+								item:Checkit(nil)
+							end else begin
+								item:hilite(nil)
+							end
+					end
+			end);
+		self:LockScreen(nil)
+	end,
+	// the navigation keys, sorted by character (HandleNavKey searches them):
+	// enter (3), backspace (8), tab (9, shift-tab going left), return (13) and
+	// the arrows left, right, up and down (0x1c-0x1f). noMultiSelect: with
+	// several selected, nil runs the command, 'first or 'last only selects that
+	// one; NoSelection: whether the command runs with nothing selected
+	NavKeys: [|Array|:
+		{char: $\u0003, command: 'NavKeyLaunch, noMultiSelect: 'first, NoSelection: nil},
+		{char: $\u0008, command: 'NavKeyDelete, noMultiSelect: nil, NoSelection: nil},
+		{
+			char: $\u0009,
+			command: 'NavKeyRight,
+			noMultiSelect: 'last,
+			NoSelection: true,
+			shiftCommand: 'NavKeyLeft
+		},
+		{char: $\u000d, command: 'NavKeyLaunch, noMultiSelect: 'first, NoSelection: nil},
+		{char: $\u001c, command: 'NavKeyLeft, noMultiSelect: 'first, NoSelection: true},
+		{char: $\u001d, command: 'NavKeyRight, noMultiSelect: 'last, NoSelection: true},
+		{char: $\u001e, command: 'NavKeyUp, noMultiSelect: 'first, NoSelection: true},
+		{char: $\u001f, command: 'NavKeyDown, noMultiSelect: 'last, NoSelection: true}
+	],
+	// ChangeSelection(select, deselect): deselects the icon or icons of
+	// deselect and selects those of select (checking them in the list view),
+	// with the screen locked in between
+	ChangeSelection: func(a1, a2) begin
+		self:LockScreen(true);
+		if overUp then begin
+				if IsArray(a2) then begin
+						(foreach l1 in a2 do begin
+								l1:Checkit(nil)
+							end)
+					end else begin
+						if a2 then begin
+								a2:Checkit(nil)
+							end
+					end;
+				if IsArray(a1) then begin
+						(foreach l1 in a1 do begin
+								l1:Checkit(true)
+							end)
+					end else begin
+						if a1 then begin
+								a1:Checkit(true)
+							end
+					end
+			end else begin
+				if IsArray(a2) then begin
+						(foreach l1 in a2 do begin
+								l1:hilite(nil)
+							end)
+					end else begin
+						if a2 then begin
+								a2:hilite(nil)
+							end
+					end;
+				if IsArray(a1) then begin
+						(foreach l1 in a1 do begin
+								l1:hilite(true)
+							end)
+					end else begin
+						if a1 then begin
+								a1:hilite(true)
+							end
+					end
+			end;
+		self:LockScreen(nil)
+	end,
+	// GetSelectedIcons(): the selected icon views
+	GetSelectedIcons: func() begin
+		list := [Array: ];
+		local list;
+		(foreach item in self:GetChildIconViews() do begin
+				if (BAnd(GetViewFlags(item), vSelected) <> 0) then begin
+						AddArraySlot(list, item)
+					end
+			end);
+		list
+	end,
+	// viewDropApproveScript(view): any view may take a drop from here
+	viewDropApproveScript: func(a1) begin
+		return a1
+	end,
+	// viewSetupChildrenScript: lays out the icons (or the list, when overUp) -
+	// spacing from the screen width or the user's settings; when needsRecalc
+	// is 'all, first remakes folderItems: an item for each entry of the
+	// "Packages" soups of the stores shown, in the folder shown, except the
+	// blessed (backdrop) application and the button bar's own (each marked not
+	// active when its package is frozen or missing), sorted by sequence; in the
+	// "Storage" folder an icon for each soup too; and the 1.x parts. Then makes
+	// a child for each item visible from the scroll position, and has the
+	// window resize to its rows when their number changed.
+	viewSetupChildrenScript: func() begin
+		local v5_xxxxxxxxxxxxxxxxxxxxxwww, v7_xxxwwwwwwwwwwwwwwwww, v8_zyy, v9_zzzzzzzzyyyyyyyy, v10_qqqqq, v11_wwwwwwwwwwwwwwwwwwwwwww, v13_yyyxxxxxxxxxxxxxxxxxxxxxx, v18_kkkjj, v22_wwwwwwwwww, v23_zzzzzzzzzzzzzzzzzzzzzy, v24_tttttt, v25_llll, v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww, v29_ppppoo, v30_wwwwwwwwwwwwwwwwwwwvvvvv, v32_zzzzzzzzzzzzzzzzzzyyyyyyy, v33_vvvuuuuuu, v34_zzzzzzzzyyyyyyyyyyyyy, v35_qqppp, v36_yyyyyyyyyyyyyyyxx, v39_uuuuuuutttttttt, v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, v41_ssssssssrrr, v42_xxxxxxxxxxxxxxxxxxwwwww, v43_nnnnnmm, v44_wwwwwwwwwwwwwwwwwww, v45_yy, v47_yxxxxxxxxxxxxxxx, v48_ttttttttsss, v50_wwwwwwwwwwwvvvvvvvvvvvvvv, v51_vvvvvvuu, v53_ttttttttsssss, v54_zzzzzyyyyyyyyyyyyyy, v55_wwwvvvvvvvvvvvvvvv, v56_yxxxxxxxxxxxxxxxxxx, v57_uuuuuuuuuttttt;
+		v55_wwwvvvvvvvvvvvvvvv := (if (v56_yxxxxxxxxxxxxxxxxxx := GetRoot().buttons.visibleItems) then (foreach v17_wwwwwwwwwvvvvvvvv in v56_yxxxxxxxxxxxxxxxxxx collect v17_wwwwwwwwwvvvvvvvv.fentry) else '[Array: ]);
+		v44_wwwwwwwwwwwwwwwwwww := userConfiguration.blessedapp;
+		v57_uuuuuuuuuttttt := self:LocalBox();
+		if overUp then begin
+				v11_wwwwwwwwwwwwwwwwwwwwwww := baseListSmall;
+				hSpacing := v57_uuuuuuuuuttttt.right;
+				vSpacing := 16;
+				v39_uuuuuuutttttttt := topIndexText
+			end else begin
+				if ((v29_ppppoo := displayParams.appAreaWidth) <= 240) then begin
+						v11_wwwwwwwwwwwwwwwwwwwwwww := baseIconSmall:GetAdjustedProto();
+						hSpacing := 46;
+						vSpacing := 51
+					end else begin
+						v11_wwwwwwwwwwwwwwwwwwwwwww := baseIcon:GetAdjustedProto();
+						hSpacing := 64;
+						vSpacing := 52
+					end;
+				if (v45_yy := GetUserConfig('extrasIconSpacingH)) then begin
+						hSpacing := v45_yy
+					end;
+				if (v25_llll := GetUserConfig('extrasIconSpacingV)) then begin
+						vSpacing := v25_llll
+					end;
+				hSpacing := (v29_ppppoo div (v29_ppppoo div hSpacing));
+				v39_uuuuuuutttttttt := topIndexIcon
+			end;
+		// the rows that fit (13 and 50: the room taken by the folder tab and the
+		// buttons, presumably), and the columns
+		v36_yyyyyyyyyyyyyyyxx := ((v35_qqppp := ((displayParams.appAreaHeight - 13) - 50)) div vSpacing);
+		v53_ttttttttsssss := (v57_uuuuuuuuuttttt.right div hSpacing);
+		if (needsRecalc = 'all) then begin
+				if (if storesFilter then (not storesFilter:IsValid())) then begin
+						storesFilter := nil
+					end;
+				v43_nnnnnmm := (if (if storesFilter then (labelsFilter <> '_soups)) then [Array: storesFilter] else GetValidStores());
+				v32_zzzzzzzzzzzzzzzzzzyyyyyyy := [Array: ];
+				(foreach v28_wwwwvvvvvvvvvvvvv in v43_nnnnnmm do begin
+						if (v4_ttttssssssss := v28_wwwwvvvvvvvvvvvvv:GetSoup("Packages")) then begin
+								AddArraySlot(v32_zzzzzzzzzzzzzzzzzzyyyyyyy, v4_ttttssssssss)
+							end
+					end);
+				v9_zzzzzzzzyyyyyyyy := 0;
+				if (Length(v32_zzzzzzzzzzzzzzzzzzyyyyyyy) > 0) then begin
+						v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx := Array(13, nil);
+						(foreach v15_xxxxxxxxxxwwwwwwwwwww in v32_zzzzzzzzzzzzzzzzzzyyyyyyy do begin
+								v22_wwwwwwwwww := v15_xxxxxxxxxxwwwwwwwwwww:Query('{indexPath: packageName, tagspec: {none: _frozen, all: _package}});
+								v30_wwwwwwwwwwwwwwwwwwwvvvvv := (v23_zzzzzzzzzzzzzzzzzzzzzy := v15_xxxxxxxxxxwwwwwwwwwww:Query(self:GetQuerySpec(labelsFilter))):entry();
+								(while v30_wwwwwwwwwwwwwwwwwwwvvvvv do begin
+										if (v30_wwwwwwwwwwwwwwwwwwwvvvvv.app <> v44_wwwwwwwwwwwwwwwwwww) then begin
+												if (v47_yxxxxxxxxxxxxxxx := ((v30_wwwwwwwwwwwwwwwwwwwvvvvv.labels <> '_buttonBar) or (not SetContains(v55_wwwvvvvvvvvvvvvvvv, v30_wwwwwwwwwwwwwwwwwwwvvvvv)))) then begin
+														v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww := nil;
+														if v30_wwwwwwwwwwwwwwwwwwwvvvvv.packageName then begin
+																try begin
+																		v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww := (if (if (v34_zzzzzzzzyyyyyyyyyyyyy := v22_wwwwwwwwww:GotoKey(v30_wwwwwwwwwwwwwwwwwwwvvvvv.packageName)) then StrEqual(v22_wwwwwwwwww:EntryKey(), v30_wwwwwwwwwwwwwwwwwwwvvvvv.packageName)) then (not IsPackageActive(v34_zzzzzzzzyyyyyyyyyyyyy.pkgRef)))
+																	end onexception |evt.ex| do begin
+																		v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww := true
+																	end
+															end;
+														v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx[v9_zzzzzzzzyyyyyyyy] := {_proto: @extraProtos.(v30_wwwwwwwwwwwwwwwwwwwvvvvv.class), fentry: v30_wwwwwwwwwwwwwwwwwwwvvvvv, notActive: v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww};
+														if ((v9_zzzzzzzzyyyyyyyy := (v9_zzzzzzzzyyyyyyyy + 1)) >= Length(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx)) then begin
+																SetLength(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, (Length(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx) + 13))
+															end
+													end
+											end;
+										(v30_wwwwwwwwwwwwwwwwwwwvvvvv := v23_zzzzzzzzzzzzzzzzzzzzzy:Next())
+									end)
+							end);
+						SetLength(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, v9_zzzzzzzzyyyyyyyy);
+						if (if (Length(v32_zzzzzzzzzzzzzzzzzzyyyyyyy) > 1) then (not overUp)) then begin
+								InsertionSort(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, '|<|, 'fentry.sequence)
+							end
+					end else begin
+						v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx := [Array: ]
+					end;
+				if (labelsFilter = '_soups) then begin
+						v18_kkkjj := Clone(skipStarter);
+						(foreach v38_yxxxxxxxxxxxx in v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx do begin
+								if v38_yxxxxxxxxxxxx.fentry.soupNames then begin
+										(foreach v4_ttttssssssss in v38_yxxxxxxxxxxxx.fentry.soupNames do begin
+												BInsert(v18_kkkjj, v4_ttttssssssss, '|str<|, nil, true)
+											end)
+									end
+							end);
+						(foreach v28_wwwwvvvvvvvvvvvvv in (if storesFilter then [Array: storesFilter] else GetValidStores()) do begin
+								(foreach v4_ttttssssssss in v28_wwwwvvvvvvvvvvvvv:GetSoupNames() do begin
+										if (if (not BeginsWith(v4_ttttssssssss, "BACKUP_")) then (not EndsWith(v4_ttttssssssss, ":RS71A"))) then begin
+												if BInsert(v18_kkkjj, v4_ttttssssssss, '|str<|, nil, true) then begin
+														v13_yyyxxxxxxxxxxxxxxxxxxxxxx := v4_ttttssssssss;
+														if (if (v54_zzzzzyyyyyyyyyyyyyy := GetSoupDef(v4_ttttssssssss)) then StrFilled(v54_zzzzzyyyyyyyyyyyyyy.userName)) then begin
+																v13_yyyxxxxxxxxxxxxxxxxxxxxxx := v54_zzzzzyyyyyyyyyyyyyy.userName
+															end;
+														v30_wwwwwwwwwwwwwwwwwwwvvvvv := self:MakeIconEntry('SoupEntry, {text: v13_yyyxxxxxxxxxxxxxxxxxxxxxx, soupNames: [Array: v4_ttttssssssss]});
+														AddArraySlot(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, {_proto: @extraProtos.SoupEntry, fentry: v30_wwwwwwwwwwwwwwwwwwwvvvvv})
+													end
+											end
+									end)
+							end)
+					end;
+				(foreach v21_wwwwwwwwwwwwwwwwwwwwwwwvvvv in |Parts1.x| do begin
+						if ((v21_wwwwwwwwwwwwwwwwwwwwwwwvvvv.labels = labelsFilter) or (labelsFilter = '_all)) then begin
+								v38_yxxxxxxxxxxxx := {_proto: @extraProtos.(v21_wwwwwwwwwwwwwwwwwwwwwwwvvvv.class), fentry: v21_wwwwwwwwwwwwwwwwwwwwwwwvvvv};
+								if ((not storesFilter) or (storesFilter = v38_yxxxxxxxxxxxx:store())) then begin
+										AddArraySlot(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, v38_yxxxxxxxxxxxx)
+									end
+							end
+					end);
+				folderItems := v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx
+			end;
+		v51_vvvvvvuu := (folderItemsLen := Length(folderItems));
+		if (v39_uuuuuuutttttttt > v51_vvvvvvuu) then begin
+				v39_uuuuuuutttttttt := 0;
+				topIndexIcon := 0;
+				topIndexText := 0
+			end;
+		v7_xxxwwwwwwwwwwwwwwwww := min((v36_yyyyyyyyyyyyyyyxx * v53_ttttttttsssss), (v51_vvvvvvuu - v39_uuuuuuutttttttt));
+		if (overUp or (labelsFilter = '_all)) then begin
+				StableSort(folderItems, '|str<|, 'fentry.text)
+			end;
+		visibleItems := (if (v7_xxxwwwwwwwwwwwwwwwww = v51_vvvvvvuu) then folderItems else begin
+				(for v6_ppoooooo := 0 to (v39_uuuuuuutttttttt - 1) do begin
+						if IsSoupEntry((v42_xxxxxxxxxxxxxxxxxxwwwww := folderItems[v6_ppoooooo].fentry)) then begin
+								EntryUndoChanges(v42_xxxxxxxxxxxxxxxxxxwwwww)
+							end
+					end);
+				(for v6_ppoooooo := (v39_uuuuuuutttttttt + v7_xxxwwwwwwwwwwwwwwwww) to (v51_vvvvvvuu - 1) do begin
+						if IsSoupEntry((v42_xxxxxxxxxxxxxxxxxxwwwww := folderItems[v6_ppoooooo].fentry)) then begin
+								EntryUndoChanges(v42_xxxxxxxxxxxxxxxxxxwwwww)
+							end
+					end);
+				ArrayMunger([Array: ], 0, 0, folderItems, v39_uuuuuuutttttttt, v7_xxxwwwwwwwwwwwwwwwww)
+			end);
+		viewChildren := nil;
+		viewChildren := Array(v7_xxxwwwwwwwwwwwwwwwww, nil);
+		v50_wwwwwwwwwwwvvvvvvvvvvvvvv := ((v57_uuuuuuuuuttttt.right mod hSpacing) >> 1);
+		v48_ttttttttsss := (v53_ttttttttsssss * hSpacing);
+		v33_vvvuuuuuu := v50_wwwwwwwwwwwvvvvvvvvvvvvvv;
+		v8_zyy := 1;
+		v24_tttttt := 0;
+		if (v44_wwwwwwwwwwwwwwwwwww = 'ExtrasDrawer) then begin
+				v24_tttttt := ((v41_ssssssssrrr := (v35_qqppp - (v36_yyyyyyyyyyyyyyyxx * vSpacing))) div (v36_yyyyyyyyyyyyyyyxx + 1));
+				v8_zyy := ((6 + v24_tttttt) + (v41_ssssssssrrr mod (v36_yyyyyyyyyyyyyyyxx + 1)))
+			end;
+		(foreach v6_ppoooooo, v46_vvvvvvvvvvvvuuu in visibleItems do begin
+				(v5_xxxxxxxxxxxxxxxxxxxxxwww := (self.viewChildren[v6_ppoooooo] := Clone(v11_wwwwwwwwwwwwwwwwwwwwwww))).target := v46_vvvvvvvvvvvvuuu;
+				v5_xxxxxxxxxxxxxxxxxxxxxwww.viewBounds := RelBounds(v33_vvvuuuuuu, v8_zyy, hSpacing, vSpacing);
+				if ((v33_vvvuuuuuu := (v33_vvvuuuuuu + hSpacing)) >= v48_ttttttttsss) then begin
+						v33_vvvuuuuuu := v50_wwwwwwwwwwwvvvvvvvvvvvvvv;
+						v8_zyy := ((v8_zyy + vSpacing) + v24_tttttt)
+					end
+			end);
+		if ((v10_qqqqq := min(v36_yyyyyyyyyyyyyyyxx, (((v51_vvvvvvuu + v53_ttttttttsssss) - 1) div v53_ttttttttsssss))) = 0) then begin
+				v10_qqqqq := 1
+			end;
+		if (if (if (v10_qqqqq <> nRows) then (needsRecalc = 'all)) then (v44_wwwwwwwwwwwwwwwwwww <> 'ExtrasDrawer)) then begin
+				self:LockScreen(true);
+				base:SizeForRows(v10_qqqqq);
+				self:LockScreen(nil)
+			end;
+		(needsRecalc := nil)
+	end,
+	// GetChildIconViews(): the icon views (all the children here)
+	GetChildIconViews: func() begin
+		self:ChildViewFrames()
+	end
+};
+
+backupInfo := "BackupInfo";
+
+library := "Library";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupChildrenScript_literal61 := same("protoFinderWindow.viewSetupChildrenScript.literals[61]");
+
+viewSetupChildrenScript_literal71 := same("protoFinderWindow.viewSetupChildrenScript.literals[71]");
+
+viewSetupChildrenScript_literal49 := same("protoFinderWindow.viewSetupChildrenScript.literals[49]");

@@ -1,5 +1,0 @@
-@@ 0x515801
-func() begin
-	(self.viewChildren := GetAllMeetings(notes, RepeatNotes, displaydate, (displaydate + 1440)))
-end
-@@end

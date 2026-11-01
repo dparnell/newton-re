@@ -1,0 +1,7 @@
+// canonicalExportTableClient, and what only it reaches
+//
+// One part that imports a unit, as GetExportTableClients lists them
+// (src/packages/Units.cpp): the unit's name and version, and the client
+// part's frame.
+
+canonicalExportTableClient := {name: nil, major: nil, minor: nil, client: nil};

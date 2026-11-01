@@ -1,0 +1,26 @@
+// protoTextButton: a rounded-rectangle button with a line of centred bold
+// text; tapping it hilites it and calls its ButtonClickScript.
+
+protoTextButton := {
+	viewClass: clTextView,
+	viewBounds: nil,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
+	viewTransferMode: modeOr,
+	viewFont: @fontSystem9Bold,
+	// 8388614 = vjCenterH + vjCenterV + oneLineOnly (0x800000, the NPG's value)
+	viewJustify: vjCenterH + vjCenterV + oneLineOnly,
+	styles: nil,
+	tabs: nil,
+	// the button's label
+	text: nil,
+	// ButtonClickScript(): called when the button is tapped (the pen lifted
+	// inside it); this default does nothing
+	buttonClickScript: func() begin
+		nil
+	end,
+	// the shared button click handler: tracks the pen, hilites the button and
+	// calls ButtonClickScript
+	viewClickScript: viewClickScript,
+	debug: 1444304
+};

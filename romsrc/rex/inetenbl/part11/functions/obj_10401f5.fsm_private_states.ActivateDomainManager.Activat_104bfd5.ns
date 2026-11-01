@@ -1,6 +1,0 @@
-@@ 0x104bfd5
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
-	(if a1.infoError then self:DoEvent('ActivateDomainManagerFailure, nil) else (if (a1.infoStatus = 'Activated) then self:DoEvent('ActivateDomainManagerSuccess, nil)))
-end
-@@end

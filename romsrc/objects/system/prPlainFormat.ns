@@ -1,0 +1,45 @@
+// prPlainFormat (@869): the "Plain" print format - an item's data reflowed
+// into page-sized pieces (ReFlow) and printed page after page, with wider
+// margins on the first page when there is no cover page.
+
+prPlainFormat := {
+	viewJustify: vjParentFullH + vjParentFullV + vjReflow,
+	symbol: 'prPlainFormat,
+	title: plain,
+	TextScript: 'plainText,
+	data: nil,
+	kids: nil,
+	reflowStart: 0,
+	// viewSetupFormScript: the page's bounds (a smaller top margin when a cover
+	// page is printed) and the data to print, from the first piece on.
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		if fields.coverPage then begin
+				viewBounds := SetBounds(60, 20, -60, 0)
+			end else begin
+				viewBounds := SetBounds(60, 40, -60, -40)
+			end;
+		self.data := target.data;
+		(self.reflowStart := 0)
+	end,
+	// viewSetupChildrenScript: reflows the data into kids once, then shows the
+	// kids from reflowStart on.
+	viewSetupChildrenScript: func() begin
+		if (if (not kids) then data) then begin
+				kids := ReFlow(data, '{reflowFont: tsFancy + tsSize(12), unistyle: nil, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28}, fields.targetBox, self:LocalBox())
+			end;
+		if kids then begin
+				self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	// printNextPageScript: moves reflowStart past the pieces on this page and
+	// lays out the next page if any are left; nil when it was the last.
+	printNextPageScript: func() begin
+		if self.stepChildren then begin
+				reflowStart := (reflowStart + Length(self.stepChildren))
+			end;
+		(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
+	end,
+	_proto: @coverPageFormat
+};

@@ -1,0 +1,7 @@
+// The folder icon of the filing button (protoFilingButton). A 1-bit bitmap frame (bits,
+// bounds), 15 x 11 pixels. Magic pointer @711. Used by protoFilingButton.
+
+filingBitmap := {
+	bits: bitmap('bits, "resources/bits/3c8f49.png", "0000000000040233023301d9023e01e8", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 11}
+};

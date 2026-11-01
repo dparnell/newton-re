@@ -1,23 +1,23 @@
 # the objects' area: 0x1017004, 0x5ac4 bytes; the byte between objects; the objects' alignment
 area	1017004	5ac4	bf	4
-1017004	obj_1017005	41	gc=1
-1017014	obj_1017005[0]	43	map=map_1017031
+1017004	part	41	gc=1
+1017014	part[0]	43	map=map_1017031
 1017030	map_1017031	41
 1017050	'_ExportTable	40
 1017070	'installScript	40
 1017090	'devInstallScript	40
 10170b4	'devRemoveScript	40
-10170d4	obj_1017005[0]._ExportTable	41
+10170d4	part[0]._ExportTable	41
 10170e4	'|Array|	40
-10170fc	obj_1017005[0]._ExportTable[0]	43	map=map_1017119
+10170fc	part[0]._ExportTable[0]	43	map=map_1017119
 1017118	map_1017119	41
 1017138	'name	40
 1017150	'major	40
 1017168	'minor	40
 1017180	'objects	40
 1017198	'|SetupProtos:NIE|	40
-10171b8	obj_1017005[0]._ExportTable[0].objects	41
-101720c	obj_101720d	43	map=map_101723d
+10171b8	part[0]._ExportTable[0].objects	41
+101720c	partItem_2Proto	43	map=map_101723d
 101723c	map_101723d	41
 1017270	'viewBounds	40
 101728c	'viewFlags	40
@@ -28,49 +28,49 @@ area	1017004	5ac4	bf	4
 101731c	'labelText	40
 1017338	'stepAllocateContext	40
 101735c	'IPLine	40
-1017374	obj_101720d.viewBounds	43	map=map_1017391
+1017374	partItem_2Proto.viewBounds	43	map=map_1017391
 1017390	map_1017391	41
 10173b0	'left	40
 10173c8	'top	40
 10173dc	'right	40
 10173f4	'bottom	40
-101740c	obj_101720d.stepChildren	41
-1017420	obj_1017421	43	map=map_1017441
+101740c	partItem_2Proto.stepChildren	41
+1017420	partItem_2ProtoItem	43	map=map_1017441
 1017440	map_1017441	41
 1017464	'viewSetupFormScript	40
 1017488	'_proto	40
 10174a0	'preAllocatedContext	40
-10174c4	obj_1017421.viewBounds	43	map=map_1017391
-10174e0	obj_1017421.viewSetupFormScript	43	map=map_1017501
+10174c4	partItem_2ProtoItem.viewBounds	43	map=map_1017391
+10174e0	partItem_2ProtoItem.viewSetupFormScript	43	map=map_1017501
 1017500	map_1017501	41
 1017524	'class	40
 101753c	'instructions	40
 101755c	'literals	40
 1017578	'argFrame	40
 1017594	'numArgs	40
-10175ac	obj_1017421.viewSetupFormScript.instructions	40
-10175f0	obj_1017421.viewSetupFormScript.literals	41
-1017620	obj_1017421.viewSetupFormScript.literals[1]	41
+10175ac	partItem_2ProtoItem.viewSetupFormScript.instructions	40
+10175f0	partItem_2ProtoItem.viewSetupFormScript.literals	41
+1017620	partItem_2ProtoItem.viewSetupFormScript.literals[1]	41
 1017634	'pathExpr	40
 1017650	'StrWidth	40
 101766c	'path	40
 1017684	'text	40
-101769c	obj_1017421.viewSetupFormScript.literals[7]	40
+101769c	partItem_2ProtoItem.viewSetupFormScript.literals[7]	40
 10176e8	'|string|	40
-1017700	obj_1017421.viewSetupFormScript.literals[8]	40
-1017750	obj_1017751	43	map=map_1017769
+1017700	partItem_2ProtoItem.viewSetupFormScript.literals[8]	40
+1017750	partItem_2ProtoItem_2	43	map=map_1017769
 1017768	map_1017769	41
-1017784	obj_1017751.viewSetupFormScript	43	map=map_1017501
-10177a4	obj_1017751.viewSetupFormScript.instructions	40
-10177fc	obj_1017751.viewSetupFormScript.literals	41
+1017784	partItem_2ProtoItem_2.viewSetupFormScript	43	map=map_1017501
+10177a4	partItem_2ProtoItem_2.viewSetupFormScript.instructions	40
+10177fc	partItem_2ProtoItem_2.viewSetupFormScript.literals	41
 1017834	'LabelOnSide	40
 1017850	'HasSlot	40
-1017868	obj_1017751.viewSetupFormScript.literals[4]	41
-101787c	obj_1017751.viewSetupFormScript.literals[5]	41
+1017868	partItem_2ProtoItem_2.viewSetupFormScript.literals[4]	41
+101787c	partItem_2ProtoItem_2.viewSetupFormScript.literals[5]	41
 1017890	'SetBounds	40
-10178ac	obj_1017751.viewSetupFormScript.literals[8]	41
+10178ac	partItem_2ProtoItem_2.viewSetupFormScript.literals[8]	41
 10178c0	'RelBounds	40
-10178dc	obj_10178dd	43	map=map_1017919
+10178dc	partItem_2ProtoItem_2Proto	43	map=map_1017919
 1017918	map_1017919	41
 1017958	'numSegs	40
 1017970	'numPeriods	40
@@ -78,12 +78,12 @@ area	1017004	5ac4	bf	4
 10179b4	'CellLocks	40
 10179d0	'CheckCellLocks	40
 10179f0	'viewQuitScript	40
-1017a10	obj_10178dd.viewBounds	43	map=map_1017a2d
+1017a10	partItem_2ProtoItem_2Proto.viewBounds	43	map=map_1017a2d
 1017a2c	map_1017a2d	41
-1017a4c	obj_10178dd.viewSetupChildrenScript	43	map=map_1017501
-1017a6c	obj_10178dd.viewSetupChildrenScript.instructions	40
-1017abc	obj_10178dd.viewSetupChildrenScript.literals	41
-1017ae4	obj_10178dd.viewSetupChildrenScript.literals[2]	43	map=map_1017b2d
+1017a4c	partItem_2ProtoItem_2Proto.viewSetupChildrenScript	43	map=map_1017501
+1017a6c	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.instructions	40
+1017abc	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals	41
+1017ae4	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]	43	map=map_1017b2d
 1017b2c	map_1017b2d	41
 1017b78	'viewChangedScript	40
 1017b9c	'IPsegment	40
@@ -95,87 +95,87 @@ area	1017004	5ac4	bf	4
 1017c44	'AdjustLocks	40
 1017c60	'_caretPopup	40
 1017c7c	'ViewKeyDownScript	40
-1017ca0	obj_10178dd.viewSetupChildrenScript.literals[2].viewBounds	43	map=map_1017a2d
-1017cbc	obj_10178dd.viewSetupChildrenScript.literals[2].viewChangedScript	43	map=map_1017501
-1017cdc	obj_10178dd.viewSetupChildrenScript.literals[2].viewChangedScript.instructions	40
-1017d84	obj_10178dd.viewSetupChildrenScript.literals[2].viewChangedScript.literals	41
+1017ca0	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewBounds	43	map=map_1017a2d
+1017cbc	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewChangedScript	43	map=map_1017501
+1017cdc	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewChangedScript.instructions	40
+1017d84	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewChangedScript.literals	41
 1017dec	'CharPos	40
 1017e04	'target	40
 1017e1c	'NumberStr	40
-1017e38	obj_1017e39	40
+1017e38	name	40
 1017e48	'StrReplace	40
-1017e64	obj_10178dd.viewSetupChildrenScript.literals[2].viewChangedScript.literals[9]	40
+1017e64	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewChangedScript.literals[9]	40
 1017e88	'passAll	40
 1017ea0	'StringFilter	40
 1017ec0	'StrLen	40
 1017ed8	'StringToNumber	40
-1017ef8	obj_1017ef9	40
+1017ef8	viewChangedScript_literal14	40
 1017f08	'SetValue	40
 1017f24	'textChanged	40
 1017f40	'GetRoot	40
 1017f58	'SysBeep	40
-1017f70	obj_10178dd.viewSetupChildrenScript.literals[2].viewChangedScript.literals[20]	41
+1017f70	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewChangedScript.literals[20]	41
 1017f88	'offset	40
 1017fa0	'length	40
 1017fb8	'paraCaret	40
 1017fd4	'SetCaretInfo	40
-1017ff4	obj_10178dd.viewSetupChildrenScript.literals[2].viewSetupFormScript	43	map=map_1017501
-1018014	obj_10178dd.viewSetupChildrenScript.literals[2].viewSetupFormScript.instructions	40
-1018054	obj_10178dd.viewSetupChildrenScript.literals[2].viewSetupFormScript.literals	41
-101808c	obj_10178dd.viewSetupChildrenScript.literals[2].viewSetupFormScript.literals[2]	41
-10180a0	obj_10178dd.viewSetupChildrenScript.literals[2].CalculateBounds	43	map=map_1017501
-10180c0	obj_10178dd.viewSetupChildrenScript.literals[2].CalculateBounds.instructions	40
-10180f0	obj_10178dd.viewSetupChildrenScript.literals[2].CalculateBounds.literals	41
+1017ff4	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewSetupFormScript	43	map=map_1017501
+1018014	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewSetupFormScript.instructions	40
+1018054	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewSetupFormScript.literals	41
+101808c	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewSetupFormScript.literals[2]	41
+10180a0	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].CalculateBounds	43	map=map_1017501
+10180c0	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].CalculateBounds.instructions	40
+10180f0	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].CalculateBounds.literals	41
 101811c	'parent	40
 1018134	'GlobalBox	40
-1018150	obj_1018151	43	map=map_1018171
+1018150	CalculateBounds_literal2	43	map=map_1018171
 1018170	map_1018171	41
 1018194	'viewFont	40
-10181b0	obj_1018151.text	40
-10181c0	obj_1018151.viewBounds	43	map=map_1017391
-10181dc	obj_10178dd.viewSetupChildrenScript.literals[2].CalculateBounds.literals[3]	41
-10181f0	obj_10178dd.viewSetupChildrenScript.literals[2].IPOutofRange	43	map=map_1017501
-1018210	obj_10178dd.viewSetupChildrenScript.literals[2].IPOutofRange.instructions	40
-101825c	obj_10178dd.viewSetupChildrenScript.literals[2].IPOutofRange.literals	41
+10181b0	CalculateBounds_literal2.text	40
+10181c0	CalculateBounds_literal2.viewBounds	43	map=map_1017391
+10181dc	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].CalculateBounds.literals[3]	41
+10181f0	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].IPOutofRange	43	map=map_1017501
+1018210	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].IPOutofRange.instructions	40
+101825c	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].IPOutofRange.literals	41
 1018278	'StrFilled	40
 1018294	'rinttol	40
-10182ac	obj_10178dd.viewSetupChildrenScript.literals[2].LockCell	43	map=map_1017501
-10182cc	obj_10178dd.viewSetupChildrenScript.literals[2].LockCell.instructions	40
-101831c	obj_10178dd.viewSetupChildrenScript.literals[2].LockCell.literals	41
-1018348	obj_10178dd.viewSetupChildrenScript.literals[2].LockCell.literals[6]	41
-101835c	obj_10178dd.viewSetupChildrenScript.literals[2].LockCell.literals[7]	41
-1018370	obj_10178dd.viewSetupChildrenScript.literals[2].AdjustLocks	43	map=map_1017501
-1018390	obj_10178dd.viewSetupChildrenScript.literals[2].AdjustLocks.instructions	40
-10183a4	obj_10178dd.viewSetupChildrenScript.literals[2].AdjustLocks.literals	41
-10183b8	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup	43	map=map_10183cd
+10182ac	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].LockCell	43	map=map_1017501
+10182cc	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].LockCell.instructions	40
+101831c	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].LockCell.literals	41
+1018348	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].LockCell.literals[6]	41
+101835c	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].LockCell.literals[7]	41
+1018370	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].AdjustLocks	43	map=map_1017501
+1018390	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].AdjustLocks.instructions	40
+10183a4	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].AdjustLocks.literals	41
+10183b8	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup	43	map=map_10183cd
 10183cc	map_10183cd	41
 10183e4	'popup	40
 10183fc	'pickActionScript	40
-1018420	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup	41
-1018430	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0]	43	map=map_1018451
+1018420	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup	41
+1018430	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0]	43	map=map_1018451
 1018450	map_1018451	41
 1018474	'bits	40
 101848c	'bounds	40
 10184a4	'width	40
 10184bc	'height	40
 10184d4	'words	40
-10184ec	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].bits	40
-10188e0	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].bounds	43	map=map_1017a2d
-10188fc	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words	41
-1018938	obj_1018939	40
-1018948	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[1]	40
-1018958	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[2]	40
-1018968	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[3]	40
-1018978	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[4]	40
-1018988	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[5]	40
-1018998	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[6]	40
-10189a8	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[7]	40
-10189b8	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[8]	40
-10189c8	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[9]	40
-10189d8	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[10]	40
-10189e8	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.pickActionScript	43	map=map_1017501
-1018a08	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.pickActionScript.instructions	40
-1018a84	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.pickActionScript.literals	41
+10184ec	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].bits	40
+10188e0	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].bounds	43	map=map_1017a2d
+10188fc	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words	41
+1018938	words_value	40
+1018948	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[1]	40
+1018958	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[2]	40
+1018968	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[3]	40
+1018978	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[4]	40
+1018988	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[5]	40
+1018998	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[6]	40
+10189a8	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[7]	40
+10189b8	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[8]	40
+10189c8	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[9]	40
+10189d8	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[10]	40
+10189e8	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.pickActionScript	43	map=map_1017501
+1018a08	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.pickActionScript.instructions	40
+1018a84	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.pickActionScript.literals	41
 1018acc	'index	40
 1018ae4	'y	40
 1018af8	'x	40
@@ -183,30 +183,30 @@ area	1017004	5ac4	bf	4
 1018b2c	'GetView	40
 1018b44	'GetCaretInfo	40
 1018b64	'info	40
-1018b7c	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.pickActionScript.literals[12]	41
+1018b7c	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.pickActionScript.literals[12]	41
 1018b90	'PostKeyString	40
-1018bb0	obj_10178dd.viewSetupChildrenScript.literals[2].ViewKeyDownScript	43	map=map_1017501
-1018bd0	obj_10178dd.viewSetupChildrenScript.literals[2].ViewKeyDownScript.instructions	40
-1018bf4	obj_10178dd.viewSetupChildrenScript.literals[2].ViewKeyDownScript.literals	41
-1018c0c	obj_10178dd.viewSetupChildrenScript.literals[4]	41
+1018bb0	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].ViewKeyDownScript	43	map=map_1017501
+1018bd0	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].ViewKeyDownScript.instructions	40
+1018bf4	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].ViewKeyDownScript.literals	41
+1018c0c	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[4]	41
 1018c2c	'_parent	40
 1018c44	map_1018c45	41
-1018c58	obj_10178dd.viewSetupFormScript	43	map=map_1017501
-1018c78	obj_10178dd.viewSetupFormScript.instructions	40
-1018c8c	obj_10178dd.viewSetupFormScript.literals	41
-1018ca0	obj_10178dd.CellLocks	41
-1018cbc	obj_10178dd.CheckCellLocks	43	map=map_1017501
-1018cdc	obj_10178dd.CheckCellLocks.instructions	40
-1018d14	obj_10178dd.CheckCellLocks.literals	41
+1018c58	partItem_2ProtoItem_2Proto.viewSetupFormScript	43	map=map_1017501
+1018c78	partItem_2ProtoItem_2Proto.viewSetupFormScript.instructions	40
+1018c8c	partItem_2ProtoItem_2Proto.viewSetupFormScript.literals	41
+1018ca0	partItem_2ProtoItem_2Proto.CellLocks	41
+1018cbc	partItem_2ProtoItem_2Proto.CheckCellLocks	43	map=map_1017501
+1018cdc	partItem_2ProtoItem_2Proto.CheckCellLocks.instructions	40
+1018d14	partItem_2ProtoItem_2Proto.CheckCellLocks.literals	41
 1018d34	'ChildViewFrames	40
-1018d54	obj_10178dd.viewQuitScript	43	map=map_1017501
-1018d74	obj_10178dd.viewQuitScript.instructions	40
-1018d8c	obj_10178dd.viewQuitScript.literals	41
+1018d54	partItem_2ProtoItem_2Proto.viewQuitScript	43	map=map_1017501
+1018d74	partItem_2ProtoItem_2Proto.viewQuitScript.instructions	40
+1018d8c	partItem_2ProtoItem_2Proto.viewQuitScript.literals	41
 1018da8	'newtAppBase	40
 1018dc4	'targetView	40
 1018de0	'StartFlush	40
-1018dfc	obj_101720d.stepAllocateContext	41
-1018e18	obj_1017005[0]._ExportTable[0].objects[1]	43	map=map_1018e85
+1018dfc	partItem_2Proto.stepAllocateContext	41
+1018e18	part[0]._ExportTable[0].objects[1]	43	map=map_1018e85
 1018e84	map_1018e85	41
 1018ef4	'symbol	40
 1018f0c	'description	40
@@ -231,36 +231,36 @@ area	1017004	5ac4	bf	4
 101914c	'MakeDataPaths	40
 101916c	'GetText	40
 1019184	'INET	40
-101919c	obj_1017005[0]._ExportTable[0].objects[1].OverviewIcon	43	map=map_10191b5
+101919c	part[0]._ExportTable[0].objects[1].OverviewIcon	43	map=map_10191b5
 10191b4	map_10191b5	41
 10191d0	'colorData	40
-10191ec	obj_1017005[0]._ExportTable[0].objects[1].OverviewIcon.bounds	43	map=map_1019209
+10191ec	part[0]._ExportTable[0].objects[1].OverviewIcon.bounds	43	map=map_1019209
 1019208	map_1019209	41
-1019228	obj_1019229	40
-10192bc	obj_1017005[0]._ExportTable[0].objects[1].OverviewIcon.colorData	43	map=map_10192d1
+1019228	OverviewIconBits	40
+10192bc	part[0]._ExportTable[0].objects[1].OverviewIcon.colorData	43	map=map_10192d1
 10192d0	map_10192d1	41
 10192e8	'cbits	40
 1019300	'bitDepth	40
-101931c	obj_1017005[0]._ExportTable[0].objects[1].StringExtract	43	map=map_1017501
-101933c	obj_1017005[0]._ExportTable[0].objects[1].StringExtract.instructions	40
-1019370	obj_1017005[0]._ExportTable[0].objects[1].StringExtract.literals	41
+101931c	part[0]._ExportTable[0].objects[1].StringExtract	43	map=map_1017501
+101933c	part[0]._ExportTable[0].objects[1].StringExtract.instructions	40
+1019370	part[0]._ExportTable[0].objects[1].StringExtract.literals	41
 1019398	'setupName	40
-10193b4	obj_10193b5	40
-10193d4	obj_10193d5	40
-10193e4	obj_1017005[0]._ExportTable[0].objects[1].MakeNextLine	43	map=map_1017501
-1019404	obj_1017005[0]._ExportTable[0].objects[1].MakeNextLine.instructions	40
-1019414	obj_1017005[0]._ExportTable[0].objects[1].MakeNextLine.literals	41
-1019424	obj_1017005[0]._ExportTable[0].objects[1].viewsToDisplay	41
-1019430	obj_1017005[0]._ExportTable[0].objects[1].newEntryViews	41
-101943c	obj_1017005[0]._ExportTable[0].objects[1].DataConversion	43	map=map_1017501
-101945c	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.instructions	40
-1019478	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals	41
-1019490	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0]	43	map=map_1017501
-10194b0	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].instructions	40
-1019628	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals	41
-10196b4	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[0]	40
-10196dc	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[1]	40
-1019708	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[3]	43	map=map_1019721
+10193b4	StringExtract_literal2	40
+10193d4	StringExtract_literal5	40
+10193e4	part[0]._ExportTable[0].objects[1].MakeNextLine	43	map=map_1017501
+1019404	part[0]._ExportTable[0].objects[1].MakeNextLine.instructions	40
+1019414	part[0]._ExportTable[0].objects[1].MakeNextLine.literals	41
+1019424	part[0]._ExportTable[0].objects[1].viewsToDisplay	41
+1019430	part[0]._ExportTable[0].objects[1].newEntryViews	41
+101943c	part[0]._ExportTable[0].objects[1].DataConversion	43	map=map_1017501
+101945c	part[0]._ExportTable[0].objects[1].DataConversion.instructions	40
+1019478	part[0]._ExportTable[0].objects[1].DataConversion.literals	41
+1019490	part[0]._ExportTable[0].objects[1].DataConversion.literals[0]	43	map=map_1017501
+10194b0	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].instructions	40
+1019628	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals	41
+10196b4	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[0]	40
+10196dc	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[1]	40
+1019708	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[3]	43	map=map_1019721
 1019720	map_1019721	41
 101973c	'ppp	40
 1019750	'slip	40
@@ -288,17 +288,17 @@ area	1017004	5ac4	bf	4
 10199c4	'dnsServerAddressAlternates	40
 10199f0	'loginInfo	40
 1019a0c	'LoginScript	40
-1019a28	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[28]	41
+1019a28	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[28]	41
 1019a3c	'loginInstructions	40
 1019a60	'|Script Manager:NIE|	40
-1019a84	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[30]	41
+1019a84	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[30]	41
 1019a98	'loginScriptTimeout	40
-1019abc	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[31]	41
+1019abc	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[31]	41
 1019ad8	'interpreterSymbol	40
 1019afc	'timeout	40
-1019b14	obj_1017005[0]._ExportTable[0].objects[1].TextScript	43	map=map_1017501
-1019b34	obj_1017005[0]._ExportTable[0].objects[1].TextScript.instructions	40
-1019cf4	obj_1017005[0]._ExportTable[0].objects[1].TextScript.literals	41
+1019b14	part[0]._ExportTable[0].objects[1].TextScript	43	map=map_1017501
+1019b34	part[0]._ExportTable[0].objects[1].TextScript.instructions	40
+1019cf4	part[0]._ExportTable[0].objects[1].TextScript.literals	41
 1019d50	'GetViewDefs	40
 1019d6c	'type	40
 1019d84	'editor	40
@@ -311,48 +311,48 @@ area	1017004	5ac4	bf	4
 1019e3c	'IsArray	40
 1019e54	'origPath	40
 1019e70	'TrimString	40
-1019e8c	obj_1017005[0]._ExportTable[0].objects[1].CheckSlots	43	map=map_1017501
-1019eac	obj_1017005[0]._ExportTable[0].objects[1].CheckSlots.instructions	40
-1019f08	obj_1017005[0]._ExportTable[0].objects[1].CheckSlots.literals	41
-1019f28	obj_1017005[0]._ExportTable[0].objects[1].FillNewEntry	43	map=map_1017501
-1019f48	obj_1017005[0]._ExportTable[0].objects[1].FillNewEntry.instructions	40
-1019f6c	obj_1017005[0]._ExportTable[0].objects[1].FillNewEntry.literals	41
-1019f94	obj_1017005[0]._ExportTable[0].objects[1].FillNewEntry.literals[1]	40
+1019e8c	part[0]._ExportTable[0].objects[1].CheckSlots	43	map=map_1017501
+1019eac	part[0]._ExportTable[0].objects[1].CheckSlots.instructions	40
+1019f08	part[0]._ExportTable[0].objects[1].CheckSlots.literals	41
+1019f28	part[0]._ExportTable[0].objects[1].FillNewEntry	43	map=map_1017501
+1019f48	part[0]._ExportTable[0].objects[1].FillNewEntry.instructions	40
+1019f6c	part[0]._ExportTable[0].objects[1].FillNewEntry.literals	41
+1019f94	part[0]._ExportTable[0].objects[1].FillNewEntry.literals[1]	40
 1019fc4	'ParamStr	40
 1019fe0	'physicalLayer	40
-101a000	obj_1017005[0]._ExportTable[0].objects[1].ValidateTarget	43	map=map_1017501
-101a020	obj_1017005[0]._ExportTable[0].objects[1].ValidateTarget.instructions	40
-101a090	obj_1017005[0]._ExportTable[0].objects[1].ValidateTarget.literals	41
+101a000	part[0]._ExportTable[0].objects[1].ValidateTarget	43	map=map_1017501
+101a020	part[0]._ExportTable[0].objects[1].ValidateTarget.instructions	40
+101a090	part[0]._ExportTable[0].objects[1].ValidateTarget.literals	41
 101a0ac	'SetDifference	40
 101a0cc	'ArrayRemoveCount	40
-101a0f0	obj_1017005[0]._ExportTable[0].objects[1].unusedSlots	43	map=map_101a0fd
+101a0f0	part[0]._ExportTable[0].objects[1].unusedSlots	43	map=map_101a0fd
 101a0fc	map_101a0fd	41
-101a10c	obj_1017005[0]._ExportTable[0].objects[1].NeededSlots	43	map=map_101a0fd
-101a118	obj_1017005[0]._ExportTable[0].objects[1].confirmWalkThru	43	map=map_1017501
-101a138	obj_1017005[0]._ExportTable[0].objects[1].confirmWalkThru.instructions	40
-101a208	obj_1017005[0]._ExportTable[0].objects[1].confirmWalkThru.literals	41
+101a10c	part[0]._ExportTable[0].objects[1].NeededSlots	43	map=map_101a0fd
+101a118	part[0]._ExportTable[0].objects[1].confirmWalkThru	43	map=map_1017501
+101a138	part[0]._ExportTable[0].objects[1].confirmWalkThru.instructions	40
+101a208	part[0]._ExportTable[0].objects[1].confirmWalkThru.literals	41
 101a244	'checkData	40
 101a260	'checkFunc	40
 101a27c	'value	40
-101a294	obj_1017005[0]._ExportTable[0].objects[1].confirmWalkThru.literals[9]	40
+101a294	part[0]._ExportTable[0].objects[1].confirmWalkThru.literals[9]	40
 101a2a8	'Substr	40
-101a2c0	obj_1017005[0]._ExportTable[0].objects[1].DontCloseSlots	43	map=map_101a0fd
-101a2cc	obj_1017005[0]._ExportTable[0].objects[1].DependenciesLoaded	43	map=map_1017501
-101a2ec	obj_1017005[0]._ExportTable[0].objects[1].DependenciesLoaded.instructions	40
-101a2fc	obj_1017005[0]._ExportTable[0].objects[1].DependenciesLoaded.literals	41
-101a310	obj_101a311	43	map=map_1017501
-101a330	obj_101a311.instructions	40
-101a3d8	obj_101a311.literals	41
+101a2c0	part[0]._ExportTable[0].objects[1].DontCloseSlots	43	map=map_101a0fd
+101a2cc	part[0]._ExportTable[0].objects[1].DependenciesLoaded	43	map=map_1017501
+101a2ec	part[0]._ExportTable[0].objects[1].DependenciesLoaded.instructions	40
+101a2fc	part[0]._ExportTable[0].objects[1].DependenciesLoaded.literals	41
+101a310	partItem	43	map=map_1017501
+101a330	partItem.instructions	40
+101a3d8	partItem.literals	41
 101a3f8	'functions	40
 101a414	'InetGetServiceList	40
 101a438	'LogicalService	40
 101a458	'excludeFrom	40
-101a474	obj_1017005[0]._ExportTable[0].objects[1].MakeDataPaths	43	map=map_1017501
-101a494	obj_1017005[0]._ExportTable[0].objects[1].MakeDataPaths.instructions	40
-101a5a4	obj_1017005[0]._ExportTable[0].objects[1].MakeDataPaths.literals	41
-101a5bc	obj_1017005[0]._ExportTable[0].objects[1].GetText	43	map=map_1017501
-101a5dc	obj_1017005[0]._ExportTable[0].objects[1].GetText.instructions	40
-101a718	obj_1017005[0]._ExportTable[0].objects[1].GetText.literals	41
+101a474	part[0]._ExportTable[0].objects[1].MakeDataPaths	43	map=map_1017501
+101a494	part[0]._ExportTable[0].objects[1].MakeDataPaths.instructions	40
+101a5a4	part[0]._ExportTable[0].objects[1].MakeDataPaths.literals	41
+101a5bc	part[0]._ExportTable[0].objects[1].GetText	43	map=map_1017501
+101a5dc	part[0]._ExportTable[0].objects[1].GetText.instructions	40
+101a718	part[0]._ExportTable[0].objects[1].GetText.literals	41
 101a758	'showEmptyData	40
 101a778	'whichOne	40
 101a794	'IsInstance	40
@@ -360,304 +360,304 @@ area	1017004	5ac4	bf	4
 101a7cc	'printFunc	40
 101a7e8	'formatFunc	40
 101a804	'format	40
-101a81c	obj_1017005[0]._ExportTable[0].objects[2]	43	map=map_101a861
+101a81c	part[0]._ExportTable[0].objects[2]	43	map=map_101a861
 101a860	map_101a861	41
 101a8a8	'useNumericKeys	40
 101a8c8	'protection	40
 101a8e4	'helpTopic	40
 101a900	'line	40
-101a918	obj_1017005[0]._ExportTable[0].objects[2].viewBounds	43	map=map_1017a2d
-101a934	obj_1017005[0]._ExportTable[0].objects[2].stepChildren	41
-101a944	obj_101a945	43	map=map_101a959
+101a918	part[0]._ExportTable[0].objects[2].viewBounds	43	map=map_1017a2d
+101a934	part[0]._ExportTable[0].objects[2].stepChildren	41
+101a944	partItem_2	43	map=map_101a959
 101a958	map_101a959	41
-101a970	obj_1017005[0]._ExportTable[0].objects[2].infoFrame	43	map=map_101a991
+101a970	part[0]._ExportTable[0].objects[2].infoFrame	43	map=map_101a991
 101a990	map_101a991	41
 101a9b4	'arrayData	40
-101a9d0	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.checkPrefix	41
-101a9e4	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.checkPrefix[1]	41
-101a9f4	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.checkPaths	41
-101aa00	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.arrayData	41
-101aa1c	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.formatFunc	43	map=map_1017501
-101aa3c	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.formatFunc.instructions	40
-101aaa0	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.formatFunc.literals	41
-101aac4	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.formatFunc.literals[1]	40
-101ab2c	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.formatFunc.literals[4]	40
+101a9d0	part[0]._ExportTable[0].objects[2].infoFrame.checkPrefix	41
+101a9e4	part[0]._ExportTable[0].objects[2].infoFrame.checkPrefix[1]	41
+101a9f4	part[0]._ExportTable[0].objects[2].infoFrame.checkPaths	41
+101aa00	part[0]._ExportTable[0].objects[2].infoFrame.arrayData	41
+101aa1c	part[0]._ExportTable[0].objects[2].infoFrame.formatFunc	43	map=map_1017501
+101aa3c	part[0]._ExportTable[0].objects[2].infoFrame.formatFunc.instructions	40
+101aaa0	part[0]._ExportTable[0].objects[2].infoFrame.formatFunc.literals	41
+101aac4	part[0]._ExportTable[0].objects[2].infoFrame.formatFunc.literals[1]	40
+101ab2c	part[0]._ExportTable[0].objects[2].infoFrame.formatFunc.literals[4]	40
 101ab98	'private	40
-101abb0	obj_1017005[0]._ExportTable[0].objects[2].helpTopic	40
-101abc4	obj_1017005[0]._ExportTable[0].objects[2].stepAllocateContext	41
-101abd8	obj_1017005[0]._ExportTable[0].objects[3]	43	map=map_101ac2d
+101abb0	part[0]._ExportTable[0].objects[2].helpTopic	40
+101abc4	part[0]._ExportTable[0].objects[2].stepAllocateContext	41
+101abd8	part[0]._ExportTable[0].objects[3]	43	map=map_101ac2d
 101ac2c	map_101ac2d	41
 101ac84	'passwordSlip	40
 101aca4	'EditPassword	40
 101acc4	'pwBtn	40
-101acdc	obj_1017005[0]._ExportTable[0].objects[3].viewBounds	43	map=map_1017a2d
-101acf8	obj_1017005[0]._ExportTable[0].objects[3].stepChildren	41
-101ad0c	obj_1017005[0]._ExportTable[0].objects[3].stepChildren[0]	43	map=map_101ad2d
+101acdc	part[0]._ExportTable[0].objects[3].viewBounds	43	map=map_1017a2d
+101acf8	part[0]._ExportTable[0].objects[3].stepChildren	41
+101ad0c	part[0]._ExportTable[0].objects[3].stepChildren[0]	43	map=map_101ad2d
 101ad2c	map_101ad2d	41
 101ad50	'label	40
-101ad68	obj_1017005[0]._ExportTable[0].objects[3].stepChildren[0].label	40
-101ad84	obj_1017005[0]._ExportTable[0].objects[3].stepChildren[0].viewBounds	43	map=map_1017391
-101ada0	obj_1017005[0]._ExportTable[0].objects[3].stepChildren[0].viewChangedScript	43	map=map_1017501
-101adc0	obj_1017005[0]._ExportTable[0].objects[3].stepChildren[0].viewChangedScript.instructions	40
-101ade4	obj_1017005[0]._ExportTable[0].objects[3].stepChildren[0].viewChangedScript.literals	41
-101ae00	obj_101ae01	43	map=map_101a959
-101ae14	obj_101ae15	43	map=map_101ae41
+101ad68	part[0]._ExportTable[0].objects[3].stepChildren[0].label	40
+101ad84	part[0]._ExportTable[0].objects[3].stepChildren[0].viewBounds	43	map=map_1017391
+101ada0	part[0]._ExportTable[0].objects[3].stepChildren[0].viewChangedScript	43	map=map_1017501
+101adc0	part[0]._ExportTable[0].objects[3].stepChildren[0].viewChangedScript.instructions	40
+101ade4	part[0]._ExportTable[0].objects[3].stepChildren[0].viewChangedScript.literals	41
+101ae00	partItem_3	43	map=map_101a959
+101ae14	partItem_3Proto	43	map=map_101ae41
 101ae40	map_101ae41	41
 101ae70	'buttonClickScript	40
 101ae94	'AdjustBounds	40
 101aeb4	'viewSetupDoneScript	40
-101aed8	obj_101ae15.buttonClickScript	43	map=map_1017501
-101aef8	obj_101aef9	40
-101af08	obj_101ae15.buttonClickScript.literals	41
-101af18	obj_101ae15.viewBounds	43	map=map_1017a2d
-101af34	obj_101ae15.AdjustBounds	43	map=map_1017501
-101af54	obj_101ae15.AdjustBounds.instructions	40
-101af84	obj_101ae15.AdjustBounds.literals	41
-101afb4	obj_101ae15.AdjustBounds.literals[4]	40
-101afdc	obj_101ae15.AdjustBounds.literals[5]	40
-101b004	obj_101ae15.AdjustBounds.literals[7]	41
-101b018	obj_101ae15.viewSetupFormScript	43	map=map_1017501
-101b038	obj_101ae15.viewSetupFormScript.instructions	40
-101b04c	obj_101ae15.viewSetupFormScript.literals	41
-101b05c	obj_101ae15.viewSetupDoneScript	43	map=map_1017501
-101b07c	obj_101ae15.viewSetupDoneScript.instructions	40
-101b090	obj_101ae15.viewSetupDoneScript.literals	41
+101aed8	partItem_3Proto.buttonClickScript	43	map=map_1017501
+101aef8	buttonClickScript_code	40
+101af08	partItem_3Proto.buttonClickScript.literals	41
+101af18	partItem_3Proto.viewBounds	43	map=map_1017a2d
+101af34	partItem_3Proto.AdjustBounds	43	map=map_1017501
+101af54	partItem_3Proto.AdjustBounds.instructions	40
+101af84	partItem_3Proto.AdjustBounds.literals	41
+101afb4	partItem_3Proto.AdjustBounds.literals[4]	40
+101afdc	partItem_3Proto.AdjustBounds.literals[5]	40
+101b004	partItem_3Proto.AdjustBounds.literals[7]	41
+101b018	partItem_3Proto.viewSetupFormScript	43	map=map_1017501
+101b038	partItem_3Proto.viewSetupFormScript.instructions	40
+101b04c	partItem_3Proto.viewSetupFormScript.literals	41
+101b05c	partItem_3Proto.viewSetupDoneScript	43	map=map_1017501
+101b07c	partItem_3Proto.viewSetupDoneScript.instructions	40
+101b090	partItem_3Proto.viewSetupDoneScript.literals	41
 101b0a4	'SyncView	40
-101b0c0	obj_1017005[0]._ExportTable[0].objects[3].infoFrame	43	map=map_101b0dd
+101b0c0	part[0]._ExportTable[0].objects[3].infoFrame	43	map=map_101b0dd
 101b0dc	map_101b0dd	41
-101b0fc	obj_1017005[0]._ExportTable[0].objects[3].infoFrame.checkPrefix	41
-101b110	obj_1017005[0]._ExportTable[0].objects[3].infoFrame.checkPaths	41
-101b120	obj_1017005[0]._ExportTable[0].objects[3].infoFrame.formatFunc	43	map=map_1017501
-101b140	obj_101b141	40
-101b164	obj_1017005[0]._ExportTable[0].objects[3].infoFrame.formatFunc.literals	41
-101b184	obj_1017005[0]._ExportTable[0].objects[3].infoFrame.formatFunc.literals[1]	40
-101b1a8	obj_1017005[0]._ExportTable[0].objects[3].infoFrame.formatFunc.literals[4]	40
-101b1d4	obj_1017005[0]._ExportTable[0].objects[3].viewQuitScript	43	map=map_1017501
-101b1f4	obj_1017005[0]._ExportTable[0].objects[3].viewQuitScript.instructions	40
-101b210	obj_1017005[0]._ExportTable[0].objects[3].viewQuitScript.literals	41
+101b0fc	part[0]._ExportTable[0].objects[3].infoFrame.checkPrefix	41
+101b110	part[0]._ExportTable[0].objects[3].infoFrame.checkPaths	41
+101b120	part[0]._ExportTable[0].objects[3].infoFrame.formatFunc	43	map=map_1017501
+101b140	formatFunc_code	40
+101b164	part[0]._ExportTable[0].objects[3].infoFrame.formatFunc.literals	41
+101b184	part[0]._ExportTable[0].objects[3].infoFrame.formatFunc.literals[1]	40
+101b1a8	part[0]._ExportTable[0].objects[3].infoFrame.formatFunc.literals[4]	40
+101b1d4	part[0]._ExportTable[0].objects[3].viewQuitScript	43	map=map_1017501
+101b1f4	part[0]._ExportTable[0].objects[3].viewQuitScript.instructions	40
+101b210	part[0]._ExportTable[0].objects[3].viewQuitScript.literals	41
 101b228	'Close	40
-101b240	obj_101b241	43	map=map_1017501
-101b260	obj_101b241.instructions	40
-101b298	obj_101b241.literals	41
-101b2d4	obj_101b241.literals[1]	43	map=map_1017501
-101b2f4	obj_101b241.literals[1].instructions	40
-101b304	obj_101b241.literals[1].literals	41
-101b318	obj_101b241.literals[1].argFrame	43	map=map_101b331
+101b240	EditPassword	43	map=map_1017501
+101b260	EditPassword.instructions	40
+101b298	EditPassword.literals	41
+101b2d4	EditPassword.literals[1]	43	map=map_1017501
+101b2f4	EditPassword.literals[1].instructions	40
+101b304	EditPassword.literals[1].literals	41
+101b318	EditPassword.literals[1].argFrame	43	map=map_101b331
 101b330	map_101b331	41
 101b34c	'_nextArgFrame	40
 101b36c	'_implementor	40
-101b38c	obj_101b241.literals[2]	41
+101b38c	EditPassword.literals[2]	41
 101b3ac	'currentPassword	40
 101b3cc	'verifyPassword	40
 101b3ec	'BuildContext	40
 101b40c	'setpassword	40
-101b428	obj_101b241.literals[8]	43	map=map_1017501
-101b448	obj_101b241.literals[8].instructions	40
-101b464	obj_101b241.literals[8].literals	41
-101b488	obj_101b241.literals[8].argFrame	43	map=map_101b331
-101b4a0	obj_101b241.literals[10]	43	map=map_1017501
-101b4c0	obj_101b241.literals[10].instructions	40
-101b4d4	obj_101b241.literals[10].literals	41
-101b4ec	obj_101b241.literals[10].argFrame	43	map=map_101b331
+101b428	EditPassword.literals[8]	43	map=map_1017501
+101b448	EditPassword.literals[8].instructions	40
+101b464	EditPassword.literals[8].literals	41
+101b488	EditPassword.literals[8].argFrame	43	map=map_101b331
+101b4a0	EditPassword.literals[10]	43	map=map_1017501
+101b4c0	EditPassword.literals[10].instructions	40
+101b4d4	EditPassword.literals[10].literals	41
+101b4ec	EditPassword.literals[10].argFrame	43	map=map_101b331
 101b504	'Open	40
-101b51c	obj_1017005[0]._ExportTable[0].objects[3].name	40
-101b54c	obj_1017005[0]._ExportTable[0].objects[3].helpTopic	40
-101b570	obj_1017005[0]._ExportTable[0].objects[3].stepAllocateContext	41
-101b584	obj_1017005[0]._ExportTable[0].objects[4]	43	map=map_101b5b5
+101b51c	part[0]._ExportTable[0].objects[3].name	40
+101b54c	part[0]._ExportTable[0].objects[3].helpTopic	40
+101b570	part[0]._ExportTable[0].objects[3].stepAllocateContext	41
+101b584	part[0]._ExportTable[0].objects[4]	43	map=map_101b5b5
 101b5b4	map_101b5b5	41
-101b5e8	obj_1017005[0]._ExportTable[0].objects[4].viewBounds	43	map=map_1017a2d
-101b604	obj_1017005[0]._ExportTable[0].objects[4].infoFrame	43	map=map_101b625
+101b5e8	part[0]._ExportTable[0].objects[4].viewBounds	43	map=map_1017a2d
+101b604	part[0]._ExportTable[0].objects[4].infoFrame	43	map=map_101b625
 101b624	map_101b625	41
-101b648	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.checkPrefix	41
-101b65c	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.checkPaths	41
-101b66c	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.formatFunc	43	map=map_1017501
-101b68c	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.formatFunc.instructions	40
-101b6a8	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.formatFunc.literals	41
-101b6bc	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.printFunc	43	map=map_1017501
-101b6dc	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.printFunc.literals	41
-101b6fc	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.printFunc.literals[1]	40
-101b728	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.printFunc.literals[4]	40
-101b75c	obj_1017005[0]._ExportTable[0].objects[5]	43	map=map_101b789
+101b648	part[0]._ExportTable[0].objects[4].infoFrame.checkPrefix	41
+101b65c	part[0]._ExportTable[0].objects[4].infoFrame.checkPaths	41
+101b66c	part[0]._ExportTable[0].objects[4].infoFrame.formatFunc	43	map=map_1017501
+101b68c	part[0]._ExportTable[0].objects[4].infoFrame.formatFunc.instructions	40
+101b6a8	part[0]._ExportTable[0].objects[4].infoFrame.formatFunc.literals	41
+101b6bc	part[0]._ExportTable[0].objects[4].infoFrame.printFunc	43	map=map_1017501
+101b6dc	part[0]._ExportTable[0].objects[4].infoFrame.printFunc.literals	41
+101b6fc	part[0]._ExportTable[0].objects[4].infoFrame.printFunc.literals[1]	40
+101b728	part[0]._ExportTable[0].objects[4].infoFrame.printFunc.literals[4]	40
+101b75c	part[0]._ExportTable[0].objects[5]	43	map=map_101b789
 101b788	map_101b789	41
-101b7b8	obj_1017005[0]._ExportTable[0].objects[5].viewBounds	43	map=map_1017a2d
-101b7d4	obj_1017005[0]._ExportTable[0].objects[5].stepChildren	41
-101b7e4	obj_1017005[0]._ExportTable[0].objects[5].stepChildren[0]	43	map=map_1018c45
-101b7f4	obj_101b7f5	43	map=map_101b821
+101b7b8	part[0]._ExportTable[0].objects[5].viewBounds	43	map=map_1017a2d
+101b7d4	part[0]._ExportTable[0].objects[5].stepChildren	41
+101b7e4	part[0]._ExportTable[0].objects[5].stepChildren[0]	43	map=map_1018c45
+101b7f4	objectsProto	43	map=map_101b821
 101b820	map_101b821	41
 101b850	'alwaysCallPickActionScript	40
 101b87c	'GetSelectedText	40
 101b89c	'labelActionScript	40
 101b8c0	'textSetup	40
-101b8dc	obj_101b7f5.viewBounds	43	map=map_1017391
-101b8f8	obj_101b7f5.GetSelectedText	43	map=map_1017501
-101b918	obj_101b7f5.GetSelectedText.instructions	40
-101b960	obj_101b7f5.GetSelectedText.literals	41
+101b8dc	objectsProto.viewBounds	43	map=map_1017391
+101b8f8	objectsProto.GetSelectedText	43	map=map_1017501
+101b918	objectsProto.GetSelectedText.instructions	40
+101b960	objectsProto.GetSelectedText.literals	41
 101b984	'labelCommands	40
 101b9a4	'item	40
-101b9bc	obj_101b7f5.labelActionScript	43	map=map_1017501
-101b9dc	obj_101b7f5.labelActionScript.instructions	40
-101b9fc	obj_101b7f5.labelActionScript.literals	41
-101ba24	obj_101b7f5.textSetup	43	map=map_1017501
-101ba44	obj_101b7f5.textSetup.literals	41
-101ba54	obj_101b7f5.viewSetupFormScript	43	map=map_1017501
-101ba74	obj_101b7f5.viewSetupFormScript.instructions	40
-101ba90	obj_101b7f5.viewSetupFormScript.literals	41
+101b9bc	objectsProto.labelActionScript	43	map=map_1017501
+101b9dc	objectsProto.labelActionScript.instructions	40
+101b9fc	objectsProto.labelActionScript.literals	41
+101ba24	objectsProto.textSetup	43	map=map_1017501
+101ba44	objectsProto.textSetup.literals	41
+101ba54	objectsProto.viewSetupFormScript	43	map=map_1017501
+101ba74	objectsProto.viewSetupFormScript.instructions	40
+101ba90	objectsProto.viewSetupFormScript.literals	41
 101bab8	'MakePopup	40
-101bad4	obj_1017005[0]._ExportTable[0].objects[6]	43	map=map_101bb05
+101bad4	part[0]._ExportTable[0].objects[6]	43	map=map_101bb05
 101bb04	map_101bb05	41
-101bb38	obj_1017005[0]._ExportTable[0].objects[6].viewBounds	43	map=map_1017a2d
-101bb54	obj_1017005[0]._ExportTable[0].objects[6].stepChildren	41
-101bb64	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]	43	map=map_1018c45
-101bb74	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto	43	map=map_101bbb1
+101bb38	part[0]._ExportTable[0].objects[6].viewBounds	43	map=map_1017a2d
+101bb54	part[0]._ExportTable[0].objects[6].stepChildren	41
+101bb64	part[0]._ExportTable[0].objects[6].stepChildren[0]	43	map=map_1018c45
+101bb74	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto	43	map=map_101bbb1
 101bbb0	map_101bbb1	41
 101bbf0	'masterlock	40
 101bc0c	'LockDown	40
 101bc28	'GetOption	40
 101bc44	'picker	40
-101bc5c	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto.viewBounds	43	map=map_1017391
-101bc78	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto.stepChildren	41
-101bc8c	obj_101bc8d	43	map=map_101bcb5
+101bc5c	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto.viewBounds	43	map=map_1017391
+101bc78	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto.stepChildren	41
+101bc8c	partItem_4	43	map=map_101bcb5
 101bcb4	map_101bcb5	41
-101bce0	obj_101bc8d.viewBounds	43	map=map_1017a2d
-101bcfc	obj_101bc8d.viewSetupFormScript	43	map=map_1017501
-101bd1c	obj_101bc8d.viewSetupFormScript.instructions	40
-101bd30	obj_101bc8d.viewSetupFormScript.literals	41
+101bce0	partItem_4.viewBounds	43	map=map_1017a2d
+101bcfc	partItem_4.viewSetupFormScript	43	map=map_1017501
+101bd1c	partItem_4.viewSetupFormScript.instructions	40
+101bd30	partItem_4.viewSetupFormScript.literals	41
 101bd50	'popupOptions	40
-101bd70	obj_101bc8d.textSetup	43	map=map_1017501
-101bd90	obj_101bc8d.textSetup.instructions	40
-101bdac	obj_101bc8d.textSetup.literals	41
-101bdcc	obj_101bc8d.labelActionScript	43	map=map_1017501
-101bdec	obj_101bc8d.labelActionScript.instructions	40
-101be0c	obj_101bc8d.labelActionScript.literals	41
-101be34	obj_101be35	43	map=map_101be51
+101bd70	partItem_4.textSetup	43	map=map_1017501
+101bd90	partItem_4.textSetup.instructions	40
+101bdac	partItem_4.textSetup.literals	41
+101bdcc	partItem_4.labelActionScript	43	map=map_1017501
+101bdec	partItem_4.labelActionScript.instructions	40
+101be0c	partItem_4.labelActionScript.literals	41
+101be34	partItem_5	43	map=map_101be51
 101be50	map_101be51	41
-101be70	obj_101be35.viewSetupFormScript	43	map=map_1017501
-101be90	obj_101be35.viewSetupFormScript.instructions	40
-101becc	obj_101be35.viewSetupFormScript.literals	41
-101befc	obj_101be35.viewSetupFormScript.literals[2]	41
-101bf10	obj_101be35.viewQuitScript	43	map=map_1017501
-101bf30	obj_101be35.viewQuitScript.instructions	40
-101bf40	obj_101be35.viewQuitScript.literals	41
-101bf50	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto.LockDown	43	map=map_1017501
-101bf70	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto.LockDown.instructions	40
-101bf88	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto.LockDown.literals	41
-101bf98	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto.GetOption	43	map=map_1017501
-101bfb8	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto.GetOption.instructions	40
-101bff0	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto.GetOption.literals	41
-101c004	obj_1017005[0]._ExportTable[0].objects[6].stepChildren[0]._proto.stepAllocateContext	41
-101c020	obj_1017005[0]._ExportTable[0].objects[7]	43	map=map_101c061
+101be70	partItem_5.viewSetupFormScript	43	map=map_1017501
+101be90	partItem_5.viewSetupFormScript.instructions	40
+101becc	partItem_5.viewSetupFormScript.literals	41
+101befc	partItem_5.viewSetupFormScript.literals[2]	41
+101bf10	partItem_5.viewQuitScript	43	map=map_1017501
+101bf30	partItem_5.viewQuitScript.instructions	40
+101bf40	partItem_5.viewQuitScript.literals	41
+101bf50	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto.LockDown	43	map=map_1017501
+101bf70	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto.LockDown.instructions	40
+101bf88	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto.LockDown.literals	41
+101bf98	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto.GetOption	43	map=map_1017501
+101bfb8	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto.GetOption.instructions	40
+101bff0	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto.GetOption.literals	41
+101c004	part[0]._ExportTable[0].objects[6].stepChildren[0]._proto.stepAllocateContext	41
+101c020	part[0]._ExportTable[0].objects[7]	43	map=map_101c061
 101c060	map_101c061	41
-101c0a4	obj_1017005[0]._ExportTable[0].objects[7].viewBounds	43	map=map_1017a2d
-101c0c0	obj_1017005[0]._ExportTable[0].objects[7].stepChildren	41
-101c0d0	obj_1017005[0]._ExportTable[0].objects[7].stepChildren[0]	43	map=map_101c0ed
+101c0a4	part[0]._ExportTable[0].objects[7].viewBounds	43	map=map_1017a2d
+101c0c0	part[0]._ExportTable[0].objects[7].stepChildren	41
+101c0d0	part[0]._ExportTable[0].objects[7].stepChildren[0]	43	map=map_101c0ed
 101c0ec	map_101c0ed	41
 101c10c	'defaultDomain	40
-101c12c	obj_101c12d	40
-101c150	obj_1017005[0]._ExportTable[0].objects[7].stepChildren[0].viewBounds	43	map=map_1017391
-101c16c	obj_1017005[0]._ExportTable[0].objects[7].infoFrame	43	map=map_101b0dd
-101c188	obj_1017005[0]._ExportTable[0].objects[7].infoFrame.checkPrefix	41
-101c19c	obj_1017005[0]._ExportTable[0].objects[7].infoFrame.checkPaths	41
-101c1ac	obj_1017005[0]._ExportTable[0].objects[7].infoFrame.formatFunc	43	map=map_1017501
-101c1cc	obj_1017005[0]._ExportTable[0].objects[7].infoFrame.formatFunc.literals	41
-101c1ec	obj_1017005[0]._ExportTable[0].objects[7].infoFrame.formatFunc.literals[1]	40
-101c218	obj_1017005[0]._ExportTable[0].objects[7].infoFrame.formatFunc.literals[4]	40
-101c24c	obj_1017005[0]._ExportTable[0].objects[7].helpTopic	40
-101c268	obj_101c269	43	map=map_1017501
-101c288	obj_101c269.instructions	40
-101c2d8	obj_101c269.literals	41
+101c12c	domainName	40
+101c150	part[0]._ExportTable[0].objects[7].stepChildren[0].viewBounds	43	map=map_1017391
+101c16c	part[0]._ExportTable[0].objects[7].infoFrame	43	map=map_101b0dd
+101c188	part[0]._ExportTable[0].objects[7].infoFrame.checkPrefix	41
+101c19c	part[0]._ExportTable[0].objects[7].infoFrame.checkPaths	41
+101c1ac	part[0]._ExportTable[0].objects[7].infoFrame.formatFunc	43	map=map_1017501
+101c1cc	part[0]._ExportTable[0].objects[7].infoFrame.formatFunc.literals	41
+101c1ec	part[0]._ExportTable[0].objects[7].infoFrame.formatFunc.literals[1]	40
+101c218	part[0]._ExportTable[0].objects[7].infoFrame.formatFunc.literals[4]	40
+101c24c	part[0]._ExportTable[0].objects[7].helpTopic	40
+101c268	GetString	43	map=map_1017501
+101c288	GetString.instructions	40
+101c2d8	GetString.literals	41
 101c2f4	'SPrintObject	40
-101c314	obj_1017005[0]._ExportTable[0].objects[12]	43	map=map_101c331
+101c314	part[0]._ExportTable[0].objects[12]	43	map=map_101c331
 101c330	map_101c331	41
 101c350	'GetString	40
-101c36c	obj_1017005[0]._ExportTable[0].objects[12].labelText	40
-101c39c	obj_1017005[0]._ExportTable[0].objects[12].checkPrefix	41
-101c3b0	obj_1017005[0]._ExportTable[0].objects[12].formatFunc	43	map=map_1017501
-101c3d0	obj_1017005[0]._ExportTable[0].objects[12].formatFunc.instructions	40
-101c40c	obj_1017005[0]._ExportTable[0].objects[12].formatFunc.literals	41
-101c428	obj_1017005[0]._ExportTable[0].objects[13]	43	map=map_101c449
+101c36c	part[0]._ExportTable[0].objects[12].labelText	40
+101c39c	part[0]._ExportTable[0].objects[12].checkPrefix	41
+101c3b0	part[0]._ExportTable[0].objects[12].formatFunc	43	map=map_1017501
+101c3d0	part[0]._ExportTable[0].objects[12].formatFunc.instructions	40
+101c40c	part[0]._ExportTable[0].objects[12].formatFunc.literals	41
+101c428	part[0]._ExportTable[0].objects[13]	43	map=map_101c449
 101c448	map_101c449	41
-101c46c	obj_1017005[0]._ExportTable[0].objects[13].label	40
-101c490	obj_1017005[0]._ExportTable[0].objects[13].viewChangedScript	43	map=map_1017501
-101c4b0	obj_1017005[0]._ExportTable[0].objects[13].viewChangedScript.instructions	40
-101c4d0	obj_1017005[0]._ExportTable[0].objects[13].viewChangedScript.literals	41
+101c46c	part[0]._ExportTable[0].objects[13].label	40
+101c490	part[0]._ExportTable[0].objects[13].viewChangedScript	43	map=map_1017501
+101c4b0	part[0]._ExportTable[0].objects[13].viewChangedScript.instructions	40
+101c4d0	part[0]._ExportTable[0].objects[13].viewChangedScript.literals	41
 101c4f4	'header	40
 101c50c	'Retarget	40
-101c528	obj_1017005[0]._ExportTable[0].objects[13].viewBounds	43	map=map_1017391
-101c544	obj_1017005[0]._ExportTable[0].objects[14]	41
-101c568	obj_1017005[0]._ExportTable[0].objects[14][0]	43	map=map_101c57d
+101c528	part[0]._ExportTable[0].objects[13].viewBounds	43	map=map_1017391
+101c544	part[0]._ExportTable[0].objects[14]	41
+101c568	part[0]._ExportTable[0].objects[14][0]	43	map=map_101c57d
 101c57c	map_101c57d	41
-101c594	obj_1017005[0]._ExportTable[0].objects[14][0].item	40
-101c5b8	obj_1017005[0]._ExportTable[0].objects[14][1]	43	map=map_101c57d
-101c5cc	obj_1017005[0]._ExportTable[0].objects[14][1].item	40
-101c5f8	obj_1017005[0]._ExportTable[0].objects[14][2]	43	map=map_101c57d
-101c60c	obj_1017005[0]._ExportTable[0].objects[14][2].item	40
-101c638	obj_1017005[0]._ExportTable[0].objects[14][3]	43	map=map_101c57d
-101c64c	obj_1017005[0]._ExportTable[0].objects[14][3].item	40
-101c678	obj_1017005[0]._ExportTable[0].objects[14][4]	43	map=map_101c57d
-101c68c	obj_1017005[0]._ExportTable[0].objects[14][4].item	40
-101c6bc	obj_1017005[0]._ExportTable[0].objects[14][5]	43	map=map_101c57d
-101c6d0	obj_1017005[0]._ExportTable[0].objects[14][5].item	40
+101c594	part[0]._ExportTable[0].objects[14][0].item	40
+101c5b8	part[0]._ExportTable[0].objects[14][1]	43	map=map_101c57d
+101c5cc	part[0]._ExportTable[0].objects[14][1].item	40
+101c5f8	part[0]._ExportTable[0].objects[14][2]	43	map=map_101c57d
+101c60c	part[0]._ExportTable[0].objects[14][2].item	40
+101c638	part[0]._ExportTable[0].objects[14][3]	43	map=map_101c57d
+101c64c	part[0]._ExportTable[0].objects[14][3].item	40
+101c678	part[0]._ExportTable[0].objects[14][4]	43	map=map_101c57d
+101c68c	part[0]._ExportTable[0].objects[14][4].item	40
+101c6bc	part[0]._ExportTable[0].objects[14][5]	43	map=map_101c57d
+101c6d0	part[0]._ExportTable[0].objects[14][5].item	40
 101c6e8	'never	40
-101c700	obj_1017005[0]._ExportTable[0].objects[16]	43	map=map_1017501
-101c720	obj_1017005[0]._ExportTable[0].objects[16].instructions	40
-101c78c	obj_1017005[0]._ExportTable[0].objects[16].literals	41
-101c7b8	obj_1017005[0]._ExportTable[0].objects[16].literals[1]	41
-101c7cc	obj_1017005[0]._ExportTable[0].objects[16].literals[1][0]	43	map=map_101c57d
-101c7e0	obj_1017005[0]._ExportTable[0].objects[16].literals[1][0].item	40
-101c7f4	obj_1017005[0]._ExportTable[0].objects[16].literals[1][1]	43	map=map_101c57d
-101c808	obj_1017005[0]._ExportTable[0].objects[16].literals[1][1].item	40
+101c700	part[0]._ExportTable[0].objects[16]	43	map=map_1017501
+101c720	part[0]._ExportTable[0].objects[16].instructions	40
+101c78c	part[0]._ExportTable[0].objects[16].literals	41
+101c7b8	part[0]._ExportTable[0].objects[16].literals[1]	41
+101c7cc	part[0]._ExportTable[0].objects[16].literals[1][0]	43	map=map_101c57d
+101c7e0	part[0]._ExportTable[0].objects[16].literals[1][0].item	40
+101c7f4	part[0]._ExportTable[0].objects[16].literals[1][1]	43	map=map_101c57d
+101c808	part[0]._ExportTable[0].objects[16].literals[1][1].item	40
 101c820	'|str<|	40
-101c838	obj_1017005[0]._ExportTable[0].objects[16].literals[6]	41
+101c838	part[0]._ExportTable[0].objects[16].literals[6]	41
 101c848	'BInsert	40
-101c860	obj_1017005[0]._ExportTable[0].objects[17]	43	map=map_1017501
-101c880	obj_1017005[0]._ExportTable[0].objects[17].instructions	40
-101c910	obj_1017005[0]._ExportTable[0].objects[17].literals	41
+101c860	part[0]._ExportTable[0].objects[17]	43	map=map_1017501
+101c880	part[0]._ExportTable[0].objects[17].instructions	40
+101c910	part[0]._ExportTable[0].objects[17].literals	41
 101c93c	'ModemLocations	40
 101c95c	'screenOrientation	40
 101c980	'GetUserConfig	40
 101c9a0	'id	40
 101c9b4	'title	40
-101c9cc	obj_1017005[0].installScript	43	map=map_1017501
-101c9ec	obj_1017005[0].installScript.instructions	40
-101ca08	obj_1017005[0].installScript.literals	41
-101ca24	obj_1017005[0].installScript.literals[1]	41
+101c9cc	part[0].installScript	43	map=map_1017501
+101c9ec	part[0].installScript.instructions	40
+101ca08	part[0].installScript.literals	41
+101ca24	part[0].installScript.literals[1]	41
 101ca38	'removeScript	40
 101ca58	'EnsureInternal	40
-101ca78	obj_1017005[0].devInstallScript	43	map=map_1017501
-101ca98	obj_101ca99	40
-101caa8	obj_1017005[0].devRemoveScript	43	map=map_1017501
-alias	obj_1017005[0]._ExportTable[0].objects[1].StringExtract.literals[2]	obj_10193b5
-alias	obj_1017005[0]._ExportTable[0].objects[1].StringExtract.literals[3]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[1].StringExtract.literals[5]	obj_10193d5
-alias	obj_1017005[0]._ExportTable[0].objects[1].MakeNextLine.literals[0]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[8]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[10]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[1].TextScript.literals[0]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[1].TextScript.literals[14]	obj_10193d5
-alias	obj_1017005[0]._ExportTable[0].objects[1].TextScript.literals[18]	obj_10193d5
-alias	obj_1017005[0]._ExportTable[0].objects[1].confirmWalkThru.literals[0]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[1].DependenciesLoaded.literals[1]	obj_101a311
-alias	obj_1017005[0]._ExportTable[0].objects[2].infoFrame.formatFunc.literals[5]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[3].stepChildren[0].viewChangedScript.literals[3]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[3].infoFrame.formatFunc.instructions	obj_101b141
-alias	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.formatFunc.literals[1]	obj_10193b5
-alias	obj_1017005[0]._ExportTable[0].objects[4].infoFrame.printFunc.instructions	obj_101b141
-alias	obj_1017005[0]._ExportTable[0].objects[7].infoFrame.formatFunc.instructions	obj_101b141
-alias	obj_1017005[0]._ExportTable[0].objects[12].formatFunc.literals[3]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[13].viewChangedScript.literals[3]	obj_1017e39
-alias	obj_1017005[0]._ExportTable[0].objects[16].literals[4]	map_101c57d
-alias	obj_1017005[0]._ExportTable[0].objects[17].literals[7]	obj_1017e39
-alias	obj_1017005[0].devInstallScript.instructions	obj_101ca99
-alias	obj_1017005[0].devRemoveScript.instructions	obj_101ca99
-alias	obj_10178dd.viewSetupChildrenScript.literals[2].viewChangedScript.literals[7]	obj_1017e39
-alias	obj_10178dd.viewSetupChildrenScript.literals[2].viewChangedScript.literals[14]	obj_1017ef9
-alias	obj_10178dd.viewSetupChildrenScript.literals[2].CalculateBounds.literals[2]	obj_1018151
-alias	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[0]	obj_1018939
-alias	obj_10178dd.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[11]	obj_1017ef9
-alias	obj_10178dd.viewSetupChildrenScript.literals[2].ViewKeyDownScript.literals[1]	obj_1018939
-alias	obj_10178dd.viewSetupChildrenScript.literals[5]	obj_1018151
-alias	obj_10178dd.viewSetupChildrenScript.literals[6]	map_1018c45
-alias	obj_101ae15.buttonClickScript.instructions	obj_101aef9
-alias	obj_101b7f5.GetSelectedText.literals[5]	obj_1017e39
-alias	obj_101b7f5.textSetup.instructions	obj_101aef9
-alias	obj_101c269.literals[0]	obj_1017e39
+101ca78	part[0].devInstallScript	43	map=map_1017501
+101ca98	devInstallScript_code	40
+101caa8	part[0].devRemoveScript	43	map=map_1017501
+alias	part[0]._ExportTable[0].objects[1].StringExtract.literals[2]	StringExtract_literal2
+alias	part[0]._ExportTable[0].objects[1].StringExtract.literals[3]	name
+alias	part[0]._ExportTable[0].objects[1].StringExtract.literals[5]	StringExtract_literal5
+alias	part[0]._ExportTable[0].objects[1].MakeNextLine.literals[0]	name
+alias	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[8]	name
+alias	part[0]._ExportTable[0].objects[1].DataConversion.literals[0].literals[10]	name
+alias	part[0]._ExportTable[0].objects[1].TextScript.literals[0]	name
+alias	part[0]._ExportTable[0].objects[1].TextScript.literals[14]	StringExtract_literal5
+alias	part[0]._ExportTable[0].objects[1].TextScript.literals[18]	StringExtract_literal5
+alias	part[0]._ExportTable[0].objects[1].confirmWalkThru.literals[0]	name
+alias	part[0]._ExportTable[0].objects[1].DependenciesLoaded.literals[1]	partItem
+alias	part[0]._ExportTable[0].objects[2].infoFrame.formatFunc.literals[5]	name
+alias	part[0]._ExportTable[0].objects[3].stepChildren[0].viewChangedScript.literals[3]	name
+alias	part[0]._ExportTable[0].objects[3].infoFrame.formatFunc.instructions	formatFunc_code
+alias	part[0]._ExportTable[0].objects[4].infoFrame.formatFunc.literals[1]	StringExtract_literal2
+alias	part[0]._ExportTable[0].objects[4].infoFrame.printFunc.instructions	formatFunc_code
+alias	part[0]._ExportTable[0].objects[7].infoFrame.formatFunc.instructions	formatFunc_code
+alias	part[0]._ExportTable[0].objects[12].formatFunc.literals[3]	name
+alias	part[0]._ExportTable[0].objects[13].viewChangedScript.literals[3]	name
+alias	part[0]._ExportTable[0].objects[16].literals[4]	map_101c57d
+alias	part[0]._ExportTable[0].objects[17].literals[7]	name
+alias	part[0].devInstallScript.instructions	devInstallScript_code
+alias	part[0].devRemoveScript.instructions	devInstallScript_code
+alias	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewChangedScript.literals[7]	name
+alias	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewChangedScript.literals[14]	viewChangedScript_literal14
+alias	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].CalculateBounds.literals[2]	CalculateBounds_literal2
+alias	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[0]	words_value
+alias	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[11]	viewChangedScript_literal14
+alias	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].ViewKeyDownScript.literals[1]	words_value
+alias	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[5]	CalculateBounds_literal2
+alias	partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[6]	map_1018c45
+alias	partItem_3Proto.buttonClickScript.instructions	buttonClickScript_code
+alias	objectsProto.GetSelectedText.literals[5]	name
+alias	objectsProto.textSetup.instructions	buttonClickScript_code
+alias	GetString.literals[0]	name

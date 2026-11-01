@@ -1,0 +1,125 @@
+// export159: Setup's labelled phone-number input - a label, an area-code line between
+// parentheses (vInputCityCode) and a local-number line (vInputLocalNum); the proto of the
+// phone pages' fields. The file holds it and what only it reaches.
+
+export159 := {
+	viewBounds: {left: 0, top: 5, right: 240, bottom: 20},
+	viewFormat: vfPen(1),
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 0, top: 3, right: 70, bottom: 17},
+			// viewSetupFormScript: takes the label's text and font from the label and labelFont slots.
+			viewSetupFormScript: func() begin
+				if (label exists) then begin
+						self.text := label
+					end;
+				(if (labelFont exists) then (self.viewFont := labelFont))
+			end,
+			viewJustify: oneLineOnly,
+			viewFormat: vfPen(1),
+			viewFont: viewFont,
+			_proto: @protoStaticText
+		},
+		{
+			viewBounds: {left: 72, top: 3, right: 79, bottom: 17},
+			viewJustify: vjCenterH + oneLineOnly,
+			viewFormat: vfPen(1),
+			viewFont: tsFancy + tsSize(12),
+			text: "(",
+			_proto: @protoStaticText
+		},
+		export159Item,
+		{
+			viewBounds: {left: 5, top: 3, right: 15, bottom: 17},
+			viewJustify: vjParentRightH + vjSiblingRightH + oneLineOnly,
+			viewFormat: vfPen(1),
+			viewFont: tsFancy + tsSize(12),
+			text: ")",
+			_proto: @protoStaticText
+		},
+		export159Item_2
+	],
+	viewJustify: vjParentCenterH + vjParentBottomV + vjSiblingBottomV,
+	// TextLength(): the length of the local number.
+	TextLength: func() begin
+		// looks like a bug: tests vInputLine, which this view does not have (it is export158's
+		// line; found by inheritance, if at all), before measuring vInputLocalNum
+		(if vInputLine.text then StrLen(vInputLocalNum.text) else 0)
+	end,
+	declareSelf: 'inputBase,
+	viewFlags: vVisible + vClickable + vCapsRequired,
+	// GetTextLocal(): the local number.
+	GetTextLocal: func() begin
+		vInputLocalNum.text
+	end,
+	// GetTextArea(): the area code.
+	GetTextArea: func() begin
+		vInputCityCode.text
+	end,
+	// SetTextLocal(phone): sets the local number.
+	SetTextLocal: func(phone) begin
+		SetValue(vInputLocalNum, 'text, phone)
+	end,
+	// SetTextArea(areaCode): sets the area code.
+	SetTextArea: func(areaCode) begin
+		SetValue(vInputCityCode, 'text, areaCode)
+	end,
+	viewClass: clView,
+	vInputCityCode: nil,
+	stepAllocateContext: [|Array|: 'vInputCityCode, export159Item, 'vInputLocalNum, export159Item_2],
+	vInputLocalNum: nil
+};
+
+export159Item := {
+	viewBounds: {left: 10, top: 1, right: 50, bottom: 17},
+	viewFormat: vfPen(1) + vfLinesGray + vfInset(3),
+	viewJustify: vjCenterH + vjParentRightH + vjSiblingRightH + oneLineOnly,
+	// viewSetupFormScript: line spacing to fit the font.
+	viewSetupFormScript: func() begin
+		self.text := text;
+		self.viewLineSpacing := fontHeight(viewFont);
+		inherited:?viewSetupFormScript()
+	end,
+	// TextLength(): the length of the text (0 when empty).
+	TextLength: func() begin
+		(if self.text then StrLen(self.text) else 0)
+	end,
+	// viewChangedScript: tells the page the text changed; in the USA a three-digit area code
+	// is complete, so the caret moves on to the local number.
+	viewChangedScript: func(slot, view) begin
+		self:?textChanged();
+		(if (if (if (StrLen(self.text) = 3) then fPersona.country) then StrEqual(fPersona.country, "USA")) then AddDeferredSend(self, 'moveKeyView, nil))
+	end,
+	viewFont: tsFancy + tsSize(12),
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	// moveKeyView(): the caret to the local-number line.
+	moveKeyView: func() begin
+		SetKeyView(vInputLocalNum, 0)
+	end,
+	_proto: @protoInputLine,
+	preAllocatedContext: 'vInputCityCode
+};
+
+export159Item_2 := {
+	viewBounds: {left: 10, top: 1, right: 95, bottom: 17},
+	viewFormat: vfPen(1) + vfLinesGray + vfInset(3),
+	viewJustify: vjParentRightH + vjSiblingRightH + oneLineOnly,
+	// viewSetupFormScript: line spacing to fit the font.
+	viewSetupFormScript: func() begin
+		self.text := text;
+		self.viewLineSpacing := fontHeight(viewFont);
+		inherited:?viewSetupFormScript()
+	end,
+	// TextLength(): the length of the text (0 when empty).
+	TextLength: func() begin
+		(if self.text then StrLen(self.text) else 0)
+	end,
+	// viewChangedScript: tells the page the text changed.
+	viewChangedScript: func(slot, view) begin
+		self:?textChanged()
+	end,
+	viewFont: tsFancy + tsSize(12),
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	_proto: @protoInputLine,
+	preAllocatedContext: 'vInputLocalNum
+};

@@ -1,0 +1,36 @@
+// protoBeamer: the state machine that beams (sends frames over infrared): a
+// protoIoStateMachine whose endpoint is a protoBasicEndpoint on the "slir"
+// (serial infrared) service.  Automatic IR receiving ("sniffing") is stopped
+// while it runs and restarted when it is done.
+
+protoBeamer := {
+	_proto: @protoIoStateMachine,
+	CallbackSpec: {_proto: @protoStateMachineInputSpec, form: 'frame, sendFlags: 2},
+	InputSpec: {_proto: @protoStateMachineInputSpec, form: 'frame, rcvFlags: 2},
+	// Initialize(mode, callback): makes the endpoint and sets the mode and the
+	// callback; mode 'AutoInAndOut adds the "irco" option to the service
+	// (opCode 512 is opSetRequired, 256 opSetNegotiate)
+	Initialize: compile(
+		constants: {
+			kLiteral_4984b5: '{label: "slir", type: service, opCode: 512}
+		},
+		func(a1, singleSelect) begin
+			if (a1 = 'AutoInAndOut) then begin
+					self:SetEndpoint(@protoBasicEndpoint, [Array: DeepClone(kLiteral_4984b5), DeepClone('{label: "irco", type: option, opCode: 256, data: {arglist: [Array: 1], typelist: [Array: 10, 1]}})])
+				end else begin
+					self:SetEndpoint(@protoBasicEndpoint, [Array: DeepClone(kLiteral_4984b5)])
+				end;
+			self:SetMode(a1);
+			self:SetCallback(singleSelect);
+			StopIRSniffing()
+		end),
+	// starts the machine at its 'DoInstantiate state
+	start: func() begin
+		inherited:start('DoInstantiate)
+	end,
+	// sent when the machine has finished: restarts automatic IR receiving if
+	// the user's preferences ask for it
+	TearDown: func() begin
+		(if userConfiguration.zapAutoReceive then StartIRSniffing())
+	end
+};

@@ -1,0 +1,137 @@
+// A formula panel (@8303): the floater the Formulas application opens for a
+// panel, with the solver the panels share.  Its lines (FSViews) are solved
+// whenever all but one are filled: the empty one is computed by its
+// ComputeValue.  The values, and which line was solved for, are kept in an
+// entry of the system soup tagged "Formulas:Apple", one slot per panel
+// (formulaSymbol).
+
+export111 := {
+	viewBounds: {left: 0, top: 22, right: 224, bottom: 150},
+	viewFlags: vClickable,
+	solvedFor: nil,
+	stepChildren: [stepChildren: clear, export111Item],
+	// Keeps the lines' values and the solved-for line in the system soup entry.
+	viewQuitScript: func() begin
+		formulaValues := self:GetFormulaValues();
+		local formulaValues;
+		(foreach key, value in FSViews do begin
+				formulaValues.(formulaSymbol).values[key] := value:GetNumericValue()
+			end);
+		formulaValues.(formulaSymbol).solvedFor := solvedFor;
+		EntryChange(formulaValues)
+	end,
+	// Empties every line (solvingFormula keeps the lines from solving meanwhile).
+	ClearAllFields: func() begin
+		solvingFormula := true;
+		(foreach item in FSViews do begin
+				item:SetNumericValue(nil)
+			end);
+		solvingFormula := nil;
+		(solvedFor := nil)
+	end,
+	FSViews: nil,
+	// Sent by a line whose value changed (lineNumber its index, nil to recheck).
+	// With one line empty it becomes the one solved for; a change to the line
+	// solved for, with every line filled, is refused with an alert; otherwise the
+	// solved-for line is computed and filled in (deferred, after the edit ends).
+	SolveFormula: func(lineNumber) begin
+		if solvingFormula then begin
+				return nil
+			end;
+		l1 := 0;
+		list := Array(Length(FSViews), nil);
+		local l1;
+		local list;
+		(foreach key, value in FSViews do begin
+				list[key] := value:GetNumericValue();
+				if (list[key] = nil) then begin
+						l1 := (l1 + 1)
+					end
+			end);
+		if (l1 = 1) then begin
+				(foreach key, value2 in list do begin
+						if (value2 = nil) then begin
+								solvedFor := key
+							end
+					end)
+			end;
+		if (if (l1 = 0) then (solvedFor = lineNumber)) then begin
+				AddDeferredSend(self, 'FillInTheSolution, [Array: solvedFor, nil]);
+				self:Notify(kNotifyAlert, "Formulas", "You cannot change the field that was being solved. Tap clear then enter the new values.");
+				return nil
+			end;
+		(if (l1 <= 1) then begin
+				list[solvedFor] := FSViews[solvedFor]:ComputeValue(list);
+				AddDeferredSend(self, 'FillInTheSolution, [Array: solvedFor, list[solvedFor]])
+			end)
+	end,
+	// Sent when a line is emptied: nothing to do here.
+	ClearFormula: func() begin
+		nil
+	end,
+	// The system soup entry holding the panels' values, added the first time.
+	GetFormulaValues: compile(
+		constants: {
+			kLiteral_76e9d9: "Formulas:Apple"
+		},
+		func() begin
+			local soup, entry;
+			if ((entry := Query((soup := GetStores()[0]:GetSoup(@systemSoupName)), {type: 'index, IndexPath: 'tag, beginKey: kLiteral_76e9d9, endKey: kLiteral_76e9d9}):entry()) = nil) then begin
+					entry := soup:Add({tag: kLiteral_76e9d9, LoanPayment: nil, NetPresentValue: nil, CurrencyExchange: nil, DateCalculator: nil, DateConversion: nil})
+				end;
+			return entry
+		end),
+	// Puts back the panel's values (all but the solved-for line, which is computed
+	// again), or makes the panel's slot in the entry the first time.
+	viewSetupDoneScript: func() begin
+		(if ((formulaValues := self:GetFormulaValues()).(formulaSymbol) = nil) then begin
+				formulaValues.(formulaSymbol) := {values: Array(Length(FSViews), nil), solvedFor: nil};
+				EntryChange(formulaValues)
+			end else begin
+				solvedFor := formulaValues.(formulaSymbol).solvedFor;
+				solvingFormula := true;
+				local formulaValues;
+				(foreach key, value in FSViews do begin
+						if ((solvedFor = nil) or (key <> solvedFor)) then begin
+								value:SetNumericValue(formulaValues.(formulaSymbol).values[key])
+							end
+					end);
+				solvingFormula := nil;
+				self:SolveFormula(nil)
+			end)
+	end,
+	solvingFormula: nil,
+	// Undoes Clear: puts back the values and the solved-for line (a1 the frame
+	// Clear saved) and solves again.
+	UndoClear: func(a1) begin
+		solvedFor := a1.solvedFor;
+		solvingFormula := true;
+		(foreach key, value in FSViews do begin
+				if ((solvedFor = nil) or (key <> solvedFor)) then begin
+						value:SetNumericValue(a1.values[key])
+					end
+			end);
+		solvingFormula := nil;
+		self:SolveFormula(nil)
+	end,
+	// Shows value a2 in line a1 without it being taken as a change.
+	FillInTheSolution: func(a1, a2) begin
+		solvingFormula := true;
+		FSViews[a1]:SetNumericValue(a2);
+		(solvingFormula := nil)
+	end,
+	// The panel's bounds are given in the application's area: made the screen's.
+	viewSetupFormScript: func() begin
+		local params;
+		SetKeyView(self, 0);
+		params := GetAppParams();
+		(self.viewBounds := OffsetRect(self.viewBounds, (-params.appAreaGlobalLeft), (-params.appAreaGlobalTop)))
+	end,
+	viewJustify: 0,
+	ReOrientToScreen: @defRotateFunc,
+	_proto: @protoFloater
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetFormulaValues_literal5 := same("export111.GetFormulaValues.literals[5]");

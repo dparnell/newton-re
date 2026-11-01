@@ -1,0 +1,78 @@
+// The print format that lays several cards to a page (@8238, the _proto of the
+// card print formats): each format's AddPrintChild places a card, and as many
+// as fit go on a page, row by row.
+
+export46 := {
+	// Another page while the cursor has cards left.
+	printNextPageScript: func() begin
+		(if (if targetCursor then target) then begin
+				self:RedoChildren();
+				true
+			end)
+	end,
+	// Lays out the next page: from the top (below any header), cards left to right
+	// with 20 pixels between them, a new row when one is full, until a card no
+	// longer fits the page.
+	viewSetupChildrenScript: func() begin
+		local l1, l2, l3, box, l5, bottom, layout, l8, addHeader, right, addPrintChild, count, l13, count2;
+		l5 := (box := self:LocalBox()).right;
+		bottom := box.bottom;
+		l8 := nil;
+		self.stepChildren := [Array: ];
+		l1 := 20;
+		if (addHeader := self:?AddHeader()) then begin
+				l1 := (l1 + addHeader)
+			end;
+		l2 := l1;
+		(while target do begin
+				addHeader := 0;
+				l3 := 50;
+				(while target do begin
+						layout := GetRoot().cardfile:GetBCLayout(target).layout;
+						count := Length(stepChildren);
+						if (addPrintChild := self:AddPrintChild(layout, target, l3, l1)) then begin
+								if ((if ((addPrintChild.bottom + l1) > bottom) then (l1 > l2)) or ((addPrintChild.right + l3) > l5)) then begin
+										count2 := Length(stepChildren);
+										SetLength(stepChildren, count);
+										break (l8 := (if ((addPrintChild.bottom + l1) > bottom) then (l1 > l2)))
+									end else begin
+										addHeader := max(addHeader, addPrintChild.bottom);
+										right := addPrintChild.right
+									end
+							end else begin
+								break (l8 := true)
+							end;
+						l3 := ((l3 + right) + 20);
+						(if (if (target := targetCursor:Next()) then (not target.class)) then call GetRoot().cardfile.kUpdateClass with (target))
+					end);
+				if l8 then begin
+						break
+					end;
+				(l1 := ((l1 + addHeader) + 20))
+			end);
+		inherited:?viewSetupChildrenScript()
+	end,
+	// With no cursor of cards to print, makes one over the whole Names soup by
+	// sort name; starts on its first card.
+	viewSetupFormScript: func() begin
+		local copy;
+		inherited:?viewSetupFormScript();
+		if (not targetCursor) then begin
+				copy := Clone(GetRoot().cardfile.allSoups.names);
+				copy:MakeSoup(GetRoot().cardfile.appSymbol);
+				copy.soupQuery := Clone(copy.soupQuery);
+				copy.soupQuery.IndexPath := 'sorton;
+				copy:SetupCursor();
+				targetCursor := copy.theCursor
+			end;
+		(if (if (target := targetCursor:entry()) then (not target.class)) then call GetRoot().cardfile.kUpdateClass with (target))
+	end,
+	usesCursors: true,
+	// The routing slip's title: the format's name.
+	SetupItem: func(fields, frame2) begin
+		fields.title := name;
+		inherited:SetupItem(fields, frame2)
+	end,
+	name: nil,
+	_proto: @protoPrintFormat
+};

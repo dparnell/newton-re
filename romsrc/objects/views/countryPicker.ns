@@ -1,0 +1,3 @@
+// countryPicker: a worldPicker (tap on the world map) of countries.
+
+countryPicker := {_proto: @worldPicker};

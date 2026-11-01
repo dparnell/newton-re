@@ -1,9 +1,0 @@
-@@ 0x1015655 argframe=nil,0
-func(a1) begin
-	local l1, l2, l3;
-	if (not (l3 := self:?DoEvent_Check('|protoFSM:KillPeriodicEvent|))) then begin
-			return nil
-		end;
-	(if IsArray((l1 := l3.engineView:?ChildViewFrames())) then (if (l2 := LFetch(l1, a1, 0, '|=|, 'event)) then RemoveStepView(l3.engineView, l2)))
-end
-@@end

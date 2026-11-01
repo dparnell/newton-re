@@ -1,0 +1,43 @@
+// usStdPhoneFilter: the US fixed phone format "555-1212" (no area code, which
+// goes in a field of its own) for the protoCharEdit corrector.
+
+usStdPhoneFilter := {
+	item: "555-1212",
+	format: format_2,
+	|string|: string_2,
+	filters: [|Array|: digits],
+	// Lays the exchange and number (as usPhoneFilter:Parse split them) into the
+	// comb; currentWord is the filter frame, currentWord2 the word.
+	SetupString: func(currentWord, currentWord2) begin
+		local sPrintObject2, len, len2;
+		if (if (if (not currentWord.code) then (not currentWord.num1)) then (not currentWord.num2)) then begin
+				currentWord:Parse(currentWord2)
+			end;
+		sPrintObject2 := SPrintObject("   -    ");
+		if currentWord.num1 then begin
+				len := StrLen(currentWord.num1);
+				StrMunger(sPrintObject2, (3 - len), len, currentWord.num1, 0, len)
+			end;
+		if currentWord.num2 then begin
+				len2 := StrLen(currentWord.num2);
+				StrMunger(sPrintObject2, 4, len2, currentWord.num2, 0, len2)
+			end;
+		currentWord.code := nil;
+		currentWord.num1 := nil;
+		currentWord.num2 := nil;
+		return sPrintObject2
+	end,
+	// Turns the comb's text back into a phone number, dropping spaces and
+	// stray separators.
+	CleanupString: func(currentWord) begin
+		local pos;
+		StrReplace(currentWord, " ", "", nil);
+		StrReplace(currentWord, ")-", ")", 1);
+		StrReplace(currentWord, "()", "", 1);
+		StrReplace(currentWord, ")", ") ", 1);
+		if (((pos := StrPos(currentWord, "-", 0)) = 0) or (pos = (StrLen(currentWord) - 1))) then begin
+				StrReplace(currentWord, "-", "", 1)
+			end;
+		return currentWord
+	end
+};

@@ -1,0 +1,154 @@
+// eraseSlip (magic pointer 574), and what only it reaches: the slip the Backup
+// slip (backupSlip, its godParent) opens to erase a card, made by
+// eraseSlip:New(backupSlip, store).  It shows the card slot's icon and offers
+// three choices - the entire card, its backup only, or its information only -
+// confirms with ModalConfirm, and then calls the method of the same name
+// (eraseStore, wipeBackup, wipeInfo) after the click, which closes the slip and
+// asks godParent to do the erasing.
+
+eraseSlip := {
+	// the card slot of the store being erased (its icon in CardSlotIcons)
+	slot: nil,
+	// godParent told the slip is gone
+	viewQuitScript: func() begin
+		(godParent.openEraseSlip := nil)
+	end,
+	// the card slot's icon: the strip's image for the screen's orientation
+	viewDrawScript: func() begin
+		DrawXBitmap(iconBounds, icon, screenOrientation, 0)
+	end,
+	viewChildren: [viewChildren:
+		{_proto: @protoCancelButton},
+		// "Erase"
+		{
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+			viewBounds: {left: -41, top: 0, right: -7, bottom: 0},
+			text: erase,
+			// value: the slip's method named by the chosen radio button; the store
+			// is named by its name, or its kind when it has none; nothing done
+			// unless the user confirms, and the method is called deferred with
+			// (the slip, godParent, the store)
+			buttonClickScript: func() begin
+				local value, name, l3;
+				value := GetVariable(self:Parent(), eraseTypeCluster.clusterValue);
+				if (StrLen((name := godParent:getDestStore():GetName())) = 0) then begin
+						name := godParent:getDestStore():GetKind()
+					end;
+				l3 := eraseStrs.(eraseTypeCluster.clusterValue);
+				if (not ModalConfirm(ParamStr("Warning! Erase will remove ^0 on \u201C\u^1\u201D\u. Are you sure you want to do this?", [Array: l3, name]), nil)) then begin
+						value := nil
+					end;
+				(if value then AddDeferredCall(value, [Array: base, godParent, store]))
+			end,
+			_proto: @protoTextButton
+		},
+		{
+			viewJustify: vjParentFullH,
+			viewBounds: {left: 47, top: 8, right: -8, bottom: 32},
+			viewFont: @fontSystem10Bold,
+			text: "What would you like to erase?",
+			_proto: @protoStaticText
+		},
+		eraseTypeCluster
+	],
+	iconBounds: nil,
+	ReOrientToScreen: @defRotateFunc,
+	viewBounds: {left: 0, top: 0, right: 210, bottom: 100},
+	store: nil,
+	allocateContext: [|Array|: 'eraseTypeCluster, eraseTypeCluster],
+	// "Information only": (the slip, godParent, the store) - the slip closed,
+	// then godParent:wipeInfo(store)
+	wipeInfo: func(a1, a2, a3) begin
+		a1:Close();
+		a2:wipeInfo(a3)
+	end,
+	_proto: @protoFloater,
+	screenOrientation: nil,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	icon: nil,
+	// eraseSlip:New(godParent, store): the slip built and opened as a modal
+	// dialog (FilterDialog)
+	New: func(a1, a2) begin
+		local context;
+		(context := BuildContext(self)).godParent := a1;
+		context.store := a2;
+		context:FilterDialog()
+	end,
+	// what each choice erases, for the confirmation's text
+	eraseStrs: {
+		eraseStore: "all the information and packages",
+		wipeInfo: "all the information",
+		wipeBackup: "all the backup information"
+	},
+	// "Backup only": the slip closed, then godParent:wipeBackup(store)
+	wipeBackup: func(a1, a2, a3) begin
+		a1:Close();
+		a2:wipeBackup(a3)
+	end,
+	// registers the slip with godParent, finds the card slot's icon and where
+	// to draw it - a quarter of the bitmap's width: the icon is a strip of
+	// four images, of which DrawXBitmap draws the one for the screen's
+	// orientation - and takes the keys
+	viewSetupFormScript: func() begin
+		godParent.openEraseSlip := self;
+		self.slot := store:CardSlot();
+		self.icon := CardSlotIcons[slot];
+		self.screenOrientation := GetUserConfig('screenOrientation);
+		self.iconBounds := {left: 5, top: 5, right: (5 + (icon.bounds.right div 4)), bottom: (5 + icon.bounds.bottom)};
+		SetKeyView(self, 0)
+	end,
+	godParent: nil,
+	// "Entire card": the slip closed, then godParent:eraseStore(store); should
+	// that throw, godParent is closed too before the exception goes on (the
+	// argument named getDestStore is the slip itself)
+	eraseStore: func(getDestStore, a2, a3) begin
+		getDestStore:Close();
+		(try begin
+				a2:eraseStore(a3)
+			end onexception |evt.ex| do begin
+				a2:Close();
+				Rethrow()
+			end)
+	end,
+	eraseTypeCluster: nil
+};
+
+// the three choices; each button's value is the name of the eraseSlip method
+// that does it
+eraseTypeCluster := {
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewBounds: {left: 47, top: 5, right: -8, bottom: 41},
+	clusterValue: 'eraseStore,
+	preallocatedContext: 'eraseTypeCluster,
+	viewChildren: [viewChildren:
+		{
+			viewJustify: vjParentFullH,
+			viewBounds: {left: 5, top: 0, right: 0, bottom: 12},
+			viewFont: @fontSystem10Bold,
+			text: "Entire card",
+			buttonValue: 'eraseStore,
+			_proto: @protoRadioButton
+		},
+		{
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 5, top: 0, right: 0, bottom: 12},
+			viewFont: @fontSystem10Bold,
+			text: "Backup only",
+			buttonValue: 'wipeBackup,
+			_proto: @protoRadioButton
+		},
+		{
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 5, top: 0, right: 0, bottom: 12},
+			viewFont: @fontSystem10Bold,
+			text: "Information only",
+			buttonValue: 'wipeInfo,
+			_proto: @protoRadioButton
+		}
+	],
+	_proto: @protoRadioCluster
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+wipeInfo_code := same("eraseSlip.wipeInfo.instructions");

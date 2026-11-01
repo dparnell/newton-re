@@ -1,0 +1,8 @@
+// function_7: the link manager's Abort action while connecting: tells the grabbing clients
+// the request was cancelled and disconnects. The file holds it and what only it reaches.
+
+// Abort: the clients told kCommErrRequestCanceled; disconnects.
+function_7 := func() begin
+	self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(kCommErrRequestCanceled), 'Update);
+	self:DoEvent('DisconnectLink, nil)
+end;

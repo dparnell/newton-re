@@ -1,5 +1,0 @@
-@@ 0x7511f1
-func() begin
-	self:SetFontForEntryLine(entryLine)
-end
-@@end

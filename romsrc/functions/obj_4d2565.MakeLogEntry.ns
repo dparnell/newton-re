@@ -1,5 +1,0 @@
-@@ 0x4d22f5
-func(a1, a2) begin
-	(a1.typeBeam := a2.typeBeam)
-end
-@@end

@@ -1,0 +1,6 @@
+// starterMath, and what only it reaches
+//
+// The starter template of a math expression view (cloned by the natives
+// that build one; its children are the expression's parts).
+
+starterMath := {viewClass: 65620, viewBounds: nil, viewFlags: vVisible + vCalculateBounds, viewChildren: nil}; // viewClass 65620 is clMathExpView (0x54) with 0x10000 set

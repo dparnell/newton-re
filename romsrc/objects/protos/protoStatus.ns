@@ -1,0 +1,15 @@
+// protoStatus: a status bar (protoStatusBar) across the bottom of an
+// application with the clock, the time field and a close (cancel) button at
+// its right end.
+
+protoStatus := {
+	_proto: @protoStatusBar,
+	viewJustify: vjParentFullH + vjParentBottomV,
+	viewBounds: {left: 0, top: -18, right: 0, bottom: 0},
+	debug: 90529,
+	viewChildren: [viewChildren:
+		@analogClock,
+		timeField,
+		{_proto: @protoCancelButton, viewBounds: {left: -19, top: -16, right: -6, bottom: -3}}
+	]
+};

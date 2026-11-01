@@ -1,5 +1,0 @@
-@@ 0x550e69
-func() begin
-	(if viewCObject then iconSpace:RedoChildren())
-end
-@@end

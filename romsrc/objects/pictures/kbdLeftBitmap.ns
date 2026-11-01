@@ -1,0 +1,7 @@
+// The left-arrow key of the keyboards. A 1-bit bitmap frame (bits, bounds), 11 x 6 pixels.
+// Magic pointer @749. Used by alphaKeys, frames, numericKeys, phonePad, viewRoot.
+
+kbdLeftBitmap := {
+	bits: bitmap('bits, "resources/bits/3d76e5.png", "00000000000400c700c700d400cd00df", 1),
+	bounds: {left: 0, top: 0, right: 11, bottom: 6}
+};

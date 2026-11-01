@@ -1,5 +1,0 @@
-@@ 0x4e72a9
-func() begin
-	base:ClearDisplay()
-end
-@@end

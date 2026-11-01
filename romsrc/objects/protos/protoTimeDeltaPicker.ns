@@ -1,0 +1,128 @@
+// protoTimeDeltaPicker: flip digits (a protoDigitBase) for a length of
+// time in minutes, shown as [+/-]hh:mm - the minutes' units and tens, the
+// hours' units and tens, and a plus/minus flap when negative values are
+// allowed. The value is in value (minutes).
+
+protoTimeDeltaPicker := {
+	// a day less a minute either way (1440 minutes in a day)
+	maxValue: 1439,
+	minValue: -1439,
+	// the step of the minute digits, if not 1
+	minuteIncrement: nil,
+	// viewSetupFormScript(): hides the plus/minus flap when the value cannot
+	// be negative
+	viewSetupFormScript: func() begin
+		(if (minValue >= 0) then (plusminus.viewFlags := 0))
+	end,
+	// viewDrawScript(): sets the digits' steps from minuteIncrement, then
+	// draws the colon between hours and minutes when the locale's time
+	// separator is ":"
+	viewDrawScript: compile(
+		constants: {
+			kROM_603: @colonSlides
+		},
+		func() begin
+			local timeformat, bounds;
+			if minuteIncrement then begin
+					// looks like a ROM bug: this reads minutes1.increment and
+					// drops it - presumably meant to set it to minuteIncrement
+					minutes1.increment;
+					if (minuteIncrement > 10) then begin
+							minutes10.increment := minuteIncrement
+						end
+				end;
+			(if ((timeformat := GetLocale().timeformat).timeSepStr1[0] = $:) then DrawXBitmap((bounds := RelBounds((((((bounds := self:LocalBox()).right - 23) - 23) - 6) - 1), ((bounds.bottom - 15) div 2), 6, 15)), kROM_603, 0, 0))
+		end),
+	viewChildren: [viewChildren: minutes1, minutes10_2, hours1_2, hours10_2, plusminus],
+	minutes1: nil,
+	allocateContext: [|Array|:
+		'minutes1,
+		minutes1,
+		'minutes10,
+		minutes10_2,
+		'hours1,
+		hours1_2,
+		'hours10,
+		hours10_2,
+		'plusminus,
+		plusminus
+	],
+	minutes10: nil,
+	hours1: nil,
+	hours10: nil,
+	plusminus: nil,
+	_proto: @protoDigitBase
+};
+
+// the minutes' units digit
+minutes1 := {
+	viewBounds: {left: -23, top: 0, right: 0, bottom: 28},
+	icon: @digitflaploWord,
+	// The digit shown: the minutes' units.
+	GetIndex: func(value) begin
+		(abs(value) mod 10)
+	end,
+	nextDigit: 'minutes10,
+	preallocatedContext: 'minutes1,
+	_proto: @protoDigit
+};
+
+// the minutes' tens digit (0-5), stepping by 10 minutes
+minutes10_2 := {
+	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+	icon: @digitflap,
+	increment: 10,
+	// The minutes' tens.
+	GetIndex: func(value) begin
+		((abs(value) mod 60) div 10)
+	end,
+	nextDigit: 'hours1,
+	preallocatedContext: 'minutes10,
+	_proto: @protoDigit
+};
+
+// the hours' units digit, stepping by an hour (10 pixels left of the
+// minutes, for the colon)
+hours1_2 := {
+	viewBounds: {left: -33, top: 0, right: -10, bottom: 28},
+	icon: @digitflaploWord,
+	increment: 60,
+	// The hours' units.
+	GetIndex: func(value) begin
+		((abs(value) div 60) mod 10)
+	end,
+	nextDigit: 'hours10,
+	preallocatedContext: 'hours1,
+	_proto: @protoDigit
+};
+
+// the hours' tens digit, stepping by ten hours
+hours10_2 := {
+	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+	icon: @digitflap,
+	increment: 600,
+	// The hours' tens.
+	GetIndex: func(value) begin
+		(abs(value) div 600)
+	end,
+	preallocatedContext: 'hours10,
+	_proto: @protoDigit
+};
+
+// the sign flap: + (index 0) or - (index 1)
+plusminus := {
+	viewBounds: {left: -16, top: 0, right: 0, bottom: 28},
+	digits: @plusminusBitmap,
+	totalFrames: 2,
+	// Advance(delta): flipping the sign negates the value (adds -2 * value)
+	Advance: func(a1) begin
+		inherited:Advance((-2 * value))
+	end,
+	// The sign: 0 plus, 1 minus.
+	GetIndex: func(value) begin
+		(if (value >= 0) then 0 else 1)
+	end,
+	nextDigit: 'minutes1,
+	preallocatedContext: 'plusminus,
+	_proto: @protoDigit
+};

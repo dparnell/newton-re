@@ -1,6 +1,0 @@
-@@ 0x104a6c5
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Release, a1, 'Update);
-	(if a1.infoError then self:DoEvent('DisengageLinkProtocolFailure, nil) else (if (a1.infoStatus = 'Disengaged) then self:DoEvent('DisengageLinkProtocolSuccess, nil)))
-end
-@@end

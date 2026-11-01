@@ -1,0 +1,7 @@
+// A closed padlock (a locked, write-protected item). A 1-bit bitmap frame (bits, bounds),
+// 12 x 11 pixels. Magic pointer @601. Used by backupSlip, viewRoot.
+
+closedPadLockBitmap := {
+	bits: bitmap('bits, "resources/bits/3d9f35.png", "00000000000401a301a3012a01ae0136", 1),
+	bounds: {left: 0, top: 0, right: 12, bottom: 11}
+};

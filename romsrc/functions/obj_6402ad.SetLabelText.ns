@@ -1,5 +1,0 @@
-@@ 0x41dd3d
-func(a1) begin
-	(labelLine.text := Stringer([Array: (if labelCommands then $\uFC01 else $\uFC02), a1]))
-end
-@@end

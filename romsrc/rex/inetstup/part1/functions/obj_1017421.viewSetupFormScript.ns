@@ -1,7 +1,0 @@
-@@ 0x10174e1
-func() begin
-	self.viewBounds := Clone(self.viewBounds);
-	self.viewBounds.right := (StrWidth(name) + 8);
-	(if (ClassOf(path) = 'pathExpr) then (self.text := (if (path[1] = 0) then "Primary DNS/Name Server Address" else "Alternate DNS/Name Server Address")) else (self.text := name))
-end
-@@end

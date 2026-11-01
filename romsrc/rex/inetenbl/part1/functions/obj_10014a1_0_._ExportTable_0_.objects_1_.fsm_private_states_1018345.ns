@@ -1,6 +1,0 @@
-@@ 0x1018345
-func(a1) begin
-	self:?DoErrorCallback("Endpoint Disconnect", a1);
-	self:DoEvent('UnBind, nil)
-end
-@@end

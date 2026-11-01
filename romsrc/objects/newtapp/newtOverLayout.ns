@@ -1,0 +1,453 @@
+// newtOverLayout, and what only it reaches: the NewtApp framework's default
+// overview layout (NPR "newtOverLayout"), based on newtLayout and on the
+// protoOverview functions it shares with the system's overviews (the slots
+// below set to functions of the same name).  It has no children: it draws one
+// line per entry (the shapes Abstract returns) with a check box column at the
+// left, keeps the checked entries as aliases in `selected`, and hands them to
+// filing, routing and delete as a target cursor.
+
+newtOverLayout := {
+	ForEachSelected: ForEachSelected,
+	// the system services' question for the target (NPR GetTargetInfo(targetType)):
+	// one checked entry is the target itself; several are a target cursor of the
+	// class overviewTargetClass (default 'newtOverview); targetStore is their store
+	// if they share one, else nil
+	GetTargetInfo: func(a1) begin
+		frame2 := {target: nil, targetView: self};
+		if (a1 = 'Filing) then begin
+				frame2.targetView := targetApp
+			end;
+		if (if selected then (Length(selected) > 0)) then begin
+				if (Length(selected) = 1) then begin
+						frame2.target := ResolveEntryAlias(selected[0])
+					end else begin
+						if (value = nil) then begin
+								value := GetVariable(self, 'overviewTargetClass)
+							end;
+						if (value = nil) then begin
+								value := 'newtOverview
+							end;
+						frame2.target := CreateTargetCursor(value, selected);
+						if (a1 = 'Filing) then begin
+								// a placeholder folder: the filing slip shows no current folder for several
+								frame2.target.labels := '__XXTempLabel
+							end
+					end;
+				local resolveEntryAlias2;
+				local store;
+				local store2;
+				local frame2;
+				local value;
+				(foreach item in selected do begin
+						if (if IsSoupEntry((resolveEntryAlias2 := ResolveEntryAlias(item))) then (store := EntryStore(resolveEntryAlias2))) then begin
+								if (not store2) then begin
+										store2 := store
+									end else begin
+										if (store <> store2) then begin
+												break (store2 := nil) // on different stores: no common store
+											end
+									end
+							end
+					end);
+				frame2.targetStore := store2
+			end;
+		frame2
+	end,
+	// Enter or Return (the key commands below): opens the highlighted entry in the
+	// previous layout
+	ChooseCurrItem: func(a1) begin
+		clicker();
+		newtAppBase:ShowLayout(nil)
+	end,
+	// newtLayout's NewEntry for the overview: adds the entry with undo and, when
+	// a2 (_context) is true, goes to it in the previous layout
+	NewEntry: func(a1, _context, store) begin
+		masterSoup:AddEntry(a1, store);
+		AddUndoSend(layout, 'KillEntry, [Array: a1]);
+		(if _context then begin
+				dataCursor:Goto(a1);
+				hiliteEntry := nil;
+				currentLayout := previousLayout;
+				newtAppBase:RedoChildren()
+			end)
+	end,
+	// listens for stationery changes (HandleStationeryChange), registered under a
+	// name made of the view and the app symbol
+	viewSetupDoneScript: func() begin
+		RegStationeryChange(Intern(Stringer([Array: viewCObject, ":Overview:", GetVariable(self, 'appSymbol)])), func(a1, a2, a3, a4) begin
+			self:HandleStationeryChange(a1, a2, a3, a4)
+		end);
+		inherited:?viewSetupDoneScript()
+	end,
+	// a dataDef was registered or removed: redisplay, as icons may have changed
+	HandleStationeryChange: func(a1, a2, a3, a4) begin
+		(if (if self.viewCObject then (a2 = 'dataDef)) then self:DoRetarget())
+	end,
+	SelectItem: SelectItem,
+	// where the check boxes are drawn in each line
+	checkBoxHorzOffset: 0,
+	// the number of lines Abstract has made so far, to find the highlighted one
+	hiliteCount: nil,
+	// leaving the overview: the main layout's cursor goes to the highlighted entry
+	viewQuitScript: func() begin
+		if hiliteEntry then begin
+				if IsSoupEntry(hiliteEntry) then begin
+						masterSoup:GetCursor():Goto(hiliteEntry)
+					end
+			end;
+		dontStartWithFolder := nil;
+		hiliteEntry := nil;
+		UnRegStationeryChange(Intern(Stringer([Array: viewCObject, ":Overview:", GetVariable(self, 'appSymbol)])));
+		inherited:?viewQuitScript()
+	end,
+	// unchecks every line (the undo of checkAll)
+	UnCheckAll: func() begin
+		hilitedIndex := nil;
+		selected := nil;
+		layout:DoRetarget()
+	end,
+	// draws the "no items" text when empty, else the lines' shapes, the gray
+	// divider beside the check boxes and the highlight of the current line
+	viewDrawScript: func() begin
+		local box, hiliteShape;
+		(if (if (not forceNewEntry) then (not dataCursor:entry())) then self:DrawShape(self:AppEmpty(), '{}) else begin
+				if (not viewStyle) then begin
+						viewStyle := {font: viewFont}
+					end;
+				if pieces then begin
+						self:DrawShape(pieces, viewStyle)
+					end;
+				if (if dividerLine then (not nothingCheckable)) then begin
+						self:DrawShape(MakeRect((selectIndent - dividerLine), 0, selectIndent, (maxLines * lineHeight)), '{penPattern: vfNone, fillPattern: 3})
+					end;
+				(if hilitedIndex then begin
+						(box := self:LocalBox()).bottom := lineHeight;
+						// box.bottom: one line high
+						self:hiliter((hiliteShape := self:GetHiliteShape(19, box)), hilitedIndex, 'off)
+					end)
+			end)
+	end,
+	// the overview's own cursor, a clone of dataCursor once one is made
+	SetupCursor: func() begin
+		inherited:SetupCursor();
+		(if cursor then (self.cursor := dataCursor:clone()))
+	end,
+	CheckState: CheckState,
+	GetIndexEntry: GetIndexEntry,
+	CheckOn: CheckOn,
+	// NPR Abstract(targetEntry, bbox): the shapes for one line: the dataDef's icon,
+	// the entry's text (its StringExtract) and, in All Items or with several stores,
+	// the folder's or the store's name at the right; an entry with no dataDef is
+	// left to the app's OverviewAbstract, else drawn as an info icon
+	Abstract: compile(
+		constants: {
+			// the style of the right-hand folder and store names
+			kLiteral_49cdf1: '{font: tsSystem + tsSize(9), justification: right}
+		},
+		func(items2Item, copy) begin
+			local l1, entryDataDef, icon, l4, stringExtract, l6, l7, list, store;
+			if (items2Item = hiliteEntry) then begin
+					hilitedIndex := hiliteCount
+				end;
+			hiliteCount := (hiliteCount + 1);
+			l1 := (if (labelsFilter = '_all) then items2Item.labels);
+			(if (entryDataDef := GetEntryDataDef(items2Item)) then begin
+					icon := entryDataDef.icon;
+					l4 := ((copy.left + 16) + 2); // after the 16-pixel icon
+					stringExtract := entryDataDef:StringExtract(items2Item, 2);
+					l6 := (copy.right - l4);
+					if l1 then begin
+							if (l7 := userConfiguration.userFolders.(items2Item.labels)) then begin
+									l6 := (l6 - StrFontWidth(l7, tsSystem + tsSize(9)))
+								end
+						end;
+					list := [Array: OffsetShape(MakeShape(icon), copy.left, (copy.top + 2)), MakeText(StrTruncate(stringExtract, l6), l4, copy.top, copy.right, (copy.top + 11))];
+					if l1 then begin
+							if l7 then begin
+									AddArraySlot(list, kLiteral_49cdf1);
+									AddArraySlot(list, MakeText(l7, l4, copy.top, (copy.right - 2), (copy.top + 11)))
+								end
+						end;
+					if (if showStoreName then (Length(GetStores()) > 1)) then begin
+							store := EntryStore(items2Item);
+							AddArraySlot(list, kLiteral_49cdf1);
+							AddArraySlot(list, MakeText(store:GetName(), l4, copy.top, (copy.right - 2), (copy.top + 25)))
+						end;
+					list
+				end else (if (not (list := self:?OverviewAbstract(items2Item, copy))) then [Array: OffsetShape(MakeShape(@infoBitmap), copy.left, (copy.top + 2))] else list))
+		end),
+	// true: each line shows its store's name when more than one store is present
+	showStoreName: nil,
+	maxLines: 0,
+	_proto: @newtLayout,
+	cursor: nil,
+	// the folder or store changed: keeps only the checked entries still shown
+	FilterChanged: func() begin
+		inherited:FilterChanged();
+		list := [Array: ];
+		copy := dataCursor:clone();
+		if selected then begin
+				local list;
+				local copy;
+				(foreach item in selected do begin
+						local resolveEntryAlias2;
+						if (if (resolveEntryAlias2 := ResolveEntryAlias(item)) then copy:Goto(resolveEntryAlias2)) then begin
+								AddArraySlot(list, item)
+							end
+					end);
+				selected := list
+			end;
+		(hilitedIndex := nil)
+	end,
+	// Command-A: checks every entry shown (selected: aliases of them all), undoably
+	checkAll: compile(
+		constants: {
+			// an alias to an entry
+			kFunction_49dabd: func(a1) begin
+				MakeEntryAlias(a1)
+			end
+		},
+		func() begin
+			hilitedIndex := nil;
+			(curse := cursor:clone()):Reset();
+			try begin
+					selected := MapCursor(curse, kFunction_49dabd)
+				end onexception |evt.ex| do begin
+					self:Notify(kNotifyAlert, title, "There was not enough memory to select all items. Some items may still be unselected.")
+				end;
+			AddUndoSend(layout, 'UnCheckAll, [Array: ]);
+			layout:DoRetarget()
+		end),
+	// the overview has no entry to flush
+	EndFlush: func() begin
+		nil
+	end,
+	// Command-Return: checks or unchecks the highlighted line
+	SelectCurrItem: func(a1) begin
+		(if (if hilitedIndex then hiliteEntry) then begin
+				clicker();
+				self:SelectItem(hilitedIndex);
+				hilitedIndex := nil;
+				checkAllPrimed := nil;
+				RefreshViews()
+			end)
+	end,
+	textFlags: 5120,
+	Scroller: Scroller,
+	SetupAbstracts: SetupAbstracts,
+	// the height of a line in pixels
+	lineHeight: 32,
+	// a found item is shown in the previous layout, not in the overview
+	ShowFoundItem: func(a1, a2) begin
+		hiliteEntry := nil;
+		newtAppBase:ShowLayout(nil);
+		inherited:ShowFoundItem(a1, a2)
+	end,
+	trackOverview: trackOverview,
+	viewStyle: nil,
+	viewScrollDownScript: viewScrollDownScript,
+	// NPR: true hides the check boxes and the dotted line
+	nothingCheckable: nil,
+	checkScrollability: nil,
+	// the checked entries (entry aliases)
+	selected: nil,
+	pieces: nil,
+	items: nil,
+	numLines: 0,
+	GetTheRightShape: GetTheRightShape,
+	CheckOff: CheckOff,
+	viewScrollUpScript: viewScrollUpScript,
+	hilitedIndex: nil,
+	// the width of the dotted line left of selectIndent (nil: none)
+	dividerLine: 1,
+	// NPR: true centres the current entry in the list
+	centerTarget: nil,
+	// the entry of the highlighted line (the one the up and down keys move)
+	hiliteEntry: nil,
+	// starts with the main layout's current entry highlighted
+	viewSetupFormScript: func() begin
+		local entry;
+		inherited:viewSetupFormScript();
+		if (entry := dataCursor:entry()) then begin
+				hiliteEntry := entry
+			end;
+		dontStartWithFolder := true;
+		SetKeyView(self, 0)
+	end,
+	GetHiliteShape: GetHiliteShape,
+	// the down arrow: highlights the next entry; past the last line, the list
+	// is redone with that entry at the top
+	downOneItem: func(a1) begin
+		local copy, next;
+		clicker();
+		if (if hiliteEntry then IsSoupEntry(hiliteEntry)) then begin
+				copy := cursor:clone();
+				copy:Goto(hiliteEntry);
+				if (next := copy:Next()) then begin
+						hiliteEntry := next;
+						if ((not hilitedIndex) or (hilitedIndex >= (maxLines - 1))) then begin
+								hilitedIndex := 0;
+								cursor:Goto(next);
+								self:RedoChildren()
+							end else begin
+								hilitedIndex := (hilitedIndex + 1);
+								self:Dirty()
+							end
+					end
+			end;
+		RefreshViews()
+	end,
+	// filing has moved the checked entries: none are checked any more
+	FilingChangedX: func() begin
+		selected := nil;
+		inherited:?FilingChangedX()
+	end,
+	// a tap on line a1 (at x, y): left of selectIndent it toggles the check box,
+	// else it opens that entry in the previous layout
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+		(if (trackScrollingItem < selectIndent) then begin
+				self:SelectItem(a1);
+				checkAllPrimed := nil;
+				hilitedIndex := nil;
+				true
+			end else begin
+				hiliteEntry := nil;
+				cursor:move(a1);
+				dataCursor:Goto(cursor:entry());
+				newtAppBase:ShowLayout(nil)
+			end)
+	end,
+	viewClickScript: viewClickScript_3,
+	// filing the checked entries: relabels each and/or moves it to the store
+	// (copies an entry off a read-only store), then broadcasts the soup change
+	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
+		if storeChanged then begin
+				if (not (soup := a5:GetSoup((l2 := allSoups.(mastersoupSlot).soupName)))) then begin
+						soup := CreateUSoupMember(l2, a5)
+					end
+			end;
+		local resolveEntryAlias2;
+		local l2;
+		local soup;
+		(foreach key, value in selected do begin
+				local l7;
+				if (resolveEntryAlias2 := ResolveEntryAlias(value)) then begin
+						l7 := nil;
+						if labelsChanged then begin
+								if (not a3) then begin
+										if resolveEntryAlias2.labels then begin
+												RemoveSlot(resolveEntryAlias2, 'labels);
+												l7 := true
+											end
+									end else begin
+										if (a3 <> resolveEntryAlias2.labels) then begin
+												resolveEntryAlias2.labels := a3;
+												l7 := true
+											end
+									end
+							end;
+						if (if storeChanged then (EntryStore(resolveEntryAlias2) <> a5)) then begin
+								self:SetActionDescription(-8101); // the action description the root's MoveTarget sets too
+								if EntryStore(resolveEntryAlias2):IsReadOnly() then begin
+										EntryCopy(resolveEntryAlias2, soup)
+									end else begin
+										EntryMove(resolveEntryAlias2, soup)
+									end
+							end else begin
+								if l7 then begin
+										EntryChange(resolveEntryAlias2)
+									end
+							end
+					end
+			end);
+		// looks like a ROM bug: l7 is the last entry's changed flag only, so relabelling
+		// that changed some entries but not the last does not broadcast
+		(if (storeChanged or l7) then XmitSoupChange(masterSoup.soupName, appSymbol, 'whatThe, nil))
+	end,
+	// Command-A check all; the up and down arrows; Enter and Return open the
+	// highlighted entry; Command-Return checks it
+	_keyCommands: [|Array|:
+		{
+			char: $a,
+			modifiers: kCommandModifier,
+			keyMessage: '_checkAllKeyScript,
+			name: "Check All",
+			category: viewing
+		},
+		{char: $\u001e, modifiers: 0, keyMessage: 'upOneItem, name: "Up", category: viewing},
+		{char: $\u001f, modifiers: 0, keyMessage: 'downOneItem, name: "Down", category: viewing},
+		{char: $\u0003, modifiers: 0, keyMessage: 'ChooseCurrItem, name: choose, category: viewing},
+		{char: $\u000d, modifiers: 0, keyMessage: 'ChooseCurrItem, name: choose, category: viewing},
+		{
+			char: $\u000d,
+			modifiers: kCommandModifier,
+			keyMessage: 'SelectCurrItem,
+			name: "Check",
+			category: viewing
+		}
+	],
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	checkBoxVertOffset: 3,
+	// the overview itself has the user's attention
+	GetActiveViewX: func() begin
+		self
+	end,
+	// the up arrow: highlights the previous entry; above the first line, the list
+	// is redone with that entry at the top
+	upOneItem: func(a1) begin
+		local copy, prev;
+		clicker();
+		if (if hiliteEntry then IsSoupEntry(hiliteEntry)) then begin
+				copy := cursor:clone();
+				copy:Goto(hiliteEntry);
+				if (prev := copy:prev()) then begin
+						hiliteEntry := prev;
+						if ((not hilitedIndex) or (hilitedIndex <= 0)) then begin
+								hilitedIndex := 0;
+								cursor:Goto(prev);
+								self:RedoChildren()
+							end else begin
+								hilitedIndex := (hilitedIndex - 1);
+								self:Dirty()
+							end
+					end
+			end;
+		RefreshViews()
+	end,
+	// sets up the cursor (on a first display, around the current entry when
+	// centerTarget is set: maxLines is the lines that fit) and makes the lines
+	viewSetupChildrenScript: func() begin
+		local dataCursor2;
+		dataCursor2 := dataCursor;
+		hiliteCount := 0;
+		hilitedIndex := nil;
+		if (not cursor) then begin
+				hilitedIndex := nil;
+				hiliteEntry := dataCursor2:entry();
+				if centerTarget then begin
+						if (not dataCursor2:move((-((maxLines := (self:LocalBox().bottom div lineHeight)) div 2)))) then begin
+								dataCursor2:Next()
+							end
+					end
+			end;
+		inherited:viewSetupChildrenScript();
+		self:SetupAbstracts(dataCursor2:clone());
+		(self.cursor := dataCursor2)
+	end,
+	hiliter: hiliter,
+	isSelected: isSelected,
+	scrollOrigin: 0,
+	autoDeselect: nil,
+	// the width of the check box column: taps left of it check
+	selectIndent: 15,
+	// Command-A
+	_checkAllKeyScript: func(a1) begin
+		clicker();
+		self:checkAll();
+		(checkAllPrimed := true)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_literal1_2 := same("newtOverLayout.viewSetupDoneScript.literals[1]");

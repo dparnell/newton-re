@@ -1,5 +1,0 @@
-@@ 0x54b0bd
-func(a1, a2) begin
-	@589.FontEntry:New()
-end
-@@end

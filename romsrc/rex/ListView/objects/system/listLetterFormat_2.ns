@@ -1,0 +1,11 @@
+// listLetterFormat_2: the Letter print format for visible topics (on @8327). The file holds
+// it and what only it reaches.
+
+listLetterFormat_2 := {
+	_proto: @8327,
+	routingType: 'Print,
+	symbol: 'listLetterFormat,
+	title: letter,
+	auxForm: @addresseeSlip,
+	debug: 18576860
+};

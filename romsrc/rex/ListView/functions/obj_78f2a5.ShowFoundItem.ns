@@ -1,5 +1,0 @@
-@@ 0x78f175 names
-func(anEntry, aFinder) begin
-	editor:ShowFoundItem(anEntry, aFinder)
-end
-@@end

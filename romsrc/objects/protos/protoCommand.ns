@@ -1,0 +1,5 @@
+// protoCommand: a template for the frame of a command - an id sent to a
+// receiver with its parameters, the result it answered and the undo action
+// registered for it.  Every slot starts empty (result 0).
+
+protoCommand := {id: nil, result: 0, parameter: nil, receiver: nil, frameparameter: nil, params: nil, undo: nil};

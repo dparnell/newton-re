@@ -1,0 +1,26 @@
+// newtCustomFilter: a NewtApp filter whose recognition the input line chooses: a line
+// that has newRecFlags, newDictionaries or newRecTextFlags slots has them used instead
+// of this filter's (newtLabelCustomInputLine, newtPhonePopupEdit).  Not in the NPR.
+//
+// This file holds newtCustomFilter and what only it reaches.
+
+newtCustomFilter := {
+	_proto: @newtTextFilter,
+	// recFlags: the entry line's view flags unless the line says otherwise (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
+	// called when the line clones the filter: take the line's own choices (the filter's
+	// _parent is the line, so the bare newRecFlags etc. below are the line's slots)
+	InitFilter: func() begin
+		local parent;
+		if (parent := self:Parent()).newRecFlags then begin
+				recFlags := newRecFlags
+			end;
+		if parent.newDictionaries then begin
+				dictionaries := newDictionaries
+			end;
+		if parent.newRecTextFlags then begin
+				recTextFlags := newRecTextFlags
+			end;
+		inherited:?InitFilter()
+	end
+};

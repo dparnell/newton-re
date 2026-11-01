@@ -1,5 +1,0 @@
-@@ 0x496935
-func() begin
-	(viewValue := (self:getDestStore() = GetDefaultStore()))
-end
-@@end

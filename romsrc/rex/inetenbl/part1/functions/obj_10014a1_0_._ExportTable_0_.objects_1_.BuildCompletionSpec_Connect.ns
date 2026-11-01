@@ -1,5 +1,0 @@
-@@ 0x1016a09
-func(a1) begin
-	{_proto: fCompletionSpec_Connect, _parent: self}
-end
-@@end

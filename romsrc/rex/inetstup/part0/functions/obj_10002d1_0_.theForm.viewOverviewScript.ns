@@ -1,5 +1,0 @@
-@@ 0x100eb1d
-func() begin
-	(if (if (currentLayout = 'overview) then (layout.dataCursor:CountEntries() = 0)) then return nil else inherited:?viewOverviewScript())
-end
-@@end

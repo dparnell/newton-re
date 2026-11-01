@@ -1,5 +1,0 @@
-@@ 0x4ad889
-func() begin
-	(if (currentLayout = 'overview) then iconInt else inherited:PickIcon())
-end
-@@end

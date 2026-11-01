@@ -1,0 +1,88 @@
+// newtNetChooser: a labelled picker for the desktop computer to connect to over
+// AppleTalk: the computers last used (memory), None, and Choose Other, which opens
+// the network chooser looking up NBPLookupType ("Docker", the desktop connection
+// software).  The slot holds the computer's NBP name, "name:Docker@zone".
+//
+// This file holds newtNetChooser and what only it reaches.
+
+newtNetChooser := {
+	viewBounds: {left: 0, top: 4, right: 0, bottom: 20},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	labelCommands: nil,
+	memory: 'connectionNetwork,
+	staticLabelCommands: [|Array|: {item: none, action: 'Clear}, {item: "Choose Other", action: 'choose}],
+	NBPLookupType: "Docker",
+	text: "Desktop Computer",
+	// the text shown: the computer's name from the NBP name
+	TextSetup: func() begin
+		(if target.(path) then GetNames(target.(path)) else "")
+	end,
+	// the picker: the remembered computers, a separator, None and Choose Other, the
+	// current one checked ($\uFC0B; added at the top when not remembered)
+	pickerSetup: func() begin
+		labelCommands := [Array: ];
+		if (memoryItems := GetMemoryItems(memory)) then begin
+				local names;
+				local l2;
+				local l3;
+				local memoryItems;
+				local count;
+				local i;
+				(foreach item in memoryItems do begin
+						AddArraySlot(labelCommands, {item: GetNames(item.item), realStr: item.item})
+					end);
+				ArrayInsert(labelCommands, 'pickseparator, Length(labelCommands))
+			end;
+		count := Length(labelCommands);
+		ArrayMunger(labelCommands, count, 0, staticLabelCommands, 0, nil);
+		if target.(path) then begin
+				names := GetNames(target.(path));
+				(for i := 0 to (count - 2) do begin
+						if StrEqual(labelCommands[i].item, names) then begin
+								labelCommands[i].mark := $\uFC0B;
+								break (l2 := true)
+							end
+					end);
+				if (not l2) then begin
+						ArrayInsert(labelCommands, {item: GetNames(target.(path)), mark: $\uFC0B}, 0)
+					end
+			end else begin
+				l3 := (Length(labelCommands) - Length(staticLabelCommands));
+				labelCommands[l3] := Clone(labelCommands[l3]);
+				labelCommands[l3].mark := $\uFC0B
+			end;
+		true
+	end,
+	// None clears the slot; Choose Other opens the network chooser ("=:Docker@", any
+	// name of that type); a remembered computer is stored
+	pickActionScript: func(index) begin
+		local action, l2;
+		base:hilite(nil);
+		(if (action := labelCommands[index].action) then (if (action = 'Clear) then begin
+					target.(path) := nil;
+					self:UpdateText("");
+					self:StartFlush()
+				end else GetRoot().netChooser:openNetChooser((l2 := nil), Stringer([Array: "=:", NBPLookupType, "@"]), labelCommands[0].item, self, "Use Mac OS computer", "Mac OS computer", "Mac OS computers")) else begin
+				target.(path) := labelCommands[index].realStr;
+				self:UpdateText(GetNames(target.(path)));
+				self:StartFlush()
+			end)
+	end,
+	// the network chooser's answer: store and remember "name:Docker@zone" ("*" the
+	// local zone)
+	networkChooserDone: func(currentSelection, currentZone) begin
+		local text, names;
+		(if viewCObject then (if (names := GetNames(currentSelection)) then begin
+					if (currentZone = nil) then begin
+							text := "*"
+						end else begin
+							text := currentZone
+						end;
+					target.(path) := Stringer([Array: names, ":", NBPLookupType, "@", text]);
+					AddMemoryItem(memory, target.(path));
+					self:UpdateText(names);
+					self:StartFlush()
+				end))
+	end,
+	_proto: @protoLabelPicker
+};

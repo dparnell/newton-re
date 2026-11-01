@@ -1,0 +1,38 @@
+// newtPopupEdit: a newtPhonePopupEdit that keeps the number being edited in
+// currPhoneNum and stores it with the class currPhoneType (the kind of phone number)
+// when there is one.  Not in the NPR.
+//
+// This file holds newtPopupEdit and what only it reaches.
+
+newtPopupEdit := {
+	// start from the text of the slot's value
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		(currPhoneNum := filter:PathToText())
+	end,
+	// the phone field changed: store the number through the filter, of class
+	// currPhoneType when it is set
+	viewChangedScript: func(slot, view) begin
+		local l1;
+		currPhoneNum := view:GetRichString();
+		target.(path) := filter:TextToPath((if StrFilled(currPhoneNum) then currPhoneNum));
+		if (if currPhoneType then target.(path)) then begin
+				SetClass(target.(path), currPhoneType)
+			end;
+		self:StartFlush()
+	end,
+	// replace the number (a string, an integer or nil) undoably; before the phone field
+	// is open only currPhoneNum is set
+	UpdateText: func(a1) begin
+		local l1;
+		if (not a1) then begin
+				a1 := ""
+			end;
+		self:AddUndoAction('UpdateText, [Array: Clone(phone:GetRichString())]);
+		if IsInteger(a1) then begin
+				a1 := SPrintObject(a1)
+			end;
+		(if phone.viewCObject then SetValue(phone, 'text, a1) else (currPhoneNum := a1))
+	end,
+	_proto: @newtPhonePopupEdit
+};

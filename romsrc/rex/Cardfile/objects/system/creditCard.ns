@@ -1,0 +1,116 @@
+// The Credit Card edit view of an owner card (@8216): card number, card name
+// (with the card types' popup), expiry date and contact phone, elements of
+// owner.creditCards.
+
+creditCard := {
+	type: 'editor,
+	symbol: 'creditCard,
+	stepChildren: [stepChildren: card_2, creditCardItem, expDate, creditCardItem_2],
+	name: "Credit Card",
+	infoFrame: {
+		_proto: infoFrameProto_2,
+		checkPrefix: [|Array|: nil, [pathExpr: 'owner, 'creditCards]],
+		checkPaths: [|Array|: 'creditCardContactNum, 'creditCardName, 'creditCardNum, 'creditCardExpDate],
+		// "Card Name: ...\nCard #: ..." and the expiry date (a date in minutes shown
+		// as a short date), with the contact number drawn below.
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			local text;
+			TrimString((text := ParamStr("^?0Card Name: ^0\n||^?1Card #: ^1||", [Array: v20_wwwwwwwwwwvvvvvv[1], v20_wwwwwwwwwwvvvvvv[2]])));
+			if v20_wwwwwwwwwwvvvvvv[3] then begin
+					text := Stringer([Array: text, ParamStr("\nExp. Date: ^0", [Array: (if (if IsInstance(v20_wwwwwwwwwwvvvvvv[3], 'string) then IsRichString(v20_wwwwwwwwwwvvvvvv[3])) then v20_wwwwwwwwwwvvvvvv[3] else ShortDateStr(v20_wwwwwwwwwwvvvvvv[3], 0))])])
+				end;
+			text
+		end
+	},
+	protection: 'private,
+	fieldOrder: nil,
+	_proto: @8240,
+	creditCardNum: nil,
+	stepAllocateContext: [|Array|:
+		'creditCardNum,
+		card_2,
+		'creditCardName,
+		creditCardItem,
+		'creditCardExpDate,
+		expDate,
+		'creditCardContactNum,
+		creditCardItem_2
+	],
+	creditCardName: nil,
+	creditCardExpDate: nil,
+	creditCardContactNum: nil
+};
+
+// The card number line.
+card_2 := {
+	path: nil,
+	flavor: @newtCustomFilter,
+	label: "Card #",
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
+	addPath: 'creditCardNum,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'creditCardNum
+};
+
+// The card type line.
+creditCardItem := {
+	path: nil,
+	addPath: 'creditCardName,
+	// The card types the popup offers.
+	GetSymArray: func() begin
+		GetGlobals().creditCardTypes.creditCardClasses
+	end,
+	// Their names.
+	GetTextArray: func() begin
+		GetGlobals().creditCardTypes.creditCardText
+	end,
+	// A card type picked: its name, and its contact number (from the card types'
+	// creditCardPhoneNums) put into the phone line.
+	pickActionScript: func(index) begin
+		local l1, parsePhone2;
+		inherited:pickActionScript(index);
+		self:UpdateText(Clone(labelCommands[index].item));
+		(if (l1 := GetGlobals().creditCardTypes.creditCardPhoneNums.(currPhoneType)) then begin
+				creditCardContactNum:UpdateAreaCode((parsePhone2 := ParsePhone(l1)).areacode);
+				creditCardContactNum:UpdatePhone(parsePhone2.phone)
+			end)
+	end,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vPunctuationAllowed + vCapsRequired,
+	_proto: @8245,
+	preAllocatedContext: 'creditCardName
+};
+
+// The expiry date line.
+expDate := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	label: "Exp. Date",
+	addPath: 'creditCardExpDate,
+	flavor: {
+		_proto: @newtDateFilter,
+		// A month and year with no day is taken as the first of the month.
+		TextToPath: func(a1) begin
+			local l1, stringToDateFrame2;
+			if (if (if (if (stringToDateFrame2 := StringToDateFrame(a1)) then (not stringToDateFrame2.day)) then stringToDateFrame2.month) then stringToDateFrame2.year) then begin
+					stringToDateFrame2.day := 1;
+					l1 := inherited:TextToPath(ShortDateStr(TotalMinutes(stringToDateFrame2), 0))
+				end else begin
+					l1 := inherited:TextToPath(a1)
+				end;
+			l1
+		end
+	},
+	_proto: @newtLabelDateInputLine,
+	preAllocatedContext: 'creditCardExpDate
+};
+
+creditCardItem_2 := {
+	path: nil,
+	addPath: 'creditCardContactNum,
+	label: phone_2,
+	_proto: defaultProto,
+	preAllocatedContext: 'creditCardContactNum
+};

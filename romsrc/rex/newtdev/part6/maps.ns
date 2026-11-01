@@ -1,3 +1,6 @@
+// Newton Devices's part6: the frame maps - the slot names of its frames, shared by frames with the same
+// slots (map(flags, supermap, slots...); romsrc/README.md)
+
 map_1006c75 := map(0, nil, '_ExportTable, 'installScript, 'devInstallScript, 'devRemoveScript);
 map_1006d5d := map(2, nil, 'name, 'major, 'minor, 'objects);
 map_1006e6d := map(3, nil, 'ConfigBeforeUse, 'DeleteClient, 'DeviceClass, 'AppleTalkAvailable, 'DeviceCISProductName, '_Clients, 'ConfigView, 'AddPacketReadyEventHandler, 'AddClient, 'DeviceInserted, 'ConfigChanged, '_LostPacketCount, 'DeviceRemoved, 'MapErrorCode, 'DeviceDisplayName, 'DeviceProtocolClassName, 'Config, 'EventDefs, 'StatusView, '_Buffer, 'DeviceType);

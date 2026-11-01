@@ -1,0 +1,13 @@
+// Strings several Connection slips share (naturalize.py put them here).
+
+export85Item_3Text := "";
+
+dock := "Dock";
+
+information := "Information";
+
+all := "ﰋ All";
+
+fileInfo := "File Info";
+
+connect := "Connect";

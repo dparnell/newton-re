@@ -1,6 +1,0 @@
-@@ 0x486479
-func() begin
-	self:CopyBits(leftBits, 0, 0, nil);
-	self:CopyBits(rightBits, (width - rightBits.bounds.right), 0, nil)
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x10466d9
-func(a1) begin
-	(if self:MGetLinkEntryByLinkID(a1) then SetUserConfig('InetDefaultLink, a1))
-end
-@@end

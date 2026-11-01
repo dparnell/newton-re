@@ -1,0 +1,247 @@
+// Setup's shared frames: objects several roots reach, none alone (naturalize.py) - the
+// page frame every Setup page starts with (nameItem: the banner pictures, the title,
+// description, the Continue, Go Back and close buttons and the feedback line) and its parts.
+
+nameItem := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vVisible + vClickable,
+	viewFormat: vfFillWhite + vfPen(1),
+	stepChildren: [stepChildren:
+		{
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			viewJustify: vjParentFullH + vjParentFullV,
+			stepChildren: [stepChildren:
+				{_proto: nameItemProto},
+				{_proto: nameItemProto_2},
+				{_proto: nameItemProto_3},
+				nameItem_2,
+				nameItem_3,
+				nameItem_4,
+				nameItem_5,
+				{_proto: @8354},
+				{
+					viewBounds: {left: 2, top: 1, right: 240, bottom: 112},
+					viewFont: viewFont,
+					viewJustify: vjParentCenterH + vjParentBottomV + vjSiblingBottomV,
+					// viewSetupFormScript: the page's description text, at descriptionHeight if the page
+					// gives one, else sized to fit.
+					viewSetupFormScript: func() begin
+						if (description exists) then begin
+								self.text := description
+							end;
+						if (descriptionHeight exists) then begin
+								self.viewBounds := Clone(viewBounds);
+								viewBounds.bottom := (viewBounds.top + descriptionHeight)
+							end else begin
+								width := viewBounds.right;
+								viewBounds := TextBounds(text, {font: viewFont}, RelBounds(0, 1, width, 0))
+							end;
+						(self.viewLineSpacing := fontHeight(viewFont))
+					end,
+					// viewSetupDoneScript: nothing.
+					viewSetupDoneScript: func() begin
+						nil
+					end,
+					viewTransferMode: 0,
+					_proto: @protoStaticText,
+					text: nil
+				}
+			],
+			// viewSetupFormScript: appends the page's own step children (put aside in
+			// fSonOfStepChildren by the page proto, export161) after the frame's.
+			viewSetupFormScript: func() begin
+				(if (if (if HasPath(self, 'stepChildren) then (stepChildren <> nil)) then (Length(fSonOfStepChildren) > 0)) then begin
+						if IsReadOnly(stepChildren) then begin
+								self.stepChildren := Clone(stepChildren)
+							end;
+						ArrayMunger(stepChildren, Length(stepChildren), nil, fSonOfStepChildren, 0, Length(fSonOfStepChildren))
+					end)
+			end,
+			// viewSetupDoneScript: no close box the first time Setup runs.
+			viewSetupDoneScript: func() begin
+				(if fFirstTime then vCloser:Hide())
+			end,
+			viewClass: clView
+		}
+	],
+	// viewSetupFormScript: nothing.
+	viewSetupFormScript: func() begin
+		nil
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewClass: clView
+};
+
+// the banner across the top in the normal (tall) format; tapping it is the overview button
+nameItemProto := {
+	viewBounds: {left: 0, top: 0, right: 320, bottom: 33},
+	viewFlags: vVisible + vClickable,
+	viewFormat: nil,
+	viewTransferMode: 2,
+	viewJustify: vjCenterH + vjParentCenterH,
+	// viewSetupDoneScript: shown only in the normal format.
+	viewSetupDoneScript: func() begin
+		(if (fformat = 'wide) then self:Hide() else self:Show())
+	end,
+	// viewClickScript: a tap does what the overview button does (twice in a row closes Setup).
+	viewClickScript: func(unit) begin
+		self:viewOverviewScript();
+		true
+	end,
+	viewClass: clPictureView,
+	icon: picture('picture, "resources/picture/7a9085")
+};
+
+// the banner down the side in the wide format
+nameItemProto_2 := {
+	viewBounds: {left: 0, top: 0, right: 46, bottom: 320},
+	viewFlags: vVisible + vClickable,
+	viewFormat: nil,
+	viewTransferMode: 2,
+	viewJustify: vjParentCenterV,
+	// viewSetupDoneScript: shown only in the wide format.
+	viewSetupDoneScript: func() begin
+		(if (not (fformat = 'wide)) then self:Hide() else self:Show())
+	end,
+	// viewClickScript: as the overview button.
+	viewClickScript: func(unit) begin
+		self:viewOverviewScript();
+		true
+	end,
+	viewClass: clPictureView,
+	icon: picture('picture, "resources/picture/7a9699")
+};
+
+// the strip along the bottom in the normal format
+nameItemProto_3 := {
+	viewBounds: {top: -22, left: 0, right: 0, bottom: 0},
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewTransferMode: 2,
+	viewJustify: vjParentFullH + vjParentBottomV,
+	// viewSetupDoneScript: shown only in the normal format.
+	viewSetupDoneScript: func() begin
+		(if (fformat = 'wide) then self:Hide() else self:Show())
+	end,
+	viewClass: clPictureView,
+	icon: picture('picture, "resources/picture/7a9f41")
+};
+
+// the Continue button
+nameItem_2 := {
+	viewBounds: {top: -22, left: 0, right: -2, bottom: -6},
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
+	// viewSetupFormScript: its text (buttonText or "Continue") and size, leaving room for the
+	// close box when that is shown.
+	viewSetupFormScript: func() begin
+		if (buttonText exists) then begin
+				self.text := buttonText
+			end else begin
+				self.text := "Continue"
+			end;
+		viewBounds := Clone(viewBounds);
+		if (not fFirstTime) then begin
+				viewBounds.right := (viewBounds.right - 21)
+			end;
+		viewBounds.left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
+		(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
+	end,
+	text: nameItem_2Text,
+	// buttonClickScript: Continue - lets the page save what was entered (TearDown), then the
+	// next page; after the last one Setup closes.
+	buttonClickScript: func() begin
+		self:?TearDown();
+		if (nil = base:NextPage()) then begin
+				base:SetupClose()
+			end;
+		return true
+	end,
+	viewFont: @fontSystem9Bold,
+	_proto: @protoTextButton,
+	preAllocatedContext: '_defaultButton
+};
+
+// the Go Back button
+nameItem_3 := {
+	viewBounds: {top: -22, left: 0, right: -8, bottom: -6},
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// viewSetupFormScript: its text (buttonText or "Go Back") and size.
+	viewSetupFormScript: func() begin
+		if (buttonText exists) then begin
+				self.text := buttonText
+			end else begin
+				self.text := "Go Back"
+			end;
+		(viewBounds := Clone(viewBounds)).left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
+		(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
+	end,
+	text: nameItem_2Text,
+	// buttonClickScript: Go Back - lets the page save (TearDown), then the page before.
+	buttonClickScript: func() begin
+		self:?TearDown();
+		if (nil = base:PreviousPage()) then begin
+				base:SetupClose()
+			end;
+		return true
+	end,
+	viewFont: @fontSystem9Bold,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'vGoBackButton
+};
+
+// the close box
+nameItem_4 := {
+	// buttonClickScript: lets the page save (TearDown) and closes Setup.
+	buttonClickScript: func() begin
+		self:?TearDown();
+		base:SetupClose();
+		true
+	end,
+	viewBounds: {top: -19, left: -15, right: -2, bottom: -6},
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV,
+	_proto: @protoCancelButton,
+	preAllocatedContext: 'vCloser
+};
+
+// the feedback line above the buttons (SetFeedback)
+nameItem_5 := {
+	text: nameItem_2Text,
+	viewBounds: {top: -80, left: 2, right: -2, bottom: -20},
+	viewJustify: vjCenterH + vjParentFullH + vjParentBottomV,
+	// SetText(text): shows text, growing the view to fit.
+	SetText: func(a1) begin
+		SetValue(self, 'text, a1);
+		self:AdjustHeight()
+	end,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: 0,
+	viewFont: @fontSystem10Bold,
+	// viewSetupFormScript: at feedbackTop if the page gives one; line spacing to fit the font.
+	viewSetupFormScript: func() begin
+		if (feedbackTop exists) then begin
+				self.viewBounds := Clone(viewBounds);
+				viewBounds.top := feedbackTop
+			end;
+		(self.viewLineSpacing := fontHeight(viewFont))
+	end,
+	// AdjustHeight(): unless the page fixes feedbackTop, grows the view upwards when the text
+	// needs more lines (width feedbackWidth, or 240), keeping its bottom 30 pixels up.
+	AdjustHeight: func() begin
+		local l1, textBounds2;
+		(if (not (feedbackTop exists)) then begin
+				l1 := (if (feedbackWidth exists) then feedbackWidth else 240);
+				(if ((textBounds2 := TextBounds(text, {font: viewFont}, RelBounds(0, 0, l1, 0))).bottom > self:LocalBox().bottom) then begin
+						textBounds2.top := ((-textBounds2.bottom) - 30);
+						textBounds2.bottom := -30;
+						SetValue(self, 'viewBounds, textBounds2)
+					end)
+			end)
+	end,
+	viewClass: clParagraphView,
+	preAllocatedContext: 'vFeedback
+};
+
+// the font of the description: espy (System) 10 bold
+viewFont := {family: 'espy, face: 1, size: 10};

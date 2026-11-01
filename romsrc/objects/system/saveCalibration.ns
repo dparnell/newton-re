@@ -1,0 +1,39 @@
+// saveCalibration (@250): saves the pen (tablet) calibration in the system
+// soup's "Calibration" entry, both as the current data and as the calibration
+// of the current screen orientation (rotated[0-3]).
+
+saveCalibration := compile(
+	constants: {
+		kLiteral_491521: "Calibration",
+		// the "Calibration" entry of the internal store's system soup, or nil; when
+		// the tablet needs calibrating again its per-orientation calibrations are
+		// forgotten first.
+		kFunction_5acb89: func() begin
+			local entry, store, soup;
+			store := GetStores()[0];
+			if store:HasSoup(@systemSoupName) then begin
+					soup := store:GetSoup(@systemSoupName);
+					if (if (entry := soup:Query({type: 'index, indexPath: 'tag, beginKey: kLiteral_491521, endKey: kLiteral_491521}):entry()) then IsTabletCalibrationNeeded()) then begin
+							entry.rotated := Array(4, nil);
+							EntryChange(entry)
+						end
+				end;
+			entry
+		end
+	},
+	// the saving: a new entry, or the calibration put in the one there is
+	func() begin
+		local calibration, l2, screenOrientation, frame2;
+		(if (calibration := GetCalibration()) then begin
+				l2 := call (kFunction_5acb89) with ();
+				screenOrientation := userConfiguration.screenOrientation;
+				(if (l2 = nil) then begin
+						(frame2 := {tag: "Calibration", data: calibration, rotated: Array(4, nil), backupInfo: 'dontbackup}).rotated[screenOrientation] := calibration;
+						AddToSysSoup(frame2)
+					end else begin
+						l2.data := calibration;
+						l2.rotated[screenOrientation] := calibration;
+						EntryChange(l2)
+					end)
+			end)
+	end);

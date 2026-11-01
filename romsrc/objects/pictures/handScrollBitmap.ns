@@ -1,0 +1,7 @@
+// The hand (grabber) that scrolls an image view (protoImageView). A 1-bit bitmap frame
+// (bits, bounds), 16 x 16 pixels. Magic pointer @713. Used by protoImageView.
+
+handScrollBitmap := {
+	bits: bitmap('bits, "resources/bits/3daaa1.png", "00000000000400080008000700180017", 1),
+	bounds: {left: 0, top: 0, right: 16, bottom: 16}
+};

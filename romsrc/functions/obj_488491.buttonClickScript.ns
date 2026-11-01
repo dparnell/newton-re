@@ -1,5 +1,0 @@
-@@ 0x488471
-func() begin
-	base:DeleteAndClose()
-end
-@@end

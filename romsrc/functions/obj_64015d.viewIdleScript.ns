@@ -1,5 +1,0 @@
-@@ 0x42b9d5
-func() begin
-	self:Close()
-end
-@@end

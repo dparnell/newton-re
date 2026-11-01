@@ -1,0 +1,1818 @@
+// part: the NIE's protos part - exports the unit |Inet Protos:NIE|: protoFSM (Apple DTS's
+// finite state machine proto: events queued by DoEvent and run from an idle engine view,
+// states and events as frames under fsm_private_states, each event an action and a
+// nextState) and protoEndpointFSM, an FSM that drives a protoBasicEndpoint through
+// Instantiate, Bind, Connect (or Listen and Accept), Disconnect, UnBind and Dispose,
+// reporting its state to a client callback. Also the Internet Setup picker on the worksite
+// card (a data view). Several of protoFSM's functions are NTK native code (class #232:
+// code, offset; bcFunc is the byte code they were compiled from). The file holds the part
+// and what only it reaches.
+
+part := array(nil, {
+	// installScript(partFrame): installs through the "wait for my imports" helper below.
+	installScript: compile(
+		constants: {
+			// the NIE's "wait for my imports" helper: returns a remove frame for clientFrame and,
+			// watching the Packages soup, calls clientFrame:UnitsInstalledScript once the imports of
+			// clientSymbol's package are all there (removeScript then calls UnitsRemovedScript).
+			kFunction_10016c5: func(clientSymbol, clientFrame) begin
+				local clientPkgRef, clientRemoveFrame;
+				clientPkgRef := ObjectPkgRef(clientSymbol);
+				(clientRemoveFrame := Clone(clientFrame)).fUnitsInstalled := nil;
+				clientRemoveFrame.WaitForUnitsRemoveScript := clientRemoveFrame.removeScript;
+				clientRemoveFrame.removeScript := func(a1) begin
+					(try begin
+							UnRegSoupChange("Packages", clientSymbol);
+							if fUnitsInstalled then begin
+									self:?UnitsRemovedScript(clientRemoveFrame)
+								end;
+							self:?WaitForUnitsRemoveScript(clientRemoveFrame);
+							nil
+						end onexception |evt.ex| do begin
+							nil
+						end)
+				end;
+				RegSoupChange("Packages", clientSymbol, func(a1, a2, a3, a4) begin
+					AddProcrastinatedCall(clientSymbol, func() begin
+						local l1;
+						(if (if (not clientRemoveFrame.fUnitsInstalled) then (not MissingImports(clientPkgRef))) then begin
+								clientRemoveFrame.fUnitsInstalled := true;
+								AddDeferredCall(GetGlobalFn('UnRegSoupChange), [Array: "Packages", clientSymbol]);
+								clientFrame:?UnitsInstalledScript(clientRemoveFrame)
+							end)
+					end, nil, 1000)
+				end);
+				clientRemoveFrame
+			end
+		},
+		func(partFrame) begin
+			call (kFunction_10016c5) with ('|NIE Protos:NIE|, self)
+		end),
+	// removeScript: nothing (the helper's remove frame undoes the install).
+	removeScript: func(partFrame) begin
+		nil
+	end,
+	// UnitsInstalledScript(clientRemoveFrame): registers the worksite data view that picks an
+	// Internet setup for the worksite (the 'INETSetup slot).
+	UnitsInstalledScript: compile(
+		constants: {
+			// formatFunc(value): how the worksite card shows the setting: "Internet Setup: <name>".
+			kFunction_100200d: func(a1) begin
+				local setupName, inetGetLinkEntry2;
+				(if a1[0] then begin
+						if (inetGetLinkEntry2 := InetGetLinkEntry(a1[0])) then begin
+								setupName := inetGetLinkEntry2.setupName
+							end else nil;
+						ParamStr("Internet Setup: ^0", [Array: setupName])
+					end else "")
+			end,
+			// the picker's viewSetupFormScript: its choices.
+			kFunction_100234d: func() begin
+				labelCommands := self:BuildLabelCommands();
+				inherited:?viewSetupFormScript()
+			end,
+			// labelActionScript(index): "Edit Setups" opens Internet Setup; another choice is stored
+			// in the worksite (and made the default link when it is the current worksite).
+			kFunction_10023b9: func(a1) begin
+				(if (labelCommands[a1].id = 'edit) then begin
+						self:updateText(self:textSetup());
+						GetRoot().|InternetSetup:NIE|:Open()
+					end else begin
+						target.(path) := Clone(labelCommands[a1].id);
+						if IsSameEntry(target, GetUserConfig('currentEmporium)) then begin
+								InetSetDefaultLinkID(labelCommands[a1].id)
+							end;
+						self:StartFlush()
+					end)
+			end,
+			// textSetup(): the name of the setup the worksite has, or "".
+			kFunction_10025cd: func() begin
+				(foreach item in labelCommands do begin
+						if (if IsFrame(item) then (item.id = target.(path))) then begin
+								return item.item
+							end
+					end);
+				""
+			end,
+			// a picker item for an "Internet Setups" soup entry
+			kFunction_1002861: func(a1) begin
+				{item: a1.setupName, id: a1.linkID}
+			end,
+			// BuildLabelCommands(): "None", the setups by name, and "Edit Setups" when Internet Setup
+			// is installed.
+			kFunction_1002685: func() begin
+				local list, l2, cursor, mapCursor2;
+				list := [Array: {item: "None", id: nil}, 'pickSeparator];
+				mapCursor2 := MapCursor((cursor := Query(GetUnionSoupAlways("Internet Setups"), {type: 'index, IndexPath: 'setupName})), kFunction_1002861);
+				list := ArrayMunger(list, Length(list), 0, mapCursor2, 0, nil);
+				if GetRoot().|InternetSetup:NIE| then begin
+						list := ArrayMunger(list, Length(list), 0, [Array: 'pickSeparator, {item: "Edit Setups", id: 'edit}], 0, nil)
+					end;
+				list
+			end,
+			kLiteral_1001c91: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjParentFullH + vjParentFullV, infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: InetDefaultLink], formatFunc: kFunction_100200d}, name: "Internet Access", noKeyboard: true, nukeRecToggle: true, protection: 'private, symbol: 'INETSetup, type: 'editor, stepChildren: [stepChildren: {text: "Internet Setup", viewBounds: '{left: 8, top: 8, right: -8, bottom: 36}, alwaysCallPickActionScript: true, viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly, path: 'InetDefaultLink, viewSetupFormScript: kFunction_100234d, labelActionScript: kFunction_10023b9, textSetup: kFunction_10025cd, _proto: @protoLabelPicker}], BuildLabelCommands: kFunction_1002685, viewClass: clView}
+		},
+		func(clientRemoveFrame) begin
+			RegDataView('worksite, kLiteral_1001c91)
+		end),
+	// UnitsRemovedScript(clientRemoveFrame): unregisters the worksite data view.
+	UnitsRemovedScript: func(clientRemoveFrame) begin
+		UnRegDataView('worksite, 'INETSetup)
+	end,
+	_ExportTable: [|Array|:
+		{
+			name: '|Inet Protos:NIE|,
+			major: 1,
+			minor: 0,
+			objects: [|Array|:
+				// the unit's objects: protoFSM, protoEndpointFSM, two icons
+				objectsProto,
+				{
+					// BuildCompletionSpec_Bind(endpoint): the completion spec for the Bind request - fCompletionSpec_Bind with this FSM as its _parent.
+					BuildCompletionSpec_Bind: func(endpoint) begin
+						{_proto: fCompletionSpec_Bind, _parent: self}
+					end,
+					// BuildCompletionSpec_Listen(endpoint): the completion spec for the Listen request - fCompletionSpec_Listen with this FSM as its _parent.
+					BuildCompletionSpec_Listen: func(endpoint) begin
+						{_proto: fCompletionSpec_Listen, _parent: self}
+					end,
+					// BuildConfigOptions_Connect(): the options sent with the Connect request (fConfigOptions_Connect).
+					BuildConfigOptions_Connect: func(a1) begin
+						fConfigOptions_Connect
+					end,
+					fConfigOptionsAfter_Bind: nil,
+					fClientCallbackFrame: nil,
+					fConfigOptionsAfter_Listen: nil,
+					// GetConfigOptionsAfter_Accept(): the options the Accept request answered with.
+					GetConfigOptionsAfter_Accept: func() begin
+						fConfigOptionsAfter_Accept
+					end,
+					// BuildConfigOptions_Instantiate(): the options sent with the Instantiate request (fConfigOptions_Instantiate).
+					BuildConfigOptions_Instantiate: func(endpoint) begin
+						fConfigOptions_Instantiate
+					end,
+					fState: 'Disconnected,
+					// SetAbort: sets the FSM's fAbort.
+					SetAbort: func(a1) begin
+						(fAbort := (a1 <> nil))
+					end,
+					// SetEndpoint: sets the FSM's fEndpoint.
+					SetEndpoint: func(frame2) begin
+						(fEndpoint := frame2)
+					end,
+					fClientCallbackSymbol: nil,
+					// GetConfigOptionsAfter_Bind(): the options the Bind request answered with.
+					GetConfigOptionsAfter_Bind: func() begin
+						fConfigOptionsAfter_Bind
+					end,
+					fConfigOptions_Accept: nil,
+					// GetConfigOptionsAfter_Listen(): the options the Listen request answered with.
+					GetConfigOptionsAfter_Listen: func() begin
+						fConfigOptionsAfter_Listen
+					end,
+					fCompletionSpec_Connect: {
+						async: true,
+						reqTimeout: 0,
+						// completionScript(endpoint, options, error): the Connect request completed - posts ConnectSuccess or ConnectFailure.
+						completionScript: func(a1, a2, a3) begin
+							fConfigOptionsAfter_Connect := a2;
+							(if a3 then self:DoEvent('ConnectFailure, [Array: a3]) else self:DoEvent('ConnectSuccess, nil))
+						end
+					},
+					// DoClientCallback(state, error): tells the client (fClientCallbackFrame:fClientCallbackSymbol)
+					// the state or an error, ignoring its exceptions.
+					DoClientCallback: func(fState, a2) begin
+						(if fClientCallbackFrame then (try begin
+									Perform(fClientCallbackFrame, fClientCallbackSymbol, [Array: fState, a2])
+								end onexception |evt.ex| do begin
+									nil
+								end))
+					end,
+					// GetState: the FSM's fState.
+					GetState: func() begin
+						fState
+					end,
+					_proto: objectsProto,
+					fConfigOptions_Bind: nil,
+					fConfigOptions_Listen: nil,
+					// BuildConfigOptions_Accept(): the options sent with the Accept request (fConfigOptions_Accept).
+					BuildConfigOptions_Accept: func(a1) begin
+						fConfigOptions_Accept
+					end,
+					// BuildCompletionSpec_Connect(endpoint): the completion spec for the Connect request - fCompletionSpec_Connect with this FSM as its _parent.
+					BuildCompletionSpec_Connect: func(endpoint) begin
+						{_proto: fCompletionSpec_Connect, _parent: self}
+					end,
+					fConnectAction: nil,
+					fConfigOptionsAfter_Connect: nil,
+					fCompletionSpec_UnBind: {
+						async: true,
+						reqTimeout: 0,
+						// completionScript(endpoint, options, error): the UnBind request completed - posts UnBindSuccess or UnBindFailure.
+						completionScript: func(a1, a2, a3) begin
+							(if a3 then self:DoEvent('UnBindFailure, [Array: a3]) else self:DoEvent('UnBindSuccess, nil))
+						end
+					},
+					// DoErrorCallback(where, error): tells the client 'error and forgets the callback.
+					DoErrorCallback: func(text, a2) begin
+						self:?DoClientCallback('error, a2);
+						fClientCallbackFrame := nil;
+						(fClientCallbackSymbol := nil)
+					end,
+					// BuildConfigOptions_Bind(): the options sent with the Bind request (fConfigOptions_Bind).
+					BuildConfigOptions_Bind: func(a1) begin
+						fConfigOptions_Bind
+					end,
+					// BuildConfigOptions_Listen(): the options sent with the Listen request (fConfigOptions_Listen).
+					BuildConfigOptions_Listen: func(a1) begin
+						fConfigOptions_Listen
+					end,
+					fAbort: nil,
+					fEndpoint: nil,
+					fConfigOptionsAfter_Instantiate: nil,
+					EndpointTemplate: @protoBasicEndpoint,
+					fCompletionSpec_Accept: {
+						async: true,
+						reqTimeout: 0,
+						// completionScript(endpoint, options, error): the Accept request completed - posts AcceptSuccess or AcceptFailure.
+						completionScript: func(a1, a2, a3) begin
+							fConfigOptionsAfter_Accept := a2;
+							(if a3 then self:DoEvent('AcceptFailure, [Array: a3]) else self:DoEvent('AcceptSuccess, nil))
+						end
+					},
+					// protoEndpointFSM: the client sends connect or Listen with its callback; states run
+					// Instantiate -> Bind -> connect (Connect or Listen) -> Connected, then Disconnect ->
+					// UnBind -> Dispose -> CleanUp; Abort and Cancel unwind from wherever it is.
+					declareSelf: 'protoEndpointFSM,
+					// BuildCompletionSpec_UnBind(endpoint): the completion spec for the UnBind request - fCompletionSpec_UnBind with this FSM as its _parent.
+					BuildCompletionSpec_UnBind: func(a1) begin
+						{_proto: fCompletionSpec_UnBind, _parent: self}
+					end,
+					fCompletionSpec_Disconnect: {
+						async: true,
+						reqTimeout: 0,
+						// completionScript(endpoint, options, error): the Disconnect request completed - posts DisconnectSuccess or DisconnectFailure.
+						completionScript: func(a1, a2, a3) begin
+							(if a3 then self:DoEvent('DisconnectFailure, [Array: a3]) else self:DoEvent('DisconnectSuccess, nil))
+						end
+					},
+					// GetConfigOptionsAfter_Connect(): the options the Connect request answered with.
+					GetConfigOptionsAfter_Connect: func() begin
+						fConfigOptionsAfter_Connect
+					end,
+					// SetState: sets the FSM's fState.
+					SetState: func(fSoundState) begin
+						(fState := fSoundState)
+					end,
+					// GetAbort: the FSM's fAbort.
+					GetAbort: func() begin
+						fAbort
+					end,
+					// GetEndpoint: the FSM's fEndpoint.
+					GetEndpoint: func() begin
+						fEndpoint
+					end,
+					// GetConfigOptionsAfter_Instantiate(): the options the Instantiate request answered with.
+					GetConfigOptionsAfter_Instantiate: func() begin
+						fConfigOptionsAfter_Instantiate
+					end,
+					fCompletionSpec_Bind: {
+						async: true,
+						reqTimeout: 0,
+						// completionScript(endpoint, options, error): the Bind request completed - posts BindSuccess or BindFailure.
+						completionScript: func(a1, a2, a3) begin
+							fConfigOptionsAfter_Bind := a2;
+							(if a3 then self:DoEvent('BindFailure, [Array: a3]) else self:DoEvent('BindSuccess, nil))
+						end
+					},
+					fCompletionSpec_Listen: {
+						async: true,
+						reqTimeout: 0,
+						// completionScript(endpoint, options, error): the Listen request completed - posts ListenSuccess or ListenFailure.
+						completionScript: func(a1, a2, a3) begin
+							fConfigOptionsAfter_Listen := a2;
+							(if a3 then self:DoEvent('ListenFailure, [Array: a3]) else self:DoEvent('ListenSuccess, nil))
+						end
+					},
+					// BuildCompletionSpec_Accept(endpoint): the completion spec for the Accept request - fCompletionSpec_Accept with this FSM as its _parent.
+					BuildCompletionSpec_Accept: func(endpoint) begin
+						{_proto: fCompletionSpec_Accept, _parent: self}
+					end,
+					fConfigOptions_Connect: nil,
+					version: 2,
+					fsm_private_states: {
+						Genesis: {
+							terminal: true,
+							Create: {
+								// state Genesis, event Create: a fresh instance - no callback, 'Disconnected, a new endpoint.
+								action: func() begin
+									fsm.fConnectAction := 'connect;
+									fsm.fClientCallbackFrame := nil;
+									fsm.fClientCallbackSymbol := nil;
+									self:SetState('Disconnected);
+									self:SetAbort(nil);
+									self:SetEndpoint({_proto: EndpointTemplate, _parent: fsm})
+								end,
+								nextState: 'ReadyToConnect
+							}
+						},
+						ReadyToConnect: {
+							connect: {
+								// state ReadyToConnect, event connect(frame, symbol): remembers the client callback and
+								// instantiates for a Connect.
+								action: func(a1, a2) begin
+									fClientCallbackFrame := a1;
+									fClientCallbackSymbol := a2;
+									self:DoEvent('Instantiate, [Array: 'connect])
+								end,
+								nextState: 'Instantiate,
+								nextNoIdle: true
+							},
+							Listen: {
+								// state ReadyToConnect, event Listen(frame, symbol): as connect, for a Listen.
+								action: func(a1, a2) begin
+									fClientCallbackFrame := a1;
+									fClientCallbackSymbol := a2;
+									self:DoEvent('Instantiate, [Array: 'Listen])
+								end,
+								nextState: 'Instantiate,
+								nextNoIdle: true
+							},
+							Cancel: {action: action},
+							Dispose: {nextState: 'Genesis}
+						},
+						Instantiate: {
+							Instantiate: {
+								// state Instantiate, event Instantiate(action): 'Connecting (the client is told);
+								// instantiates the endpoint with BuildConfigOptions_Instantiate.
+								action: func(a1) begin
+									local endpoint;
+									self:SetState('Connecting);
+									self:SetAbort(nil);
+									fConnectAction := a1;
+									self:?DoClientCallback(fState, nil);
+									try begin
+											fConfigOptionsAfter_Instantiate := endpoint:Instantiate((endpoint := self:GetEndpoint()), self:BuildConfigOptions_Instantiate(endpoint))
+										end onexception |evt.ex| do begin
+											return self:DoEvent('InstantiateFailure, [Array: CurrentException()])
+										end;
+									self:DoEvent('InstantiateSuccess, nil)
+								end,
+								nextState: 'Instantiating
+							},
+							Abort: {
+								// state Instantiate, event Abort: tells the client the request was cancelled; cleans up.
+								action: func() begin
+									self:?DoErrorCallback("Abort", kCommErrRequestCanceled);
+									self:DoEvent('CleanUp, nil)
+								end,
+								nextState: 'CleanUp
+							},
+							Cancel: {action: action}
+						},
+						Instantiating: {
+							InstantiateSuccess: {
+								// state Instantiating, event InstantiateSuccess: binds, unless aborted meanwhile.
+								action: func() begin
+									if self:GetAbort() then begin
+											return self:DoEvent('Abort, nil)
+										end;
+									self:DoEvent('Bind, nil)
+								end,
+								nextState: 'Bind
+							},
+							InstantiateFailure: {
+								// state Instantiating, event InstantiateFailure(error): tells the client; cleans up.
+								action: func(a1) begin
+									self:?DoErrorCallback("Endpoint Instantiate", a1);
+									self:DoEvent('CleanUp, nil)
+								end,
+								nextState: 'CleanUp
+							},
+							Cancel: {action: action}
+						},
+						Bind: {
+							Bind: {
+								// state Bind, event Bind: binds the endpoint (asynchronous; the completion spec posts the result).
+								action: func() begin
+									local endpoint;
+									(try begin
+											(fConfigOptionsAfter_Bind := endpoint:Bind(self:BuildConfigOptions_Bind((endpoint := self:GetEndpoint())), self:BuildCompletionSpec_Bind(endpoint)))
+										end onexception |evt.ex| do begin
+											self:DoEvent('BindFailure, [Array: CurrentException()])
+										end)
+								end,
+								nextState: 'Binding
+							},
+							Abort: {
+								// state Bind, event Abort: tells the client cancelled; disposes.
+								action: func() begin
+									self:?DoErrorCallback("Abort", kCommErrRequestCanceled);
+									self:DoEvent('Dispose, nil)
+								end,
+								nextState: 'Dispose
+							},
+							Cancel: {action: action}
+						},
+						Binding: {
+							BindSuccess: {
+								// state Binding, event BindSuccess: connects (or listens), unless aborted.
+								action: func() begin
+									if self:GetAbort() then begin
+											return self:DoEvent('Abort, nil)
+										end;
+									self:DoEvent('connect, nil)
+								end,
+								nextState: 'connect
+							},
+							BindFailure: {
+								// state Binding, event BindFailure(error): tells the client; disposes.
+								action: func(a1) begin
+									self:?DoErrorCallback("Endpoint Bind", a1);
+									self:DoEvent('Dispose, nil)
+								end,
+								nextState: 'Dispose
+							},
+							Cancel: {action: action_2}
+						},
+						connect: {
+							connect: {
+								// state connect, event connect: Connect or Listen, as fConnectAction says.
+								action: func() begin
+									local endpoint;
+									(if (fConnectAction = 'connect) then (try begin
+												(fConfigOptionsAfter_Connect := endpoint:connect(self:BuildConfigOptions_Connect((endpoint := self:GetEndpoint())), self:BuildCompletionSpec_Connect(endpoint)))
+											end onexception |evt.ex| do begin
+												self:DoEvent('ConnectFailure, [Array: CurrentException()])
+											end) else (try begin
+												(fConfigOptionsAfter_Listen := endpoint:Listen(self:BuildConfigOptions_Listen((endpoint := self:GetEndpoint())), self:BuildCompletionSpec_Listen(endpoint)))
+											end onexception |evt.ex| do begin
+												self:DoEvent('ListenFailure, [Array: CurrentException()])
+											end))
+								end,
+								nextState: 'Connecting
+							},
+							Abort: {
+								// state connect, event Abort: tells the client cancelled; unbinds.
+								action: func() begin
+									self:?DoErrorCallback("Abort", kCommErrRequestCanceled);
+									self:DoEvent('UnBind, nil)
+								end,
+								nextState: 'UnBind
+							},
+							Cancel: {action: action}
+						},
+						Connecting: {
+							ConnectSuccess: {
+								// state Connecting, event ConnectSuccess: 'Connected, unless aborted.
+								action: func() begin
+									fState := 'Connected;
+									if self:GetAbort() then begin
+											return self:DoEvent('Abort, nil)
+										end;
+									self:DoEvent('Connected, nil)
+								end,
+								nextState: 'Connected
+							},
+							ConnectFailure: {
+								// state Connecting, event ConnectFailure(error): tells the client; unbinds.
+								action: func(a1) begin
+									self:?DoErrorCallback("Endpoint Connect", a1);
+									self:DoEvent('UnBind, nil)
+								end,
+								nextState: 'UnBind
+							},
+							ListenSuccess: {
+								// state Connecting, event ListenSuccess: accepts the incoming connection, unless aborted.
+								action: func() begin
+									if self:GetAbort() then begin
+											return self:DoEvent('Abort, nil)
+										end;
+									self:DoEvent('Accept, nil)
+								end,
+								nextState: 'Accept
+							},
+							ListenFailure: {
+								// state Connecting, event ListenFailure(error): tells the client; unbinds.
+								action: func(a1) begin
+									self:?DoErrorCallback("Endpoint Listen", a1);
+									self:DoEvent('UnBind, nil)
+								end,
+								nextState: 'UnBind
+							},
+							Cancel: {action: action_2}
+						},
+						Accept: {
+							Accept: {
+								// state Accept, event Accept: accepts the connection.
+								action: func() begin
+									local endpoint;
+									(try begin
+											(fConfigOptionsAfter_Accept := endpoint:Accept(self:BuildConfigOptions_Accept((endpoint := self:GetEndpoint())), self:BuildCompletionSpec_Accept(endpoint)))
+										end onexception |evt.ex| do begin
+											self:DoEvent('AcceptFailure, [Array: CurrentException()])
+										end)
+								end,
+								nextState: 'Accepting
+							},
+							Abort: {
+								// state Accept, event Abort: tells the client cancelled; disconnects.
+								action: func() begin
+									self:?DoErrorCallback("Abort", kCommErrRequestCanceled);
+									self:DoEvent('Disconnect, [Array: nil, nil])
+								end,
+								nextState: 'Disconnect
+							},
+							Cancel: {action: action}
+						},
+						Accepting: {
+							AcceptSuccess: {
+								// state Accepting, event AcceptSuccess: 'Connected, unless aborted.
+								action: func() begin
+									fState := 'Connected;
+									if self:GetAbort() then begin
+											return self:DoEvent('Abort, nil)
+										end;
+									self:DoEvent('Connected, nil)
+								end,
+								nextState: 'Connected
+							},
+							AcceptFailure: {
+								// state Accepting, event AcceptFailure(error): tells the client; unbinds.
+								action: func(a1) begin
+									self:?DoErrorCallback("Endpoint Accept", a1);
+									self:DoEvent('UnBind, nil)
+								end,
+								nextState: 'UnBind
+							},
+							Cancel: {action: action_2}
+						},
+						Connected: {
+							Connected: {
+								// state Connected, event Connected: tells the client it is connected (or aborts).
+								action: func() begin
+									if self:GetAbort() then begin
+											return self:DoEvent('Abort, nil)
+										end;
+									self:?DoClientCallback(fState, nil)
+								end
+							},
+							Disconnect: {
+								// state Connected, event Disconnect(frame, symbol): 'Disconnecting; the new callback is
+								// told; disconnects the endpoint.
+								action: func(a1, a2) begin
+									local endpoint;
+									self:SetState('Disconnecting);
+									self:SetAbort(true);
+									fClientCallbackFrame := a1;
+									fClientCallbackSymbol := a2;
+									self:?DoClientCallback(fState, nil);
+									(try begin
+											endpoint := self:GetEndpoint();
+											endpoint:Disconnect(true, self:BuildCompletionSpec_Disconnect(endpoint))
+										end onexception |evt.ex| do begin
+											self:DoEvent('DisconnectFailure, [Array: CurrentException()])
+										end)
+								end,
+								nextState: 'Disconnecting
+							},
+							Abort: {
+								// state Connected, event Abort: tells the client cancelled; disconnects.
+								action: func() begin
+									self:?DoErrorCallback("Abort", kCommErrRequestCanceled);
+									self:DoEvent('Disconnect, [Array: nil, nil])
+								end
+							},
+							Cancel: {action: action_2}
+						},
+						Disconnecting: {
+							DisconnectSuccess: {
+								// state Disconnecting, event DisconnectSuccess: unbinds.
+								action: func() begin
+									self:DoEvent('UnBind, nil)
+								end,
+								nextState: 'UnBind
+							},
+							DisconnectFailure: {
+								// state Disconnecting, event DisconnectFailure(error): tells the client; unbinds anyway.
+								action: func(a1) begin
+									self:?DoErrorCallback("Endpoint Disconnect", a1);
+									self:DoEvent('UnBind, nil)
+								end,
+								nextState: 'UnBind
+							},
+							Cancel: {action: action_2}
+						},
+						UnBind: {
+							UnBind: {
+								// state UnBind, event UnBind: unbinds the endpoint.
+								action: func() begin
+									local endpoint;
+									(try begin
+											endpoint:UnBind(self:BuildCompletionSpec_UnBind((endpoint := self:GetEndpoint())))
+										end onexception |evt.ex| do begin
+											self:DoEvent('UnBindFailure, [Array: CurrentException()])
+										end)
+								end,
+								nextState: 'UnBinding
+							},
+							Cancel: {action: action}
+						},
+						UnBinding: {
+							UnBindSuccess: {
+								// state UnBinding, event UnBindSuccess: disposes.
+								action: func() begin
+									self:DoEvent('Dispose, nil)
+								end,
+								nextState: 'Dispose
+							},
+							UnBindFailure: {
+								// state UnBinding, event UnBindFailure(error): tells the client; disposes anyway.
+								action: func(a1) begin
+									self:?DoErrorCallback("Endpoint UnBind", a1);
+									self:DoEvent('Dispose, nil)
+								end,
+								nextState: 'Dispose
+							},
+							Cancel: {action: action_2}
+						},
+						Dispose: {
+							Dispose: {
+								// state Dispose, event Dispose: disposes of the endpoint.
+								action: func() begin
+									try begin
+											self:GetEndpoint():Dispose()
+										end onexception |evt.ex| do begin
+											return self:DoEvent('DisposeFailure, [Array: CurrentException()])
+										end;
+									self:DoEvent('DisposeSuccess, nil)
+								end,
+								nextState: 'Disposing
+							},
+							Cancel: {action: action}
+						},
+						Disposing: {
+							DisposeSuccess: {
+								// state Disposing, event DisposeSuccess: cleans up.
+								action: func() begin
+									self:DoEvent('CleanUp, nil)
+								end,
+								nextState: 'CleanUp
+							},
+							DisposeFailure: {
+								// state Disposing, event DisposeFailure(error): tells the client; cleans up anyway.
+								action: func(a1) begin
+									self:?DoErrorCallback("Endpoint Dispose", a1);
+									self:DoEvent('CleanUp, nil)
+								end,
+								nextState: 'CleanUp
+							},
+							Cancel: {action: action}
+						},
+						CleanUp: {
+							CleanUp: {
+								// state CleanUp, event CleanUp: 'Disconnected (the client is told); forgets the callback
+								// and the endpoint; back to Genesis.
+								action: func() begin
+									self:SetState('Disconnected);
+									self:?DoClientCallback(fState, nil);
+									fClientCallbackFrame := nil;
+									fClientCallbackSymbol := nil;
+									self:SetAbort(nil);
+									self:SetEndpoint(nil);
+									(fConnectAction := nil)
+								end,
+								nextState: 'Genesis
+							}
+						}
+					},
+					// BuildCompletionSpec_Disconnect(endpoint): the completion spec for the Disconnect request - fCompletionSpec_Disconnect with this FSM as its _parent.
+					BuildCompletionSpec_Disconnect: func(endpoint) begin
+						{_proto: fCompletionSpec_Disconnect, _parent: self}
+					end,
+					fConfigOptionsAfter_Accept: nil,
+					// the Instantiate options: "aser" the service, "siop" serial I/O (19200 bps, 8 data bits),
+					// "iflc"/"oflc" input and output flow control (XON $11, XOFF $13)
+					fConfigOptions_Instantiate: [|Array|:
+						{label: "aser", type: 'service, opCode: opSetRequired, result: nil},
+						{
+							label: "siop",
+							type: 'option,
+							opCode: opSetRequired,
+							result: nil,
+							form: 'template,
+							data: {
+								arglist: [|Array|: 0, 0, 8, 19200],
+								typeList: [|Array|: 'struct, 'long, 'long, 'long, 'long]
+							}
+						},
+						{
+							label: "iflc",
+							type: 'option,
+							opCode: opSetRequired,
+							result: nil,
+							form: 'template,
+							data: {
+								arglist: [|Array|: $\u0011, $\u0013, nil, nil, 0, 0],
+								typeList: [|Array|: 'struct, 'byte, 'byte, 'boolean, 'boolean, 'boolean, 'boolean]
+							}
+						},
+						{
+							label: "oflc",
+							type: 'option,
+							opCode: opSetRequired,
+							result: nil,
+							form: 'template,
+							data: {
+								arglist: [|Array|: $\u0011, $\u0013, nil, nil, 0, 0],
+								typeList: [|Array|: 'struct, 'byte, 'byte, 'boolean, 'boolean, 'boolean, 'boolean]
+							}
+						}
+					]
+				},
+				{
+					bits: bitmap('bits, "resources/bits/1018cdd.png", "000000000004000000000000001e001e", 1),
+					bounds: {left: 0, top: 0, right: 30, bottom: 30}
+				},
+				{
+					bits: bitmap('bits, "resources/bits/1018da1.png", "0000000000040198019801a501a701b4", 1),
+					bounds: {left: 0, top: 0, right: 15, bottom: 15}
+				}
+			]
+		}
+	]
+});
+
+_literals_11Item_7 := "";
+
+// protoFSM, Apple DTS's finite state machine proto (version 2)
+objectsProto := {
+	// DoEvent(event, params): queues an event and, if the engine is idle, starts it (the
+	// engine view's idle script runs DoEvent_Loop). Native.
+	DoEvent: {
+		class: #232,
+		code: code,
+		numArgs: 2,
+		closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals},
+		offset: 10732,
+		// the byte code of DoEvent
+		bcFunc: compile(
+			options: "argframe=nil,0",
+			func(a1, a2) begin
+				local event_Check;
+				if (not (event_Check := self:?DoEvent_Check('|protoFSM:DoEvent|))) then begin
+						return nil
+					end;
+				event_Check.pendingEventQueue:EnQueue(a1);
+				event_Check.pendingParamsQueue:EnQueue(a2);
+				if (not event_Check.busy) then begin
+						event_Check.busy := true;
+						AddDelayedSend(event_Check.engineView, 'SetupIdle, [Array: event_Check.turtle], 1)
+					end;
+				nil
+			end)
+	},
+	// Instantiate(): a new running instance - its private context (event queues, ancestor
+	// list of fsm_private_states), an engine view behind the root's first child, hidden;
+	// then the Genesis state's Create event.
+	Instantiate: func() begin
+		local frame2, childViewFrames;
+		(frame2 := {_proto: self, fsm: nil, currentStateFrame: nil, currentEventFrame: nil, fsm_private_states: nil, fsm_private_context: {fsm: nil, ancestors: self:MBuildAncestorList(self, 'fsm_private_states), turtle: 1, level: 0, busy: nil, Release: nil, waitView: nil, waitAborted: nil, engineView: BuildContext(EngineTemplate), isNewPendingState: true, stateCache: nil, eventCache: nil, pendingState: 'Genesis, pendingEventQueue: QueueTemplate:Instantiate(), pendingParamsQueue: QueueTemplate:Instantiate(), currentState: nil, currentEvent: nil, currentParams: nil}}).currentStateFrame := {_proto: frame2:MCollectAncestorStates(frame2.fsm_private_context.ancestors, 'Genesis), _parent: frame2};
+		frame2.fsm_private_context.engineView:Open();
+		if IsArray((childViewFrames := GetRoot():?ChildViewFrames())) then begin
+				if (Length(childViewFrames) > 0) then begin
+						if (childViewFrames[0] <> frame2.fsm_private_context.engineView) then begin
+								frame2.fsm_private_context.engineView:MoveBehind(childViewFrames[0])
+							end
+					end
+			end;
+		frame2.fsm_private_context.engineView:Hide();
+		(frame2.fsm_private_context.engineView.fsm := (frame2.fsm_private_context.fsm := (frame2.fsm := frame2)))
+	end,
+	// Dispose(): stops the instance and clears its private context.
+	Dispose: func() begin
+		if (not fsm_private_context) then begin
+				return nil
+			end;
+		fsm_private_context.pendingEventQueue:Reset();
+		fsm_private_context.pendingParamsQueue:Reset();
+		fsm_private_context.engineView:Close();
+		(foreach key, value in fsm_private_context do begin
+				fsm_private_context.(key) := nil
+			end);
+		fsm := (currentStateFrame := (currentEventFrame := (fsm_private_context := nil)));
+		nil
+	end,
+	// DoEvent_Loop(): the engine - for each queued event, finds the event frame in the current
+	// state (and the protos' states), runs its action and moves to nextState; keeps going
+	// while events are queued and nextNoIdle is set. Returns the idle delay, or nil when done
+	// (disposing of a released instance once it reaches a terminal state). Native.
+	DoEvent_Loop: {
+		class: #232,
+		code: code,
+		numArgs: 0,
+		closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_2},
+		offset: 12280,
+		// the byte code of DoEvent_Loop
+		bcFunc: compile(
+			constants: {
+				// closes the wait view (WaitForTerminal) of a context that reached a terminal state
+				kFunction_1012985: func(a1) begin
+					(if a1.waitView then a1.waitView:Close())
+				end
+			},
+			options: "argframe=nil,0",
+			func() begin
+				(repeat if (not (event_Check := self:?DoEvent_Check('|protoFSM:DoEvent_Loop|))) then begin
+							return nil
+						end; l1 := nil; if event_Check.pendingState then begin
+							if mCollectAncestorStates then begin
+									event_Check.stateCache := mCollectAncestorStates;
+									mCollectAncestorStates := nil
+								end else begin
+									if event_Check.isNewPendingState then begin
+											event_Check.stateCache := self:MCollectAncestorStates(event_Check.ancestors, event_Check.pendingState)
+										end
+								end;
+							if event_Check.stateCache then begin
+									if (event_Check.eventCache := self:MCollectAncestorEvents(event_Check.ancestors, event_Check.pendingState, event_Check.pendingEventQueue:Peek())) then begin
+											l1 := true
+										end else begin
+											if (event_Check.pendingEventQueue:Peek() <> '|fsm_private_event:Release|) then begin
+													self:?DebugFSM('UnknownEvent, event_Check.pendingState, event_Check.pendingEventQueue:Peek(), event_Check.pendingParamsQueue:Peek())
+												end
+										end
+								end else begin
+									self:?DebugFSM('UnknownState, event_Check.pendingState, event_Check.pendingEventQueue:Peek(), event_Check.pendingParamsQueue:Peek())
+								end
+						end else begin
+							self:?DebugFSM('NilState, event_Check.pendingState, event_Check.pendingEventQueue:Peek(), event_Check.pendingParamsQueue:Peek())
+						end; if (not l1) then begin
+							currentStateFrame := nil;
+							currentEventFrame := nil;
+							event_Check.isNewPendingState := true;
+							event_Check.pendingEventQueue:DeQueue();
+							event_Check.pendingParamsQueue:DeQueue()
+						end else begin
+							event_Check.currentState := event_Check.pendingState;
+							event_Check.currentEvent := event_Check.pendingEventQueue:DeQueue();
+							event_Check.currentParams := event_Check.pendingParamsQueue:DeQueue();
+							if event_Check.isNewPendingState then begin
+									event_Check.isNewPendingState := nil;
+									currentStateFrame := {_proto: event_Check.stateCache, _parent: self};
+									if IsArray((childViewFrames := event_Check.engineView:?ChildViewFrames())) then begin
+											if (Length(childViewFrames) > 0) then begin
+													list := [Array: ];
+													local l1;
+													local mCollectAncestorStates;
+													local l3;
+													local event_Check;
+													local childViewFrames;
+													local list;
+													(foreach item in childViewFrames do begin
+															if (item.scope = 'State) then begin
+																	AddArraySlot(list, item)
+																end
+														end);
+													(foreach item in list do begin
+															RemoveStepView(event_Check.engineView, item)
+														end);
+													list := nil
+												end
+										end
+								end;
+							if (currentEventFrame := {_proto: event_Check.eventCache, _parent: currentStateFrame}).action then begin
+									self:?TraceFSM('PreAction, event_Check.currentState, event_Check.currentEvent, event_Check.currentParams);
+									event_Check.level := (event_Check.level + 1);
+									try begin
+											Perform(currentEventFrame, 'action, event_Check.currentParams)
+										end onexception |evt.ex| do begin
+											try begin
+													self:?ExceptionHandler(CurrentException())
+												end onexception |evt.ex| do begin end
+										end;
+									event_Check.level := (event_Check.level - 1);
+									self:?TraceFSM('PostAction, event_Check.currentState, event_Check.currentEvent, event_Check.currentParams)
+								end;
+							if currentEventFrame.nextState then begin
+									event_Check.pendingState := currentEventFrame.nextState;
+									event_Check.isNewPendingState := (event_Check.currentState <> event_Check.pendingState)
+								end;
+							self:?TraceFSM('nextState, event_Check.pendingState, event_Check.pendingEventQueue:Peek(), event_Check.pendingParamsQueue:Peek())
+						end; if (if (if (event_Check.waitView or event_Check.Release) then event_Check.pendingState) then (mCollectAncestorStates := self:MCollectAncestorStates(event_Check.ancestors, event_Check.pendingState))) then begin
+							l3 := (if event_Check.Release then mCollectAncestorStates.terminal);
+							if (if event_Check.waitView then mCollectAncestorStates.terminal) then begin
+									event_Check.pendingEventQueue:Reset();
+									event_Check.pendingParamsQueue:Reset();
+									AddDelayedCall(kFunction_1012985, [Array: event_Check], 1)
+								end
+						end; event_Check.busy := (not event_Check.pendingEventQueue:IsEmpty()) until (not (if (if event_Check.busy then currentEventFrame) then currentEventFrame.nextNoIdle)));
+				if event_Check.busy then begin
+						return event_Check.turtle
+					end;
+				if l3 then begin
+						self:Dispose()
+					end;
+				nil
+			end)
+	},
+	// SetSpeed(ms): the engine's idle delay between events (turtle).
+	SetSpeed: func(a1) begin
+		(fsm_private_context.turtle := a1)
+	end,
+	// IsBusy(): whether events are being processed.
+	IsBusy: func() begin
+		fsm_private_context.busy
+	end,
+	// GetSpeed(): the engine's idle delay.
+	GetSpeed: func() begin
+		fsm_private_context.turtle
+	end,
+	// GoToState(state): the next state, the pending events dropped.
+	GoToState: func(a1) begin
+		local fsm_private_context2;
+		(fsm_private_context2 := fsm_private_context).pendingState := a1;
+		fsm_private_context2.pendingEventQueue:Reset();
+		fsm_private_context2.pendingParamsQueue:Reset();
+		nil
+	end,
+	// QueueTemplate: a simple FIFO queue (Instantiate makes one)
+	QueueTemplate: {
+		// Instantiate(): a new empty queue.
+		Instantiate: func() begin
+			{_proto: self, queue: [Array: ]}
+		end,
+		// Reset(): empties the queue.
+		Reset: func() begin
+			SetLength(queue, 0)
+		end,
+		// Peek(): the first item, or nil. Native.
+		Peek: {
+			class: #232,
+			code: code,
+			numArgs: 0,
+			closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_3},
+			offset: 31260,
+			// the byte code
+			bcFunc: compile(
+				options: "argframe=nil,0",
+				func() begin
+					(if (Length(queue) > 0) then queue[0])
+				end)
+		},
+		// DeQueue(): removes and returns the first item, or nil. Native.
+		DeQueue: {
+			class: #232,
+			code: code,
+			numArgs: 0,
+			closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_4},
+			offset: 31608,
+			// the byte code
+			bcFunc: compile(
+				options: "argframe=nil,0",
+				func() begin
+					local queueItem;
+					(if (Length(queue) > 0) then begin
+							queueItem := queue[0];
+							RemoveSlot(queue, 0);
+							queueItem
+						end)
+				end)
+		},
+		// EnQueue(item): appends an item. Native.
+		EnQueue: {
+			class: #232,
+			code: code,
+			numArgs: 1,
+			closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_5},
+			offset: 32192,
+			// the byte code
+			bcFunc: compile(
+				options: "argframe=nil,0",
+				func(a1) begin
+					AddArraySlot(queue, a1);
+					nil
+				end)
+		},
+		// GetQueueSize(): the number of items. Native.
+		GetQueueSize: {
+			class: #232,
+			code: code,
+			numArgs: 0,
+			closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_6},
+			offset: 32496,
+			// the byte code
+			bcFunc: compile(
+				options: "argframe=nil,0",
+				func() begin
+					Length(queue)
+				end)
+		},
+		// IsEmpty(): whether the queue is empty. Native.
+		IsEmpty: {
+			class: #232,
+			code: code,
+			numArgs: 0,
+			closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_7},
+			offset: 32772,
+			// the byte code
+			bcFunc: compile(
+				options: "argframe=nil,0",
+				func() begin
+					(Length(queue) = 0)
+				end)
+		}
+	},
+	// ProtoClone(frame): a deep copy of frame that follows its protos (the closure).
+	ProtoClone: func(a1) begin
+		local f;
+		// the closure that copies a frame and what it protos from
+		f := func() :|romsrc:closure:10133e1|(f);
+		call f with (a1)
+	end,
+	// WaitForTerminal(statusOptions): a modal wait (with a status slip) until the FSM reaches a
+	// terminal state; returns whether the user aborted. nil when it cannot wait.
+	WaitForTerminal: func(frame2) begin
+		local fsm_private_context2;
+		if (((fsm_private_context2 := fsm_private_context).waitView or (fsm_private_context2.level <> 0)) or fsm_private_context2.pendingEventQueue:IsEmpty()) then begin
+				return nil
+			end;
+		fsm_private_context2.waitView := BuildContext(waitViewTemplate);
+		fsm_private_context2.waitView:SetOwnerContext(fsm_private_context2, frame2);
+		fsm_private_context2.waitView:ModalDialog();
+		fsm_private_context2.waitAborted
+	end,
+	// the modal wait view: after a delay it opens the status slip
+	waitViewTemplate: {
+		viewClass: clView,
+		viewFlags: vVisible,
+		viewFormat: 0,
+		viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+		statusView: nil,
+		statusViewOptions: nil,
+		fsmContext: nil,
+		aborted: nil,
+		// SetOwnerContext(context, statusOptions): remembers the FSM context and the options.
+		SetOwnerContext: func(fsm_private_context, statusViewOptions) begin
+			self.statusView := nil;
+			self.statusViewOptions := statusViewOptions;
+			self.fsmContext := fsm_private_context;
+			(self.aborted := nil)
+		end,
+		// viewIdleScript: opens the status slip.
+		viewIdleScript: func() begin
+			statusView := BuildContext(statusViewTemplate);
+			statusView:SetOwnerContext(self, statusViewOptions);
+			statusView:ModalDialog();
+			nil
+		end,
+		// viewSetupDoneScript: waits delayUntilStatusVisible ms (2000 by default) before the slip.
+		viewSetupDoneScript: func() begin
+			inherited:?viewSetupDoneScript();
+			(if (not statusViewOptions) then self:SetupIdle(2000) else (if statusViewOptions.delayUntilStatusVisible then self:SetupIdle((if (statusViewOptions.delayUntilStatusVisible <= 0) then 1 else statusViewOptions.delayUntilStatusVisible))))
+		end,
+		// viewQuitScript: closes the slip and tells the FSM whether the user aborted.
+		viewQuitScript: func() begin
+			if statusView then begin
+					statusView:Close()
+				end;
+			fsmContext.waitAborted := aborted;
+			(fsmContext.waitView := nil)
+		end,
+		// the status slip: a barber pole, and an Abort button after delayUntilAbortVisible
+		statusViewTemplate: {
+			_proto: @protoStatusTemplate,
+			initialSetup: nil,
+			waitView: nil,
+			delayUntilAbortTimer: nil,
+			delayUntilAbortVisible: nil,
+			abortButtonText: nil,
+			// viewIdleScript: turns the barber pole every 300 ms; shows the Abort button once
+			// delayUntilAbortVisible (8000 ms by default) has passed.
+			viewIdleScript: func() begin
+				local frame2;
+				inherited:?viewIdleScript();
+				frame2 := {name: 'vBarber, values: {barber: true}};
+				if delayUntilAbortVisible then begin
+						if ((delayUntilAbortTimer := (delayUntilAbortTimer + 300)) > delayUntilAbortVisible) then begin
+								delayUntilAbortVisible := nil;
+								frame2.values.primary := {text: abortButtonText, script: func() begin
+									waitView.aborted := true;
+									waitView:Close()
+								end};
+								base:ViewSet(frame2);
+								return 300
+							end
+					end;
+				base:UpdateIndicator(frame2);
+				300
+			end,
+			// viewSetupDoneScript: starts the idle.
+			viewSetupDoneScript: func() begin
+				inherited:?viewSetupDoneScript();
+				self:SetupIdle(100);
+				(self.delayUntilAbortTimer := 0)
+			end,
+			// SetOwnerContext(waitView, statusOptions): the texts and delays (defaults "Abort",
+			// "Please wait...").
+			SetOwnerContext: func(fsm_private_context, statusViewOptions) begin
+				self.waitView := fsm_private_context;
+				self.delayUntilAbortVisible := (if statusViewOptions then statusViewOptions.delayUntilAbortVisible else 8000);
+				self.abortButtonText := (if (if statusViewOptions then statusViewOptions.abortButtonText) then statusViewOptions.abortButtonText else "Abort");
+				(self.initialSetup := {name: 'vBarber, values: {icon: @routeUpdateBitmap, statusText: (if statusViewOptions then statusViewOptions.statusText else "Please wait..."), titleText: (if statusViewOptions then statusViewOptions.titleText), barber: true, primary: nil, closeBox: nil}})
+			end
+		}
+	},
+	// ExceptionHandler(ex): an exception thrown by an action - shown in an alert with the
+	// event and state it happened in.
+	ExceptionHandler: func(ex) begin
+		local fsm_private_context2, l2, text;
+		l2 := (if (fsm_private_context2 := fsm_private_context) then Stringer([Array: "The following exception occurred in event (", fsm_private_context2.currentEvent, ") of state (", fsm_private_context2.currentState, ") of finite state machine (", fsm_private_context2.fsm.declareSelf, "):  "]) else "The following exception occurred:  ");
+		text := "<unable to create string representation of exception frame>";
+		try begin
+				text := self:ObjectToString(ex)
+			end onexception |evt.ex| do begin end;
+		self:ExceptionHandler_Notify(Stringer([Array: l2, text]));
+		nil
+	end,
+	// ObjectToString(obj): a printable string of any object (frames and arrays to
+	// printDepth/printLength, cycles shown as <n>), as the debugger's print does. Native.
+	ObjectToString: {
+		class: #232,
+		code: code,
+		numArgs: 1,
+		closure: {
+			_nextArgFrame: nil,
+			_parent: nil,
+			_implementor: nil,
+			_literals: _literals_9,
+			backIndex: nil,
+			backList: nil,
+			maxDepth: nil,
+			maxLength: nil,
+			runParent: nil,
+			runProto: nil,
+			f: nil,
+			p: nil,
+			floatFormat: nil
+		},
+		offset: 50328,
+		// the byte code of ObjectToString
+		bcFunc: compile(
+			options: "argframe=0,0",
+			func(a1) begin
+				local backIndex, backList, runProto, runParent, floatFormat, maxDepth, maxLength, p, f;
+				backIndex := nil;
+				backList := [Array: nil];
+				runProto := (GetGlobalVar('printProto) <> nil);
+				runParent := (GetGlobalVar('printParent) <> nil);
+				if (not IsString((floatFormat := GetGlobalVar('printReal)))) then begin
+						floatFormat := "%.16e"
+					end;
+				if ((not IsNumber((maxDepth := GetGlobalVar('printDepth)))) or (maxDepth < 0)) then begin
+						maxDepth := 65535
+					end;
+				if ((not IsNumber((maxLength := GetGlobalVar('printLength)))) or (maxLength < 0)) then begin
+						maxLength := 65535
+					end;
+				// p: the native that turns what f made into a string
+				p := func() '|romsrc:native:1014535|;
+				// f: the closure that prints a1 (from depth 0) under the print settings
+				f := func() :|romsrc:closure:1014649|(backIndex, backList, runProto, runParent, floatFormat, maxDepth, maxLength, p, f);
+				(try begin
+						call p with (call f with (a1, 0))
+					end onexception |evt.ex.outofmem| do begin
+						backList := nil;
+						"<insufficient memory>"
+					end onexception |evt.ex| do begin
+						backList := nil;
+						"<exception occurred>"
+					end)
+			end)
+	},
+	// DoEvent_Check(caller): the FSM's private context, or nil if it was disposed of. Native.
+	DoEvent_Check: {
+		class: #232,
+		code: code,
+		numArgs: 1,
+		closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_12},
+		offset: 54476,
+		// the byte code
+		bcFunc: compile(
+			options: "argframe=nil,0",
+			func(a1) begin
+				local fsm_private_context2;
+				if (fsm_private_context2 := fsm_private_context) then begin
+						return fsm_private_context2
+					end;
+				nil
+			end)
+	},
+	// ExceptionHandler_Notify(text): shows text in an alert (Notify level 3).
+	ExceptionHandler_Notify: func(text) begin
+		GetRoot():Notify(kNotifyAlert, "Newton Internet Enabler", text);
+		nil
+	end,
+	// DoPeriodicEvent(event, params, unique, ..., occurrences, delay): posts an event every
+	// delay ms (a hidden child view of the engine) the given number of times.
+	DoPeriodicEvent: func(a1, a2, a3, a4, a5, hangupDelay) begin
+		local addStepView2, event_Check;
+		if (not (event_Check := self:?DoEvent_Check('|protoFSM:DoPeriodicEvent|))) then begin
+				return nil
+			end;
+		event_Check.fsm:KillPeriodicEvent(a1);
+		(if (if a5 then (a5 > 0)) then (if (addStepView2 := AddStepView(event_Check.engineView, {_proto: event_Check.fsm.PeriodicTemplate, fsm: event_Check.fsm, event: a1, params: a2, unique: a3, scope: a4, occurrences: a5, delay: (if ((not hangupDelay) or (hangupDelay < event_Check.turtle)) then event_Check.turtle else hangupDelay)})) then begin
+					addStepView2:Open();
+					addStepView2:Hide()
+				end))
+	end,
+	// the view that posts a periodic event
+	PeriodicTemplate: {
+		viewClass: clView,
+		viewFlags: 0,
+		viewFormat: 0,
+		viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+		// viewIdleScript: posts the event (DoUniqueEvent if unique); idles again while occurrences remain. Native.
+		viewIdleScript: {
+			class: #232,
+			code: code,
+			numArgs: 0,
+			closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_13},
+			offset: 54756,
+			// the byte code
+			bcFunc: compile(
+				options: "argframe=nil,0",
+				func() begin
+					try begin
+							if (unique = 'unique) then begin
+									fsm:DoUniqueEvent(event, params)
+								end else begin
+									fsm:DoEvent(event, params)
+								end
+						end onexception |evt.ex| do begin end;
+					(try begin
+							(if ((occurrences := (occurrences - 1)) > 0) then delay)
+						end onexception |evt.ex| do begin
+							nil
+						end)
+				end)
+		},
+		// viewSetupDoneScript: starts the idle. Native.
+		viewSetupDoneScript: {
+			class: #232,
+			code: code,
+			numArgs: 0,
+			closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_14},
+			offset: 56284,
+			// the byte code
+			bcFunc: compile(
+				options: "argframe=nil,0",
+				func() begin
+					self:SetupIdle(delay)
+				end)
+		},
+		// ReorientToScreen: nothing.
+		ReorientToScreen: func() begin
+			nil
+		end
+	},
+	// KillPeriodicEvent(event): stops the periodic event. Native.
+	KillPeriodicEvent: {
+		class: #232,
+		code: code,
+		numArgs: 1,
+		closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_15},
+		offset: 56888,
+		// the byte code
+		bcFunc: compile(
+			options: "argframe=nil,0",
+			func(a1) begin
+				local childViewFrames, event, event_Check;
+				if (not (event_Check := self:?DoEvent_Check('|protoFSM:KillPeriodicEvent|))) then begin
+						return nil
+					end;
+				(if IsArray((childViewFrames := event_Check.engineView:?ChildViewFrames())) then (if (event := LFetch(childViewFrames, a1, 0, '|=|, 'event)) then RemoveStepView(event_Check.engineView, event)))
+			end)
+	},
+	// the engine view: its idle script runs the FSM
+	EngineTemplate: {
+		viewClass: clView,
+		viewFlags: 0,
+		viewFormat: 0,
+		viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+		// viewIdleScript: runs DoEvent_Loop. Native.
+		viewIdleScript: {
+			class: #232,
+			code: code,
+			numArgs: 0,
+			closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_16},
+			offset: 58428,
+			// the byte code
+			bcFunc: compile(
+				options: "argframe=nil,0",
+				func() begin
+					fsm:DoEvent_Loop()
+				end)
+		},
+		// ReorientToScreen: nothing.
+		ReorientToScreen: func() begin
+			nil
+		end
+	},
+	// MCollectAncestorStates(ancestors, state): the state's frame, merged through the
+	// ancestors' (each later one protoed to the earlier). Native.
+	MCollectAncestorStates: {
+		class: #232,
+		code: code,
+		numArgs: 2,
+		closure: {
+			_nextArgFrame: _nextArgFrame_4,
+			_parent: _nextArgFrame_4,
+			_implementor: _nextArgFrame_4,
+			_literals: _literals_17
+		},
+		offset: 58972,
+		// the byte code
+		bcFunc: func(a1, a2) begin
+			if (if a1 then a2) then begin
+					local copy2;
+					local copy;
+					(foreach item in a1 do begin
+							if (copy := item.(a2)) then begin
+									if copy2 then begin
+											(copy := Clone(copy))._proto := copy2;
+											copy2 := copy
+										end else begin
+											copy2 := copy
+										end
+								end
+						end)
+				end;
+			copy2
+		end
+	},
+	// MCollectAncestorEvents(ancestors, state, event): the event's frame, merged likewise. Native.
+	MCollectAncestorEvents: {
+		class: #232,
+		code: code,
+		numArgs: 3,
+		closure: {
+			_nextArgFrame: _nextArgFrame_5,
+			_parent: _nextArgFrame_5,
+			_implementor: _nextArgFrame_5,
+			_literals: _literals_18
+		},
+		offset: 59400,
+		// the byte code
+		bcFunc: func(a1, a2, a3) begin
+			if (if (if a1 then a2) then a3) then begin
+					local copy2;
+					local copy;
+					(foreach item in a1 do begin
+							if (copy := item.(a2)) then begin
+									if (copy := copy.(a3)) then begin
+											if copy2 then begin
+													(copy := Clone(copy))._proto := copy2;
+													copy2 := copy
+												end else begin
+													copy2 := copy
+												end
+										end
+								end
+						end)
+				end;
+			copy2
+		end
+	},
+	// MBuildAncestorList(frame, slot): the slot's values along frame's _proto chain, the
+	// furthest proto first.
+	MBuildAncestorList: func(a1, a2) begin
+		local value, list;
+		list := [Array: getSlot(a1, a2)];
+		(while (a1 := a1._proto) do (if (value := getSlot(a1, a2)) then ArrayInsert(list, value, 0)));
+		list
+	end,
+	// Release(): disposes of the instance once it reaches a terminal state.
+	Release: func() begin
+		fsm_private_context.Release := true;
+		fsm_private_context.fsm:DoEvent('|fsm_private_event:Release|, nil);
+		nil
+	end,
+	// InheritedSlot(slot): the slot's value in the proto after the one that has it.
+	InheritedSlot: func(a1) begin
+		local _proto;
+		_proto := self;
+		(while (if _proto then (not HasSlot(_proto, a1))) do (_proto := _proto._proto));
+		(if (if _proto then _proto._proto) then _proto._proto.(a1))
+	end,
+	// DoUniqueEvent(event, params): DoEvent, unless that event is queued already. Native.
+	DoUniqueEvent: {
+		class: #232,
+		code: code,
+		numArgs: 2,
+		closure: {_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: _literals_19},
+		offset: 59888,
+		// the byte code
+		bcFunc: compile(
+			options: "argframe=nil,0",
+			func(a1, a2) begin
+				local event_Check;
+				if (not (event_Check := self:?DoEvent_Check('|protoFSM:DoUniqueEvent|))) then begin
+						return nil
+					end;
+				(if (not LSearch(event_Check.pendingEventQueue.queue, a1, 0, '|=|, nil)) then self:DoEvent(a1, a2))
+			end)
+	},
+	// InstantiateAndPerform(parent, event, params): a new instance with that parent, running
+	// the event at once.
+	InstantiateAndPerform: func(a1, a2, a3) begin
+		local instantiate;
+		instantiate := self:Instantiate();
+		if a1 then begin
+				instantiate._parent := a1
+			end;
+		instantiate.fsm_private_context.pendingEventQueue:EnQueue(a2);
+		instantiate.fsm_private_context.pendingParamsQueue:EnQueue(a3);
+		instantiate:DoEvent_Loop();
+		instantiate
+	end,
+	version: 2
+};
+
+_literals := [literals:
+	'|protoFSM:DoEvent|,
+	'DoEvent_Check,
+	'pendingEventQueue,
+	'EnQueue,
+	'pendingParamsQueue,
+	'busy,
+	'engineView,
+	'SetupIdle,
+	'turtle,
+	'|Array|,
+	'AddDelayedSend
+];
+
+_literals_2Item := array(6, nil, '_proto, '_parent);
+
+_literals_2 := [literals:
+	'|protoFSM:DoEvent_Loop|,
+	'DoEvent_Check,
+	'pendingState,
+	'stateCache,
+	'isNewPendingState,
+	'ancestors,
+	'MCollectAncestorStates,
+	'eventCache,
+	'pendingEventQueue,
+	'Peek,
+	'MCollectAncestorEvents,
+	'|fsm_private_event:Release|,
+	'UnknownEvent,
+	'pendingParamsQueue,
+	'DebugFSM,
+	'UnknownState,
+	'NilState,
+	'currentStateFrame,
+	'currentEventFrame,
+	'DeQueue,
+	'currentState,
+	'currentEvent,
+	'currentParams,
+	_literals_2Item,
+	'engineView,
+	'ChildViewFrames,
+	'IsArray,
+	'|Array|,
+	'scope,
+	'State,
+	'RemoveStepView,
+	_literals_2Item,
+	'action,
+	'PreAction,
+	'TraceFSM,
+	'level,
+	'|evt.ex|,
+	'Perform,
+	'CurrentException,
+	'ExceptionHandler,
+	'PostAction,
+	'nextState,
+	'waitView,
+	'Release,
+	'terminal,
+	'Reset,
+	func(a1) begin
+		(if a1.waitView then a1.waitView:Close())
+	end,
+	'AddDelayedCall,
+	'busy,
+	'IsEmpty,
+	'nextNoIdle,
+	'turtle,
+	'Dispose
+];
+
+_literals_3 := [literals: 'queue];
+
+_literals_4 := [literals: 'queue, 'RemoveSlot];
+
+_literals_5 := [literals: 'queue];
+
+_literals_6 := [literals: 'queue];
+
+_literals_7 := [literals: 'queue];
+
+_literals_9 := [literals:
+	'backIndex,
+	'|Array|,
+	'backList,
+	'printProto,
+	'GetGlobalVar,
+	'runProto,
+	'printParent,
+	'runParent,
+	'printReal,
+	'floatFormat,
+	'IsString,
+	"%.16e",
+	'printDepth,
+	'maxDepth,
+	'IsNumber,
+	65535,
+	'printLength,
+	'maxLength,
+	_literals_9Item,
+	'p,
+	_literals_9Item_2,
+	'f,
+	'|evt.ex.outofmem|,
+	'|evt.ex|,
+	"<insufficient memory>",
+	"<exception occurred>"
+];
+
+// ObjectToString's helper p: drops a trailing ", ". Native.
+_literals_9Item := {
+	class: #232,
+	code: code,
+	numArgs: 1,
+	closure: {
+		_nextArgFrame: _nextArgFrame_2,
+		_parent: _nextArgFrame_2,
+		_implementor: _nextArgFrame_2,
+		_literals: _literals_10
+	},
+	offset: 34416,
+	// the byte code
+	bcFunc: func(a1) begin
+		(if EndsWith(a1, ", ") then StrMunger(a1, (StrLen(a1) - 2), nil, nil, 0, nil) else a1)
+	end
+};
+
+_nextArgFrame_2 := {};
+
+_literals_10 := [literals: _literals_10Item, 'EndsWith, 'StrLen, 'StrMunger];
+
+_literals_10Item := ", ";
+
+// ObjectToString's helper f(obj, depth): the string of one object. Native.
+_literals_9Item_2 := {
+	class: #232,
+	code: code,
+	numArgs: 2,
+	closure: {
+		_nextArgFrame: _nextArgFrame_3,
+		_parent: _nextArgFrame_3,
+		_implementor: _nextArgFrame_3,
+		_literals: _literals_11
+	},
+	offset: 34968,
+	// the byte code
+	bcFunc: compile(
+		options: "argframe=0,0 literals+=stringer",
+		func(a1, a2) begin
+			functionArgCount := 0;
+			Stringer([Array: (if (not IsValid(a1)) then "<invalid object reference>" else (if IsMagicPtr(a1) then Stringer([Array: "@+", refOf(a1)]) else (if IsFunction(a1) then begin
+							functionArgCount := GetFunctionArgCount(a1);
+							ParamStr("func(^0 arg^?1|s|)", [Array: functionArgCount, (functionArgCount = 1)])
+						end else (if IsFrame(a1) then (if (backIndex := LSearch(backList, a1, 1, '|=|, nil)) then Stringer([Array: "<", backIndex, ">"]) else begin
+									text := Stringer([Array: "{<", Length(backList), "> "]);
+									AddArraySlot(backList, a1);
+									if (a2 > maxDepth) then begin
+											text := Stringer([Array: text, "+", refOf(a1)])
+										end else begin
+											local functionArgCount;
+											local text;
+											(foreach key, value in a1 do begin
+													if ((functionArgCount := (functionArgCount + 1)) > maxLength) then begin
+															text := Stringer([Array: text, "..."]);
+															break
+														end else begin
+															text := Stringer([Array: text, key, ": ", (if ((if (key = '_parent) then (not runParent)) or (if (key = '_proto) then (not runProto))) then "<ignored>, " else call f with (value, (a2 + 1)))])
+														end
+												end)
+										end;
+									Stringer([Array: call p with (text), "}"])
+								end) else (if IsArray(a1) then (if (backIndex := LSearch(backList, a1, 1, '|=|, nil)) then Stringer([Array: "<", backIndex, ">"]) else begin
+										text := Stringer([Array: "[<", Length(backList), "> ", (if (ClassOf(a1) <> 'Array) then Stringer([Array: ClassOf(a1), ": "]))]);
+										AddArraySlot(backList, a1);
+										if (a2 > maxDepth) then begin
+												text := Stringer([Array: text, "+", refOf(a1)])
+											end else begin
+												(foreach value in a1 do begin
+														if ((functionArgCount := (functionArgCount + 1)) > maxLength) then begin
+																text := Stringer([Array: text, "..."]);
+																break
+															end else begin
+																text := Stringer([Array: text, call f with (value, (a2 + 1))])
+															end
+													end)
+											end;
+										Stringer([Array: call p with (text), "]"])
+									end) else (if IsString(a1) then Stringer([Array: $", a1, $"]) else (if IsSymbol(a1) then Stringer([Array: $', a1]) else (if IsInteger(a1) then Stringer([Array: (if (a1 > 0) then "+" else ""), NumberStr(a1)]) else (if IsNumber(a1) then Stringer([Array: (if (a1 > 0) then "+" else ""), FormattedNumberStr(a1, floatFormat)]) else (if IsImmediate(a1) then (if (not a1) then "nil" else (if (a1 = true) then "true" else SPrintObject(a1))) else (if IsBinary(a1) then Stringer([Array: "<", ClassOf(a1), ", length ", Length(a1), ">"]) else SPrintObject(a1)))))))))))), ", "])
+		end)
+};
+
+_nextArgFrame_3 := {};
+
+_literals_11 := [literals:
+	'IsValid,
+	"<invalid object reference>",
+	'IsMagicPtr,
+	"@+",
+	'refOf,
+	'|Array|,
+	'IsFunction,
+	'GetFunctionArgCount,
+	"func(^0 arg^?1|s|)",
+	'ParamStr,
+	'IsFrame,
+	'backList,
+	'|=|,
+	'LSearch,
+	'backIndex,
+	_literals_11Item,
+	_literals_11Item_2,
+	"{<",
+	_literals_11Item_3,
+	'maxDepth,
+	_literals_11Item_4,
+	'maxLength,
+	_literals_11Item_5,
+	_literals_11Item_6,
+	'_parent,
+	'runParent,
+	'_proto,
+	'runProto,
+	"<ignored>, ",
+	'f,
+	'p,
+	"}",
+	'IsArray,
+	_literals_11Item,
+	_literals_11Item_2,
+	"[<",
+	_literals_11Item_3,
+	_literals_11Item_6,
+	_literals_11Item_4,
+	_literals_11Item_5,
+	"]",
+	'IsString,
+	'IsSymbol,
+	'IsInteger,
+	_literals_11Item_4,
+	_literals_11Item_7,
+	'NumberStr,
+	'IsNumber,
+	_literals_11Item_4,
+	_literals_11Item_7,
+	'floatFormat,
+	'FormattedNumberStr,
+	'IsImmediate,
+	"nil",
+	"true",
+	'SPrintObject,
+	'IsBinary,
+	_literals_11Item,
+	", length ",
+	_literals_11Item_2,
+	_literals_10Item,
+	'stringer
+];
+
+_literals_11Item := "<";
+
+_literals_11Item_2 := ">";
+
+_literals_11Item_3 := "> ";
+
+_literals_11Item_4 := "+";
+
+_literals_11Item_5 := "...";
+
+_literals_11Item_6 := ": ";
+
+_literals_12 := [literals: 'fsm_private_context];
+
+_literals_13 := [literals:
+	'|evt.ex|,
+	'unique,
+	'event,
+	'params,
+	'fsm,
+	'DoUniqueEvent,
+	'DoEvent,
+	'occurrences,
+	'delay
+];
+
+_literals_14 := [literals: 'delay, 'SetupIdle];
+
+_literals_15 := [literals:
+	'|protoFSM:KillPeriodicEvent|,
+	'DoEvent_Check,
+	'engineView,
+	'ChildViewFrames,
+	'IsArray,
+	'|=|,
+	'event,
+	'LFetch,
+	'RemoveStepView
+];
+
+_literals_16 := [literals: 'fsm, 'DoEvent_Loop];
+
+_nextArgFrame_4 := {};
+
+_literals_17 := [literals: '_proto];
+
+_nextArgFrame_5 := {};
+
+_literals_18 := [literals: '_proto];
+
+_literals_19 := [literals:
+	'|protoFSM:DoUniqueEvent|,
+	'DoEvent_Check,
+	[pathExpr: 'pendingEventQueue, 'queue],
+	'|=|,
+	'LSearch,
+	'DoEvent
+];
+
+// Cancel's action: marks the FSM aborted (the next step unwinds)
+action := func() begin
+	self:SetAbort(true)
+end;
+
+// Cancel's action while a request is pending: marks it aborted and cancels the endpoint's request
+action_2 := func() begin
+	self:SetAbort(true);
+	(try begin
+			self:GetEndpoint():Cancel(nil)
+		end onexception |evt.ex.comm| do begin
+			nil
+		end)
+end;
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+installScript_literal1 := same("part[0].installScript.literals[1].literals[8].literals[1]");
+
+removeScript_code := same("part[0].removeScript.instructions");
+
+UnitsInstalledScript_code := same("part[0].UnitsInstalledScript.instructions");
+
+BuildLabelCommands_literal1 := same("part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[1]");
+
+IsBusy_code := same("objectsProto.IsBusy.instructions");
+
+viewIdleScript_literal3 := same("objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[3]");
+
+action_literal0 := same("part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action.literals[0]");
+
+BuildCompletionSpec_Bind_code := same("part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Bind.instructions");
+
+BuildConfigOptions_Connect_code := same("part[0]._ExportTable[0].objects[1].BuildConfigOptions_Connect.instructions");
+
+SetEndpoint_code := same("part[0]._ExportTable[0].objects[1].SetEndpoint.instructions");
+
+completionScript_code := same("part[0]._ExportTable[0].objects[1].fCompletionSpec_Connect.completionScript.instructions");
+
+completionScript_code_2 := same("part[0]._ExportTable[0].objects[1].fCompletionSpec_UnBind.completionScript.instructions");
+
+action_code := same("part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.connect.action.instructions");
+
+action_code_2 := same("part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action.instructions");
+
+action_code_3 := same("part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateSuccess.action.instructions");
+
+action_code_4 := same("part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure.action.instructions");
+
+action_code_5 := same("part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Bind.action.instructions");
+
+action_code_6 := same("part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectSuccess.action.instructions");
+
+action_code_7 := same("part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort.action.instructions");
+
+action_code_8 := same("part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectSuccess.action.instructions");

@@ -1,8 +1,0 @@
-@@ 0x1016d1d
-func(a1) begin
-	self.target.(a1[0]) := a1[1];
-	targetView:?StartFlush();
-	self:AddUndoAction('HandleRedoDelete, [Array: a1]);
-	self:RedoChildren()
-end
-@@end

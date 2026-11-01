@@ -1,7 +1,0 @@
-@@ 0x5a5b69
-func() begin
-	callOptionsSlip.inNumber := GetUserConfig('mailPhone);
-	callOptionsSlip.inCountry := GetUserConfig('currentCountry);
-	inherited:buttonClickScript()
-end
-@@end

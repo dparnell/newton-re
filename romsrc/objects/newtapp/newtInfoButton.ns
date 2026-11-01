@@ -1,0 +1,46 @@
+// newtInfoButton: the NewtApp "i" information button (NPR 2.0), a protoInfoButton
+// whose About, Help and Prefs items open the application's aboutView and prefsView
+// and its help book - and close them when they are open.
+//
+// This file holds newtInfoButton and what only it reaches.
+
+newtInfoButton := {
+	_proto: @protoInfoButton,
+	boutView: nil,
+	prefView: nil,
+	// open the About view (theApp: the application), or close the one open
+	DoInfoAbout: func() begin
+		(if (if boutView then boutView.viewCObject) then begin
+				newtAppBase:RememberedClose(boutView);
+				RemoveSlot(self, 'boutView)
+			end else begin
+				(boutView := BuildContext(aboutView)).theApp := newtAppBase;
+				newtAppBase:RememberedOpen(boutView)
+			end)
+	end,
+	// open the Preferences view, or close the one open
+	DoInfoPrefs: func() begin
+		(if (if prefView then prefView.viewCObject) then begin
+				newtAppBase:RememberedClose(prefView);
+				RemoveSlot(self, 'prefView)
+			end else begin
+				(prefView := BuildContext(prefsView)).theApp := newtAppBase;
+				newtAppBase:RememberedOpen(prefView)
+			end)
+	end,
+	// close the help book if it is open; else open it at the application's HelpManual
+	// and viewHelpTopic, when it has them
+	DoInfoHelp: func() begin
+		local tinyTim, viewHelpTopic, l3;
+		(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else begin
+				if newtAppBase.viewHelpTopic then begin
+						viewHelpTopic := newtAppBase.viewHelpTopic
+					end;
+				(if newtAppBase.HelpManual then (if viewHelpTopic then tinyTim:OpenManualTo(newtAppBase.HelpManual, viewHelpTopic) else tinyTim:OpenManual(newtAppBase.HelpManual)) else (if viewHelpTopic then tinyTim:OpenHelpTo(viewHelpTopic) else tinyTim:Open()))
+			end)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+DoInfoAbout_code := same("newtInfoButton.DoInfoAbout.instructions");

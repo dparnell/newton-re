@@ -1,0 +1,14 @@
+// defaultStatusMsgs: protoTransport's default dialogStatusMsgs, the text of the
+// status slip for each state a transport reports (Connecting, Sending, ...);
+// idle shows nothing.
+
+defaultStatusMsgs := {
+	idle: uCardPositionAlertButton,
+	Connecting: @connectMessage,
+	Sending: sending,
+	Receiving: receiving,
+	Confirming: "Confirming…",
+	Disconnecting: @disconnectMessage,
+	Canceling: canceling,
+	Listening: "Listening…"
+};

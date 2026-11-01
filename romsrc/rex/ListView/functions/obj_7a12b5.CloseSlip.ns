@@ -1,5 +1,0 @@
-@@ 0x79f175 names
-func() begin
-	base:Close()
-end
-@@end

@@ -1,0 +1,7 @@
+// The slash key. A 1-bit bitmap frame (bits, bounds), 8 x 13 pixels. Magic pointer @745.
+// Used by arrays, numericKeys, viewRoot.
+
+keyslashBitmap := {
+	bits: bitmap('bits, "resources/bits/3d92a5.png", "000000000004005b005b02840068028c", 1),
+	bounds: {left: 0, top: 0, right: 8, bottom: 13}
+};

@@ -1,0 +1,13 @@
+// phoneText (@148): the names of the kinds of phone number (the class of a
+// phone string: phone, homePhone, workPhone, ...) shown to the user.
+
+phoneText := {
+	phone: phone,
+	homePhone: home,
+	workPhone: work,
+	faxPhone: fax,
+	carPhone: car,
+	beeperPhone: "Beeper",
+	mobilePhone: "Mobile",
+	otherPhone: otherCategoryName
+};

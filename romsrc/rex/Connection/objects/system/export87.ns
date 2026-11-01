@@ -1,0 +1,13 @@
+// GetWorksite (@8279): the worksite whose place is a1, or nil.
+
+export87 := func(a1) begin
+	if a1 then begin
+			(foreach item in self:GetWorksites() do begin
+					local resolveEntryAlias2;
+					if (if (if (resolveEntryAlias2 := ResolveEntryAlias(item)) then resolveEntryAlias2.place) then StrEqual(resolveEntryAlias2.place, a1)) then begin
+							return resolveEntryAlias2
+						end
+				end)
+		end;
+	return nil
+end;

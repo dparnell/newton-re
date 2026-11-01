@@ -1,85 +1,85 @@
 # the objects' area: 0x1000804, 0xc9c bytes; the byte between objects; the objects' alignment
 area	1000804	c9c	bf	4
-1000804	obj_1000805	41	gc=1
-1000814	obj_1000805[0]	43	map=map_1000831
+1000804	part	41	gc=1
+1000814	part[0]	43	map=map_1000831
 1000830	map_1000831	41
 1000848	map_1000849	41
 1000860	'DoNotInstall	40
 1000880	'installScript	40
 10008a0	'text	40
 10008b8	'TapAction	40
-10008d4	obj_1000805[0].DoNotInstall	43	map=map_10008f5
+10008d4	part[0].DoNotInstall	43	map=map_10008f5
 10008f4	map_10008f5	41
 1000918	'class	40
 1000930	'instructions	40
 1000950	'literals	40
 100096c	'argFrame	40
 1000988	'numArgs	40
-10009a0	obj_1000805[0].DoNotInstall.instructions	40
-1000a64	obj_1000805[0].DoNotInstall.literals	41
+10009a0	part[0].DoNotInstall.instructions	40
+1000a64	part[0].DoNotInstall.literals	41
 1000ad8	'|evt.ex.msg|	40
 1000af4	'|evt.ex|	40
 1000b0c	'MissingImports	40
 1000b2c	'GetGlobalFn	40
-1000b48	obj_1000805[0].DoNotInstall.literals[4]	40
+1000b48	part[0].DoNotInstall.literals[4]	40
 1000be8	'|string|	40
 1000c00	'Throw	40
 1000c18	'GetStores	40
 1000c34	'GetPackageNames	40
-1000c54	obj_1000805[0].DoNotInstall.literals[8]	40
+1000c54	part[0].DoNotInstall.literals[8]	40
 1000c84	'|str=|	40
 1000c9c	'LSearch	40
-1000cb4	obj_1000805[0].DoNotInstall.literals[11]	40
+1000cb4	part[0].DoNotInstall.literals[11]	40
 1000d94	'NIE_OkayToInstallOnAnyStore	40
 1000dc0	'GetUserConfig	40
 1000de0	'|NIE:NIE|	40
 1000df8	'ObjectPkgRef	40
 1000e18	'GetPkgRefInfo	40
 1000e38	'store	40
-1000e50	obj_1000805[0].DoNotInstall.literals[18]	40
-1000ebc	obj_1000ebd	40
+1000e50	part[0].DoNotInstall.literals[18]	40
+1000ebc	newtonInternetEnabler	40
 1000ef8	'CurrentException	40
 1000f1c	'message	40
 1000f34	'|Array|	40
 1000f4c	'ParamStr	40
 1000f68	'GetRoot	40
 1000f80	'Notify	40
-1000f98	obj_1000805[0].installScript	43	map=map_10008f5
-1000fb8	obj_1000805[0].installScript.instructions	40
-1000fcc	obj_1000805[0].installScript.literals	41
+1000f98	part[0].installScript	43	map=map_10008f5
+1000fb8	part[0].installScript.instructions	40
+1000fcc	part[0].installScript.literals	41
 1000fe8	'|NIE:NIE_TapActionFunc|	40
-1001010	obj_1000805[0].installScript.literals[1]	43	map=map_10008f5
-1001030	obj_1000805[0].installScript.literals[1].instructions	40
-1001070	obj_1000805[0].installScript.literals[1].literals	41
-10010b4	obj_1000805[0].installScript.literals[1].literals[0]	40
-10010dc	obj_1000805[0].installScript.literals[1].literals[1]	40
-10010f8	obj_1000805[0].installScript.literals[1].literals[2]	40
-1001108	obj_1000805[0].installScript.literals[1].literals[5]	40
-100111c	obj_1000805[0].installScript.literals[1].literals[6]	40
-1001224	obj_1000805[0].installScript.literals[1].literals[8]	40
-1001240	obj_1001241	41
+1001010	part[0].installScript.literals[1]	43	map=map_10008f5
+1001030	part[0].installScript.literals[1].instructions	40
+1001070	part[0].installScript.literals[1].literals	41
+10010b4	part[0].installScript.literals[1].literals[0]	40
+10010dc	part[0].installScript.literals[1].literals[1]	40
+10010f8	part[0].installScript.literals[1].literals[2]	40
+1001108	part[0].installScript.literals[1].literals[5]	40
+100111c	part[0].installScript.literals[1].literals[6]	40
+1001224	part[0].installScript.literals[1].literals[8]	40
+1001240	installScript_literal9	41
 1001258	'value	40
-1001270	obj_1000805[0].installScript.literals[1].literals[10]	40
-100128c	obj_1000805[0].installScript.literals[1].literals[12]	43	map=map_10008f5
-10012ac	obj_1000805[0].installScript.literals[1].literals[12].instructions	40
-10012d4	obj_1000805[0].installScript.literals[1].literals[12].literals	41
+1001270	part[0].installScript.literals[1].literals[10]	40
+100128c	part[0].installScript.literals[1].literals[12]	43	map=map_10008f5
+10012ac	part[0].installScript.literals[1].literals[12].instructions	40
+10012d4	part[0].installScript.literals[1].literals[12].literals	41
 10012e8	'InetShutDown	40
 1001308	'GlobalFnExists	40
 1001328	'AsyncConfirm	40
 1001348	'DefGlobalVar	40
-1001368	obj_1000805[0].installScript.literals[3]	43	map=map_1001379
+1001368	part[0].installScript.literals[3]	43	map=map_1001379
 1001378	map_1001379	41
 100138c	'removeScript	40
-10013ac	obj_1000805[0].installScript.literals[3].removeScript	43	map=map_10008f5
-10013cc	obj_1000805[0].installScript.literals[3].removeScript.instructions	40
-10013dc	obj_1000805[0].installScript.literals[3].removeScript.literals	41
+10013ac	part[0].installScript.literals[3].removeScript	43	map=map_10008f5
+10013cc	part[0].installScript.literals[3].removeScript.instructions	40
+10013dc	part[0].installScript.literals[3].removeScript.literals	41
 10013f0	'UnDefGlobalVar	40
-1001410	obj_1000805[0].TapAction	43	map=map_10008f5
-1001430	obj_1000805[0].TapAction.instructions	40
-1001448	obj_1000805[0].TapAction.literals	41
+1001410	part[0].TapAction	43	map=map_10008f5
+1001430	part[0].TapAction.instructions	40
+1001448	part[0].TapAction.literals	41
 1001460	'GetGlobalVar	40
 1001480	'AddDeferredCall	40
-alias	obj_1000805[0].DoNotInstall.literals[19]	obj_1000ebd
-alias	obj_1000805[0].installScript.literals[1].literals[7]	obj_1000ebd
-alias	obj_1000805[0].installScript.literals[1].literals[9]	obj_1001241
-alias	obj_1000805[0].installScript.literals[1].literals[11]	obj_1001241
+alias	part[0].DoNotInstall.literals[19]	newtonInternetEnabler
+alias	part[0].installScript.literals[1].literals[7]	newtonInternetEnabler
+alias	part[0].installScript.literals[1].literals[9]	installScript_literal9
+alias	part[0].installScript.literals[1].literals[11]	installScript_literal9

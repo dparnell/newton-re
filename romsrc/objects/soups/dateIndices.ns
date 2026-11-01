@@ -1,0 +1,8 @@
+// The indexes the calendar and to-do soups share. An array of soup index specifications
+// (the indexes of a soup definition). Magic pointer @64. Used by calendarNotesSoupDef,
+// calendarSoupDef, todoSoupDef.
+
+dateIndices := [|Array|:
+	{structure: 'slot, path: 'mtgStartDate, type: 'int},
+	{structure: 'slot, path: 'mtgAlarm, type: 'int}
+];

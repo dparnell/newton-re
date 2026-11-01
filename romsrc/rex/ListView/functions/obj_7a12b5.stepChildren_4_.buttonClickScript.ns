@@ -1,5 +1,0 @@
-@@ 0x7a148d names
-func() begin
-	base:Close()
-end
-@@end

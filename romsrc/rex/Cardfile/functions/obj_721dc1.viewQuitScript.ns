@@ -1,5 +1,0 @@
-@@ 0x722b1d
-func() begin
-	'postQuit
-end
-@@end

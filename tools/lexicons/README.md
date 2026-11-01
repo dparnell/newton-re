@@ -95,7 +95,7 @@ machine knows it).
 Seven more Airus dictionaries are NewtonScript binaries of class
 `'AirusA` rather than ROM data: the locale bundles' `dateDictionary`,
 `timeDictionary`, `numberDictionary` and `phoneDictionary` (and
-`obj_4a1d1d`), the grammars a locale other than the built-in one gives
+`dateDictionary`), the grammars a locale other than the built-in one gives
 the date, time, number and phone readers. They are the same dictionaries
 without the size word in front, so `romsrc/` keeps them in the same text:
 `lexicon('AirusA, "resources/AirusA/<addr>.lex")` in the object files,

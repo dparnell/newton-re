@@ -1,0 +1,45 @@
+// singleTaskFrameDef: a single task's routing format for beaming and mail (the task as its
+// item's body, routed by the Calendar). The file holds it and what only it reaches.
+
+singleTaskFrameDef := {
+	title: singleTask,
+	version: 1,
+	symbol: 'singleTaskFrameDef,
+	// SetupSlip(slip, item): the item's body is the task (from Find or the overview: its topic) with its date.
+	SetupSlip: compile(
+		options: "names",
+		func(slip, item) begin
+			local date;
+			if slip.target.topic then begin
+					Print("Using topic, must be from overview or Find");
+					date := slip.target.instanceTime;
+					item.body := slip.target.topic;
+					item.body.date := date;
+					item.title := MakeRichString(item.body.text, item.body.styles)
+				end else begin
+					if slip.targetView.task then begin
+							item.body := slip.targetView.task
+						end else begin
+							item.body := slip.target
+						end;
+					item.body.date := slip.target.date;
+					item.title := MakeRichString(item.body.text, item.body.styles)
+				end;
+			item.body.class := 'todo;
+			(item.appSymbol := 'calendar)
+		end),
+	// TextScript(item, target): the task as text - date, text, priority and whether completed.
+	TextScript: compile(
+		options: "names",
+		func(item, target) begin
+			local text, task, date;
+			date := LongDateStr(item.startDate, @datetimeStrSpecs.longDateStrSpec);
+			task := item.body;
+			(text := Stringer([Array: (text := Stringer([Array: (text := Stringer([Array: date, "\n", task.text])), "\n", "Priority", ":", " ", '[Array: "High", "Medium", "Low", "None"][task.mtgPriority]])), "\n", "Completed", ":", " ", (if task.mtgDone then "Yes" else "No")]))
+		end),
+	_proto: @targetFrameFormat
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TextScript_literal9 := same("singleTaskFrameDef.TextScript.literals[9]");

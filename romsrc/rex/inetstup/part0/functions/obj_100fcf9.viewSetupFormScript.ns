@@ -1,7 +1,0 @@
-@@ 0x100fdad
-func() begin
-	inherited:?viewSetupFormScript();
-	self.text := self:parent():ChildViewFrames()[0].helpText;
-	(if Visible(AlphaKeys) then (self.viewBounds := SetBounds(viewBounds.left, (AlphaKeys.viewBounds.top - 42), viewBounds.right, (AlphaKeys.viewBounds.top - 10))))
-end
-@@end

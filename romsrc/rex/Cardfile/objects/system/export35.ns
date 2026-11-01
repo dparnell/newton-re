@@ -1,0 +1,128 @@
+// The overview layout of the Names application (@8227): a list of the cards
+// (newtOverLayout), each with its class's icon, its name and its first phone
+// number, with the A-Z tabs above (not for owner cards).
+
+export35 := {
+	name: overview,
+	stepChildren: [stepChildren:
+		{
+			masterSoupSlot: 'names,
+			name: overview,
+			viewBounds: {left: 0, top: 20, right: 0, bottom: 0},
+			viewJustify: vjParentFullH + vjParentFullV,
+			forceNewEntry: nil,
+			// Draws a card's line: the icon, the first line of its text and its phone
+			// number at the right (phoneIndent).  Notes the line of the card to hilite.
+			Abstract: func(items2Item, copy) begin
+				local dataDefs, stringExtract, pos, part, text, left, right, top, l9;
+				text := "";
+				left := copy.left;
+				right := copy.right;
+				top := copy.top;
+				l9 := (copy.bottom - 2);
+				if (if (not hilitedIndex) then (items2Item = hiliteEntry)) then begin
+						hilitedIndex := hiliteCount
+					end;
+				if items2Item.class then begin
+						dataDefs := GetDataDefs(items2Item.class)
+					end else begin
+						if (ClassOf(items2Item.sorton) = 'name) then begin
+								dataDefs := GetDataDefs('person)
+							end else begin
+								dataDefs := GetDataDefs('company)
+							end
+					end;
+				(if dataDefs then begin
+						hiliteCount := (hiliteCount + 1);
+						if (pos := StrPos((stringExtract := dataDefs:StringExtract(items2Item, 2)), "\n", 0)) then begin
+								part := Substr(stringExtract, 0, pos);
+								text := Substr(stringExtract, pos, Length(stringExtract));
+								phoneIndent := (right - 95)
+							end else begin
+								part := stringExtract;
+								phoneIndent := right
+							end;
+						[Array: OffsetShape(MakeShape(dataDefs.overviewIcon), left, top), MakeText(part, (left + 20), top, phoneIndent, l9), MakeText(text, phoneIndent, top, right, l9)]
+					end else inherited:Abstract(items2Item, copy))
+			end,
+			// A tap on a phone number opens the Call slip for it (not for owner cards);
+			// elsewhere, as the overview does.
+			HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+				local l1, copy, move;
+				(if (if (trackScrollingItem > phoneIndent) then (newtAppBase.superSymbol <> 'ownerNames)) then begin
+						copy := cursor:clone();
+						(if (if HasSlot((move := copy:Move(a1)), 'phones) then (Length(move.phones) > 0)) then begin
+								self.hilitItem := move;
+								call kDoCallSlip with (self, move, move.phones[0]);
+								(self.hilitItem := nil)
+							end else inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2))
+					end else inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2))
+			end,
+			lineHeight: 12,
+			// While a phone is being called, the target is that card.
+			GetTargetInfo: func(a1) begin
+				(if self.hilitItem then {target: hilitItem, targetView: self} else inherited:GetTargetInfo(a1))
+			end,
+			phoneIndent: nil,
+			// Follows the cursor's card.
+			Retarget: func(a1) begin
+				inherited:Retarget(a1);
+				(target := dataCursor:entry())
+			end,
+			checkBoxVertOffset: -1,
+			// Scrolls and follows the cursor.
+			Scroller: func(maxLines) begin
+				inherited:Scroller(maxLines);
+				self:Retarget(nil)
+			end,
+			// Drops the bookmark.
+			viewSetupDoneScript: func() begin
+				(bookmark := nil)
+			end,
+			// Adds entry a1 to store (going to it when _context), with an undo.
+			newEntry: func(a1, _context, store) begin
+				masterSoup:AddEntry(a1, store);
+				if _context then begin
+						dataCursor:Goto(a1)
+					end;
+				AddUndoSend(layout, 'KillEntry, [Array: a1]);
+				(if _context then layout:NewTarget() else layout:Retarget(true))
+			end,
+			// Owner cards: no tabs above, so the list starts near the top.
+			viewSetupFormScript: func() begin
+				if (superSymbol = 'ownerNames) then begin
+						if IsReadOnly(viewBounds) then begin
+								viewBounds := Clone(viewBounds)
+							end;
+						viewBounds.top := 3
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			useTypeScrolling: true,
+			_proto: @newtOverLayout,
+			stepChildren: [|Array|: ]
+		},
+		export35Item
+	],
+	viewBounds: {top: 21, left: 0, right: 0, bottom: -18},
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewJustify: vjParentFullH + vjParentFullV,
+	// Owner cards have no A-Z tabs.
+	viewSetupFormScript: func() begin
+		if (superSymbol = 'ownerNames) then begin
+				if IsReadOnly(stepChildren) then begin
+						stepChildren := Clone(stepChildren)
+					end;
+				RemoveSlot(stepChildren, 1)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewClass: clView,
+	azTabs: nil,
+	stepAllocateContext: [|Array|: 'azTabs, export35Item]
+};
+
+overview := "Overview";
+
+export35Item := {_proto: @8235, preAllocatedContext: 'azTabs};

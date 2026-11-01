@@ -1,5 +1,0 @@
-@@ 0x79fc55 names
-func(hide) begin
-	(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
-end
-@@end

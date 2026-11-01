@@ -1,5 +1,0 @@
-@@ 0x499905
-func() begin
-	(if userConfiguration.zapAutoReceive then StartIRSniffing())
-end
-@@end

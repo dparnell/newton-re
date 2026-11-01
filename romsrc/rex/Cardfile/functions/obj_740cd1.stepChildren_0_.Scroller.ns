@@ -1,6 +1,0 @@
-@@ 0x741319
-func(a1) begin
-	inherited:Scroller(a1);
-	self:Retarget(nil)
-end
-@@end

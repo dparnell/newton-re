@@ -1,0 +1,39 @@
+// newtroTextView: the read-only NewtApp slot view for text (the NPR's newtROTextView),
+// the base of the simple slot views: a paragraph showing target.(path) of the entry
+// view's current entry, its text made by TargetData.  The editable views built on it
+// add a viewChangedScript that writes the text back.
+//
+// This file holds newtroTextView and what only it reaches.
+
+newtroTextView := {
+	viewClass: clParagraphView,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewFlags: vVisible + vReadOnly,
+	viewFont: tsHWFont + tsSize(12),
+	styles: nil,
+	tabs: nil,
+	// a path into another entry for jamFromEntry (NPR 2.0 JamFromEntry)
+	jamSlot: nil,
+	// true while Retarget sets the text, so the editable views do not store it back
+	hack: nil,
+	// the text when the view opens
+	viewSetupFormScript: func() begin
+		(self.text := self:TargetData())
+	end,
+	// the entry view moved to another entry: show its value
+	Retarget: func() begin
+		hack := true;
+		SetValue(self, 'text, self:TargetData());
+		(hack := nil)
+	end,
+	jamFromEntry: jamFromEntry,
+	// the text for target.(path), "" when there is no entry, path or value
+	TargetData: func() begin
+		(if (if target then path) then Clone(target.(path)) else "")
+	end,
+	// the text of the view, for routing and the like (NPR 2.0 TextScript)
+	TextScript: func() begin
+		self:?TargetData()
+	end
+};

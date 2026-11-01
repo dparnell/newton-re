@@ -1,0 +1,102 @@
+// A currency line (@8301) of the Currency Exchange panel: a country picker (the
+// label, showing the country's name), the country's currency name below it, and
+// a number field.  Tapping the country pops up the countries (locationPopup).
+
+export109 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 56},
+	viewFlags: vVisible,
+	viewFormat: vfPen(1),
+	stepChildren: [stepChildren: export109Item, export109Item_2, export109Item_3],
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	// Shows the line's country (a symbol) and its currency, from the countries soup.
+	viewSetupFormScript: func() begin
+		SetValue(label, 'text, Stringer([Array: $\uFC01, GetCountryEntry(country)[0].name]));
+		SetValue(Currency, 'text, GetCountryEntry(country)[0].Currency);
+		label:RestyleString()
+	end,
+	integerField: nil,
+	// A tap on the label: pops up the countries under the label's text; the one
+	// picked goes to ChangeCountry.
+	CalcLineLabelClickScript: func(unit) begin
+		local box;
+		(box := label:GlobalBox()).right := (box.left + StrFontWidth(label.text, label.viewFont));
+		@locationPopup:new({spots: @countrySoupName}, box, {_parent: self, PickActionScript: func(index) begin
+			self:ChangeCountry(index)
+		end})
+	end,
+	// index is the picked country's entry: shows it and its currency, recomputes
+	// the rate (ComputeExchangeRate) and truncates both texts to fit.
+	ChangeCountry: func(index) begin
+		country := index.symbol;
+		SetValue(label, 'text, Stringer([Array: $\uFC01, GetCountryEntry(country)[0].name]));
+		SetValue(Currency, 'text, GetCountryEntry(country)[0].Currency);
+		self:ComputeExchangeRate();
+		label:RestyleString();
+		Currency:RestyleString()
+	end,
+	// Sets the line's value.
+	SetNumericValue: func(a1) begin
+		value:SetNumericValue(a1)
+	end,
+	// The line's value (its number field's).
+	GetNumericValue: func() begin
+		return value:GetNumericValue()
+	end,
+	rightmargin: 0,
+	decimalPlaces: 2,
+	indent: 115,
+	viewClass: clView,
+	label: nil,
+	stepAllocateContext: [|Array|: 'label, export109Item, 'Currency, export109Item_2, 'value, export109Item_3],
+	Currency: nil,
+	value: nil
+};
+
+// The country name: tappable, sending the tap on as CalcLineLabelClickScript.
+export109Item := {
+	text: staticText,
+	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
+	viewFont: @fontSystem10Bold,
+	// A tap on the label: CalcLineLabelClickScript (the countries).
+	viewClickScript: func(unit) begin
+		(if self:TrackHilite(unit) then begin
+				self:CalcLineLabelClickScript(unit);
+				self:hilite(nil)
+			end)
+	end,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	// Truncates the text (with an ellipsis) to the view's width.
+	RestyleString: func() begin
+		local copy, l2;
+		l2 := ((copy := Clone(viewBounds)).right - copy.left);
+		(text := StyledStrTruncate(text, l2, viewFont))
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'label
+};
+
+// The currency's name, below the country.
+export109Item_2 := {
+	text: staticText,
+	viewBounds: {left: 22, top: 0, right: 110, bottom: 20},
+	viewFont: @fontSystem10Bold,
+	viewJustify: vjParentBottomV + vjSiblingBottomV + oneLineOnly,
+	// Truncates the text (with an ellipsis) to the view's width.
+	RestyleString: func() begin
+		local copy, l2;
+		l2 := ((copy := Clone(viewBounds)).right - copy.left);
+		(text := StyledStrTruncate(text, l2, viewFont))
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'Currency
+};
+
+export109Item_3 := {
+	viewBounds: {left: 115, top: 10, right: 223, bottom: 45},
+	_proto: @8295,
+	preAllocatedContext: 'value
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+RestyleString_code := same("export109Item.RestyleString.instructions");

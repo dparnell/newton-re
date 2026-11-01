@@ -1,8 +1,0 @@
-@@ 0x4de999
-func() begin
-	currentForm := self;
-	targetView := self;
-	SetKeyView(nil, nil);
-	(target := cards:entry())
-end
-@@end

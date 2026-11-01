@@ -1,0 +1,7 @@
+// canonicalFramePartRemoveInfo, and what only it reaches
+//
+// What RemovePart is told of a frame part being removed
+// (src/packages/FramePartHandler.cpp): its type, frame, package id, index
+// and package style.
+
+canonicalFramePartRemoveInfo := {partType: nil, partFrame: nil, packageId: nil, partIndex: nil, packageStyle: nil};

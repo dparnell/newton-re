@@ -1,9 +1,0 @@
-@@ 0x101c491
-func(a1, a2) begin
-	inherited:?viewChangedScript(a1, a2);
-	if (not target.(path)) then begin
-			target.(path) := ""
-		end;
-	header:Retarget()
-end
-@@end

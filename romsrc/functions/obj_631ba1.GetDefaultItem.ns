@@ -1,5 +1,0 @@
-@@ 0x4ed315
-func() begin
-	allSoups.calls:CreateBlankEntry()
-end
-@@end

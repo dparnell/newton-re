@@ -1,0 +1,112 @@
+// The Card Style edit view (@8251): a button (@8237) for each business card
+// layout of the card's class, the card's own framed; tapping one gives the card
+// that layout.
+
+style := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	name: "Card Style",
+	symbol: 'style,
+	type: 'styleEditor,
+	stepChildren: [stepChildren: {icon: nil, cardType: 1, _proto: @8237}],
+	// Makes a button per bizcard view of the class from the template's last child,
+	// sorted by bizCardNum, laid out in rows of 38 x 23 buttons.
+	viewSetupChildrenScript: func() begin
+		l1 := 20;
+		l2 := 15;
+		l4 := (l3 := self:LocalBox()).right;
+		l5 := l3.bottom;
+		self.stepChildren := Clone(stepChildren);
+		l8 := Length(stepChildren);
+		l7 := stepChildren[(l8 - 1)];
+		SetLength(stepChildren, (l8 - 1));
+		if (not (l10 := target.cardType)) then begin
+				l10 := 0
+			end;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		local l6;
+		local l7;
+		local l8;
+		local l9;
+		local l10;
+		(foreach l6 in GetViewDefs(target.class) do begin
+				if (l6.type = 'bizcard) then begin
+						if (l10 = l6.bizCardNum) then begin
+								l9 := stylesViewFormat
+							end else begin
+								l9 := 0
+							end;
+						BInsertRight(stepChildren, {_proto: l7, icon: l6.bizCardIcon, cardType: l6.bizCardNum, viewJustify: 0, viewFormat: l9}, '|<|, 'cardType, nil)
+					end
+			end);
+		(foreach l12 in stepChildren do begin
+				if ((l2 + 38) >= l4) then begin
+						l2 := 15;
+						l1 := ((l1 + 23) + 20)
+					end;
+				l12.viewBounds := RelBounds(l2, l1, 38, 23);
+				l2 := ((l2 + 38) + 15)
+			end)
+	end,
+	stylesViewFormat: vfFrameBlack + vfPen(2),
+	noKeyboard: true,
+	// Frames button a1 as the one picked and unframes the one before.
+	SelectBizcard: func(a1) begin
+		SetValue(selectedCard, 'viewFormat, 0);
+		SetValue(a1, 'viewFormat, stylesViewFormat);
+		selectedCard := a1;
+		AddDeferredSend(self:parent(), 'dirty, '[Array: ])
+	end,
+	selectedCard: nil,
+	// Finds the framed button: the card's style.
+	viewSetupDoneScript: func() begin
+		count := Length((childViewFrames := self:ChildViewFrames()));
+		local childViewFrames;
+		local i;
+		local count;
+		(for i := 0 to (count - 1) do begin
+				if (childViewFrames[i].viewFormat <> 0) then begin
+						break (selectedCard := childViewFrames[i])
+					end
+			end)
+	end,
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|: 'cardType],
+		showEmptyData: true,
+		// "Card Style: " and the style's icon.
+		shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
+			if (not (v20_wwwwwwwwwwvvvvvvItem := v20_wwwwwwwwwwvvvvvv[0])) then begin
+					v20_wwwwwwwwwwvvvvvvItem := 0
+				end;
+			local bizCardIcon;
+			local v20_wwwwwwwwwwvvvvvvItem;
+			local text;
+			local strFontWidth2;
+			local fontAscent2;
+			(foreach item in GetViewDefs('person) do begin
+					if (if (item.type = 'bizcard) then (item.bizCardNum = v20_wwwwwwwwwwvvvvvvItem)) then begin
+							break (bizCardIcon := item.bizCardIcon)
+						end
+				end);
+			(if bizCardIcon then begin
+					strFontWidth2 := StrFontWidth((text := "Card Style: "), a4.font);
+					fontAscent2 := FontAscent(a4.font);
+					{shape: [Array: MakeText(text, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.left, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.right, (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + fontAscent2)), OffsetShape(MakeShape(bizCardIcon), (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.left + strFontWidth2), (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + 3))]}
+				end)
+		end,
+		// "Card Style: n", counting from 1.
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			ParamStr("Card Style: ^0", [Array: (v20_wwwwwwwwwwvvvvvv[0] + 1)])
+		end
+	},
+	protection: 'private,
+	nukeRecToggle: true,
+	viewClass: clView
+};

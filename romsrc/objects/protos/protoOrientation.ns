@@ -1,0 +1,147 @@
+// protoOrientation: the "Rotate" popup button (protoPopupButton) - rotates
+// the screen a quarter turn left or right or half a turn, and, when the
+// screen has a button bar, moves the bar's buttons or controls to the other
+// side. Each item names the message (msg) sent to the button, with args.
+// leftBits and rightBits, below, are the bar items' icons.
+
+protoOrientation := {
+	text: "  Rotate",
+	viewBounds: {left: 7, top: 0, right: 54, bottom: 13},
+	// the rotations: RelRotate's argument is in quarter turns
+	popup: [|Array|:
+		{
+			item: "Left",
+			icon: {
+				bits: bitmap('bits, "resources/bits/43f6fd.png", "00000000000400fb00fb01f8010c0205", 1),
+				bounds: {left: 0, top: 0, right: 13, bottom: 17}
+			},
+			indent: 24,
+			msg: 'RelRotate,
+			args: [|Array|: 1]
+		},
+		{
+			item: "Right",
+			icon: {
+				bits: bitmap('bits, "resources/bits/43f78d.png", "00000000000400fb00fb0209010c0216", 1),
+				bounds: {left: 0, top: 0, right: 13, bottom: 17}
+			},
+			indent: 24,
+			msg: 'RelRotate,
+			args: [|Array|: -1]
+		},
+		{
+			item: "180°",
+			icon: {
+				bits: bitmap('bits, "resources/bits/43f81d.png", "00000000000400fb00fb0219010c0224", 1),
+				bounds: {left: 0, top: 0, right: 11, bottom: 17}
+			},
+			indent: 24,
+			msg: 'RelRotate,
+			args: [|Array|: 2]
+		}
+	],
+	// the item offered for each position of the button bar
+	// (displayParams.buttonBarPosition), moving it to the other side
+	bBarItems: {
+		left: {
+			item: "Buttons Right",
+			icon: {bits: leftBits, bounds: {left: 0, top: 0, right: 11, bottom: 17}},
+			indent: 24,
+			msg: 'FlipBBar,
+			args: [|Array|: 'right]
+		},
+		right: {
+			item: "Buttons Left",
+			icon: {bits: rightBits, bounds: {left: 0, top: 0, right: 11, bottom: 17}},
+			indent: 24,
+			msg: 'FlipBBar,
+			args: [|Array|: 'left]
+		}
+	},
+	// likewise for the position of the bar's controls
+	bBarControlsItems: {
+		left: {
+			item: "Controls Right",
+			icon: {bits: leftBits, bounds: {left: 0, top: 0, right: 11, bottom: 17}},
+			indent: 24,
+			msg: 'FlipBBarControls,
+			args: [|Array|: 'right]
+		},
+		right: {
+			item: "Controls Left",
+			icon: {bits: rightBits, bounds: {left: 0, top: 0, right: 11, bottom: 17}},
+			indent: 24,
+			msg: 'FlipBBarControls,
+			args: [|Array|: 'left]
+		}
+	},
+	// Called when the button is tapped, before the popup shows: if there is a
+	// button bar, a copy of popup (in the view's own slot) gets a separator and
+	// the items that move its controls and its buttons.
+	buttonClickScript: func() begin
+		local l1, l2;
+		if (displayParams.buttonBarPosition <> 'none) then begin
+				l1 := bBarControlsItems.(displayParams.buttonBarControlsPosition);
+				if ((l2 := bBarItems.(displayParams.buttonBarPosition)) or l1) then begin
+						AddArraySlot((popup := Clone(popup)), 'pickseparator);
+						if l1 then begin
+								AddArraySlot(popup, l1)
+							end;
+						if l2 then begin
+								AddArraySlot(popup, l2)
+							end
+					end
+			end;
+		inherited:?buttonClickScript()
+	end,
+	// No item chosen: drop the copy of popup, back to the proto's list.
+	pickCancelledScript: func() begin
+		RemoveSlot(self, 'popup);
+		inherited:pickCancelledScript()
+	end,
+	// Item index chosen: drop the copy of popup, and send the item's message to
+	// the button later (deferred, once the popup has gone).
+	pickActionScript: func(index) begin
+		local popupItem;
+		popupItem := popup[index];
+		RemoveSlot(self, 'popup);
+		AddDeferredSend(self, popupItem.msg, popupItem.args);
+		inherited:?pickActionScript(index)
+	end,
+	// Turns the screen a1 quarter turns from its orientation (0-3, kept in range
+	// by the mask 3), if that is a change.
+	RelRotate: func(a1) begin
+		local bAnd2;
+		bAnd2 := BAnd((GetOrientation() + a1), 3);
+		(if (GetOrientation() <> bAnd2) then SetScreenOrientation(bAnd2))
+	end,
+	// Records 'left or 'right as the button bar's side for the current
+	// orientation, in the user configuration's buttonBarPositions (one per
+	// orientation).
+	FlipBBar: func(a1) begin
+		local buttonBarPositions;
+		if (not (buttonBarPositions := GetUserConfig('buttonBarPositions))) then begin
+				buttonBarPositions := Array(4, nil)
+			end;
+		buttonBarPositions[GetOrientation()] := a1;
+		SetUserConfig('buttonBarPositions, buttonBarPositions)
+	end,
+	// Likewise for the side of the bar's controls (buttonBarControlsPositions).
+	FlipBBarControls: func(a1) begin
+		local buttonBarControlsPositions;
+		if (not (buttonBarControlsPositions := GetUserConfig('buttonBarControlsPositions))) then begin
+				buttonBarControlsPositions := Array(4, nil)
+			end;
+		buttonBarControlsPositions[GetOrientation()] := a1;
+		SetUserConfig('buttonBarControlsPositions, buttonBarControlsPositions)
+	end,
+	_proto: @protoPopupButton
+};
+
+leftBits := bitmap('bits, "resources/bits/43f5ad.png", "0000000000040000000000000011000b", 1);
+
+rightBits := bitmap('bits, "resources/bits/43f63d.png", "0000000000040000000000000011000b", 1);
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+FlipBBar_code := same("protoOrientation.FlipBBar.instructions");

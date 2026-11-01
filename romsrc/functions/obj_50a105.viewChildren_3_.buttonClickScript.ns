@@ -1,5 +1,0 @@
-@@ 0x50a1c1
-func() begin
-	base:Close()
-end
-@@end

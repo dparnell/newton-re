@@ -1,5 +1,0 @@
-@@ 0x4c16c1
-func() begin
-	(newtAppBase.syncAlso := itemStatus)
-end
-@@end

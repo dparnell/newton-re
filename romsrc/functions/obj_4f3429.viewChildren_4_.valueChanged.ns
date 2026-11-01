@@ -1,5 +1,0 @@
-@@ 0x4f36c9
-func() begin
-	self:AddWeek(1)
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x51cd45
-func(a1) begin
-	GetRoot().copperfield:OpenBook(a1)
-end
-@@end

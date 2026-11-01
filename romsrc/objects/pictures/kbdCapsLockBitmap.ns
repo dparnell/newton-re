@@ -1,0 +1,7 @@
+// The caps lock key of the keyboard. A 1-bit bitmap frame (bits, bounds), 11 x 12 pixels.
+// Magic pointer @755. Used by alphaKeys.
+
+kbdCapsLockBitmap := {
+	bits: bitmap('bits, "resources/bits/3d7961.png", "00000000000400df00df012f00eb013a", 1),
+	bounds: {left: 0, top: 0, right: 11, bottom: 12}
+};

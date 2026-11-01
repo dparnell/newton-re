@@ -1,0 +1,32 @@
+// The phone and pager lines of a business card (@8234), right-aligned at the
+// foot of the card, the phone icons lined up under each other.
+
+export42 := {
+	viewBounds: {top: -55, left: 5, right: -5, bottom: -3},
+	viewJustify: vjRightH + vjParentFullH + vjParentBottomV,
+	layouts: layouts_4,
+	viewFont: tsFancy + tsSize(10),
+	phoneLeft: nil,
+	// Adds one data item to the card's drawing (text-lines view's hook): lines up
+	// each item's phone icon with the first one's (phoneLeft), leaving room for the
+	// icon when right-justified.
+	AddAllInfoItem: func(a1, checkPrefixItem, shapeArray, hitArray, a5, a6, a7, a8, a9, frame2) begin
+		local count, l2;
+		if phoneLeft then begin
+				frame2.leftInfo := phoneLeft
+			end else begin
+				if (frame2.justification = 'right) then begin
+						(a8 := Clone(a8)).right := (a8.right - 25)
+					end
+			end;
+		l2 := inherited:?AddAllInfoItem(a1, checkPrefixItem, shapeArray, hitArray, a5, a6, a7, a8, a9, frame2);
+		if (not phoneLeft) then begin
+				if ((count := Length(hitArray)) > 0) then begin
+						phoneLeft := hitArray[(count - 1)].misc.bbox.left
+					end
+			end;
+		l2
+	end,
+	showMultipleData: true,
+	_proto: @8242
+};

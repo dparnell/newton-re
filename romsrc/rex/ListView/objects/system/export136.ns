@@ -1,0 +1,4 @@
+// export136: a print format (on @8323, visible topics) that prints the checkboxes
+// (printListViewFlags 2). The file holds it and what only it reaches.
+
+export136 := {_proto: @8323, printListViewFlags: 2};

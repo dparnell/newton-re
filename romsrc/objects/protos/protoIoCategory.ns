@@ -1,0 +1,4 @@
+// protoIoCategory: an empty frame in the ROM with no slots of its own; by its
+// name a base for an In/Out Box category (protoOutCategory is empty too).
+
+protoIoCategory := {};

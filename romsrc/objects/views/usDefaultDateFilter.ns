@@ -1,0 +1,4 @@
+// usDefaultDateFilter: the corrector's "any format" date template: no comb,
+// with recognition biased to numbers.
+
+usDefaultDateFilter := {item: anyFormat, bias: 'numbers};

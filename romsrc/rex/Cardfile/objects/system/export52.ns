@@ -1,0 +1,81 @@
+// The edit view for one phone number (@8244): area code, number and extension
+// fields made into a phone string (MakePhone) when the slip closes, keeping
+// its phone class.
+
+export52 := {
+	type: 'editor,
+	// Builds the number from the fields (the area code only when there is a number
+	// or it was changed); nil when it comes out empty.
+	viewQuitScript: func() begin
+		local l1, phone, l3, cls;
+		if (if self.phoneNum then (phone := target.(path))) then begin
+				cls := ClassOf(phone);
+				phone := ParsePhone(phone).phone
+			end;
+		if self.areacode then begin
+				l1 := (if (if (not StrFilled(phone)) then (not areacode.changed)) then nil else TrimString(areacode.entryLine:GetRichString()))
+			end;
+		l3 := (if self.extension then TrimString(extension.entryLine:GetRichString()));
+		savePhoneNum := MakePhone({areacode: l1, phone: phone, extension: l3});
+		if (if cls then StrFilled(savePhoneNum)) then begin
+				SetClass(savePhoneNum, cls)
+			end else begin
+				savePhoneNum := nil
+			end;
+		'postQuit
+	end,
+	// Splits the card's number into the fields; for a new number, the area code of
+	// the card's other phones (or the user's own) is offered, hilited.
+	viewSetupFormScript: func() begin
+		if StrFilled(target.(path)) then begin
+				parsePhone2 := ParsePhone(target.(path));
+				if self.areacode then begin
+						areacode.text := parsePhone2.areacode
+					end;
+				if self.phoneNum then begin
+						phoneNum.text := parsePhone2.phone
+					end;
+				if self.extension then begin
+						extension.text := parsePhone2.extension
+					end
+			end else begin
+				if self.areacode then begin
+						if (if (phones := target.phones) then ((count := Length(phones)) > 0)) then begin
+								local parsePhone2;
+								local areacode2;
+								local i;
+								local count;
+								local phones;
+								(for i := 0 to (count - 1) do begin
+										if (if (if phones[i] then (parsePhone2 := ParsePhone(phones[i]))) then parsePhone2.areacode) then begin
+												break (areacode2 := parsePhone2.areacode)
+											end
+									end)
+							end;
+						if (not areacode2) then begin
+								areacode2 := UserConfiguration.currentAreaCode
+							end;
+						if areacode2 then begin
+								areacode.text := Clone(areacode2)
+							end;
+						hiliteAreaCode := true
+					end
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewJustify: vjParentFullH + vjParentFullV,
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	protection: 'private,
+	hiliteAreaCode: nil,
+	usePhoneKeys: true,
+	// Puts the number into the card once the slip has closed.
+	viewPostQuitScript: func() begin
+		target.(path) := savePhoneNum;
+		targetView:StartFlush()
+	end,
+	savePhoneNum: nil,
+	viewClass: clView
+};

@@ -1,0 +1,44 @@
+// newtEntryShowStationeryButton: a Show button inside an entry view (NPR 2.0):
+// changes the viewDef of that entry view alone, so each entry can be shown its own
+// way.  It always shows its picker (shortCircuit nil).
+//
+// This file holds newtEntryShowStationeryButton and what only it reaches.
+
+newtEntryShowStationeryButton := {
+	shortCircuit: nil,
+	// the viewDefs of the entry view's dataDef
+	SetUpStatArray: func() begin
+		(if targetDataDef then GetDefs(form, [Array: targetDataDef.symbol], types) else [Array: ])
+	end,
+	// show the entry view with the viewDef chosen
+	statScript: func(statArrayItem) begin
+		targetView.viewDef := statArrayItem.symbol;
+		targetView:RedoChildren()
+	end,
+	// popup: the picker's items, one for each stationery (name, or title; icon when it
+	// has one); indented (24) to leave room for the icons when any has one
+	// and the entry view's viewDef checked ($\uFC0B, the check mark)
+	BuildPopup: func() begin
+		popup := [Array: ];
+		statArray := self:SetUpStatArray();
+		if sorter then begin
+				Sort(statArray, sorter, 'name)
+			end;
+		l1 := nil;
+		local l1;
+		(foreach item in statArray do begin
+				local l4, l5;
+				l4 := (if item.name then item.name else item.title);
+				l5 := (if item.icon then begin
+						l1 := true;
+						{item: l4, icon: item.icon}
+					end else {item: l4});
+				if (if targetView then (item.symbol = targetView.viewDef)) then begin
+						l5.mark := $\uFC0B
+					end;
+				AddArraySlot(popup, l5)
+			end);
+		(if l1 then (popup[0].indent := 24))
+	end,
+	_proto: @newtShowStationeryButton
+};

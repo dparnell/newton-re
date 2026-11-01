@@ -1,5 +1,0 @@
-@@ 0x59c3c5
-func() begin
-	self:RedoChildren()
-end
-@@end

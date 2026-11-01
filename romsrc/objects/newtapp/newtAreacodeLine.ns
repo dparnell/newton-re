@@ -1,0 +1,25 @@
+// newtAreacodeLine: the NewtApp labelled input line for an area code (NPR 2.0's
+// newtAreaCodeLine): numbers only, with the phone keyboard as the entry line's
+// keyboard (a double tap opens it).
+//
+// This file holds newtAreacodeLine and what only it reaches.
+
+newtAreacodeLine := {
+	_proto: @newtProtoLine,
+	// a filter of its own: digits from the numbers-only dictionary
+	flavor: {
+		_proto: @newtTextFilter,
+		// recFlags: the entry line's view flags (newtTextFilter)
+		recFlags: vVisible + vClickable + vGesturesAllowed + vCustomDictionaries,
+		dictionaries: kNumbersOnlyDictionary,
+		// not newtTextFilter's: the "letters in fields" option does not apply
+		InitFilter: func() begin
+			nil
+		end
+	},
+	// the phone keyboard is the one the entry line opens
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		(entryLine._keyboard := GetRoot().phoneKeyboard)
+	end
+};

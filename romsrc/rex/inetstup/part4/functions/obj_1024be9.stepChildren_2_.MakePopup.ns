@@ -1,5 +1,0 @@
-@@ 0x10252c1
-func() begin
-	'[Array: {item: "Manual", symbol: manual}, {item: "Server", symbol: usingServer}]
-end
-@@end

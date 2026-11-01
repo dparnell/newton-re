@@ -1,0 +1,42 @@
+// protoPersonaPopup: the pop-up of the owner's name (the "persona", one of
+// the owner cards in the user configuration's personae): it shows the
+// current persona's name, and when there are several, a diamond and a menu
+// of them, choosing one making it the current persona (UseCurrentPersona).
+
+protoPersonaPopup := {
+	_proto: @protoPopInPlace,
+	viewBounds: {left: 10, top: 10, right: 210, bottom: 23},
+	viewFormat: 0,
+	viewJustify: vjCenterV,
+	viewSetupFormScript: viewSetupFormScript,
+	// sets text to the current persona's name, after the pop-up diamond
+	// character ($\uFC01) when there is more than one to choose from; "" when
+	// there is no current persona
+	SetupText: func() begin
+		local currentPersona, resolveEntryAlias2;
+		(if (currentPersona := GetUserConfig('currentPersona)) then begin
+				resolveEntryAlias2 := ResolveEntryAlias(currentPersona);
+				(text := Stringer([Array: (if (Length(GetUserConfig('personae)) > 1) then $\uFC01), self:PrimaryName(resolveEntryAlias2)]))
+			end else (text := ""))
+	end,
+	JamIt: JamIt,
+	// a tap: with more than one persona, make the menu of their names (an
+	// unnamed card "(unnamed owner)") and pop it up; else just unhighlight.
+	// (the locals declared after their first use are the decompiler's layout)
+	buttonClickScript: func() begin
+		(if (if (personae := GetUserConfig('personae)) then (Length(personae) > 1)) then begin
+				local primaryName;
+				local personae;
+				popup := (foreach item in personae collect (if (primaryName := self:PrimaryName(ResolveEntryAlias(item))) then primaryName else "(unnamed owner)"));
+				inherited:buttonClickScript()
+			end else self:hilite(nil))
+	end,
+	viewDrawScript: viewDrawScript_2,
+	// the persona at index was chosen: make it the current one and switch to it
+	pickActionScript: func(index) begin
+		SetUserConfig('currentPersona, GetUserConfig('personae)[index]);
+		UseCurrentPersona();
+		self:hilite(nil)
+	end,
+	viewQuitScript: viewQuitScript
+};

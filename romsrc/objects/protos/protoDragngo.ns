@@ -1,0 +1,4 @@
+// protoDragNGo: a protoDragger with a close box (protoCloseBox) in its lower
+// right corner; the client adds the contents.
+
+protoDragngo := {_proto: @protoDragger, debug: 182001, viewChildren: [viewChildren: {_proto: @protoClosebox}]};

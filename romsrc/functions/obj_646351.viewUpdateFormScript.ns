@@ -1,6 +1,0 @@
-@@ 0x481e31
-func() begin
-	self:viewSetupFormScript();
-	self:viewSetupDoneScript()
-end
-@@end

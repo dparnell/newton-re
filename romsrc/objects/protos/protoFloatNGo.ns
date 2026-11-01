@@ -1,0 +1,3 @@
+// protoFloatNGo: a protoFloater with a close box (protoCloseBox).
+
+protoFloatNGo := {_proto: @protoFloater, viewChildren: [|Array|: {_proto: @protoClosebox}], debug: 363081};

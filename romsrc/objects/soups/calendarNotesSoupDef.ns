@@ -1,0 +1,12 @@
+// The soup of the calendar's non-repeating events (userName "calendar events"). A soup
+// definition (the soupDef frame RegUnionSoup and RegSoupDef take: name, userName, ownerApp,
+// userDescr, indexes). Magic pointer @368. Used by bootSoupwannabes, globalvarwannabes.
+
+calendarNotesSoupDef := {
+	name: @calendarNotesName,
+	userName: "calendar events",
+	ownerApp: 'calendar,
+	ownerAppName: dates_2,
+	userDescr: "non-repeating events in the calendar",
+	indexes: @dateIndices
+};

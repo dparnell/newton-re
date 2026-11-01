@@ -1,0 +1,398 @@
+// The backup options slip (@8259): which applications' information to back up
+// (by default all), whether to back up all packages, and from which stores
+// (internal and cards); the choices are kept in the preferences, and Backup
+// sends the sync options to the progress slip.
+
+export67 := {
+	inited: nil,
+	backupPackages: nil,
+	// True when the packages checkbox is shown: packages are not excluded in the
+	// preferences and some store has packages (the list's first item).
+	ShowPackagesCheckbox: func() begin
+		local neverSyncPackages;
+		return (if (neverSyncPackages := protoContext:ConnectionPrefsRead('neverSyncPackages)) then nil else protoContext.applications[0].packages)
+	end,
+	// The stores to offer (newer than the backup version); the slip shorter when
+	// there is no packages checkbox.
+	AdjustForStores: func() begin
+		backupStoreVersion := protoContext:GetBackupStoreVersion();
+		self.StoreMap := [Array: ];
+		local backupStoreVersion;
+		(foreach item in GetStores() do begin
+				local copy;
+				if (item.version > backupStoreVersion) then begin
+						AddArraySlot(StoreMap, item)
+					end
+			end);
+		self.numStores := Length(StoreMap);
+		copy := Clone(OriginalViewBounds);
+		self.packagesCheckboxVisible := self:ShowPackagesCheckbox();
+		if (not packagesCheckboxVisible) then begin
+				self.checkAdjust := 15;
+				copy.bottom := (copy.bottom - 15)
+			end else begin
+				self.checkAdjust := nil
+			end;
+		SetValue(self, 'viewBounds, copy)
+	end,
+	// The kept options of a store, by name.
+	GetStoreFromWhichstores: func(a1) begin
+		return LFetch(whichStores, a1, 0, '|str<|, '[pathExpr: name])
+	end,
+	// Leaves: stops idling, unregisters, tells a newer desktop ('ntic', protocol
+	// version 11 or later) the Newton is no longer choosing, and ends the
+	// connection when the slip was closed some other way.
+	viewQuitScript: func() begin
+		endpoint:StopIdle(self);
+		UnRegStoreChange('Connection);
+		if (endpoint.protocolVersion > 10) then begin
+				endpoint:WriteCommand("ntic", nil, true)
+			end;
+		protoContext:RemoveOpenWindow(self);
+		(if (not closing) then endpoint:ConnectionDone(0))
+	end,
+	fromText: nil,
+	viewFlags: vApplication + vFloating + vClickable,
+	// Keeps the connection alive while the slip is up.
+	viewIdleScript: func() begin
+		return endpoint:IdleConnection(true)
+	end,
+	OriginalViewBounds: nil,
+	appList: nil,
+	viewBounds: {left: 0, top: 10, right: 220, bottom: 263},
+	_proto: @protoFloater,
+	StoreMap: nil,
+	// A card in or out: the applications and stores are listed again.
+	RegisterMyStoreChange: func() begin
+		local fn;
+		// a store come or gone: the applications listed again (the connection kept
+		// alive meanwhile) and the slip redone
+		fn := func(a1, a2, a3) begin
+			protoContext:InvalidateApplicationList();
+			protoContext:BuildApplicationList(func() begin
+				endpoint:IdleConnection(true)
+			end);
+			protoContext:ShowIfNotVisible(backupPackages);
+			self:AdjustForStores();
+			base:RedoChildren()
+		end;
+		RegStoreChange('Connection, fn)
+	end,
+	storeList: nil,
+	stepAllocateContext: [|Array|:
+		'appList,
+		export67Item,
+		'backupPackages,
+		backupAllPackages,
+		'fromText,
+		from,
+		'storeList,
+		export67Item_2
+	],
+	closing: nil,
+	soupOptions: nil,
+	// Once: reads the kept options, builds the applications list, sizes the slip,
+	// watches for cards, and idles the connection every 2 seconds.
+	viewSetupFormScript: func() begin
+		if inited then begin
+				return nil
+			end;
+		self.inited := true;
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		self.whichStores := protoContext:ConnectionPrefsRead('storeOptions);
+		if ((not whichStores) or IsFrame(whichStores)) then begin
+				whichStores := [Array: ]
+			end;
+		self.closing := nil;
+		protoContext:BuildApplicationList(func() begin
+			endpoint:IdleConnection(true)
+		end);
+		self.soupOptions := protoContext:ConnectionPrefsRead('soupOptions);
+		self.OriginalViewBounds := Clone(viewBounds);
+		self:AdjustForStores();
+		self:RegisterMyStoreChange();
+		endpoint:StartIdle(self, 2000)
+	end,
+	packagesCheckboxVisible: nil,
+	stepChildren: [stepChildren:
+		{
+			text: information,
+			viewBounds: {left: 7, top: 6, right: 179, bottom: 18},
+			viewJustify: vjSiblingBottomV + oneLineOnly,
+			viewFont: @fontSystem10Bold,
+			_proto: @protoStaticText
+		},
+		export67Item,
+		{
+			// All: selects every application, or none when all are selected.
+			buttonClickScript: func() begin
+				appList:|SelectAll?|();
+				appList:DrawHilite()
+			end,
+			text: all,
+			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
+			_proto: @protoTextButton
+		},
+		backupAllPackages,
+		from,
+		export67Item_2,
+		{
+			// All: selects every store, or none.
+			buttonClickScript: func() begin
+				storeList:|SelectAll?|();
+				storeList:DrawHilite()
+			end,
+			text: all,
+			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
+			_proto: @protoTextButton
+		},
+		{
+			// Cancel: keeps the options and goes back to the which-connection slip.
+			buttonClickScript: func() begin
+				closing := true;
+				self:SaveOptions();
+				inherited:?buttonClickScript();
+				protoContext:OpenWhichConnection(endpoint)
+			end,
+			_proto: @protoCancelButton
+		},
+		{
+			text: "Backup",
+			buttonClickScript: compile(
+				constants: {
+					kLiteral_745f61: "Dock",
+					kROM_8269: @8269
+				},
+				// Backup: keeps the options and, when a store and something to back up are
+				// picked, sends them on to the progress slip (alerts otherwise).
+				func() begin
+					local text, syncOptions;
+					self:SaveOptions();
+					(if (Length(storeList.selectedItems) = 0) then begin
+							text := "You must check Internal or a card checkbox before proceeding.";
+							if (numStores = 1) then begin
+									text := "You must check the Internal checkbox before proceeding."
+								end;
+							AddDeferredSend(GetRoot(), 'Notify, [Array: 5, kLiteral_745f61, text])
+						end else (if (if (Length(appList.selectedItems) = 0) then (not backupPackages.viewValue)) then AddDeferredSend(GetRoot(), 'Notify, [Array: 5, kLiteral_745f61, "You didn\u2019\ut select anything to backup."]) else begin
+								syncOptions := self:BuildSyncOptions();
+								closing := true;
+								base:Close();
+								kROM_8269:OpenOnEndpoint(syncOptions, endpoint, nil)
+							end))
+				end),
+			viewBounds: {left: -49, top: 0, right: -7, bottom: 13},
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
+			_proto: @protoTextButton
+		}
+	],
+	// Keeps the applications picked (nil for all), the stores and the whole list.
+	SaveOptions: func() begin
+		local l1;
+		soupOptions := appList:CollectOptions();
+		protoContext:ConnectionPrefsWrite('soupOptions, soupOptions);
+		protoContext:ConnectionPrefsWrite('storeOptions, whichStores);
+		l1 := (if soupOptions then appList.listItems);
+		protoContext:ConnectionPrefsWrite('allApps, l1)
+	end,
+	// Selects every item of a list, or none when all are selected.
+	|SelectAll?|: func() begin
+		(if (Length(listItems) = Length(selectedItems)) then (selectedItems := [Array: ]) else begin
+				selectedItems := (foreach key, value in listItems collect key);
+				selectedItems
+			end)
+	end,
+	whichStores: nil,
+	// The sync options for the desktop: {packages, syncall, stores}, each store
+	// picked with the soups of the applications picked (syncall when all).
+	BuildSyncOptions: func() begin
+		l1 := {packages: nil, syncall: true, stores: [Array: ]};
+		protoContext:BuildApplicationList(func() begin
+			endpoint:IdleConnection(true)
+		end);
+		if (not protoContext:ConnectionPrefsRead('neverSyncPackages)) then begin
+				l1.packages := protoContext:ConnectionPrefsRead('backupPackages)
+			end;
+		l2 := protoContext:ConnectionPrefsRead('soupOptions);
+		l3 := [Array: ];
+		if l2 then begin
+				l1.syncall := nil;
+				l4 := protoContext.applications;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				(foreach l5 in l2 do begin
+						if (l7 := LFetch(l4, l5, 0, '|str=|, '[pathExpr: name])) then begin
+								soups := BMerge(l3, l7.soups, '|str<|, nil, true)
+							end
+					end);
+				if l1.packages then begin
+						BInsert(l3, "Packages", '|str<|, nil, true)
+					end
+			end;
+		local l7;
+		local l8;
+		l8 := (foreach l9 in storeList.selectedItems collect StoreMap[l9]);
+		(foreach l13 in l8 do begin
+				(l15 := protoContext:BuildStoreFrame(l13, nil, true)).soups := [Array: ];
+				l15.signatures := [Array: ];
+				local l15;
+				(foreach l16 in l3 do begin
+						local l18;
+						if (l18 := l13:GetSoup(l16)) then begin
+								AddArraySlot(l15.soups, l16);
+								AddArraySlot(l15.signatures, l18:GetSignature())
+							end
+					end);
+				AddArraySlot(l1.stores, l15)
+			end);
+		l1
+	end,
+	numStores: nil,
+	checkAdjust: nil
+};
+
+// The applications (without "Packages"): those picked last time, and any new
+// since, selected; all to start.
+export67Item := {
+	viewBounds: {left: 0, top: 5, right: 184, bottom: 89},
+	viewFont: @fontSystem10,
+	// The applications to pick from (the first left out when it stands for the
+	// packages).
+	viewSetupFormScript: func() begin
+		count := Length((applications := protoContext.applications));
+		l3 := (if protoContext.applications[0].packages then 1 else 0);
+		list := Array((count - l3), nil);
+		local applications;
+		local count;
+		local l3;
+		local list;
+		(for i := l3 to (count - 1) do begin
+				list[(i - l3)] := applications[i].name
+			end);
+		self.listItems := list;
+		self.selectedItems := [Array: ];
+		allApps := protoContext:ConnectionPrefsRead('allApps);
+		if soupOptions then begin
+				local allApps;
+				(foreach key, value in list do begin
+						if (LSearch(soupOptions, value, 0, '|str<|, nil) or (if allApps then (not LSearch(allApps, value, 0, '|str<|, nil)))) then begin
+								AddArraySlot(selectedItems, key)
+							end
+					end)
+			end else begin
+				self:|SelectAll?|()
+			end;
+		self:SetupList();
+		inherited:?viewSetupFormScript()
+	end,
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	useMultipleSelections: true,
+	useScrollers: true,
+	// The applications picked, or nil when all are.
+	CollectOptions: func() begin
+		if (Length(appList.selectedItems) <> Length(appList.listItems)) then begin
+				local l1;
+				l1 := (foreach item in appList.selectedItems collect appList.listItems[item])
+			end;
+		return l1
+	end,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2),
+	_proto: @protoTextList,
+	preAllocatedContext: 'appList
+};
+
+// "Backup all packages", kept in the preferences.
+backupAllPackages := {
+	text: "Backup all packages",
+	viewBounds: {left: 4, top: 12, right: 175, bottom: 27},
+	viewFont: @fontSystem10,
+	// Shows the kept setting.
+	viewSetupFormScript: func() begin
+		(if packagesCheckboxVisible then (self.viewValue := protoContext:ConnectionPrefsRead('backupPackages)))
+	end,
+	viewValue: nil,
+	viewJustify: vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
+	// Hidden when no packages can be backed up.
+	viewSetupDoneScript: func() begin
+		if (not packagesCheckboxVisible) then begin
+				protoContext:HideIfVisible(self)
+			end;
+		inherited:?viewSetupDoneScript()
+	end,
+	// Keeps the setting.
+	valueChanged: func() begin
+		protoContext:ConnectionPrefsWrite('backupPackages, self.viewValue)
+	end,
+	_proto: @protoCheckbox,
+	preAllocatedContext: 'backupPackages
+};
+
+// "From".
+from := {
+	text: "From",
+	viewBounds: {left: 7, top: 3, right: 200, bottom: 15},
+	viewJustify: vjParentBottomV + vjSiblingBottomV + oneLineOnly,
+	// Moves up when the packages checkbox is hidden.
+	viewSetupFormScript: func() begin
+		if (not inited) then begin
+				OriginalViewBounds := Clone(viewBounds)
+			end;
+		self.inited := true;
+		(if checkAdjust then begin
+				self.viewBounds := Clone(OriginalViewBounds);
+				viewBounds.top := (viewBounds.top - checkAdjust);
+				(viewBounds.bottom := (viewBounds.bottom - checkAdjust))
+			end else (self.viewBounds := OriginalViewBounds))
+	end,
+	OriginalViewBounds: nil,
+	inited: nil,
+	// Nothing more to do.
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript()
+	end,
+	viewFont: @fontSystem10Bold,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'fromText
+};
+
+// The stores (by name, or kind), all selected.
+export67Item_2 := {
+	viewBounds: {left: 0, top: 5, right: 184, bottom: 55},
+	viewLines: 3,
+	// The stores by name (else kind), all selected.
+	viewSetupFormScript: func() begin
+		self.listItems := (foreach item in StoreMap collect begin
+			local name;
+			if (not StrFilled((name := item:GetName()))) then begin
+					name := item:GetKind()
+				end;
+			name
+		end);
+		self.selectedItems := [Array: ];
+		self:|SelectAll?|();
+		self:SetupList();
+		inherited:?viewSetupFormScript()
+	end,
+	viewJustify: vjParentCenterH + vjParentBottomV + vjSiblingBottomV,
+	useMultipleSelections: true,
+	useScrollers: true,
+	viewFont: @fontSystem10,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2),
+	_proto: @protoTextList,
+	preAllocatedContext: 'storeList
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetStoreFromWhichstores_literal2 := same("export67.GetStoreFromWhichstores.literals[2]");
+
+viewQuitScript_literal5 := same("export67.viewQuitScript.literals[5]");
+
+buttonClickScript_code_3 := same("export67.stepChildren[2].buttonClickScript.instructions");
+
+BuildSyncOptions_literal1 := same("export67.BuildSyncOptions.literals[1]");

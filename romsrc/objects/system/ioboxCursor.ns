@@ -1,0 +1,3 @@
+// ioboxCursor (@540): an empty frame, the In/Out Box's cursor's placeholder.
+
+ioboxCursor := {};

@@ -1,0 +1,86 @@
+// newtrocomboView: a read-only NewtApp slot view showing several slots of the entry
+// at once, through a template: format is a ParamStr string whose ^0, ^1, ... are the
+// slots named in paths, one line of the view for each line of format; lines that come
+// out empty are left out.  Not in the NPR.
+//
+// This file holds newtrocomboView and what only it reaches.
+
+newtrocomboView := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewChildren: nil,
+	viewBounds: nil,
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	// the paths of the slots, in the order of format's ^0, ^1, ...
+	paths: [|Array|: ],
+	// the template (default ""); autoSize: fit the view's height to the lines
+	format: uCardPositionAlertButton,
+	shape: nil,
+	jamSlot: nil,
+	autoSize: nil,
+	// shape: the lines of text, made only when at least one of the slots is filled
+	viewSetupFormScript: func() begin
+		(if target then begin
+				local l1;
+				local l2;
+				l2 := (foreach item in paths collect begin
+					local l7, pos, l9, text;
+					(if StrFilled(target.(item)) then begin
+							l1 := true;
+							target.(item)
+						end else "")
+				end);
+				shape := [Array: ];
+				if l1 then begin
+						l7 := 0;
+						(loop begin
+								l9 := (if (pos := StrPos(format, "\n", l7)) then (pos - l7));
+								if StrFilled((text := ParamStr(Substr(format, l7, l9), l2))) then begin
+										AddArraySlot(shape, text)
+									end;
+								if (not pos) then begin
+										break
+									end;
+								(l7 := (pos + 1))
+							end)
+					end;
+				(if autoSize then ((viewBounds := Clone(viewBounds)).bottom := (viewBounds.top + (Length(shape) * FontHeight(viewFont)))))
+			end else (shape := [Array: ]))
+	end,
+	jamFromEntry: jamFromEntry,
+	// turn the lines into text shapes, one line of the view's font each
+	viewSetupChildrenScript: func() begin
+		box := self:LocalBox();
+		fontHeight2 := FontHeight(viewFont);
+		fontAscent2 := FontAscent(viewFont);
+		local box;
+		local fontHeight2;
+		local fontAscent2;
+		(foreach key, value in shape do begin
+				shape[key] := MakeText(value, 0, (fontAscent2 + ((key - 1) * fontHeight2)), box.right, (fontAscent2 + (key * fontHeight2)))
+			end)
+	end,
+	// draw them with the view's horizontal justification (viewJustify's low two bits)
+	// and its fill pattern (viewFormat's low four bits) as the pen
+	viewDrawScript: func() begin
+		local bAnd2, l2;
+		bAnd2 := BAnd(viewJustify, 3);
+		l2 := 'left;
+		if (bAnd2 = vjRightH) then begin
+				l2 := 'right
+			end else begin
+				if (bAnd2 = vjCenterH) then begin
+						l2 := 'center
+					end else begin
+						if (bAnd2 = vjFullH) then begin
+								l2 := 'full
+							end
+					end
+			end;
+		(if shape then self:DrawShape(shape, {font: viewFont, penPattern: BAnd(viewFormat, 15), justification: l2}))
+	end,
+	// no text for routing
+	TextScript: func() begin
+		""
+	end
+};

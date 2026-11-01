@@ -1,0 +1,25 @@
+// An edit slip's group of fields (@8240): when the slip edits one element of an
+// array (selectedPath), each field's path is made from that element and its
+// addPath.
+
+export48 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	// Points each field (every other entry of stepAllocateContext) at the element
+	// being edited.
+	viewSetupChildrenScript: func() begin
+		(if selectedPath then begin
+				l3 := (Length(stepAllocateContext) - 1);
+				local l1;
+				local l2;
+				local l3;
+				(for i := 0 to l3 by 2 do begin
+						(l1 := self.(stepAllocateContext[i])).path := self:MakeDataPaths(selectedPath, [Array: l1.addPath], nil)[0]
+					end)
+			end)
+	end,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	fieldOrder: nil,
+	viewClass: clView
+};

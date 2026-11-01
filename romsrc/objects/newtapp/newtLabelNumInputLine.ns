@@ -1,0 +1,7 @@
+// newtLabelNumInputLine: the NewtApp labelled input line for a number, integer or
+// real (NPR 2.0), shown with the filter's format.
+//
+// This file holds newtLabelNumInputLine and what only it reaches.
+
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
+newtLabelNumInputLine := {_proto: @newtProtoLine, flavor: @newtNumberFilter};

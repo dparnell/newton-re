@@ -1,5 +1,0 @@
-@@ 0x741c25
-func(a1, a2) begin
-	self:bcHelper(a1, a2, '[Array: emailAddrs], '[Array: email, emailPassword])
-end
-@@end

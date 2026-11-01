@@ -1,0 +1,6 @@
+// canonicalGestaltPatchInfoArrayElement, and what only it reaches
+//
+// One installed system patch in Gestalt's patch info: its checksum,
+// version, page count and first page.
+
+canonicalGestaltPatchInfoArrayElement := {fPatchCheckSum: nil, fPatchVersion: nil, fPatchPageCount: nil, fPatchFirstPageIndex: nil};

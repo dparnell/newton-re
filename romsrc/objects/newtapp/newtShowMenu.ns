@@ -1,0 +1,56 @@
+// newtShowMenu: a Show button that lists the NewtApp application's layouts
+// (allLayouts, but the overview) by name, checking the current one, and shows the
+// one chosen.
+//
+// This file holds newtShowMenu and what only it reaches.
+
+newtShowMenu := {
+	_proto: @protoPopupButton,
+	viewBounds: {left: 7, top: 0, right: 45, bottom: 13},
+	viewJustify: vjSiblingRightH + vjSiblingTopV,
+	text: show_2,
+	keyButton: '_showKeyButton,
+	// register as one of the application's key buttons: newtAppBase.(keyButton) is this view
+	// (the buttons the keyboard's and other commands can find)
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		(if keyButton then (newtAppBase.(keyButton) := self))
+	end,
+	// build the picker from the layouts, then open it
+	buttonClickScript: func() begin
+		popup := [Array: ];
+		(foreach key, value in allLayouts do begin
+				local frame2;
+				if (key <> 'overview) then begin
+						frame2 := {item: value.name, slot: key};
+						if (key = currentLayout) then begin
+								frame2.mark := $\uFC0B
+							end;
+						AddArraySlot(popup, frame2)
+					end
+			end);
+		inherited:buttonClickScript()
+	end,
+	// show the layout chosen
+	pickActionScript: func(index) begin
+		inherited:pickActionScript(index);
+		newtAppBase:ShowLayout(popup[index].slot);
+		(popup := nil)
+	end,
+	// no choice: forget the items
+	pickCancelledScript: func() begin
+		inherited:pickCancelledScript();
+		(popup := nil)
+	end,
+	// no longer a key button
+	viewQuitScript: func() begin
+		if keyButton then begin
+				RemoveSlot(newtAppBase, keyButton)
+			end;
+		inherited:?viewQuitScript()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_literal5 := same("newtShowMenu.buttonClickScript.literals[5]");

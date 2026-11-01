@@ -1,0 +1,163 @@
+// protoFullRouteSlip: the full routing slip, the one an application's routing
+// (or the In/Out Box) opens for a transport: the envelope with the sender
+// pop-up, the transport pop-up, the format picker (when there are several
+// formats), a close box and the Send button - and those children. The system
+// sets fields (the item), target, activeFormat, transport and editing.
+
+protoFullRouteSlip := {
+	// viewSetupFormScript: the first time, makes room below the envelope for the
+	// format picker when there are several formats (its 13 pixels and 8 of
+	// margin), and hides the sender pop-up in the simple mode ('KSimpleMode)
+	viewSetupFormScript: func() begin
+		if firstTime then begin
+				if (if formats then (Length(formats) > 1)) then begin
+						bottomIndent := ((bottomIndent + 13) + 8)
+					end;
+				if GetUserConfig('KSimpleMode) then begin
+						senderPopup.viewFlags := 0
+					end
+			end;
+		inherited:viewSetupFormScript()
+	end,
+	// PrepareToSend(when), from the Send button (PrepareForSubmission) or when
+	// the slip is closed: a hook before sending, which here just goes on
+	PrepareToSend: func(noworlater) begin
+		self:ContinueSend(noworlater)
+	end,
+	// ContinueSend(when): 'readdress (an item being edited) tells the transport
+	// the item changed and closes the slip; otherwise the slip's send animation
+	// plays and the Send button submits the item a second later
+	ContinueSend: func(when) begin
+		(if (when = 'readdress) then begin
+				transport:itemchanged(fields);
+				base:Close()
+			end else begin
+				base:AnimateSend();
+				AddDelayedCall(func() begin
+					(if sendButton then sendButton:SubmitIt(when))
+				end, nil, 1000)
+			end)
+	end,
+	// SlipClosed(), from the close box: an item being edited (readdressed, or a
+	// pending one) is saved as for 'readdress; otherwise the slip just closes
+	SlipClosed: func() begin
+		(if (Editing or (fields.state = 'pending)) then self:PrepareToSend('readdress) else base:Close())
+	end,
+	viewChildren: [viewChildren: senderPopup, fromTransport, formatPicker, _closeBox, sendButton],
+	senderPopup: nil,
+	allocateContext: [|Array|:
+		'senderPopup,
+		senderPopup,
+		'fromTransport,
+		fromTransport,
+		'formatPicker,
+		formatPicker,
+		'_closeBox,
+		_closeBox,
+		'sendButton,
+		sendButton
+	],
+	fromTransport: nil,
+	formatPicker: nil,
+	_closeBox: nil,
+	sendButton: nil,
+	_proto: @protoRouteSlip,
+	// rotating the screen: the standard handler (@defRotateFunc)
+	ReOrientToScreen: @defRotateFunc
+};
+
+senderPopup := {
+	// senderPopup's JamIt: when the sender changed - an item with a sender takes
+	// the new current persona; tells the slip (OwnerInfoChanged)
+	JamIt: func() begin
+		if fields.fromRef then begin
+				fields.fromRef := GetUserConfig('currentPersona)
+			end;
+		self:?OwnerInfoChanged();
+		inherited:?JamIt()
+	end,
+	preallocatedContext: 'senderPopup,
+	_proto: @protoSenderPopup
+};
+
+fromTransport := {preallocatedContext: 'fromTransport, _proto: @protoTransportPopup};
+
+formatPicker := {
+	viewBounds: {left: 10, top: 0, right: 130, bottom: 16},
+	// the format last picked, to go back to (revertCommand)
+	lastCmd: nil,
+	// formatPicker's viewSetupFormScript: places the picker below the envelope
+	// when there are several formats, else hides it (clears vVisible)
+	viewSetupFormScript: func() begin
+		viewBounds := DeepClone(viewBounds);
+		if (if formats then (Length(formats) > 1)) then begin
+				viewBounds.top := (envelopeHeight + 8);
+				viewBounds.bottom := (viewBounds.top + 16);
+				viewBounds.right := (envelopeWidth - 10)
+			end else begin
+				self.viewFlags := BAnd(self.viewFlags, bnot(vVisible))
+			end;
+		inherited:viewSetupFormScript()
+	end,
+	// LabelActionScript(index): the slip's FormatChanged may refuse the format
+	// (returning true); otherwise closes the format's auxiliary view and lets
+	// protoFormatPicker make it active
+	LabelActionScript: func(index) begin
+		lastCmd := index;
+		if self:?FormatChanged(formats[index]) then begin
+				return nil
+			end;
+		if auxUp then begin
+				auxUp:Close()
+			end;
+		auxUp := nil;
+		inherited:LabelActionScript(index)
+	end,
+	// revertCommand(): shows the last format picked again
+	revertCommand: func() begin
+		self:UpdateText(labelCommands[lastCmd])
+	end,
+	preallocatedContext: 'formatPicker,
+	_proto: @protoFormatPicker
+};
+
+_closeBox := {
+	viewBounds: {left: -24, top: 0, right: -11, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH,
+	// _closeBox's viewSetupFormScript: puts the box at the envelope's bottom
+	viewSetupFormScript: func() begin
+		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
+		(viewBounds.bottom := (viewBounds.top + 13))
+	end,
+	// buttonClickScript: closes the slip (SlipClosed); if that fails because the
+	// store is write-protected the slip is cancelled anyway (the inherited
+	// close); the exception is passed on either way
+	buttonClickScript: func() begin
+		local error;
+		(try begin
+				self:SlipClosed()
+			end onexception |evt.ex| do begin
+				if ((error := CurrentException().error) = kSError_WriteProtected) then begin
+						inherited:?buttonClickScript()
+					end;
+				Rethrow()
+			end)
+	end,
+	preallocatedContext: '_closeBox,
+	_proto: @protoCancelButton
+};
+
+sendButton := {
+	// sendButton's PrepareForSubmission(when): the slip's PrepareToSend
+	PrepareForSubmission: func(when) begin
+		self:PrepareToSend(when)
+	end,
+	preallocatedContext: 'sendButton,
+	_proto: @protoSendButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_31 := same("_closeBox.viewSetupFormScript.instructions");
+
+PrepareForSubmission_code := same("sendButton.PrepareForSubmission.instructions");

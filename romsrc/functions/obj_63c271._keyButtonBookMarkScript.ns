@@ -1,5 +1,0 @@
-@@ 0x51cba5
-func(a1) begin
-	pageDialog:Toggle()
-end
-@@end

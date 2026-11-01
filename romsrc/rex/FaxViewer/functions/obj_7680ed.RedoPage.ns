@@ -1,5 +1,0 @@
-@@ 0x768bb5
-func() begin
-	self:GotoPage(fPageNum)
-end
-@@end

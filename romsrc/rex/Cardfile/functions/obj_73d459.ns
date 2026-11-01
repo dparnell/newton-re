@@ -1,5 +1,0 @@
-@@ 0x73d459
-func(a1, a2) begin
-	call GetRoot().cardfile.kGenericTextFunc with (a2)
-end
-@@end

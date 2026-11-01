@@ -1,5 +1,0 @@
-@@ 0x54ea41
-func(a1) begin
-	AddArraySlot(|Parts1.x|, self:MakeIconEntry('ROMHelpBookEntry, a1))
-end
-@@end

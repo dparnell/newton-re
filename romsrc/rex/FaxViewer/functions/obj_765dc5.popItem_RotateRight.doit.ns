@@ -1,5 +1,0 @@
-@@ 0x766c41
-func(a1) begin
-	a1:DoMunge('rotateRight)
-end
-@@end

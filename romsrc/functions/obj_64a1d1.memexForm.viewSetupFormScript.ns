@@ -1,9 +1,0 @@
-@@ 0x550695
-func() begin
-	if (userConfiguration.blessedapp = 'ExtrasDrawer) then begin
-			makeBackDrop.viewFlags := 0
-		end;
-	newBlessed := userConfiguration.blessedapp;
-	inherited:?viewSetupFormScript()
-end
-@@end

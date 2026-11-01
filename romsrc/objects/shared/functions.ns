@@ -1,0 +1,1343 @@
+// objects several roots reach, none alone (naturalize.py)
+//
+// The ROM's NewtonScript functions that more than one object holds: the
+// compiler shared one function object wherever the same method was put in
+// several protos or apps, so it is defined here once and named after the
+// first slot it was found in (a _2, _3 suffix tells same-named ones apart).
+// They come in families: button and radio-button click handling
+// (protoTextButton, protoRadioButton), the overview list shared by
+// protoOverview and NewtApp's newtOverLayout, the clock in protoTimeButton
+// and protoClockShowBar, the sender/emporium/persona popups, the entry
+// headers of NewtApp (newtEntryPageHeader, newtEntryRollHeader), the In/Out
+// Box soup, the Calendar's meeting helpers (calendar and calendarStuff /
+// globalHeapvarwannabes), the Find slip's finders (soupFinder,
+// compatibleFinder), and the soup prototypes' ...Xmit methods.
+
+// protoTextButton's (and a few others') viewClickScript: track the pen
+// with the button hilited and, if it is lifted inside, send
+// buttonClickScript.  Answers true: the click is handled.
+viewClickScript := func(a1) begin
+	if self:TrackHilite(a1) then begin
+			self:buttonClickScript();
+			self:hilite(nil)
+		end;
+	true
+end;
+
+// protoRadioButton's and protoIconRadioButton's radioClickScript: make this
+// button (its declared `base`) the one chosen in its radio cluster.
+radioClickScript := func(a1) begin
+	cluster:SetCluster(base);
+	true
+end;
+
+// The radio buttons' viewClickScript: like a button's, but a click lifted
+// inside sends radioClickScript with the unit.
+viewClickScript_2 := func(a1) begin
+	if self:TrackHilite(a1) then begin
+			self:radioClickScript(a1);
+			self:hilite(nil)
+		end;
+	true
+end;
+
+// protoContainerView's, protoNotifyForm's and the preview view's
+// _DoDefaultButton(view): press the view's _defaultButton (the button a
+// Return or Enter key stands for), if it has one.
+_DoDefaultButton := func(a1) begin
+	local value;
+	(if (value := GetVariable(a1, '_defaultButton)) then PressButton(value))
+end;
+
+// The same views' viewKeyDownScript(char, flags): Return or Enter ($\03)
+// with none of the command, option or control modifiers presses the
+// default button (sent along the key chain as '_DoDefaultButton); answers
+// true when it did, so the key is used up.
+viewKeyDownScript := func(a1, a2) begin
+	// -234881024 is 0xF2000000: kCommandModifier, kOptionsModifier,
+	// kControlModifier and the two bits above them (not shift, caps lock or
+	// kIsSoftKeyboard)
+	(if (if ((a1 = $\n) or (a1 = $\03)) then (BAnd(a2, -234881024) = 0)) then begin
+			SendKeyMessage(self, '_DoDefaultButton);
+			true
+		end)
+end;
+
+// The analog and digital time popups' New(time, increment, a3, context):
+// make one (Init) on the time (now when nil) rounded to the nearest
+// multiple of increment minutes, keep the context, and open it with its
+// popup method, which is given a3.
+New := func(a1, a2, a3, a4) begin
+	local init, l2;
+	if (not a1) then begin
+			a1 := Time()
+		end;
+	init := self:Init();
+	l2 := ((if (not a1) then Time() else a1) + (a2 div 2));
+	init.Time := (l2 - (l2 mod a2));
+	init.increment := a2;
+	init.context := a4;
+	init:popup(a3)
+end;
+
+// The overview list (protoOverview, newtOverLayout): CheckState(entry) -
+// whether the entry's checkbox is checked (non-nil), or 'NotCheckable;
+// asks isSelected when the overview has one.
+CheckState := func(a1) begin
+	(if (if self.isSelected then a1) then self:isSelected(a1))
+end;
+
+// GetTheRightShape(entry, box): the shapes of one overview line - the
+// entry's Abstract moved 18 pixels right to make room for a checkbox, with
+// the checked or unchecked box drawn before it (no box when the overview
+// has nothingCheckable or the entry is 'NotCheckable).
+GetTheRightShape := func(a1, a2) begin
+	local copy, checkState;
+	(copy := Clone(a2)).left := (copy.left + 18);
+	if nothingCheckable then begin
+			return self:Abstract(a1, a2)
+		end;
+	(if ((checkState := self:CheckState(a1)) = 'NotCheckable) then return self:Abstract(a1, copy) else (if checkState then return [Array: OffsetShape(MakeShape(CheckOn), ((copy.left - 18) + checkBoxHorzOffset), (copy.top + checkBoxVertOffset)), self:Abstract(a1, copy)] else return [Array: OffsetShape(MakeShape(CheckOff), ((copy.left - 18) + checkBoxHorzOffset), (copy.top + checkBoxVertOffset)), self:Abstract(a1, copy)]))
+end;
+
+// SetupAbstracts(cursor): the shapes of as many lines as fit (maxLines,
+// lineHeight each) into `pieces`, one per entry from the cursor on,
+// skipping 'deleted ones; with checkScrollability it also notes whether
+// there is anything above (canScrollUp) or below (canScrollDown).
+SetupAbstracts := func(a1) begin
+	box := self:LocalBox();
+	self.maxLines := (box.bottom div lineHeight);
+	box.bottom := lineHeight;
+	if (not checkBoxVertOffset) then begin
+			// looks like a ROM bug: the test is the wrong way round (it would
+			// divide a nil lineHeight); lineHeight was used above, so the
+			// offset is always 2, never centred on the line
+			checkBoxVertOffset := (if (not lineHeight) then max(((lineHeight div 2) - 6), 0) else 2)
+		end;
+	self.pieces := Array(maxLines, nil);
+	if checkScrollability then begin
+			canScrollUp := (if (canScrollUp := a1:prev()) then (canScrollUp <> 'deleted));
+			next := a1:Next()
+		end else begin
+			next := a1:entry()
+		end;
+	local box;
+	local l2;
+	local next;
+	local l4;
+	l4 := (for i := 0 to (maxLines - 1) do begin
+			if (not next) then begin
+					break i
+				end;
+			if (next <> 'deleted) then begin
+					pieces[i] := self:GetTheRightShape(next, box);
+					box.bottom := ((box.top := box.bottom) + lineHeight)
+				end;
+			next := a1:Next()
+		end);
+	if checkScrollability then begin
+			canScrollDown := (if (canScrollDown := a1:entry()) then (canScrollDown <> 'deleted))
+		end;
+	if l4 then begin
+			SetLength(pieces, l4)
+		end;
+	(self.numLines := Length(pieces))
+end;
+
+// The overview's scroll arrows: a page (all lines but one) up or down.
+viewScrollUpScript := func() begin
+	local l1;
+	self:Scroller((-(l1 := (maxLines - 1))));
+	RefreshViews()
+end;
+
+// (down)
+viewScrollDownScript := func() begin
+	local l1;
+	self:Scroller((l1 := (maxLines - 1)));
+	RefreshViews()
+end;
+
+// GetIndexEntry(index): the entry index places past the cursor's (a clone
+// of the cursor is moved, the overview's own stays put); nil without one.
+GetIndexEntry := func(a1) begin
+	local copy;
+	(if cursor then begin
+			copy := cursor:clone();
+			copy:move(a1);
+			copy:entry()
+		end)
+end;
+
+// hiliter(hiliteShape, index, 'on or 'off): show or take away the hilite
+// of line index (nil: nothing).  A shape over the checkbox column (left of
+// selectIndent) redraws that line's box checked or unchecked instead -
+// flipped while 'on; any other shape (its own style XORs it,
+// GetHiliteShape) is drawn moved down to that line.
+hiliter := func(a1, a2, a3) begin
+	local shapeBounds2, indexEntry, checkState;
+	(if a2 then (if ((shapeBounds2 := ShapeBounds(a1)).left < selectIndent) then begin
+				if (not (indexEntry := self:GetIndexEntry((a2 + scrollOrigin)))) then begin
+						return nil
+					end;
+				(if ((checkState := self:CheckState(indexEntry)) <> 'NotCheckable) then begin
+						if (a3 = 'on) then begin
+								checkState := (not checkState)
+							end;
+						self:DrawShape(OffsetShape((shapes := (if checkState then MakeShape(CheckOn) else MakeShape(CheckOff))), (shapeBounds2.left + checkBoxHorzOffset), ((shapeBounds2.top + checkBoxVertOffset) + (a2 * lineHeight))), {transferMode: modeCopy, penPattern: 0, fillPattern: 1})
+					end)
+			end else self:DrawShape(a1, {transform: [Array: 0, (a2 * lineHeight)]})))
+end;
+
+// The overview's viewClickScript: follow the pen down the list (the
+// drawing is done by trackOverview, under DoDrawing) and send HitItem
+// with what it answers - the line, and the pen's x and y within it.
+viewClickScript_3 := func(a1) begin
+	local trackOverview;
+	if (trackOverview := self:DoDrawing('trackOverview, [Array: a1])) then begin
+			SendWithStrokesOff(self, 'HitItem, [Array: trackOverview[0], trackOverview[1], trackOverview[2]])
+		end;
+	true
+end;
+
+// trackOverview(unit): the hilite follows the pen from line to line,
+// scrolling when it goes above or below the list, until the pen is
+// lifted.  Answers [line, x, y within the line] for the line it was lifted
+// on, or nil.  A line whose item has a category is hilited across its
+// whole width, others as GetHiliteShape says (checkbox column or the
+// text); the hilite is taken away again when autoDeselect is set or the
+// pen was in the checkbox column.
+trackOverview := compile(
+	constants: {
+		// the hilite's style: black, XORed over the line
+		kLiteral_3c5eed: '{transferMode: modeXor, penPattern: 0, fillPattern: 5}
+	},
+	func(a1) begin
+		local box, l2, box2, pt, l5, l6, shapeBounds2, l8, l9, l10;
+		InkOff(a1);
+		playsound(@click);
+		BusyBoxControl(2);
+		box := self:GlobalBox();
+		if ((l2 := ((GetPoint(finalY, a1) - box.top) div lineHeight)) >= numLines) then begin
+				return nil
+			end;
+		(box2 := self:LocalBox()).bottom := lineHeight;
+		l5 := ((pt := GetPoint(finalX, a1)) - box.left);
+		(shapeBounds2 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(box2))] else self:GetHiliteShape(l5, box2))))).left := (shapeBounds2.left + box.left);
+		shapeBounds2.right := (shapeBounds2.right + box.left);
+		(loop begin
+				pt := GetPoint(finalX, a1);
+				l2 := ((l8 := (GetPoint(finalY, a1) - box.top)) div lineHeight);
+				if (l8 < 0) then begin
+						self:hiliter(l6, hilitedIndex, 'off);
+						hilitedIndex := (l2 := nil);
+						self:viewScrollUpScript()
+					end else begin
+						if ((l2 >= maxLines) or (l2 >= numLines)) then begin
+								self:hiliter(l6, hilitedIndex, 'off);
+								hilitedIndex := nil;
+								if (l2 >= maxLines) then begin
+										self:viewScrollDownScript()
+									end;
+								l2 := nil
+							end else begin
+								if ((pt < shapeBounds2.left) or (pt > shapeBounds2.right)) then begin
+										if (if (pt > box.left) then (pt < box.right)) then begin
+												self:hiliter(l6, hilitedIndex, 'off);
+												l5 := (pt - box.left);
+												(shapeBounds2 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(box2))] else self:GetHiliteShape(l5, box2))))).left := (shapeBounds2.left + box.left);
+												shapeBounds2.right := (shapeBounds2.right + box.left);
+												self:hiliter(l6, (hilitedIndex := l2), 'on)
+											end else begin
+												l2 := nil
+											end
+									end
+							end
+					end;
+				if (l2 <> hilitedIndex) then begin
+						self:hiliter(l6, hilitedIndex, 'off);
+						if l2 then begin
+								l5 := (pt - box.left);
+								(shapeBounds2 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(box2))] else self:GetHiliteShape(l5, box2))))).left := (shapeBounds2.left + box.left);
+								shapeBounds2.right := (shapeBounds2.right + box.left);
+								self:hiliter(l6, (hilitedIndex := l2), 'on)
+							end;
+						hilitedIndex := l2
+					end;
+				(if StrokeDone(a1) then break)
+			end);
+		(if l2 then begin
+				l9 := ((GetPoint(finalY, a1) - box.top) mod lineHeight);
+				l10 := (self:GlobalBox().left - self:LocalBox().left);
+				if (pt < (selectIndent + l10)) then begin
+						hilitedIndex := nil
+					end;
+				if (autoDeselect or (l5 < selectIndent)) then begin
+						self:hiliter(l6, hilitedIndex, 'off);
+						hilitedIndex := nil
+					end;
+				[Array: l2, l5, l9]
+			end)
+	end);
+
+// GetHiliteShape(x, lineBox): the hilite for a line tapped at x - the
+// checkbox column (left of selectIndent) or the rest of the line - as
+// [style, shape] with an XOR style.
+GetHiliteShape := func(a1, a2) begin
+	local copy;
+	if (a1 > selectIndent) then begin
+			(copy := Clone(a2)).left := selectIndent
+		end else begin
+			(copy := Clone(a2)).right := (selectIndent - 1)
+		end;
+	[Array: '{transferMode: modeXor, penPattern: 0, fillPattern: 5}, MakeShape(copy)]
+end;
+
+// The overview's SelectItem(index): check or uncheck the entry on line
+// index - its alias added to or taken out of `selected` (entries compared
+// with IsSameEntry) - and that line's shape remade and redrawn.
+SelectItem := compile(
+	constants: {
+		// the test that two entries are one
+		kFunction_43b471: func(a1, a2) begin
+			IsSameEntry(a1, a2)
+		end
+	},
+	func(a1) begin
+		local move, entryAlias, pos, box;
+		entryAlias := MakeEntryAlias((move := cursor:clone():move(a1)));
+		if selected then begin
+				if (pos := LSearch(selected, entryAlias, 0, kFunction_43b471, nil)) then begin
+						RemoveSlot(selected, pos)
+					end else begin
+						AddArraySlot(selected, entryAlias)
+					end
+			end else begin
+				selected := [Array: entryAlias]
+			end;
+		(box := self:LocalBox()).bottom := ((box.top := (a1 * lineHeight)) + lineHeight);
+		pieces[a1] := self:GetTheRightShape(move, box);
+		self:Dirty()
+	end);
+
+// isSelected(entry): its position in `selected` (non-nil: checked), or nil.
+isSelected := compile(
+	constants: {
+		// the test that two entries are one
+		kFunction_43b531: func(a1, a2) begin
+			IsSameEntry(a1, a2)
+		end
+	},
+	func(a1) begin
+		(if selected then LSearch(selected, a1, 0, kFunction_43b531, nil))
+	end);
+
+// Scroller(count): move the overview's cursor count entries (negative: up),
+// no further than the soup goes; the hilited line moves with the list (and
+// is dropped when it leaves the visible lines), then the lines are remade.
+Scroller := func(a1) begin
+	entry := cursor:entry();
+	if (not cursor:move(a1)) then begin
+			l2 := (if (a1 < 0) then -1 else 1);
+			if hilitedIndex then begin
+					cursor:Goto(entry);
+					local entry;
+					local l2;
+					(for i := 0 to a1 by l2 do begin
+							if (not cursor:move(l2)) then begin
+									break (a1 := i)
+								end
+						end)
+				end;
+			if (l2 < 0) then begin
+					cursor:Next()
+				end else begin
+					cursor:prev()
+				end
+		end;
+	if hilitedIndex then begin
+			if (((hilitedIndex := (hilitedIndex - a1)) < 0) or (hilitedIndex >= maxLines)) then begin
+					hilitedIndex := nil
+				end
+		end;
+	self:RedoChildren()
+end;
+
+// ForEachSelected(fn): call fn with each checked entry that still resolves.
+ForEachSelected := func(a1) begin
+	(if selected then (foreach item in selected do begin
+				local resolveEntryAlias2;
+				if (resolveEntryAlias2 := ResolveEntryAlias(item)) then begin
+						call a1 with (resolveEntryAlias2)
+					end
+			end))
+end;
+
+// The network chooser's (netChooser) buttonClickScript: hand the chosen
+// item and zone to notifyOnClose:networkChooserDone - or say that nothing
+// was chosen - and close.
+buttonClickScript := func() begin
+	if (notifyOnClose exists) then begin
+			if (selectedIndex = nil) then begin
+					self:Notify(kNotifyAlert, "Chooser", ParamStr("No ^0 was selected.", [Array: headerText]))
+				end else begin
+					notifyOnClose:networkChooserDone(currentSelection, currentZone)
+				end
+		end;
+	self:CloseAndNotify(nil)
+end;
+
+// protoFilingButton's buttonClickScript (and the root's OpenFilingSlip):
+// open the filing slip for the current target, as GetTargetInfo('Filing)
+// describes it, with the target view's doCardRouting and
+// dontStartWithFolder settings.
+buttonClickScript_2 := func() begin
+	local filing;
+	filing := self:GetTargetInfo('Filing);
+	filingSlip:OpenForUser(self, filing, GetVariable(filing.targetView, 'doCardRouting), GetVariable(filing.targetView, 'dontStartWithFolder))
+end;
+
+// protoTimeButton's and protoClockShowBar's TimeString: the time now
+// (shortest form) and the short date, as one string.
+TimeString := func() begin
+	Stringer([Array: TimeStr(Time(), @datetimeStrSpecs.shortestTimeStrSpec), " ", ShortDate(nil)])
+end;
+
+// protoTimeButton's buttonClickScript and protoClockShowBar's
+// titleClickScript: send Toggle to the root's `alarm` view.
+buttonClickScript_3 := func() begin
+	GetRoot().alarm:Toggle()
+end;
+
+// TimeBox(string): viewBounds made as wide as the string is in viewFont,
+// or nil when they already are.
+TimeBox := func(a1) begin
+	local viewBounds2, strFontWidth2;
+	viewBounds2 := viewBounds;
+	strFontWidth2 := StrFontWidth(a1, viewFont);
+	(if ((viewBounds2.right - viewBounds2.left) <> strFontWidth2) then begin
+			(viewBounds2 := Clone(viewBounds2)).right := (viewBounds2.left + strFontWidth2);
+			viewBounds2
+		end)
+end;
+
+// The clock's viewIdleScript: put the time and date in its title (resized
+// to fit) and come back in 30000 ms - every half minute.
+viewIdleScript := func() begin
+	local timeString, timeBox;
+	if (timeBox := title:TimeBox((timeString := self:TimeString()))) then begin
+			SetValue(title, 'viewBounds, timeBox)
+		end;
+	SetValue(title, 'text, timeString);
+	30000
+end;
+
+// The clock's viewDrawScript: after the inherited drawing, update at once
+// when the time has been set since (vars.setTimeSeed changed).
+viewDrawScript := func() begin
+	inherited:?viewDrawScript();
+	(if (lastSeed <> vars.setTimeSeed) then begin
+			lastSeed := vars.setTimeSeed;
+			self:viewIdleScript()
+		end)
+end;
+
+// The sender, emporium and persona popups' viewQuitScript: leave the root's
+// senderList, the list the popups are kept up to date through.
+viewQuitScript := func() begin
+	SetRemove(senderList, self)
+end;
+
+// protoEmporiumPopup's and protoSenderPopup's PickOther: open the
+// location popup over the city soup, to choose a place not in the list.
+PickOther := func() begin
+	@locationPopup:New({spots: @citySoupName, result: nil}, self:GlobalBox(), self.map)
+end;
+
+// The emporium and sender popups' map: pickActionScript(city), a city
+// chosen - the world clock set to it (a city without a place is named by
+// its name).
+pickActionScript := func(a1) begin
+	if (not (a1 := DeepClone(a1)).place) then begin
+			a1.place := a1.name
+		end;
+	GetRoot().worldClock:SetLocation(a1)
+end;
+
+// The popups' JamIt: show the current setting again (SetupText) - what the
+// senderList members are sent when it changes.
+JamIt := func() begin
+	SetValue(self, 'text, self:SetupText());
+	self:SyncView()
+end;
+
+// The popups' viewSetupFormScript: join the root's senderList (made when
+// there is none) and take the current setting as the text.
+viewSetupFormScript := func() begin
+	if (not GetRoot().senderList) then begin
+			GetRoot().senderList := [Array: ]
+		end;
+	SetAdd(senderList, self, true);
+	text := self:SetupText();
+	inherited:viewSetupFormScript()
+end;
+
+// The emporium and persona popups draw nothing of their own.
+viewDrawScript_2 := func() begin
+	nil
+end;
+
+// The restore-preferences slip's stashItems(items): keep the items chosen
+// (selectedItems holds their indexes) in prefsCache.(prefsArray).
+stashItems := func(a1) begin
+	count := Length((selectedItems2 := selectedItems));
+	prefsCache.(prefsArray) := Array(count, nil);
+	local i;
+	local count;
+	local selectedItems2;
+	(for i := 0 to (count - 1) do begin
+			prefsCache.(prefsArray)[i] := a1[selectedItems2[i]]
+		end)
+end;
+
+// The NewtApp page and roll layouts' Jogged: start again from the first
+// entry and sync every child view.
+Jogged := func() begin
+	nextEntry := 0;
+	(foreach item in layout:ChildViewFrames() do begin
+			item:SyncView()
+		end)
+end;
+
+// The NewtApp page and roll layouts' GetActiveViewX: the target view of
+// their first child, or nil without children.
+GetActiveViewX := func() begin
+	local childViewFrames;
+	(if (if (childViewFrames := self:ChildViewFrames()) then (Length(childViewFrames) > 0)) then childViewFrames[0].targetView)
+end;
+
+// The In/Out Box soup's (ioIoboxSoup) CreateBlankEntry: a new 'ioItem
+// entry stamped with the time.
+CreateBlankEntry := func() begin
+	{class: 'ioItem, timestamp: Time()}
+end;
+
+// The In/Out Box soup's FillNewSoup: only takes the In/Out Box's
+// hideFilter.
+FillNewSoup := func() begin
+	(hideFilter := GetRoot().iobox.hideFilter)
+end;
+
+// AddTagSlot(querySpec, key, tag): add tag to the query's tagspec under key
+// (a single symbol there made an array first); answers the tagspec, nil
+// when there was neither one nor a tag.
+AddTagSlot := func(a1, a2, a3) begin
+	local tagspec;
+	tagspec := a1.tagspec;
+	if a3 then begin
+			if (not tagspec) then begin
+					tagspec := {}
+				end;
+			if tagspec.(a2) then begin
+					if (ClassOf(tagspec.(a2)) = 'symbol) then begin
+							tagspec.(a2) := [Array: tagspec.(a2)]
+						end;
+					SetAdd(tagspec.(a2), a3, true)
+				end else begin
+					tagspec.(a2) := [Array: a3]
+				end;
+			a1.tagspec := tagspec
+		end;
+	return tagspec
+end;
+
+// FolderTag(querySpec): limit the query to the folder shown - '_unfiled
+// for soupFilter nil, nothing for '_all, else the folder itself.
+FolderTag := func(a1) begin
+	local soupFilter2;
+	soupFilter2 := nil;
+	if (soupFilter = nil) then begin
+			soupFilter2 := '_unfiled
+		end else begin
+			if (soupFilter <> '_all) then begin
+					soupFilter2 := soupFilter
+				end
+		end;
+	self:AddTagSlot(a1, 'all, soupFilter2)
+end;
+
+// The In/Out Box soup's SetupCursor: the query of its entries - hidden
+// classes left out (tagspec none: the hideFilter), the folder shown, only
+// the store chosen (storesFilter) when it is still valid.
+SetupCursor := func() begin
+	local frame2, copy, l3;
+	frame2 := {none: GetRoot().iobox.hideFilter};
+	(copy := Clone(soupQuery)).tagspec := frame2;
+	self:FolderTag(copy);
+	l3 := (if (if storesFilter then storesFilter:IsValid()) then theSoup:GetMember(storesFilter) else begin
+			storesFilter := nil;
+			theSoup
+		end);
+	(theCursor := l3:Query(copy))
+end;
+
+// AddEntry(entry, store): the inherited AddEntry, with its undo noted
+// (EntryUndoChanges); answers the entry.
+AddEntry := func(a1, a2) begin
+	EntryUndoChanges((a1 := inherited:AddEntry(a1, a2)));
+	a1
+end;
+
+// The NewtApp entry headers' (newtEntryPageHeader, newtEntryRollHeader)
+// viewSetupFormScript: register as the application's _titleKeyButton.
+viewSetupFormScript_2 := func() begin
+	(if newtAppBase then (newtAppBase._titleKeyButton := self))
+end;
+
+// The entry headers' GetTitle: the entry's title, or its date ("Mon 4/1")
+// for an entry that has none.
+GetTitle := func() begin
+	(if HasPath(target, 'title) then Clone(target.title) else Stringer([Array: LongDateStr(target.timestamp, @datetimeStrSpecs.abbrDayOfWeekStrSpec), " ", ShortDateStr(target.timestamp, @datetimeStrSpecs.numericMDStrSpec)]))
+end;
+
+// The entry headers' viewDrawScript: the header bar, made once into
+// `pieces` - the data def's icon, the title, a filled bar after it and, when
+// all folders are shown, the entry's folder at the right (room left for
+// the filing button when hasFiling).
+viewDrawScript_3 := func() begin
+	local icon, text, l3, strFontWidth2, box, l6, title, l8, l9;
+	if (if (not pieces) then target) then begin
+			headerText := appObject[0];
+			if targetDataDef then begin
+					if (icon := targetDataDef.icon) then begin
+							headerIcon := icon
+						end;
+					headerText := targetDataDef.description
+				end;
+			text := "";
+			if (if (labelsFilter = '_all) then target.labels) then begin
+					if (l3 := userConfiguration.userFolders.(target.labels)) then begin
+							text := StrTruncate(Clone(l3), 100)
+						end
+				end;
+			strFontWidth2 := StrFontWidth(text, viewFont);
+			l6 := (((box := layout:LocalBox()).right - strFontWidth2) - 4);
+			if hasFiling then begin
+					l6 := (l6 - 35)
+				end;
+			title := self:GetTitle();
+			l8 := (headerIcon.bounds.right + 4);
+			l9 := (StrFontWidth((title := StrTruncate(title, ((l6 - 2) - l8))), viewFont) + 2);
+			pieces := [Array: OffsetShape(MakeShape(headerIcon), 1, ((15 - (headerIcon.bounds.bottom - headerIcon.bounds.top)) div 2)), '{fillPattern: 5}, MakeRect(((l8 + l9) + 2), 6, l6, 9), {transferMode: modeCopy, font: viewFont}, MakeText(title, l8, 2, (l8 + l9), 11), MakeText(text, (l6 + 2), 2, ((l6 + strFontWidth2) + 4), 11)]
+		end;
+	(if pieces then self:DrawShape(pieces, nil))
+end;
+
+// The entry headers' InfoChanged(changed): the info box closed; when it
+// changed the entry, the entry is flushed and the header remade.
+InfoChanged := func(a1) begin
+	if a1 then begin
+			self:FlushEntry(target);
+			pieces := nil;
+			self:Dirty()
+		end;
+	(info := nil)
+end;
+
+// InfoClosed: the info box is gone.
+InfoClosed := func() begin
+	(info := nil)
+end;
+
+// The entry headers' viewQuitScript: close the info box and leave the
+// application's _titleKeyButton.
+viewQuitScript_2 := func() begin
+	if info then begin
+			info:Close()
+		end;
+	(if newtAppBase then (if newtAppBase._titleKeyButton then RemoveSlot(newtAppBase, '_titleKeyButton)))
+end;
+
+// The entry headers' Popit(x): open the info box (infoBox) for the target
+// entry - pending changes saved first when its store can be written.
+Popit := func(a1) begin
+	if (if target then (not EntryStore(target):IsReadOnly())) then begin
+			self:EndFlush()
+		end;
+	(if target then (info := infoBox:New(target, headerIcon, headerText, self:GlobalBox(), self)))
+end;
+
+// The entry headers' viewClickScript: a tap on the icon (the left 20
+// pixels) hilites it while the pen stays there and opens the info box;
+// in a resizable roll, a drag elsewhere (not near the right end) drags the
+// header to change the height of the entry above, which is saved.
+viewClickScript_4 := compile(
+	constants: {
+		kLiteral_3c5eed: '{transferMode: modeXor, penPattern: 0, fillPattern: 5}
+	},
+	func(a1) begin
+		(if target then begin
+				l1 := self:GlobalBox();
+				if (((l2 := GetPoint(firstX, a1)) - l1.left) < 20) then begin
+						InkOff(a1);
+						playsound(@click);
+						l4 := OffsetShape(MakeRect((l3 := headerIcon.bounds).left, l3.top, l3.right, l3.bottom), 1, ((15 - (l3.bottom - l3.top)) div 2));
+						l6 := ((GetPoint(firstX, a1) - l1.left) < 20);
+						(loop begin
+								if (l5 <> l6) then begin
+										self:DrawShape(l4, kLiteral_3c5eed);
+										l5 := l6
+									end;
+								if StrokeDone(a1) then begin
+										break
+									end;
+								(l6 := ((GetPoint(finalX, a1) - l1.left) < 20))
+							end);
+						if l6 then begin
+								self:DrawShape(l4, kLiteral_3c5eed);
+								if (not info) then begin
+										self:Popit(true)
+									end
+							end
+					end else begin
+						if (if ((l1.right - l2) > 40) then resizable) then begin
+								playsound(@click);
+								l7 := dataCursor:clone();
+								l7:Goto(target);
+								if (if (l5 := l7:prev()) then l5.height) then begin
+										self:hilite(true);
+										l9 := (l8 := self:GlobalBox()).top;
+										l10 := 0;
+										local l1;
+										local l2;
+										local l3;
+										local l4;
+										local l5;
+										local l6;
+										local l7;
+										local l8;
+										local l9;
+										local l10;
+										local l11;
+										local l12;
+										l12 := (foreach l13, l14 in (l11 := targetView:Parent():ChildViewFrames()) do begin
+												local l16, l17, l18;
+												if (if (l13 > 0) then (l14 = targetView)) then begin
+														break l11[(l13 - 1)]
+													end
+											end);
+										if l12 then begin
+												if (l16 := l12.targetViewDef:?MinimalBounds(l5)) then begin
+														l10 := (l10 + l16.bottom)
+													end;
+												l10 := (l10 + l12.minimumHeight)
+											end;
+										l17 := layout:GlobalBox();
+										l8.top := max(((l8.top - l5.height) + l10), l17.top);
+										l8.bottom := l17.bottom;
+										self:Drag(a1, l8);
+										l18 := self:GlobalBox();
+										if (target = dataCursor:entry()) then begin
+												dataCursor:Goto(l5);
+												layout.viewOriginY := l5.height
+											end;
+										if (if (dataCursor:entry() = l5) then (layout.viewOriginY = ((l5.height + l18.top) - l9))) then begin
+												dataCursor:Next();
+												layout.viewOriginY := 0
+											end;
+										self:SetAndSaveNoteHeight(l5, ((l5.height + l18.top) - l9));
+										self:hilite(nil)
+									end
+							end
+					end;
+				true
+			end)
+	end);
+
+// The NewtApp roll entry view's and the In/Out Box item layout's
+// checkCaret: scroll the layout until the caret's paragraph is in sight
+// (tried again in 500 ms while another view is in use).
+checkCaret := func() begin
+	local box, caretInfo, caretRelativeToVisibleRect;
+	if OtherViewInUse(nil) then begin
+			// another view (a slip, a drag) is busy: try again in 500 ms
+			AddProcrastinatedSend('checkCaret, targetView, 'checkCaret, nil, 500);
+			return nil
+		end;
+	(loop begin
+			if ((((not (caretInfo := GetCaretInfo())) or (not caretInfo.view)) or (not caretInfo.view.viewCObject)) or (BAnd(caretInfo.view.viewClass, 65535) <> clParagraphView)) then begin
+					break
+				end;
+			if (not ViewContainsCaretView(self)) then begin
+					break
+				end;
+			if (not box) then begin
+					(box := layout:GlobalBox()).top := (box.top + 8);
+					box.bottom := (box.bottom - viewLineSpacing)
+				end;
+			if ((not (caretRelativeToVisibleRect := caretInfo.view:CaretRelativeToVisibleRect(box))) or (caretRelativeToVisibleRect = 'inbox)) then begin
+					break
+				end;
+			(if (caretRelativeToVisibleRect = 'top) then layout:PixelScrollBy(0, ((box.top - box.bottom) + viewLineSpacing)) else (if (caretRelativeToVisibleRect = 'bottom) then layout:PixelScrollBy(0, ((box.bottom - box.top) - viewLineSpacing)) else break))
+		end)
+end;
+
+// newtCheckbox's and the read-only NewtApp views' jamFromEntry(entry):
+// copy the entry's jamSlot into the target's path (cleared first).
+jamFromEntry := func(a1) begin
+	(if jamSlot then begin
+			target.(path) := nil;
+			(if a1 then (target.(path) := a1.(jamSlot)))
+		end)
+end;
+
+// The Calendar's ChangeMeeting(meeting, slot, value): set one slot of a
+// meeting, wherever it belongs - the repeat template's start or stop date
+// (instance notes outside the new range made exceptions), an exception's
+// own slots, the instance notes, a repeating meeting's template (its alarm
+// kept as minutes before the start, its exceptions moved with a new start
+// time), a crib note's template, or a plain meeting (its alarm and its
+// viewBounds moved with it).
+ChangeMeeting := func(a1, a2, a3) begin
+	l1 := a1.viewStationery;
+	l2 := a1.repeatTemplate;
+	l3 := a1.repeatTemplate.InstanceNotesData;
+	l4 := (if l2 then EntrySoup(l2));
+	// an exception keeps its own start, duration, invitees and location;
+	// a 'RepeatingMeeting or 'exceptionMeeting changes its template
+	(if (a2 = 'mtgFirstDate) then begin
+			self:ConvertAnnotatedMeetingsBeforeStartDate(l2, a3);
+			setSlot(l2, 'mtgStartDate, a3)
+		end else (if (if self:IsExceptionMeeting(a1) then ArrayPos('[Array: mtgStartDate, mtgDuration, mtgInvitees, mtgLocation], a2, 0, nil)) then setSlot(a1, a2, a3) else (if (a2 = 'InstanceNotesData) then self:StoreLocalNotes(l2, a1.mtgStartDate, a3, nil) else (if (a2 = 'mtgStopDate) then begin
+						if l3 then begin
+								self:ConvertAnnotatedMeetingsAfterStopDate(l2, a3)
+							end;
+						setSlot(l2, a2, a3)
+					end else (if ((l1 = 'RepeatingMeeting) or (l1 = 'exceptionMeeting)) then begin
+							if (if (a2 = 'mtgAlarm) then a3) then begin
+									a3 := (a1.mtgStartDate - a3)
+								end;
+							if (if (if (l1 = 'RepeatingMeeting) then (a2 = 'mtgStartDate)) then l2.exceptions) then begin
+									// the new start's time of day (1440 minutes in a day), given to
+									// every exception on its own date
+									l5 := (a3 mod 1440);
+									local l1;
+									local l2;
+									local l3;
+									local l4;
+									local l5;
+									(foreach l6 in l2.exceptions do begin
+											local l8, l9, l10, l11;
+											l8 := ((l8 := l6[0]) - (l8 mod 1440));
+											l6[0] := (l8 + l5);
+											if l6[1] then begin
+													l6[1].originDate := l6[0]
+												end
+										end)
+								end;
+							setSlot(l2, a2, a3)
+						end else (if (l1 = 'cribNote) then (if l2 then begin
+									if (if (a2 = 'mtgAlarm) then a3) then begin
+											a3 := (a1.mtgStartDate - a3)
+										end;
+									setSlot(l2, a2, a3)
+								end else setSlot(a1, a2, a3)) else begin
+								if (if (a2 = 'mtgStartDate) then a1.mtgAlarm) then begin
+										a1.mtgAlarm := (a1.mtgAlarm + (a3 - a1.mtgStartDate))
+									end;
+								if (if a1.viewBounds then ((a2 = 'mtgStartDate) or (a2 = 'mtgDuration))) then begin
+										l9 := a1.(a2);
+										l10 := a1.viewBounds;
+										if (l9 <> a3) then begin
+												// the day view's scale: 16 pixels for each 30 minutes
+												l11 := (((a3 - l9) div 30) * 16);
+												if (a2 = 'mtgStartDate) then begin
+														l10.top := (l10.top + l11);
+														l10.bottom := (l10.bottom + l11)
+													end else begin
+														if (a2 = 'mtgDuration) then begin
+																l10.bottom := (l10.bottom + l11)
+															end
+													end;
+												setSlot(a1, 'viewBounds, l10)
+											end
+									end;
+								setSlot(a1, a2, a3)
+							end))))))
+end;
+
+// ConvertAnnotatedMeetingsAfterStopDate(template, stopDate): the instances
+// with notes after the new stop date made exceptions, so the notes stay.
+ConvertAnnotatedMeetingsAfterStopDate := compile(
+	constants: {
+		// ArrayPos's test: an instance's notes ([date, alias]) dated after a1
+		kFunction_4f3d01: func(a1, a2) begin
+			(a2[0] > a1)
+		end
+	},
+	func(a1, a2) begin
+		local instanceNotesData, pos;
+		(if (instanceNotesData := a1.InstanceNotesData) then (if (pos := ArrayPos(instanceNotesData, a2, 0, kFunction_4f3d01)) then self:ConvertAnnotatedMeetingsToExceptions(a1, pos, (Length(instanceNotesData) - 1))))
+	end);
+
+// ConvertAnnotatedMeetingsBeforeStartDate(template, startDate): the same
+// for the instances before the new start date.
+ConvertAnnotatedMeetingsBeforeStartDate := compile(
+	constants: {
+		// ArrayPos's test: an instance's notes ([date, alias]) dated at or after a1
+		kFunction_4f3dd1: func(a1, a2) begin
+			(a2[0] >= a1)
+		end
+	},
+	func(a1, a2) begin
+		local instanceNotesData, pos;
+		(if (instanceNotesData := a1.InstanceNotesData) then begin
+				if (pos := ArrayPos(instanceNotesData, a2, 0, kFunction_4f3dd1)) then begin
+						pos := (pos - 1)
+					end else begin
+						pos := (Length(instanceNotesData) - 1)
+					end;
+				(if (pos >= 0) then self:ConvertAnnotatedMeetingsToExceptions(a1, 0, pos))
+			end)
+	end);
+
+// ConvertAnnotatedMeetingsToExceptions(template, first, last): an exception
+// made for each of those InstanceNotesData items ([date, notes]) that has
+// none yet; the template saved.
+ConvertAnnotatedMeetingsToExceptions := func(a1, a2, a3) begin
+	instanceNotesData := a1.InstanceNotesData;
+	mtgDuration := a1.mtgDuration;
+	local instanceNotesData;
+	local mtgDuration;
+	(for i := a2 to a3 do begin
+			local instanceNotesDataItem, l7, instanceNotesDataItemItem;
+			l7 := (instanceNotesDataItem := instanceNotesData[i])[0];
+			instanceNotesDataItemItem := instanceNotesDataItem[1];
+			if (not self:FindException(l7, a1)) then begin
+					self:MakeNewExceptionFrame(a1, l7, l7, mtgDuration)
+				end
+		end);
+	self:CarefulChange(EntrySoup(a1), a1, true)
+end;
+
+// The Calendar's GetNotesData(meeting): where the meeting's notes are, as
+// [slot, notes] - 'NotesData (the meeting's own, or an old-style template's)
+// or 'InstanceNotesData (this instance's, kept per date in the repeat
+// template, an alias resolved).  A template on a writable store still
+// holding shared NotesData has them moved to this instance first.
+GetNotesData := func(a1) begin
+	local repeatTemplate, name, instanceNotesData, found, l3ItemItem, resolveEntryAlias2;
+	(if ((repeatTemplate := a1.repeatTemplate) <> nil) then (if (repeatTemplate.version = nil) then [Array: 'NotesData, repeatTemplate.NotesData] else begin
+				if IsSoupEntry(repeatTemplate) then begin
+						name := EntrySoup(repeatTemplate):GetName();
+						if (if repeatTemplate.NotesData then (if (not EntryStore(repeatTemplate):IsReadOnly()) then (StrEqual(name, @repeatMeetingName) or StrEqual(name, @repeatNotesName)))) then begin
+								self:StoreLocalNotes(repeatTemplate, a1.mtgStartDate, repeatTemplate.NotesData, nil);
+								repeatTemplate.NotesData := nil;
+								EntryChangeXmit(repeatTemplate, 'calendar)
+							end
+					end;
+				(if HasSlot(repeatTemplate, 'InstanceNotesData) then begin
+						instanceNotesData := repeatTemplate.InstanceNotesData;
+						found := nil;
+						if instanceNotesData then begin
+								found := BFind(instanceNotesData, a1.mtgStartDate, '|<|, 0)
+							end;
+						(if found then (if (l3ItemItem := instanceNotesData[found][1]) then (if IsEntryAlias(l3ItemItem) then (if (resolveEntryAlias2 := ResolveEntryAlias(l3ItemItem)) then [Array: 'InstanceNotesData, resolveEntryAlias2.notes] else [Array: 'InstanceNotesData, nil]) else [Array: 'InstanceNotesData, l3ItemItem]) else [Array: 'InstanceNotesData, nil]) else [Array: 'InstanceNotesData, nil])
+					end else [Array: 'NotesData, repeatTemplate.NotesData])
+			end) else [Array: 'NotesData, a1.NotesData])
+end;
+
+// FindException(startDate, template): the exception meeting of the
+// template at that start date (its repeatTemplate set), or nil.
+FindException := func(a1, a2) begin
+	local lFetch2Item, lFetch2;
+	lFetch2Item := nil;
+	if a2.exceptions then begin
+			if (lFetch2 := LFetch(a2.exceptions, a1, 0, '|=|, '[pathExpr: 1, mtgStartDate])) then begin
+					(lFetch2Item := lFetch2[1]).repeatTemplate := a2
+				end
+		end;
+	lFetch2Item
+end;
+
+// GetMeetingSlot(meeting, slot): the meeting's own value, or else its
+// repeat template's - never the template's viewBounds, nor its
+// mtgLocation when the instance has the slot (even nil).
+GetMeetingSlot := func(a1, a2) begin
+	local l1;
+	if (if (not (l1 := a1.(a2))) then a1.repeatTemplate) then begin
+			if (if (a2 <> 'viewBounds) then (not (if (a2 = 'mtgLocation) then HasSlot(a1, 'mtgLocation)))) then begin
+					l1 := a1.repeatTemplate.(a2)
+				end
+		end;
+	l1
+end;
+
+// GetMeetingText(meeting): the title, the repeat template's for an
+// instance.
+GetMeetingText := func(a1) begin
+	(if a1.repeatTemplate then a1.repeatTemplate.mtgText else a1.mtgText)
+end;
+
+// GetNameOfPerson(nameRef): the person's name as text (the people name
+// reference's data def).
+GetNameOfPerson := func(a1) begin
+	GetDataDefs('|nameRef.people|):Get(a1, 'name, 'text)
+end;
+
+// GetNamesOfInvitees(invitees, width): the invitees' names joined with
+// ", "; with a width, cut off after about 50 characters and truncated to
+// that width.
+GetNamesOfInvitees := func(a1, a2) begin
+	smartStart2 := SmartStart(20);
+	smartConcat2 := 0;
+	if (if (a1 <> nil) then (Length(a1) > 0)) then begin
+			local smartStart2;
+			local smartConcat2;
+			(foreach item in a1 do begin
+					local nameOfPerson;
+					nameOfPerson := self:GetNameOfPerson(item);
+					if (if a2 then (smartConcat2 > 50)) then begin
+							break
+						end else begin
+							if (StrLen(nameOfPerson) > 0) then begin
+									if (smartConcat2 > 0) then begin
+											smartConcat2 := SmartConcat(smartStart2, smartConcat2, ", ")
+										end;
+									smartConcat2 := SmartConcat(smartStart2, smartConcat2, nameOfPerson)
+								end
+						end
+				end);
+			if a2 then begin
+					smartStart2 := StyledStrTruncate(smartStart2, a2, tsHWFont + tsSize(10));
+					smartConcat2 := nil
+				end
+		end;
+	if smartConcat2 then begin
+			SmartStop(smartStart2, smartConcat2)
+		end;
+	smartStart2
+end;
+
+// getNameOfLocation(nameRef): the meeting place's name (its company field).
+getNameOfLocation := func(a1) begin
+	GetDataDefs('|nameRef.meetingPlace|):Get(a1, 'company, 'text)
+end;
+
+// protoBook's BookData: the open book's data, or nil.
+BookData := func() begin
+	(if self:CurrentBook() then self:CurrentBook().data)
+end;
+
+// protoBook's InsertForm(form): the story card and the page dialogs
+// closed, the form put in the content area.
+InsertForm := func(a1) begin
+	self:HideStoryCard();
+	if Visible(pageDialog) then begin
+			pageDialog:Close()
+		end;
+	if Visible(pageNumberDialog) then begin
+			pageNumberDialog:Close()
+		end;
+	self:AddToContentArea(a1)
+end;
+
+// Does nothing: proto1_2Exformentry's delete (and a store slot of
+// extraProtos).
+delete_3 := func() begin
+	nil
+end;
+
+// Does nothing: proto1_2Exformentry's move and file, extraProtos' move.
+move := func(a1) begin
+	nil
+end;
+
+// file(label): file the entry fentry in the folder label (nil: unfiled) -
+// its _tagList (copied when read-only) and labels changed; answers true.
+file_2 := func(a1) begin
+	if IsReadOnly(fentry._tagList) then begin
+			fentry._tagList := Clone(fentry._tagList)
+		end;
+	if fentry.labels then begin
+			SetRemove(fentry._tagList, fentry.labels)
+		end;
+	if a1 then begin
+			SetAdd(fentry._tagList, a1, true);
+			fentry.labels := a1
+		end else begin
+			fentry.labels := nil
+		end;
+	EntryChange(fentry);
+	true
+end;
+
+// The Extras Drawer's and protoFinderWindow's ChangeTagListAndLabels(entry,
+// label): the entry moved from its folder to label in _tagList and labels.
+ChangeTagListAndLabels := func(a1, a2) begin
+	SetRemove(a1._tagList, a1.labels);
+	if a2 then begin
+			SetAdd(a1._tagList, a2, true)
+		end;
+	(a1.labels := a2)
+end;
+
+// The Find slip's finders (soupFinder, compatibleFinder): SelectItem(item)
+// checks or unchecks a found item, kept in `selected` as {_uniqueID,
+// _storeID}.
+SelectItem_2 := compile(
+	constants: {
+		// the test that two entries are one (unique id and store)
+		kFunction_55f3f1: func(a1, a2) begin
+			(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
+		end
+	},
+	func(a1) begin
+		local frame2, pos;
+		frame2 := {_uniqueID: a1.entryID, _storeID: a1.storeID};
+		(if selected then (if (pos := ArrayPos(selected, frame2, 0, kFunction_55f3f1)) then RemoveSlot(selected, pos) else AddArraySlot(selected, frame2)) else (selected := [Array: frame2]))
+	end);
+
+// isSelected(item): its position in `selected`, or nil.
+isSelected_2 := compile(
+	constants: {
+		// the test that two entries are one (unique id and store)
+		kFunction_55f479: func(a1, a2) begin
+			(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
+		end
+	},
+	func(a1) begin
+		(if selected then ArrayPos(selected, a1, 0, kFunction_55f479))
+	end);
+
+// ForEachSelected(fn): call fn with each checked item's entry, found again
+// in the cursor's soup by its unique id and store signature.
+ForEachSelected_2 := func(a1) begin
+	(if selected then begin
+			cursor2 := Query(cursor:soup(), '{type: index});
+			local cursor2;
+			(foreach item in selected do begin
+					local gotoKey;
+					gotoKey := cursor2:GotoKey(item._uniqueID);
+					(loop begin
+							if (gotoKey._uniqueID <> item._uniqueID) then begin
+									break (gotoKey := nil)
+								end;
+							(if (EntryStore(gotoKey):GetSignature() <> item._storeID) then (gotoKey := cursor2:Next()) else break)
+						end);
+					if gotoKey then begin
+							call a1 with (gotoKey)
+						end else nil
+				end)
+		end)
+end;
+
+// The finders' FileAndMove(labelsChanged, newLabel, storeChanged,
+// newStore): the Filing slip's answer - each checked entry filed or moved
+// by the owner's FileThis, those on a locked store left alone (and the
+// user told).
+FileAndMove := compile(
+	constants: {
+		kLiteral_546201: "Find"
+	},
+	func(labelsChanged, newLabel, storeChanged, newStore) begin
+		local somethingLockedSoNotFiled;
+		if (if storeChanged then newStore:IsReadOnly()) then begin
+				GetRoot():Notify(kNotifyAlert, kLiteral_546201, "Can not file items to a write-protected store.")
+			end else begin
+				if selected then begin
+						self:ForEachSelected(func(a1) begin
+							(if (if labelsChanged then EntryStore(a1):IsReadOnly()) then (somethingLockedSoNotFiled := true) else owner:FileThis(a1, labelsChanged, newLabel, storeChanged, newStore))
+						end)
+					end
+			end;
+		selected := nil;
+		(if somethingLockedSoNotFiled then GetRoot():Notify(kNotifyAlert, kLiteral_546201, "At least one item was not filed because it is on a write-protected store."))
+	end);
+
+// FileAs(label): the checked entries put in that folder (a soup change
+// sent once for many, each for one); entries on locked stores skipped.
+FileAs := func(labels) begin
+	local somethingLockedSoNotFiled, somethingFiled;
+	(if selected then begin
+			if (Length(selected) = 1) then begin
+					self:ForEachSelected(func(a1) begin
+						(if EntryStore(a1):IsReadOnly() then (somethingLockedSoNotFiled := true) else begin
+								a1.labels := labels;
+								EntryChangeXmit(a1, 'find)
+							end)
+					end)
+				end else begin
+					self:ForEachSelected(func(a1) begin
+						(if EntryStore(a1):IsReadOnly() then (somethingLockedSoNotFiled := true) else begin
+								somethingFiled := true;
+								a1.labels := labels;
+								EntryChange(a1)
+							end)
+					end);
+					if somethingFiled then begin
+							XmitSoupChange(cursor:soup():GetName(), 'unknown, 'whatThe, nil)
+						end
+				end;
+			if (not (if owner.doCardRouting then waitToUnSelect)) then begin
+					selected := nil
+				end;
+			(if somethingLockedSoNotFiled then GetRoot():Notify(kNotifyAlert, "Find", "At least one item was not filed because it is on a write-protected store."))
+		end)
+end;
+
+// MoveTo(store): the checked entries moved to that store's soup.
+MoveTo := func(toStore) begin
+	local toSoup;
+	local name;
+	(if (if selected then toStore:IsReadOnly()) then GetRoot():Notify(kNotifyAlert, "Find", "Can not file items to a write-protected store.") else (if selected then begin
+				name := cursor:soup():GetName();
+				toSoup := GetUnionSoupAlways(name):GetMember(toStore);
+				if (Length(selected) = 1) then begin
+						self:ForEachSelected(func(a1) begin
+							(if (EntryStore(a1) <> toStore) then EntryMoveXmit(a1, toSoup, 'find))
+						end)
+					end else begin
+						self:ForEachSelected(func(a1) begin
+							(if (EntryStore(a1) <> toStore) then EntryMove(a1, toSoup))
+						end);
+						XmitSoupChange(cursor:soup():GetName(), 'unknown, 'whatThe, nil)
+					end;
+				selected := nil;
+				(waitToUnSelect := nil)
+			end))
+end;
+
+// The finders' delete: the checked entries removed from their soups
+// (those on locked stores kept, and the user told), the cached counts
+// forgotten.
+delete_5 := func() begin
+	local somethingLockedSoNotDeleted, somethingDeleted;
+	(if selected then begin
+			if (Length(selected) = 1) then begin
+					self:ForEachSelected(func(a1) begin
+						(if EntryStore(a1):IsReadOnly() then (somethingLockedSoNotDeleted := true) else EntryRemoveFromSoupXmit(a1, 'find))
+					end)
+				end else begin
+					self:ForEachSelected(func(a1) begin
+						(if EntryStore(a1):IsReadOnly() then (somethingLockedSoNotDeleted := true) else begin
+								somethingDeleted := true;
+								EntryRemoveFromSoup(a1)
+							end)
+					end);
+					if somethingDeleted then begin
+							XmitSoupChange(cursor:soup():GetName(), 'unknown, 'whatThe, nil)
+						end
+				end;
+			selected := nil;
+			self.isReset := nil;
+			self.zeroOneOrMoreResult := nil;
+			self.cacheCount := nil;
+			(if somethingLockedSoNotDeleted then GetRoot():Notify(kNotifyAlert, "Find", "At least one item was not deleted because it is on a write-protected store."))
+		end)
+end;
+
+// The finders' GetTarget: the checked entries - one entry, or a target
+// cursor of their aliases of the owner's overviewTargetClass
+// ('newtOverview by default); nil for none.
+GetTarget := func() begin
+	list := [Array: ];
+	if selected then begin
+			cursor2 := Query(cursor:soup(), '{type: index});
+			local list;
+			local cursor2;
+			(foreach item in selected do begin
+					local gotoKey, value;
+					gotoKey := cursor2:GotoKey(item._uniqueID);
+					(loop begin
+							if (gotoKey._uniqueID <> item._uniqueID) then begin
+									break (gotoKey := nil)
+								end;
+							(if (EntryStore(gotoKey):GetSignature() <> item._storeID) then (gotoKey := cursor2:Next()) else break)
+						end);
+					if gotoKey then begin
+							AddArraySlot(list, MakeEntryAlias(gotoKey))
+						end
+				end)
+		end;
+	if (Length(list) = 0) then begin
+			return nil
+		end;
+	if (Length(list) = 1) then begin
+			return ResolveEntryAlias(list[0])
+		end;
+	if owner then begin
+			value := GetVariable(owner, 'overviewTargetClass)
+		end;
+	if (value = nil) then begin
+			value := 'newtOverview
+		end;
+	CreateTargetCursor(value, list)
+end;
+
+// protoPrefFrame's and protoPrefFramer's viewSetupDoneScript: grow to the
+// bottom of the prefPanelProto child when it reaches further.
+viewSetupDoneScript := func() begin
+	box := self:LocalBox();
+	local box;
+	local box2;
+	(foreach item in self:ChildViewFrames() do begin
+			if (item._proto = prefPanelProto) then begin
+					box2 := item:LocalBox()
+				end
+		end);
+	(if (if box2 then (box.bottom < box2.bottom)) then SetValue(self, 'viewBounds, RelBounds(0, 0, box.right, box2.bottom)))
+end;
+
+// The soup prototypes' (plain and union soups) ...Xmit methods: the method
+// without Xmit, then - when given a changeSym - XmitSoupChange with
+// 'soupTagsChanged, 'soupIndexAdded or 'soupIndexRemoved.  AddTagsXmit(tags,
+// changeSym).
+AddTagsXmit := func(a1, a2) begin
+	local addTags;
+	addTags := self:AddTags(a1);
+	if a2 then begin
+			XmitSoupChange(self:GetName(), a2, 'soupTagsChanged, self)
+		end;
+	addTags
+end;
+
+// AddIndexXmit(indexSpec, changeSym)
+AddIndexXmit := func(a1, a2) begin
+	local addIndex;
+	addIndex := self:AddIndex(a1);
+	if a2 then begin
+			XmitSoupChange(self:GetName(), a2, 'soupIndexAdded, {soup: self, indexPath: a1.path})
+		end;
+	addIndex
+end;
+
+// ModifyTagXmit(oldTag, newTag, changeSym)
+ModifyTagXmit := func(a1, a2, a3) begin
+	local modifyTag;
+	modifyTag := self:ModifyTag(a1, a2);
+	if a3 then begin
+			XmitSoupChange(self:GetName(), a3, 'soupTagsChanged, self)
+		end;
+	modifyTag
+end;
+
+// RemoveTagsXmit(tags, changeSym)
+RemoveTagsXmit := func(a1, a2) begin
+	local removeTags;
+	removeTags := self:RemoveTags(a1);
+	if a2 then begin
+			XmitSoupChange(self:GetName(), a2, 'soupTagsChanged, self)
+		end;
+	removeTags
+end;
+
+// RemoveIndexXmit(indexPath, changeSym)
+RemoveIndexXmit := func(a1, a2) begin
+	local removeIndex;
+	removeIndex := self:RemoveIndex(a1);
+	if a2 then begin
+			XmitSoupChange(self:GetName(), a2, 'soupIndexRemoved, {soup: self, indexPath: a1})
+		end;
+	removeIndex
+end;

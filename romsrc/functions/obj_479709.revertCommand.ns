@@ -1,5 +1,0 @@
-@@ 0x4796e9
-func() begin
-	self:UpdateText(labelCommands[lastCmd])
-end
-@@end

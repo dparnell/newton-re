@@ -1,8 +1,0 @@
-@@ 0x4ae3f1
-func() begin
-	if keyButton then begin
-			RemoveSlot(newtAppBase, keyButton)
-		end;
-	inherited:?viewQuitScript()
-end
-@@end

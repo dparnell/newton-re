@@ -1,0 +1,20 @@
+// multiDatePopup: protoMultiDatePopup, a datePopup whose calendar lets the
+// user select several days (a range) rather than one.
+
+multiDatePopup := {
+	singleDay: nil,
+	// Replaces the picker's viewSetupFormScript with one that also allows more
+	// than one day to be selected (singleDay nil).
+	viewSetupFormScript: func() begin
+		inherited:?viewSetupFormScript();
+		(picker.viewSetupFormScript := func() begin
+			selectedDates := dates;
+			inherited:?viewSetupFormScript();
+			if (Date(selectedDates[0]).year = kYearMissing) then begin
+					calendar.viewBounds := SetBounds(0, 0, 0, -2)
+				end;
+			(calendar.singleDay := nil)
+		end)
+	end,
+	_proto: @datePopup
+};

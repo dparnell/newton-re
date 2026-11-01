@@ -21,6 +21,20 @@ No ROM image is needed: the build compiles the committed `romsrc/` tree into
 reMarkable's is the AppLoad application directory and
 `tools/ci/README-remarkable.txt`.
 
+## Portable to any x86-64 CPU (2026-11-01)
+
+A user reported that no Windows release started on their Celeron laptop: the
+window opened and closed at once, and Windows wrote a crash dump each time.
+`zig cc` with no target compiles for the CPU of the machine it runs on, and
+GitHub's runners have AVX, AVX2, AVX-512, BMI and F16C; a build here had about
+11,400 AVX instructions, the first in start-up code, so a CPU without AVX
+(Celerons and Pentiums of the Gemini Lake, Apollo Lake and older families)
+stops at once with an illegal instruction.  `zig-toolchain.cmake` now passes
+`-mcpu=baseline` to a native build (`-DZIG_CPU=native` for a build that stays
+on its own machine), and the `windows` job checks the result with
+`cpuscan.py`.  The other jobs were not affected: the Linux and macOS builds use
+clang's generic default, and the zig cross builds name their target.
+
 ## The scripts (`tools/ci/`)
 
 The workflow's steps are scripts, so a release can be made, or a step
@@ -29,6 +43,7 @@ checked, by hand:
 | script | what it does | run |
 |---|---|---|
 | `smoke.sh` | `newtonscript` runs a line; `newton` boots headless from the object file to the Setup assistant and quits (`smoke.ns`) | `tools/ci/smoke.sh <build>/host` |
+| `cpuscan.py` | lists the instruction-set extensions past x86-64's baseline (SSE2) that a PE executable uses, with the first of each; fails if there are any, so the `windows` job never publishes a binary that only runs on CPUs like the runner's (needs capstone) | `python tools/ci/cpuscan.py <build>/host/newton.exe` |
 | `package.sh` | the build installed into `dist/<name>/` with `README.txt`, then `dist/<name>.zip` or `.tar.gz` (Python's `zipfile`/`tarfile`, so the same on every runner) | `tools/ci/package.sh <build> <name> zip\|tar` |
 | `package-macos.sh` | `Newton.app` copied with `ditto` (its signature kept), `newtonscript`, `romsrc-objects.bin` and `README-macos.txt` into `dist/<name>/`; the signature verified and the architectures listed; then `dist/<name>.zip` by `ditto -c -k`, which keeps the bundle as it is | `tools/ci/package-macos.sh <build> <name>` |
 | `package-remarkable.sh` | `tools/remarkable/package.py`'s AppLoad application in `dist/<name>/newton`, `newton` and `run.sh` made executable, with `README-remarkable.txt`; then `dist/<name>.tar.gz` (a tar keeps the executable bits that a copy from Windows loses) | `tools/ci/package-remarkable.sh <build> <name>` |

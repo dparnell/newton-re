@@ -1,0 +1,51 @@
+// newtPrefsView: the default NewtApp Preferences view (NPR 2.0): a dragger with the
+// title "<application> Preferences" and one check box, "Always store new <items>
+// internally" (the application's internalStore preference).
+//
+// This file holds newtPrefsView and what only it reaches.
+
+newtPrefsView := {
+	viewBounds: {left: 0, top: 0, right: 200, bottom: 60},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	// the application, set by newtInfoButton when it opens the view
+	theApp: nil,
+	// the keyboard goes to this view (SetKeyView, at offset 0)
+	viewSetupFormScript: func() begin
+		SetKeyView(self, 0)
+	end,
+	viewChildren: [viewChildren:
+		{
+			title: nil,
+			// the title: "<application's title> Preferences"
+			viewSetupFormScript: func() begin
+				title := ParamStr("^0 Preferences", [Array: theApp.title]);
+				inherited:viewSetupFormScript()
+			end,
+			_proto: @protoTitle
+		},
+		{
+			viewJustify: vjParentBottomV,
+			viewBounds: {left: 16, top: -32, right: 196, bottom: -17},
+			text: nil,
+			// checked as the preference is; the application's appObject[1] is its plural item name
+			viewSetupFormScript: func() begin
+				viewValue := theApp:GetAppPreferences().internalStore;
+				(text := ParamStr("Always store new ^0 internally", [Array: Downcase(Clone(theApp.appObject[1]))]))
+			end,
+			// keep the setting in the application's preferences cache
+			viewQuitScript: func() begin
+				(if theApp.prefsCache then (theApp.prefsCache.internalStore := viewValue))
+			end,
+			_proto: @protoCheckbox
+		},
+		{
+			// the close box closes the view through the application, after this click
+			buttonClickScript: func() begin
+				AddDeferredSend(theApp, 'RememberedClose, [Array: base])
+			end,
+			_proto: @protoClosebox
+		}
+	],
+	_proto: @protoDragger,
+	ReOrientToScreen: @defRotateFunc
+};

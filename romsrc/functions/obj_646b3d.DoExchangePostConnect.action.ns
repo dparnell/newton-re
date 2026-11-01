@@ -1,5 +1,0 @@
-@@ 0x49951d
-func() begin
-	(if (BAnd(fOptionsIn[0].data.arglist[0], 2) = 0) then 'DoInputSpec else 'DoOutput)
-end
-@@end

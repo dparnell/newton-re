@@ -1,6 +1,0 @@
-@@ 0x101dcc5
-func() begin
-	labelCommands := self:BuildLabelCommands();
-	inherited:?viewSetupFormScript()
-end
-@@end

@@ -6,7 +6,7 @@ Usage:
                                  [--iconset DIR] [--no-icns]
 
 The bitmap (by default the ROM's smallLogoBitmap, the Newton lightbulb -
-romsrc/objects/misc-000.ns) is drawn at every size of a macOS iconset
+romsrc/objects/pictures/smalllogoBitmap.ns) is drawn at every size of a macOS iconset
 (16 to 1024 pixels, each at 1x and 2x) onto a rounded tile the colour of
 the MessagePad 2x00's screen: scaled by a whole number of pixels where the
 size allows, so the Newton's pixels stay sharp, and averaged down where the

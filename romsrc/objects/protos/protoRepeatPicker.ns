@@ -1,0 +1,159 @@
+// protoRepeatPicker: the "Repeat" label picker of a meeting or event slip in
+// the Dates application: it shows how the meeting repeats and sets it from
+// a list of common patterns (every day, every week, every other week, every
+// month, the same week each month or year...), "Other" opening the full
+// repeat editor (RepeatingView). The choice is kept in RepeatingView's
+// repeatType and mtgInfo (Newton Programmer's Reference 16-24).
+
+protoRepeatPicker := {
+	viewFont: tsSystem + tsSize(9) + tsBold,
+	viewBounds: nil,
+	text: "Repeat",
+	// the choices, in the order of the indexes TextSetup and
+	// LabelActionScript use (8: other)
+	labelCommands: [|Array|:
+		donTRepeat,
+		everyDay,
+		everyWeek,
+		everyOtherWeek,
+		everyMonth,
+		"Same week each month",
+		everyYear,
+		"Same week each year",
+		otherCategoryName
+	],
+	currentLabelIndex: nil,
+	// the meeting (for a repeating one, this occurrence) the picker describes
+	meetingInstance: nil,
+	// on opening: for a repeating meeting take the occurrence on
+	// originalMtgDate (its exception if it has one, else an instance made
+	// for it), and hand it and its start to the repeat editor
+	viewSetupFormScript: func() begin
+		local calendar, exception;
+		if selectedMeeting.repeatType then begin
+				calendar := GetRoot().calendar;
+				if (exception := calendar:FindException(originalMtgDate, selectedMeeting)) then begin
+						meetingInstance := exception
+					end else begin
+						meetingInstance := calendar:MakeInstanceOfRepeatingMeeting(selectedMeeting, originalMtgDate)
+					end
+			end else begin
+				meetingInstance := selectedMeeting
+			end;
+		RepeatingView.meetingInstance := meetingInstance;
+		RepeatingView.originalMtgDate := meetingInstance.mtgStartDate;
+		inherited:viewSetupFormScript()
+	end,
+	// the label's text at opening: the choice (l2) matching the meeting's
+	// repeat template, 8 ("Other") when it matches none of the patterns.
+	// "Every week" is the meeting's own day of every week; "same week each
+	// month" its day in the week of the month its date falls in
+	TextSetup: func() begin
+		local repeatTemplate, l2, date2;
+		if (repeatTemplate := meetingInstance.repeatTemplate) then begin
+				RepeatingView.repeatType := repeatTemplate.repeatType;
+				RepeatingView.mtgInfo := repeatTemplate.mtgInfo
+			end;
+		date2 := Date(meetingInstance.mtgStartDate);
+		if (repeatTemplate = nil) then begin
+				l2 := 0
+			end else begin
+				if (if (repeatTemplate.repeatType = kDayOfWeek) then (repeatTemplate.mtgInfo = BOr(kEveryday, kEveryWeek))) then begin
+						l2 := 1
+					end else begin
+						if (if (repeatTemplate.repeatType = kDayOfWeek) then (repeatTemplate.mtgInfo = BOr((kSunday >> date2.dayOfWeek), kEveryWeek))) then begin
+								l2 := 2
+							end else begin
+								if (repeatTemplate.repeatType = kPeriod) then begin
+										l2 := 3
+									end else begin
+										if (repeatTemplate.repeatType = kDateInMonth) then begin
+												l2 := 4
+											end else begin
+												if (if (repeatTemplate.repeatType = kWeekInMonth) then (repeatTemplate.mtgInfo = BOr((kFirstWeek >> ((date2.Date - 1) div 7)), (kSunday >> date2.dayOfWeek)))) then begin
+														l2 := 5
+													end else begin
+														if (repeatTemplate.repeatType = kDateInYear) then begin
+																l2 := 6
+															end else begin
+																if (repeatTemplate.repeatType = kWeekInYear) then begin
+																		l2 := 7
+																	end else begin
+																		l2 := 8
+																	end
+															end
+													end
+											end
+									end
+							end
+					end
+			end;
+		currentLabelIndex := l2;
+		labelCommands[l2]
+	end,
+	// before the list opens: an exception (one changed occurrence of a
+	// repeating meeting) cannot have its repeat changed - say so and return
+	// nil (no list); else true
+	pickerSetup: func() begin
+		(if GetRoot().calendar:IsExceptionMeeting(meetingInstance) then begin
+				self:Notify(kNotifyAlert, (if appSymbol then GetAppName(appSymbol) else ""), (if (meetingInstance.viewStationery = 'cribNote) then "You cannot change the repeat frequency of an exception event." else "You cannot change the repeat frequency of an exception meeting."));
+				self:hilite(nil);
+				nil
+			end else true)
+	end,
+	// choice index was picked: set the repeat editor's repeatType and
+	// mtgInfo for that pattern, from the meeting's new date; "Other" (8)
+	// opens the editor instead
+	LabelActionScript: func(index) begin
+		local date2;
+		date2 := Date(newMtgDate);
+		if (index = 0) then begin
+				RepeatingView.repeatType := kNever;
+				RepeatingView.mtgInfo := 0
+			end else begin
+				if (index = 1) then begin
+						RepeatingView.repeatType := kDayOfWeek;
+						RepeatingView.mtgInfo := BOr(kEveryday, kEveryWeek)
+					end else begin
+						if (index = 2) then begin
+								RepeatingView.repeatType := kDayOfWeek;
+								RepeatingView.mtgInfo := BOr((kSunday >> date2.dayOfWeek), kEveryWeek)
+							end else begin
+								if (index = 3) then begin
+										// every other week: a period of 14 days from the
+										// meeting's day (its minutes div 1440, the
+										// minutes in a day), the day in the high bits
+										RepeatingView.repeatType := kPeriod;
+										RepeatingView.mtgInfo := (((newMtgDate div 1440) << 8) + 14)
+									end else begin
+										if (index = 4) then begin
+												RepeatingView.repeatType := kDateInMonth;
+												RepeatingView.mtgInfo := date2.Date
+											end else begin
+												if (index = 5) then begin
+														RepeatingView.repeatType := kWeekInMonth;
+														RepeatingView.mtgInfo := BOr((kFirstWeek >> ((date2.Date - 1) div 7)), (kSunday >> date2.dayOfWeek))
+													end else begin
+														if (index = 6) then begin
+																// the month in the high byte, the date in the low
+																RepeatingView.repeatType := kDateInYear;
+																RepeatingView.mtgInfo := ((date2.month << 8) + date2.Date)
+															end else begin
+																if (index = 7) then begin
+																		// the month above the day and week bits
+																		RepeatingView.repeatType := kWeekInYear;
+																		RepeatingView.mtgInfo := (((date2.month << 12) + (kSunday >> date2.dayOfWeek)) + (kFirstWeek >> ((date2.Date - 1) div 7)))
+																	end else begin
+																		RepeatingView:Open()
+																	end
+															end
+													end
+											end
+									end
+							end
+					end
+			end;
+		(currentLabelIndex := index)
+	end,
+	_proto: @protoLabelPicker
+};

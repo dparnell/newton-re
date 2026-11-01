@@ -1,6 +1,0 @@
-@@ 0x104af39
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(a1), 'Update);
-	self:DoEvent('DisconnectLink, nil)
-end
-@@end

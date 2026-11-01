@@ -1,0 +1,81 @@
+// protoYearPicker: a year shown as flip digits (like a mechanical counter)
+// the user can flip: the units with the tens (years), the decade digit
+// (decades) and the two century digits (centuries), each a protoDigit that
+// carries into the next. The year is in value.
+
+protoYearPicker := {
+	viewClass: clPictureView,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewJustify: 0,
+	viewBounds: {left: 20, top: 51, right: 104, bottom: 79},
+	declareSelf: 'digitBase,
+	// the range of years
+	maxValue: 2922,
+	minValue: 1904,
+	icon: nil,
+	// viewSetupFormScript(): hides the picker (viewFlags 0) when the year is
+	// 2920 (what that value stands for is not clear from here)
+	viewSetupFormScript: func() begin
+		(if (value = 2920) then SetValue(self, 'viewFlags, 0))
+	end,
+	// SetYear(year): shows another year, updating the three digit views
+	SetYear: func(year) begin
+		(if (value <> year) then begin
+				value := year;
+				years:Update();
+				decades:Update();
+				centuries:Update()
+			end)
+	end,
+	viewChildren: [viewChildren: years, decades, centuries],
+	years: nil,
+	allocateContext: [|Array|: 'years, years, 'decades, decades, 'centuries, centuries],
+	decades: nil,
+	centuries: nil
+};
+
+// the units digit (carries into the decades)
+years := {
+	viewBounds: {left: -23, top: 0, right: 0, bottom: 28},
+	icon: @digitflaploWord,
+	nextDigit: 'decades,
+	debug: 1451,
+	preallocatedContext: 'years,
+	_proto: @protoDigit
+};
+
+// the tens digit, stepping by 10
+decades := {
+	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+	icon: @digitflap,
+	increment: 10,
+	// GetIndex(value): the tens digit of the year
+	GetIndex: func(value) begin
+		((value mod 100) div 10)
+	end,
+	nextDigit: 'centuries,
+	debug: 4529,
+	preallocatedContext: 'decades,
+	_proto: @protoDigit
+};
+
+// the two century digits on one wide flap, stepping by 100
+centuries := {
+	viewBounds: {left: -36, top: 0, right: 1, bottom: 28},
+	icon: @digitWideflap,
+	increment: 100,
+	// GetIndex(value): the year's hundreds (19 for 1997)
+	GetIndex: func(value) begin
+		((value mod 10000) div 100)
+	end,
+	// viewDrawScript(): draws the index's two digits side by side
+	viewDrawScript: func() begin
+		local offsetRect2;
+		DrawXBitmap((offsetRect2 := OffsetRect((offsetRect2 := Clone(digitFrame)), (1 - offsetRect2.left), 0)), digits, (currentIndex div 10), copyMode);
+		DrawXBitmap((offsetRect2 := OffsetRect(offsetRect2, (offsetRect2.right - 1), 0)), digits, (currentIndex mod 10), copyMode)
+	end,
+	debug: 16733,
+	preallocatedContext: 'centuries,
+	_proto: @protoDigit
+};

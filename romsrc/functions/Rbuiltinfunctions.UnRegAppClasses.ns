@@ -1,6 +1,0 @@
-@@ 0x3c6b51
-func(a1) begin
-	RemoveSlot(AppClassesRegistry, a1);
-	nil
-end
-@@end

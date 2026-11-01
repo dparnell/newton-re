@@ -1,0 +1,86 @@
+// protoExtrasControlButton: a picture button of the Extras Drawer (its iconPro
+// frame holds the plain and highlighted pictures) that sits on the same side as
+// the Extras button and tracks the pen like a push button.
+
+protoExtrasControlButton := {
+	viewClass: clView,
+	viewFormat: 0,
+	viewFlags: vVisible + vClickable,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	// viewSetupFormScript: works out which side the Extras ("belly") button is on
+	// from displayParams (its position 'outside or 'inside the button bar, and
+	// the bar's position) and, when it is on the right, mirrors the template's
+	// horizontal bounds
+	viewSetupFormScript: func() begin
+		local buttonBarPosition, bellyButtonPosition, buttonBarControlsPosition, viewBounds;
+		buttonBarPosition := displayParams.buttonBarPosition;
+		bellyButtonPosition := displayParams.bellyButtonPosition;
+		buttonBarControlsPosition := displayParams.buttonBarControlsPosition;
+		if (bellyButtonPosition = 'outside) then begin
+				bellyButtonPosition := (if ((buttonBarPosition = 'right) or (buttonBarControlsPosition = 'right)) then 'right else 'left)
+			end else begin
+				if (bellyButtonPosition = 'inside) then begin
+						bellyButtonPosition := (if ((buttonBarPosition = 'left) or (buttonBarControlsPosition = 'left)) then 'right else 'left)
+					end
+			end;
+		(if (bellyButtonPosition = 'right) then begin
+				viewBounds := self._proto.viewBounds;
+				(self.viewBounds := RelBounds((-viewBounds.left), viewBounds.top, (viewBounds.right - viewBounds.left), (viewBounds.bottom - viewBounds.top)))
+			end)
+	end,
+	// viewDrawScript: draws iconPro's hilited or unhilited picture, as the view's
+	// vSelected flag says (CopyBits mode 8, as protoExtrasIcon's style uses)
+	viewDrawScript: func() begin
+		local l1;
+		l1 := (BAnd(GetViewFlags(self), vSelected) <> 0);
+		self:CopyBits(iconPro.((if l1 then 'hilited else 'unhilited)), 0, 0, 8)
+	end,
+	// viewClickScript(unit): highlights the button and tracks the pen - while it
+	// is on the button's picture the button stays highlighted and its optional
+	// buttonPressedScript is sent repeatedly; lifting the pen there sends
+	// buttonClickScript. Returns true.
+	viewClickScript: func(unit) begin
+		local box, l2, top, hilited, l5, l6, y2, pt, l9, y, l11;
+		InkOff(unit);
+		clicker();
+		l2 := (box := self:GlobalBox()).left;
+		top := box.top;
+		self:hilite(true);
+		RefreshViews();
+		hilited := iconPro.hilited;
+		l5 := true;
+		(repeat if l5 then begin
+					self:?buttonPressedScript()
+				end; l9 := (pt := GetPoint(finalXY, unit)).x; y := pt.y; if ((l9 <> l6) or (y <> y2)) then begin
+					l11 := (PtInPicture((l9 - l2), (y - top), hilited) <> nil);
+					if (l5 <> l11) then begin
+							self:hilite(l11);
+							RefreshViews();
+							l5 := l11;
+							hilited := iconPro.((if l11 then 'hilited else 'unhilited))
+						end;
+					l6 := l9;
+					y2 := y
+				end until StrokeDone(unit));
+		if l5 then begin
+				self:hilite(nil);
+				self:?buttonClickScript()
+			end;
+		true
+	end,
+	// viewHiliteScript(on): redraws (skipping one redraw after justHilited is
+	// set); returns true so the system does not invert the view
+	viewHiliteScript: func(on) begin
+		if on then begin
+				if self.justHilited then begin
+						RemoveSlot(self, 'justHilited)
+					end else begin
+						self.justHilited := true;
+						self:Dirty()
+					end
+			end else begin
+				self:Dirty()
+			end;
+		true
+	end
+};

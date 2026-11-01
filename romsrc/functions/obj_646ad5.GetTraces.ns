@@ -1,5 +1,0 @@
-@@ 0x498325
-func() begin
-	traceArray
-end
-@@end

@@ -1,0 +1,7 @@
+// The Action menu icon of Print. A 1-bit bitmap frame (bits, bounds), 21 x 15 pixels. Magic
+// pointer @730. Used by viewRoot.
+
+routePrintIcon := {
+	bits: bitmap('bits, "resources/bits/3d5b01.png", "000000000004007b007b00c8008a00dd", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 15}
+};

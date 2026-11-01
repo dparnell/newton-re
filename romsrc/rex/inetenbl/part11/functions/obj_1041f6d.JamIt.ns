@@ -1,6 +1,0 @@
-@@ 0x1041fdd
-func() begin
-	inherited:?JamIt();
-	slip:?OwnerInfoChanged()
-end
-@@end

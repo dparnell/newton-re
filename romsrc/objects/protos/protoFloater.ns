@@ -1,0 +1,11 @@
+// protoFloater: a protoDragger that floats above its non-floating siblings
+// (vFloating), centred horizontally in its parent and opening with a zoom
+// effect. Apple recommends protoDragger instead for an application's base view.
+
+protoFloater := {
+	_proto: @protoDragger,
+	viewFlags: vFloating + vClickable,
+	viewJustify: vjParentCenterH,
+	viewEffect: fxZoomOpenEffect,
+	debug: 181520
+};

@@ -1,0 +1,8 @@
+// One of the puff-of-smoke clouds of the poof animation. A 1-bit bitmap frame (bits,
+// bounds) with a mask, 178 x 109 pixels. Magic pointer @53.
+
+cloud1 := {
+	mask: bitmap('mask, "resources/mask/3c93b9.png", "000000000018003b003b007f00a80131", 1),
+	bits: bitmap('bits, "resources/bits/3c9e0d.png", "000000000018003b003b007f00a80131", 1),
+	bounds: {left: 0, top: 0, right: 178, bottom: 109}
+};

@@ -1,5 +1,0 @@
-@@ 0x51ea09
-func() begin
-	(if miniBar then (self.viewBounds := RelBounds(22, 0, 17, 17)))
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x4e71ed
-func() begin
-	base:NewWordRequested(base:GetRandom())
-end
-@@end

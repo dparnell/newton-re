@@ -1,0 +1,93 @@
+// protoRadioCluster: the container of a group of radio buttons
+// (protoRadioButton, protoPictRadioButton) of which one is on: clusterValue
+// is the chosen button's buttonValue, clusterChild that button's view. The
+// buttons find the cluster by its declared name, cluster.
+
+protoRadioCluster := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: 0,
+	declareSelf: 'cluster,
+	// the value chosen (the chosen button's buttonValue) and its view
+	clusterValue: nil,
+	clusterChild: nil,
+	// once the buttons are open: turn on the one whose value is clusterValue
+	viewSetupDoneScript: func() begin
+		local childViewFrames;
+		(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+				if (clusterValue = item.buttonValue) then begin
+						clusterChild := item;
+						item.viewValue := item.buttonValue;
+						item:UpdateBitmap()
+					end
+			end)
+	end,
+	// chooses the button whose value is scope, as if it had been tapped
+	SetClusterValue: func(scope) begin
+		local childViewFrames;
+		(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+				if (scope = item.buttonValue) then begin
+						self:SetCluster(item)
+					end
+			end)
+	end,
+	// a button (base) was tapped: turn the old one off (undoably), base on,
+	// redraw, and tell ClusterChanged
+	SetCluster: func(base) begin
+		(if (clusterChild <> base) then begin
+				if clusterChild then begin
+						AddUndoAction('UndoAction, [Array: clusterChild]);
+						clusterChild.viewValue := nil;
+						clusterChild:UpdateBitmap()
+					end;
+				clusterChild := base;
+				clusterValue := base.buttonValue;
+				base.viewValue := base.buttonValue;
+				base:UpdateBitmap();
+				RefreshViews();
+				self:ClusterChanged()
+			end)
+	end,
+	// sets the cluster to value a1 without undo or ClusterChanged; if no
+	// button has that value, all are turned off (l2: one was found). (The
+	// locals declared after their first use are the decompiler's layout.)
+	InitClusterValue: func(a1) begin
+		l2 := nil;
+		local childViewFrames;
+		local l2;
+		(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+				if (a1 = item.buttonValue) then begin
+						l2 := true;
+						self:InitCluster(item)
+					end
+			end);
+		(if (if (not l2) then clusterChild) then begin
+				clusterChild.viewValue := nil;
+				clusterChild:UpdateBitmap();
+				(clusterChild := nil)
+			end)
+	end,
+	// turns button item on and the old one off, quietly (no undo, no
+	// ClusterChanged, no RefreshViews)
+	InitCluster: func(item) begin
+		(if (clusterChild <> item) then begin
+				if clusterChild then begin
+						clusterChild.viewValue := nil;
+						clusterChild:UpdateBitmap()
+					end;
+				clusterChild := item;
+				clusterValue := item.buttonValue;
+				item.viewValue := item.buttonValue;
+				item:UpdateBitmap()
+			end)
+	end,
+	// the choice changed: an instance overrides it
+	ClusterChanged: func() begin
+		nil
+	end,
+	// the undo of a choice: choose the button a1 that was on before
+	UndoAction: func(a1) begin
+		self:SetCluster(a1)
+	end,
+	debug: 5775968
+};

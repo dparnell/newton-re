@@ -1,8 +1,0 @@
-@@ 0x48d359
-func() begin
-	(if (not target.(mailPhone.path)) then begin
-			target.(mailNetwork.path) := nil;
-			self:StartFlush()
-		end)
-end
-@@end

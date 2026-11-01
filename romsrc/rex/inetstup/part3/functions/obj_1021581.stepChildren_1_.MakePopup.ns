@@ -1,5 +1,0 @@
-@@ 0x1021a41
-func() begin
-	'[Array: {item: "Manual", symbol: manual}, {item: "MacIP Server", symbol: usingServer}]
-end
-@@end

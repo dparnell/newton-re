@@ -1,0 +1,44 @@
+// clicks: the pen click sounds.  Clicker() plays one of these for each tap when
+// the pen sound effects preference is on, stepping through the click song
+// (_clicksong.ns holds indexes into this array).  The first is the ordinary
+// @click; the others are the same kind of 8-bit sample at other sampling rates,
+// so they sound as other notes.
+
+clicks := [|Array|:
+	@click,
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 29401.2),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	},
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 26193.7),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	},
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 23336.08),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	},
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 19623.4),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	},
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 17482.5),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	}
+];

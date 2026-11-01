@@ -1,6 +1,0 @@
-@@ 0x531169
-func() begin
-	title := ParamStr("^0 Preferences", [Array: transport.title]);
-	inherited:viewSetupFormScript()
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x4bac09
-func() begin
-	(if pix then self:DrawShape(pix, {font: labelFont}))
-end
-@@end

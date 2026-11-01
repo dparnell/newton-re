@@ -1,0 +1,14 @@
+// plainSoupPersistent: the template of a soup's persistent frame - the store
+// object the store's name index maps a soup's name to; StoreCreateSoup clones it
+// with class 'DiskSoup and fills the rest (docs/stores/README.md,
+// src/stores/Soups.cpp).
+
+plainSoupPersistent := {
+	class: 'DiskSoup,
+	lastUID: nil,
+	signature: nil,
+	indexes: nil,
+	flags: nil,
+	indexesModTime: nil,
+	infoModTime: nil
+};

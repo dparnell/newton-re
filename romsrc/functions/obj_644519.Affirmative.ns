@@ -1,5 +1,0 @@
-@@ 0x444425
-func() begin
-	context:?pickActionScript(startTime, (if Ongoing then 536870911 else stopTime))
-end
-@@end

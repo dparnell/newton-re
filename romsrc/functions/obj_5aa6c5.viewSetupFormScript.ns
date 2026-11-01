@@ -1,5 +1,0 @@
-@@ 0x5aa2ed
-func() begin
-	(viewBounds := SetBounds(9, 20, -8, (20 + (numLines * lineHeight))))
-end
-@@end

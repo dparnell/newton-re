@@ -1,0 +1,33 @@
+// protoStatusText: the message text of a status slip
+// (protoStatusTemplate), taken from the statusText slot of the values given
+// to ViewSet/UpdateIndicator; a single line that fits is centred vertically.
+
+protoStatusText := {
+	debug: 46240,
+	viewBounds: {left: 42, top: 4, right: 180, bottom: 29},
+	viewJustify: 0,
+	viewFlags: vVisible + vReadOnly + vClipping,
+	text: nil,
+	// the slot of the values frame this component shows
+	name: 'statusText,
+	// GetText(): the string in the values frame
+	GetText: func() begin
+		self:path().(name)
+	end,
+	// GetJustify(): viewJustify with vjCenterV set when the text is narrower
+	// than the view (one line), cleared otherwise
+	GetJustify: func() begin
+		(if (if StrFilled(text) then (StrWidth(text) < (viewBounds.right - viewBounds.left))) then BOr(self.viewJustify, vjCenterV) else BAnd(self.viewJustify, bnot(vjCenterV)))
+	end,
+	// The text and, for a line that fits, centred vertically.
+	viewSetupFormScript: func() begin
+		text := self:GetText();
+		(self.viewJustify := self:GetJustify())
+	end,
+	// viewUpdateFormScript(): sent by UpdateIndicator; the new text
+	viewUpdateFormScript: func() begin
+		SetValue(self, 'text, self:GetText());
+		SetValue(self, 'viewJustify, self:GetJustify())
+	end,
+	_proto: @protoStaticText
+};

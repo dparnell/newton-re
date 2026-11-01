@@ -1,0 +1,20 @@
+// genevaFont: magic pointer @104, the font family frame of the Simple (Geneva)
+// font, tsSimple: its screen font data, Helvetica scaled by 1.1 (psScale, 16.16
+// fixed point) for printing, the sizes the user is offered.
+
+genevaFont := {
+	name: "Simple",
+	encoding: 0,
+	macFontID: 3,
+	screenSym: 'genevaFont,
+	psName: 'helvetica,
+	psScale: 72089,
+	badFontMap: 1,
+	plainData: sfnt('sfnt, "resources/sfnt/3f5e81"),
+	boldData: nil,
+	italicData: nil,
+	boldItalicData: nil,
+	userSizes: [|Array|: 9, 10, 12, 18],
+	usable: true,
+	tsID: tsSimple
+};

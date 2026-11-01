@@ -1,0 +1,28 @@
+// protoRCheckbox: a checkbox (protoCheckboxIcon) with its box at the right
+// of its label text - the text view child fills it and the box is drawn
+// right-justified.
+
+protorCheckbox := {
+	_proto: @protoCheckboxIcon,
+	icon: CheckOff,
+	onBitmap: CheckOn,
+	offBitmap: CheckOff,
+	viewJustify: vjRightH + vjCenterV,
+	// viewSetupFormScript(): widens the view (a copy of viewBounds, which
+	// may be in ROM) to the indent plus the width of the check bitmap
+	viewSetupFormScript: func() begin
+		viewBounds := Clone(viewBounds);
+		(self.viewBounds.right := (((self.viewBounds.left + indent) + onBitmap.bounds.right) - onBitmap.bounds.left))
+	end,
+	viewChildren: [viewChildren:
+		// the label
+		{
+			viewClass: clTextView,
+			viewFlags: vVisible + vReadOnly,
+			// 8388852 = vjCenterV + vjParentFullH + vjParentFullV +
+			// oneLineOnly (0x800000, the NPG's value)
+			viewJustify: vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0}
+		}
+	]
+};

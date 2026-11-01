@@ -1,5 +1,0 @@
-@@ 0x101c1ad
-func(a1) begin
-	(if StrFilled(a1[0]) then ParamStr("Domain Name: ^0", [Array: a1[0]]) else "Domain Name: <None>")
-end
-@@end

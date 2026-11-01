@@ -1,5 +1,0 @@
-@@ 0x4dc4ad
-func() begin
-	(alarmed := (not alarmed))
-end
-@@end

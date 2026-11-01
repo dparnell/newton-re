@@ -1,6 +1,0 @@
-@@ 0x5200d5
-func() begin
-	inherited:viewSetupChildrenScript();
-	(entryLine.viewJustify := BOr(BAnd(entryLine.viewJustify, bnot(0)), 2))
-end
-@@end

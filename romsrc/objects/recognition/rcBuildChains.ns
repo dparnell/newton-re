@@ -1,0 +1,5 @@
+// rcBuildChains: a recognition configuration used to build the dictionary
+// chains for word lookups (src/recognition/Dictionaries.h BuildChains): the
+// dictionaries that serve words, without the symbols dictionary.
+
+rcBuildChains := {inputmask: vCharsAllowed, inhibitSymbolsDictionary: 1};

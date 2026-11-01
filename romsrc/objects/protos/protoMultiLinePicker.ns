@@ -1,0 +1,75 @@
+// protoMultiLinePicker: a protoLabelPicker whose value is shown on a line of
+// its own (entryLine) under the label when the picker is tall enough. Its
+// info frame can make it depend on a transport (as in a routing slip): the
+// picker hides itself when the transport lacks info.testMethod, and moves
+// into the place of a hidden sibling (doTheShuffle).
+
+protoMultiLinePicker := {
+	// a frame describing the picker: testMethod, sibling, transport
+	info: nil,
+	// or: the name of a slot of base holding the info frame
+	infoSymbol: nil,
+	// Hides the picker unless the transport has info.testMethod; then, if
+	// info.sibling names a view of base that is hidden, takes over its bounds
+	// and justification so that no gap is left.
+	doTheShuffle: func() begin
+		local l1, transport, l3;
+		// l1: whether the picker stays visible
+		l1 := nil;
+		if (if (not info) then infoSymbol) then begin
+				info := base.(infoSymbol)
+			end;
+		if info then begin
+				if HasPath((transport := self:GetTransport()), info.testMethod) then begin
+						l1 := true
+					end
+			end;
+		if (not l1) then begin
+				self.viewFlags := BAnd(viewFlags, bnot(vVisible))
+			end;
+		(if (if info then info.sibling) then (if (if (l3 := base.(info.sibling)) then (not (BAnd(l3.viewFlags, vVisible) = vVisible))) then begin
+					self.viewBounds := l3.viewBounds;
+					(self.viewJustify := l3.viewJustify)
+				end))
+	end,
+	// Makes the one child, entryLine, with the picker's text (TextSetup) and its
+	// line spacing (10 if the picker has none); when the picker is more than 16
+	// pixels tall, the line goes at the bottom, 13 pixels in from the left.
+	viewSetupChildrenScript: func() begin
+		entryLine.text := self:TextSetup();
+		self.viewChildren := [Array: entryLine];
+		if HasPath(self, 'viewLineSpacing) then begin
+				entryLine.viewLineSpacing := self.viewLineSpacing
+			end else begin
+				self.viewLineSpacing := 10
+			end;
+		(if (self:LocalBox().bottom > 16) then begin
+				entryLine.viewBounds := SetBounds(13, ((-self.viewLineSpacing) - 6), self:LocalBox().right, (self.viewLineSpacing + 6));
+				(entryLine.viewJustify := oneLineOnly + vjParentBottomV)
+			end)
+	end,
+	// The transport whose methods count: the root's view named by info.transport,
+	// else the one named by appSymbol.
+	GetTransport: func() begin
+		(if (if info then info.transport) then GetRoot().(info.transport) else GetRoot().(appSymbol))
+	end,
+	// The index of the item to mark in the popup; 0 here, overridden.
+	GetIndex: func() begin
+		0
+	end,
+	// protoLabelPicker calls this to show the popup (x is its left): labelCommands
+	// with the current item (GetIndex) check-marked, placed under the label line.
+	// Returns true (the tap was handled).
+	Popit: func(x) begin
+		local copy, index, l3;
+		copy := Clone(labelCommands);
+		index := self:GetIndex();
+		// $\uFC0B: the check mark character
+		copy[index] := {item: copy[index], mark: $\uFC0B};
+		// l3: the popup's vertical offset
+		l3 := (if HasPath(self, 'viewLineSpacing) then ((viewLineSpacing - FontAscent(viewFont)) - 2) else -2);
+		DoPopup(copy, x, l3, self);
+		true
+	end,
+	_proto: @protoLabelPicker
+};

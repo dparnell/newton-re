@@ -1,0 +1,11 @@
+// function_5: the link manager's AddLinkClient action while connecting (shared by several
+// states): counted in; -60506 for another link, -60501 without one. The file holds it and
+// what only it reaches.
+
+// AddLinkClient(client): counted in (fLinkClients_Grab).
+function_5 := func(a1) begin
+	(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
+				fLinKRefCount := (fLinKRefCount + 1);
+				AddArraySlot(fLinkClients_Grab, a1)
+			end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
+end;

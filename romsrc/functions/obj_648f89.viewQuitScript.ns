@@ -1,5 +1,0 @@
-@@ 0x550ea9
-func() begin
-	(visibleItems := nil)
-end
-@@end

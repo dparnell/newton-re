@@ -1,0 +1,84 @@
+// protoShowBar: the black bar along the top of an application with a tab
+// that shows which folder it is showing ("All Notes", a folder's name,
+// "Unfiled ..."), as the filing system's labelsFilter of the application's
+// target view says. It follows folder changes (RegFolderChanged) and its
+// tab (showBarText) lets the user pick another folder.
+
+protoShowBar := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 13},
+	viewJustify: vjParentFullH,
+	// the symbol this view registers its folder-change callback under
+	folderChangeSym: nil,
+	// viewSetupFormScript(): registers for folder changes under a symbol
+	// unique to this view; when the folder shown is renamed (or removed),
+	// the tab moves to the new one
+	viewSetupFormScript: func() begin
+		RegFolderChanged((folderChangeSym := Intern(Stringer([Array: "showBar.", viewCObject]))), func(a1, a2) begin
+			(if (if a1 then (labelsFilter = a1)) then showBarText:SetNewFilter(targetView, 'labelsFilter, a2))
+		end)
+	end,
+	// viewQuitScript(): unregisters the callback
+	viewQuitScript: func() begin
+		UnRegFolderChanged(folderChangeSym)
+	end,
+	// UpdateFilter(labelsFilter, ...): resyncs the tab when the target view's
+	// labelsFilter is no longer the one given
+	UpdateFilter: func(labelsFilter, labelsFilter2) begin
+		local filing;
+		(if (GetVariable((filing := self:GetTargetInfo('Filing)).targetView, 'labelsFilter) <> labelsFilter) then showBarText:SyncView())
+	end,
+	// viewDrawScript(): the black bar, 7 pixels tall
+	viewDrawScript: func() begin
+		local box;
+		box := self:LocalBox();
+		self:DrawShape(MakeRect(0, 0, box.right, (box.bottom - 6)), '{fillPattern: 5})
+	end,
+	// RedoText(): sets the tab's text from the target view's labelsFilter -
+	// nil: unfiled items (the application's AppObjectUnfiled, or "Unfiled"
+	// with its object name), '_all: AppAll, else the folder's name - each
+	// after U+FC01 (the pop-up diamond), truncated to 137 pixels, and sizes
+	// the tab to it
+	RedoText: func() begin
+		local filing, l2, value;
+		// l2: the target view; value: its labelsFilter
+		if (not (value := GetVariable((l2 := (filing := self:GetTargetInfo('Filing)).targetView), 'labelsFilter))) then begin
+				if (l2:AppObjectUnfiled exists) then begin
+						text := Stringer([Array: $\uFC01, GetVariable(l2, 'AppObjectUnfiled)])
+					end else begin
+						text := Stringer([Array: $\uFC01, ParamStr(unfiled, [Array: GetVariable(l2, 'appObject)[1]])])
+					end
+			end else begin
+				if (value = '_all) then begin
+						text := Stringer([Array: $\uFC01, GetVariable(l2, 'AppAll)])
+					end else begin
+						text := Stringer([Array: $\uFC01, GetFolderStr(value)])
+					end
+			end;
+		showBarText.text := StrTruncate(text, 137);
+		showBarText.width := (StrFontWidth(text, viewFont) + 16);
+		showBarText.viewBounds := SetBounds(0, 1, showBarText.width, 13);
+		self:Dirty()
+	end,
+	// the tab's left and right ends, plain and hilited
+	leftBits: {
+		bits: bitmap('bits, "resources/bits/3d7569.png", "000000000004009900990153009f015b", 1),
+		bounds: {left: 0, top: 0, right: 8, bottom: 6}
+	},
+	rightBits: {
+		bits: bitmap('bits, "resources/bits/3d75cd.png", "0000000000040099009901b3009f01bb", 1),
+		bounds: {left: 0, top: 0, right: 8, bottom: 6}
+	},
+	leftHiliteBits: {
+		bits: bitmap('bits, "resources/bits/485cb9.png", "000000000004018b018b00f5019500fd", 1),
+		bounds: {left: 0, top: 0, right: 8, bottom: 10}
+	},
+	rightHiliteBits: {
+		bits: bitmap('bits, "resources/bits/485d2d.png", "000000000004018b018b00f5019500fd", 1),
+		bounds: {left: 0, top: 0, right: 8, bottom: 10}
+	},
+	viewChildren: [viewChildren: showBarText],
+	showBarText: nil,
+	allocateContext: [|Array|: 'showBarText, showBarText]
+};

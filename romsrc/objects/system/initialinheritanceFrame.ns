@@ -1,0 +1,20 @@
+// initialinheritanceFrame (@112): the class inheritance the system starts with,
+// for IsSubclass and IsInstance (the natives' gInheritanceFrame,
+// src/frames/Objects.cpp): each slot is a class and its value the class it is
+// a subclass of - every kind of phone number is a 'phone, which is a string.
+
+initialinheritanceFrame := {
+	phone: '|string|,
+	homePhone: 'phone,
+	workPhone: 'phone,
+	faxPhone: 'phone,
+	otherPhone: 'phone,
+	carPhone: 'phone,
+	beeperPhone: 'phone,
+	mobilePhone: 'phone,
+	homefaxPhone: 'phone,
+	company: '|string|,
+	address: '|string|,
+	title: '|string|,
+	name: '|string|
+};

@@ -1,5 +1,0 @@
-@@ 0x104bd95
-func() begin
-	self:DoEvent('ConnectLinkFailure, nil)
-end
-@@end

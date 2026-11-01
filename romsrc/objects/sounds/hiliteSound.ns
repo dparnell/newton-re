@@ -1,0 +1,63 @@
+// The sound of hiliting. A 'codec sound frame whose samples are a tone score (tonescore:
+// frequencies and envelopes) that the tDTMFCodec synthesises when it is played. Magic
+// pointer @110.
+
+hiliteSound := {
+	sndFrameType: 'codec,
+	codecName: tDTMFCodec,
+	dataType: 16,
+	bufferSize: 6400,
+	bufferCount: 4,
+	compressionType: 6,
+	samplingRate: 21600,
+	samples: tonescore('samples, {version: 1, algorithm: 4, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 2500,
+			fraction: 0,
+			peak: 13100,
+			delay: 0,
+			attack: 0,
+			decay: 150,
+			hold: 1,
+			release: 149,
+			sustain: 31000,
+			tail: 0
+		},
+		{
+			frequency: 6,
+			fraction: 0,
+			peak: 11100,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 300,
+			release: 0,
+			sustain: 0,
+			tail: 0
+		},
+		{
+			frequency: 7,
+			fraction: 0,
+			peak: 200,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 300,
+			release: 0,
+			sustain: 0,
+			tail: 0
+		},
+		{
+			frequency: 8,
+			fraction: 0,
+			peak: 110,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 300,
+			release: 0,
+			sustain: 0,
+			tail: 0
+		}
+	])
+};

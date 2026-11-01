@@ -1,5 +1,0 @@
-@@ 0x4b773d
-func(a1) begin
-	parentView:jamFromEntry(a1)
-end
-@@end

@@ -1,0 +1,78 @@
+// protoOverview: the base of an application's overview - a scrolling list of
+// one-line items (lineHeight pixels each) with a column on the left
+// (selectIndent wide) where tapping checks an item. Most methods are shared
+// functions defined elsewhere (CheckOn, hiliter, trackOverview ...); an
+// application supplies the items, pieces (the shapes to draw) and Abstract.
+
+protoOverview := {
+	checkBoxHorzOffset: 0,
+	viewFlags: vVisible + vApplication + vClickable,
+	CheckOn: CheckOn,
+	viewBounds: nil,
+	// how many lines fit in the view
+	maxLines: 0,
+	// called to scroll; nothing here, for the application to override
+	Scroller: func(maxLines) begin
+		nil
+	end,
+	lineHeight: 32,
+	// the style frame (font ...) the pieces are drawn with; made from viewFont
+	viewStyle: nil,
+	// non-nil: no item can be checked (no divider line is drawn)
+	nothingCheckable: nil,
+	checkScrollability: nil,
+	// the shapes making up the visible lines
+	pieces: nil,
+	items: nil,
+	numLines: 0,
+	CheckOff: CheckOff,
+	// the line highlighted, or nil
+	hilitedIndex: nil,
+	// the width of the line between the check column and the items, or nil
+	dividerLine: nil,
+	viewClass: clView,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	checkBoxVertOffset: 3,
+	scrollOrigin: 0,
+	autoDeselect: nil,
+	// the width of the check column on the left
+	selectIndent: 18,
+	CheckState: CheckState,
+	GetTheRightShape: GetTheRightShape,
+	SetupAbstracts: SetupAbstracts,
+	viewScrollUpScript: viewScrollUpScript,
+	viewScrollDownScript: viewScrollDownScript,
+	// Draws the overview: the pieces in viewStyle (made from viewFont the first
+	// time), the divider down the right of the check column when there is one and
+	// something can be checked, and the highlighted line, if any.
+	viewDrawScript: func() begin
+		local box, hiliteShape;
+		if (not viewStyle) then begin
+				viewStyle := {font: viewFont}
+			end;
+		if pieces then begin
+				self:DrawShape(pieces, viewStyle)
+			end;
+		if (if dividerLine then (not nothingCheckable)) then begin
+				self:DrawShape(MakeRect((selectIndent - dividerLine), 0, selectIndent, (maxLines * lineHeight)), '{penPattern: 0, fillPattern: 3})
+			end;
+		(if hilitedIndex then begin
+				(box := self:LocalBox()).bottom := lineHeight;
+				self:hiliter((hiliteShape := self:GetHiliteShape(19, box)), hilitedIndex, 'off)
+			end)
+	end,
+	GetIndexEntry: GetIndexEntry,
+	hiliter: hiliter,
+	viewClickScript: viewClickScript_3,
+	trackOverview: trackOverview,
+	// Called while tracking a tap on line a1 at horizontal position
+	// trackScrollingItem: a tap in the check column on an item that is not a
+	// category heading selects it (SelectItem) and returns true; otherwise nil.
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+		(if (if (trackScrollingItem < selectIndent) then (not (if items then items[a1].category))) then begin
+				self:SelectItem(a1);
+				true
+			end)
+	end,
+	GetHiliteShape: GetHiliteShape
+};

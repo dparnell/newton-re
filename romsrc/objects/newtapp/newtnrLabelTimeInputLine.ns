@@ -1,0 +1,8 @@
+// newtnrLabelTimeInputLine: a time input line whose time can only be picked with the
+// time popup (the NPR's newtNRLabelTimeInputLine).
+//
+// This file holds newtnrLabelTimeInputLine and what only it reaches.
+
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
+// access 'pickOnly: the value can only be set with the filter's picker, not written
+newtnrLabelTimeInputLine := {_proto: @newtProtoLine, flavor: @newtTimeFilter, access: 'pickOnly};

@@ -1,0 +1,186 @@
+// The number field of a formula line (@8295, a protoInputLine in a frame): it
+// holds the line's value as a number (calcLineValue), shows it formatted for the
+// locale, takes only numbers (the numeric keyboard, the numbers-only dictionary)
+// and solves the formula whenever it is changed.  Lines (@8296) are made of it.
+
+export103 := {
+	viewBounds: {left: 115, top: 0, right: 223, bottom: 36},
+	viewFlags: vVisible,
+	viewFormat: vfFrameBlack,
+	stepChildren: [stepChildren: export103Item],
+	// Insets the field by its line's indent and right margin, empty to start.
+	viewSetupFormScript: func() begin
+		self.viewBounds := Clone(viewBounds);
+		self.viewBounds.left := indent;
+		self.viewBounds.right := (self.viewBounds.right - rightmargin);
+		(self.calcLineValue := nil)
+	end,
+	calcLineValue: nil,
+	// Sets the value (nil to clear), alerting instead when it is not finite.
+	SetNumericValue: func(a1) begin
+		if (a1 = nil) then begin
+				calcLineValue := nil
+			end else begin
+				if IsFinite(a1) then begin
+						calcLineValue := a1
+					end else begin
+						calcLineValue := nil;
+						self:Notify(kNotifyAlert, "Formulas", "The result is out of range.")
+					end
+			end;
+		self:SetNumericValueString(self:FormulasNumberToString(calcLineValue))
+	end,
+	// Shows a string in the field without it being taken as the user's change.
+	SetNumericValueString: func(a1) begin
+		changeInProgress := true;
+		SetValue(value, 'text, Clone(a1));
+		(changeInProgress := nil)
+	end,
+	// The value, a number or nil.
+	GetNumericValue: func() begin
+		return calcLineValue
+	end,
+	changeInProgress: nil,
+	// The value as text: whole for an integer field; otherwise with eight places
+	// when it is under 0.01, else four or two (decimalPlaces), the trailing zeros
+	// dropped when all of them are zero.
+	FormulasNumberToString: func(calcLineValue) begin
+		local formattedNumberStr2;
+		(if (calcLineValue = nil) then return Clone("") else begin
+				if integerField then begin
+						formattedNumberStr2 := FormattedNumberStr(calcLineValue, "%.0f")
+					end else begin
+						if (abs(calcLineValue) < 0.01) then begin
+								if StrEqual(Substr((formattedNumberStr2 := FormattedNumberStr(calcLineValue, "%.8f")), (StrLen(formattedNumberStr2) - 9), 9), Stringer([Array: GetLocale().numberFormat.decimalPoint, "00000000"])) then begin
+										formattedNumberStr2 := Substr(formattedNumberStr2, 0, (StrLen(formattedNumberStr2) - 9))
+									end
+							end else begin
+								if (decimalPlaces = 4) then begin
+										if StrEqual(Substr((formattedNumberStr2 := FormattedNumberStr(calcLineValue, "%.4f")), (StrLen(formattedNumberStr2) - 5), 5), Stringer([Array: GetLocale().numberFormat.decimalPoint, "0000"])) then begin
+												formattedNumberStr2 := Substr(formattedNumberStr2, 0, (StrLen(formattedNumberStr2) - 5))
+											end
+									end else begin
+										if StrEqual(Substr((formattedNumberStr2 := FormattedNumberStr(calcLineValue, "%.2f")), (StrLen(formattedNumberStr2) - 3), 3), Stringer([Array: GetLocale().numberFormat.decimalPoint, "00"])) then begin
+												formattedNumberStr2 := Substr(formattedNumberStr2, 0, (StrLen(formattedNumberStr2) - 3))
+											end
+									end
+							end
+					end;
+				return formattedNumberStr2
+			end)
+	end,
+	viewClass: clView,
+	value: nil,
+	stepAllocateContext: [|Array|: 'value, export103Item]
+};
+
+export103Item := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	// After the user writes or types: a lone sign or decimal point waits for more;
+	// anything that is not a number is cut down to its digits with an alert; else
+	// the formula is solved for the other lines (SolveFormula with this line's
+	// number), and an empty field clears the formula.
+	viewChangedScript: func(slot, view) begin
+		local formulasStripBadChars, rejectAll;
+		if changeInProgress then begin
+				return nil
+			end;
+		(if (StrLen(view.text) > 0) then begin
+				if ((((StrEqual(view.text, "+") or StrEqual(view.text, "-")) or StrEqual(view.text, ".")) or StrEqual(view.text, "-.")) or StrEqual(view.text, "+.")) then begin
+						return nil
+					end;
+				if ((calcLineValue := self:FormulasStringToNumber(view.text)) = nil) then begin
+						formulasStripBadChars := self:FormulasStripBadChars(view.text);
+						AddDeferredSend(self, SetNumericValueString, [Array: formulasStripBadChars]);
+						self:Notify(kNotifyAlert, "Formulas", "Only numbers are allowed in this field.");
+						return nil
+					end;
+				if integerField then begin
+						calcLineValue := floor(calcLineValue)
+					end;
+				self:SolveFormula(lineNumber);
+				(if (not StrEqual((rejectAll := StringFilter(view.text, " ", 'rejectAll)), view.text)) then AddDeferredSend(self, 'SetNumericValueString, [Array: rejectAll]))
+			end else begin
+				calcLineValue := nil;
+				self:ClearFormula()
+			end)
+	end,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCustomDictionaries,
+	viewLineSpacing: 28,
+	viewFormat: vfPen(1) + vfLinesGray,
+	// The number in a string, with a leading sign and the locale's group separators
+	// allowed; nil when it is not one.
+	FormulasStringToNumber: func(text) begin
+		local rejectAll, part, same2, rejectAll2, number;
+		same2 := StrEqual((part := Substr((rejectAll := StringFilter(text, " ", 'rejectAll)), 0, 1)), "-");
+		if (StrEqual(part, "+") or same2) then begin
+				rejectAll := Substr(rejectAll, 1, (StrLen(rejectAll) - 1))
+			end else begin
+				part := nil
+			end;
+		if ((number := StringToNumber((rejectAll2 := StringFilter(rejectAll, GetLocale().numberFormat.groupSepStr, 'rejectAll)))) = nil) then begin
+				return number
+			end;
+		if same2 then begin
+				number := (-number)
+			end;
+		return number
+	end,
+	// What is left of a string after the characters a number cannot have: a leading
+	// sign, digits, group separators and one decimal point.
+	FormulasStripBadChars: compile(
+		constants: {
+			kLiteral_76ba2d: "0123456789"
+		},
+		func(text2) begin
+			local part, numberFormat, text, passAll, passAll2, pos;
+			if (StrEqual((part := Substr(text2, 0, 1)), "+") or StrEqual(part, "-")) then begin
+					text2 := Substr(text2, 1, (StrLen(text2) - 1))
+				end else begin
+					part := nil
+				end;
+			numberFormat := GetLocale().numberFormat;
+			text := Stringer([Array: kLiteral_76ba2d, numberFormat.groupSepStr, numberFormat.decimalPoint]);
+			passAll := StringFilter(text2, text, 'passAll);
+			if (if StrFilled((passAll2 := StringFilter(text2, numberFormat.decimalPoint, 'passAll))) then (StrLen(passAll2) > 1)) then begin
+					pos := StrPos(text2, numberFormat.decimalPoint, 0);
+					passAll := Stringer([Array: Substr(passAll, 0, (pos + 1)), StringFilter(Substr(passAll, (pos + 1), nil), Stringer([Array: kLiteral_76ba2d, numberFormat.groupSepStr]), 'passAll)])
+				end;
+			(if part then return Stringer([Array: part, passAll]) else return passAll)
+		end),
+	viewJustify: vjParentFullH + vjParentFullV + oneLineOnly,
+	dictionaries: [|Array|: kNumbersOnlyDictionary],
+	// Ink is not taken: an alert half a second later (procrastinated, so a run of
+	// strokes gives one).
+	ViewRawInkScript: func(a1) begin
+		AddProcrastinatedSend('OnlyNumbersAllowed, self, 'OnlyNumbersAllowed, nil, 500);
+		return true
+	end,
+	// The alert for anything but a number.
+	OnlyNumbersAllowed: func() begin
+		self:Notify(kNotifyAlert, "Formulas", "Only numbers are allowed in this field.")
+	end,
+	// Writing in the field brings up the numeric keyboard.
+	viewSetupFormScript: func() begin
+		self._keyboard := GetRoot().numericKeyboard;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @protoInputLine,
+	preAllocatedContext: 'value
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewChangedScript_literal3 := same("export103Item.viewChangedScript.literals[3]");
+
+viewChangedScript_literal5 := same("export103Item.viewChangedScript.literals[5]");
+
+viewChangedScript_literal16 := same("export103Item.viewChangedScript.literals[16]");
+
+viewChangedScript_literal22 := same("export103Item.viewChangedScript.literals[22]");
+
+GetNumericValue_code := same("export103.GetNumericValue.instructions");
+
+FormulasNumberToString_literal5 := same("export103.FormulasNumberToString.literals[5]");
+
+FormulasNumberToString_literal18 := same("export103.FormulasNumberToString.literals[18]");

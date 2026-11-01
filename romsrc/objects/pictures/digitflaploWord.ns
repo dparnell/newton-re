@@ -1,0 +1,8 @@
+// The flap of a low-order digit of the flip-number pickers. A 1-bit bitmap frame (bits,
+// bounds), 23 x 28 pixels. Magic pointer @685. Used by frames, protoNumberPicker,
+// protoTimeDeltaPicker, protoYearPicker.
+
+digitflaploWord := {
+	bits: bitmap('bits, "resources/bits/3da605.png", "00000000000401ef01ef016e020b0185", 1),
+	bounds: {left: 0, top: 0, right: 23, bottom: 28}
+};

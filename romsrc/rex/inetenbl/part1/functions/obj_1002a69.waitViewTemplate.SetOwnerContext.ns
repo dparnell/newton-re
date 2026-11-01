@@ -1,8 +1,0 @@
-@@ 0x10138b1
-func(a1, a2) begin
-	self.statusView := nil;
-	self.statusViewOptions := a2;
-	self.fsmContext := a1;
-	(self.aborted := nil)
-end
-@@end

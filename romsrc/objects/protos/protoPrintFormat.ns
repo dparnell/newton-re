@@ -1,0 +1,208 @@
+// protoPrintFormat: the routing format an application gives for printing
+// and faxing a view of its data: the format is itself the view drawn on
+// each page (inside the page's margins), set up from the routing slip's
+// fields; with a cursor as target it prints one entry after another
+// (mainFormat, the format found for each entry), unless the format uses
+// the cursor itself (usesCursors).
+
+protoPrintFormat := {
+	type: 'printFormat,
+	storeCursors: true,
+	// the routing system sends it to fill in a new item's fields: the
+	// transport sets the printer's page bounds if there are none, and they
+	// are turned for the format's orientation. kFunction_4c6865 swaps a
+	// rectangle's width and height (left/top, right/bottom) and records the
+	// orientation in it
+	SetupItem: compile(
+		constants: {
+			// a bounds frame turned through a right angle (its width and height swapped),
+			// with its orientation a2
+			kFunction_4c6865: func(a1, a2) begin
+				local copy, left;
+				left := (copy := Clone(a1)).bottom;
+				copy.bottom := copy.right;
+				copy.right := left;
+				left := copy.left;
+				copy.left := copy.top;
+				copy.top := left;
+				copy.orientation := a2;
+				copy
+			end
+		},
+		func(fields, frame2) begin
+			local orientation2;
+			inherited:SetupItem(fields, frame2);
+			if (not fields.printerPageBounds) then begin
+					GetItemTransport(fields):?SetPageBounds(fields)
+				end;
+			if (not (orientation2 := fields.printerPageBounds.orientation)) then begin
+					orientation2 := 'portrait
+				end;
+			if (orientation <> orientation2) then begin
+					fields.printerPageBounds := call (kFunction_4c6865) with (fields.printerPageBounds, orientation)
+				end;
+			fields
+		end),
+	routingType: 'view,
+	// insets the view by margins (and 20 more at the top of a fax, for the
+	// fax header); a full-page format (useFullPage) is pushed out by the
+	// printer's unprintable margins instead, to the page's edge at most
+	// (right and bottom are offsets from the parent's edges). With a1 true,
+	// changed bounds are set with SetValue so that the view moves
+	SetMarginBounds: func(a1) begin
+		local viewBounds2;
+		viewBounds2 := viewBounds;
+		RemoveSlot(self, 'viewBounds);
+		(viewBounds := Clone(viewBounds)).left := (viewBounds.left + margins.left);
+		viewBounds.right := (viewBounds.right - margins.right);
+		viewBounds.top := (viewBounds.top + margins.top);
+		viewBounds.bottom := (viewBounds.bottom - margins.bottom);
+		if fields.faxResolution then begin
+				viewBounds.top := (viewBounds.top + 20)
+			end;
+		if (if useFullPage then fields.printableMargin) then begin
+				viewBounds.left := max((viewBounds.left - fields.printableMargin.left), 0);
+				viewBounds.right := min((viewBounds.right + fields.printableMargin.right), 0);
+				viewBounds.top := max((viewBounds.top - fields.printableMargin.top), 0);
+				viewBounds.bottom := min((viewBounds.bottom + fields.printableMargin.bottom), 0)
+			end;
+		(if (if a1 then ((((viewBounds.left <> viewBounds2.left) or (viewBounds.right <> viewBounds2.right)) or (viewBounds.top <> viewBounds2.top)) or (viewBounds.bottom <> viewBounds2.bottom))) then SetValue(self, 'viewBounds, viewBounds))
+	end,
+	viewFlags: vVisible + vReadOnly,
+	// sent just before printing (a1 the item's fields): for a full-page
+	// format, take the printer's own page size for the paper (l1) and work
+	// out the margins it cannot print (printableMargin, from the paper's
+	// real size), both turned for a landscape format
+	LastChanceToSetup: compile(
+		constants: {
+			// a bounds frame turned through a right angle (its width and height swapped),
+			// with its orientation a2
+			kFunction_4c6865: func(a1, a2) begin
+				local copy, left;
+				left := (copy := Clone(a1)).bottom;
+				copy.bottom := copy.right;
+				copy.right := left;
+				left := copy.left;
+				copy.left := copy.top;
+				copy.top := left;
+				copy.orientation := a2;
+				copy
+			end
+		},
+		func(a1) begin
+			local l1, printer, realPaperSize, l4;
+			(if useFullPage then begin
+					if (not (printer := a1.printer)) then begin
+							printer := GetUserConfig('currentPrinter)
+						end;
+					(if (if printer.printerPageBounds then (l1 := printer.printerPageBounds.(a1.printerPageBounds.id))) then begin
+							a1.printerPageBounds := Clone(a1.printerPageBounds);
+							a1.printerPageBounds.bottom := l1.bottom;
+							a1.printerPageBounds.right := l1.right;
+							realPaperSize := GetRealPaperSize(a1.printerPageBounds.id);
+							(l4 := (a1.printableMargin := Clone(printer.printableOrigin))).right := ((realPaperSize.width - l1.right) - l4.left);
+							l4.bottom := ((realPaperSize.height - l1.bottom) - l4.top);
+							(if (orientation <> 'portrait) then begin
+									a1.printerPageBounds := call (kFunction_4c6865) with (a1.printerPageBounds, orientation);
+									(a1.printableMargin := call (kFunction_4c6865) with (a1.printableMargin, orientation))
+								end)
+						end)
+				end)
+		end),
+	// the format to print entry a1 of a cursor with
+	GetCursorFormat: func(a1) begin
+		self:FindCursorFormat(a1)
+	end,
+	// the number of pages the item will print to (a fax's cover page says
+	// it): lays the item out in a page-counting form (pageCounterForm),
+	// which leaves the count in fields.pageCount
+	CountPages: func(fields, target) begin
+		local context;
+		(context := BuildContext(@pageCounterForm)).fields := fields;
+		context:Open();
+		context:Close();
+		fields.pageCount
+	end,
+	// true: print to the edges the printer can reach, not inside margins
+	useFullPage: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	_proto: @targetFrameFormat,
+	// the cursor's current entry, the cursor moved on; nil (with an alert)
+	// when the entry has been deleted, or with no cursor
+	NextItem: func() begin
+		local entry;
+		entry := nil;
+		if targetCursor then begin
+				if ((entry := targetCursor:entry()) = 'deleted) then begin
+						self:Notify(kNotifyAlert, title, "Cannot print: The data has been removed or deleted");
+						return nil
+					end;
+				targetCursor:Next()
+			end;
+		return entry
+	end,
+	pageWidth: nil,
+	symbol: nil,
+	usesCursors: nil,
+	viewJustify: vjParentFullH + vjParentFullV,
+	dataTypes: [|Array|: 'view],
+	orientation: 'portrait,
+	pageHeight: nil,
+	// on opening: the first format opened is the cover form (margins of 60
+	// at the sides when it has no symbol or noDefaults); this one is the
+	// print form; with a cursor target, take the cursor and, unless the
+	// format uses it itself, the format for its first entry
+	viewSetupFormScript: func() begin
+		if (coverForm = nil) then begin
+				coverForm := self;
+				if (noDefaults or (symbol = nil)) then begin
+						margins := SetBounds(60, 0, 60, 0)
+					end;
+				self:SetMarginBounds(nil)
+			end;
+		printForm := self;
+		if TargetIsCursor(target) then begin
+				targetCursor := GetTargetCursor(target, nil)
+			end;
+		(if (if (not usesCursors) then TargetIsCursor(target)) then (if (target := targetCursor:entry()) then (mainFormat := coverForm:FindCursorFormat(target))))
+	end,
+	viewClass: clView,
+	viewFont: tsFancy + tsSize(12),
+	// protoPrintForm asks it after each page whether there is another: the
+	// print form's printNextPageScript, else (printing a cursor's entries
+	// one by one) the next entry, its format and the children made again;
+	// true while there is more. (result is not declared local, so it is
+	// found or made as a slot of the frames in scope)
+	printNextPageScriptX: func() begin
+		(if fields then begin
+				result := nil;
+				if (if (printForm exists) then printForm.printNextPageScript) then begin
+						result := printForm:printNextPageScript()
+					end;
+				if (if (if (result = nil) then targetCursor) then (not usesCursors)) then begin
+						if (target := targetCursor:Next()) then begin
+								mainFormat := coverForm:FindCursorFormat(target);
+								self:RedoChildren();
+								result := true
+							end
+					end;
+				result
+			end)
+	end,
+	// before the children are made: fit to the printable area, note the page
+	// size (pageWidth, pageHeight) and make the entry's format the child
+	viewSetupChildrenScript: func() begin
+		local box;
+		if useFullPage then begin
+				self:SetMarginBounds(true)
+			end;
+		pageWidth := (box := self:LocalBox()).right;
+		pageHeight := box.bottom;
+		(if self.mainFormat then (self.stepChildren := [Array: mainFormat]))
+	end,
+	margins: {left: 0, top: 0, right: 0, bottom: 0}
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SetupItem_literal7 := same("protoPrintFormat.SetupItem.literals[7]");

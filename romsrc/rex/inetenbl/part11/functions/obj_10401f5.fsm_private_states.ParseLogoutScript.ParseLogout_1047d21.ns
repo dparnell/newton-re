@@ -1,6 +1,0 @@
-@@ 0x1047d21
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Release, a1, 'Update);
-	(if a1.infoError then self:DoEvent('ParseLogoutScriptFailure, nil) else (if (a1.infoStatus = 'Parsed) then self:DoEvent('ParseLogoutScriptSuccess, nil)))
-end
-@@end

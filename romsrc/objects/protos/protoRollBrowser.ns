@@ -1,0 +1,29 @@
+// protoRollBrowser: a whole application built round a protoRoll - a title,
+// the roll filling the space between, and a status bar. rollItems,
+// rollIndex and rollCollapsed are handed to the roll as its items, index and
+// allCollapsed when it opens.
+
+protoRollBrowser := {
+	_proto: @protoApp,
+	// the roll's item templates, the first one shown, whether all start collapsed
+	rollItems: nil,
+	rollIndex: 0,
+	rollCollapsed: true,
+	viewChildren: [|Array|:
+		{
+			_proto: @protoRoll,
+			viewFlags: vVisible + vApplication + vClipping,
+			viewJustify: vjParentFullH + vjParentFullV,
+			// inset below the title (18) and above the status bar (14)
+			viewBounds: {left: 0, top: 18, right: 0, bottom: -14},
+			// pass the browser's settings on to the roll
+			viewSetupFormScript: func() begin
+				self.items := rollItems;
+				self.index := rollIndex;
+				(self.allCollapsed := rollCollapsed)
+			end
+		},
+		protoAppItem,
+		@protoStatus
+	]
+};

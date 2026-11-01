@@ -1,6 +1,0 @@
-@@ 0x482661
-func() begin
-	base.cancelButton := self;
-	inherited:?viewSetupFormScript()
-end
-@@end

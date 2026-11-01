@@ -1,5 +1,0 @@
-@@ 0x41a54d
-func() begin
-	AddDeferredSend(self, '_OpenLater, nil)
-end
-@@end

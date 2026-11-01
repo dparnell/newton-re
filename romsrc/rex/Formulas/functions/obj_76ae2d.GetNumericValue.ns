@@ -1,5 +1,0 @@
-@@ 0x76be71
-func() begin
-	return calcLineValue
-end
-@@end

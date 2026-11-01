@@ -1,0 +1,7 @@
+// txExternalVboPrototype, and what only it reaches
+//
+// The template of a text view's document as a frame (Externalize) when
+// its characters are a large binary on a store (txText) rather than a
+// string; otherwise as txExternalPrototype.
+
+txExternalVboPrototype := {txText: nil, styles: nil, rulers: nil, txData: nil};

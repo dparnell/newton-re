@@ -1,0 +1,20 @@
+// The indexes of the In Box and Out Box soups. An array of soup index specifications (the
+// indexes of a soup definition). Magic pointer @114. Used by inboxSoupDef, ioIoboxSoup,
+// outboxSoupDef, viewRoot.
+
+ioIndices := [|Array|:
+	{
+		structure: 'multiSlot,
+		path: [|Array|: 'category, 'timestamp],
+		type: [|Array|: 'symbol, 'int],
+		order: [|Array|: 'ascending, 'ascending]
+	},
+	{
+		structure: 'multiSlot,
+		path: [|Array|: 'state, 'timestamp],
+		type: [|Array|: 'symbol, 'int],
+		order: [|Array|: 'ascending, 'ascending]
+	},
+	{structure: 'slot, path: 'xlabels, type: 'tags, tags: [|Array|: '_new]},
+	{structure: 'slot, path: 'timestamp, type: 'int, order: 'ascending}
+];

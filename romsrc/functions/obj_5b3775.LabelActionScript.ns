@@ -1,5 +1,0 @@
-@@ 0x5b3715
-func(a1) begin
-	SetUserConfig('currentModem, labelCommands[a1])
-end
-@@end

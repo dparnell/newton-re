@@ -1,5 +1,0 @@
-@@ 0x1048519
-func() begin
-	(if (if (not fConnectionSlipView) then (Length(fLinkClients) = 0)) then InetShutDown('auto))
-end
-@@end

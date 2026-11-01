@@ -1,6 +1,0 @@
-@@ 0x104d609
-func(a1) begin
-	local l1;
-	(if (if IsPathExpr(a1) then (l1 := InetStartUp().fLinkEntry)) then TotalClone(l1.(a1)))
-end
-@@end

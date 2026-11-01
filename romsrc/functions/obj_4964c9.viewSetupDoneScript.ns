@@ -1,5 +1,0 @@
-@@ 0x4964a9
-func() begin
-	(if (not backupInfo) then self:Hide())
-end
-@@end

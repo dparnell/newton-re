@@ -1,0 +1,40 @@
+// slotCacheTable: the 34 slot symbols a view caches lookups of - bit n of the
+// view's slot cache says whether slot n may be in its template's proto chain
+// (TView::fSlotCache; src/views/View.h, docs/views/README.md).
+
+slotCacheTable := [|Array|:
+	'viewQuitScript,
+	'styles,
+	'tabs,
+	'realData,
+	'text,
+	'viewTransferMode,
+	'viewFont,
+	'viewOriginY,
+	'viewOriginX,
+	'viewJustify,
+	'viewFlags,
+	'viewDrawScript,
+	'viewIdleScript,
+	'viewSetupChildrenScript,
+	'viewChildren,
+	'buttonClickScript,
+	'viewClickScript,
+	'viewFormat,
+	'viewBounds,
+	'viewShowScript,
+	'viewStrokeScript,
+	'viewgesturescript,
+	'viewHiliteScript,
+	'allocateContext,
+	'keyPressScript,
+	'ViewKeyUpScript,
+	'viewKeyDownScript,
+	'ViewKeyRepeatScript,
+	'stepallocatecontext,
+	'viewChangedScript,
+	'viewRawInkScript,
+	'viewinkwordscript,
+	'ViewKeyStringScript,
+	'viewCaretActivateScript
+];

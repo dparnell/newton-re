@@ -1,5 +1,0 @@
-@@ 0x4c1efd
-func() begin
-	self:PrepScroller(nil)
-end
-@@end

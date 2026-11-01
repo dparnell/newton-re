@@ -1,6 +1,0 @@
-@@ 0x100e7c1
-func() begin
-	(newEntry := {version: 2, tags: Clone('INET)}).linkID := (if functions.InetStartUp then InetStartUp():MGetLinkUniqueID() else Random(0, 10000));
-	newEntry
-end
-@@end

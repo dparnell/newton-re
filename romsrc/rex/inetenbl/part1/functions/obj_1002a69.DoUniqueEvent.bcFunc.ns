@@ -1,9 +1,0 @@
-@@ 0x1015bf9 argframe=nil,0
-func(a1, a2) begin
-	local l1;
-	if (not (l1 := self:?DoEvent_Check('|protoFSM:DoUniqueEvent|))) then begin
-			return nil
-		end;
-	(if (not LSearch(l1.pendingEventQueue.queue, a1, 0, '|=|, nil)) then self:DoEvent(a1, a2))
-end
-@@end

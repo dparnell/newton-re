@@ -1,0 +1,7 @@
+// The left-arrow key of the phone keypad. A 1-bit bitmap frame (bits, bounds), 21 x 20
+// pixels.
+
+dtmfLeft := {
+	bits: bitmap('bits, "resources/bits/3d7edd.png", "000000000004001d001d00890031009e", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 20}
+};

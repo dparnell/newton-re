@@ -1,0 +1,161 @@
+// protoThumbnail: a reduced picture of a larger image (a page, a drawing)
+// with a grey box marking the part its view shows; dragging the box scrolls
+// that view. The view supplying GetScalingInfo and ScrollTo (and optionally
+// PrepareToScroll and DoneScrolling) is found by inheritance; without them
+// the thumbnail is only a picture.
+
+protoThumbnail := {
+	// viewSetupDoneScript(): draws the thumbnail of the image (or of
+	// tempImage, which OpenThumbnail leaves)
+	viewSetupDoneScript: func() begin
+		self:setup((if tempImage then tempImage else image));
+		(tempImage := nil)
+	end,
+	// what is drawn: the bitmap, or the bitmap greyed with the box's part
+	// clear and framed
+	theShape: nil,
+	viewFormat: vfFrameBlack + vfPen(1),
+	// viewGestureScript(unit, gesture): swallows every gesture; the test for
+	// gesture 50 has an empty branch
+	viewgesturescript: func(unit, gesture) begin
+		if (gesture = 50) then begin end;
+		true
+	end,
+	// Draws the thumbnail's shape.
+	viewDrawScript: func() begin
+		self:DrawShape(theShape, '{transferMode: 0})
+	end,
+	// the grey box's shape
+	greyBox: nil,
+	viewFlags: vVisible + vClipping + vClickable,
+	viewBounds: {left: -2, top: -2, right: -2, bottom: -2},
+	// RelocateGreyBox(scalingInfo): maps the part shown (scalingInfo's
+	// viewBox at offsetX, offsetY within extent) into the thumbnail and keeps
+	// the box inside the view
+	RelocateGreyBox: func(scalingInfo) begin
+		local box;
+		ScaleShape(greyBox, nil, scalingInfo.viewBox);
+		OffsetShape(greyBox, scalingInfo.offsetX, scalingInfo.offsetY);
+		ScaleShape(greyBox, scalingInfo.extent, thumbnailBounds);
+		box := self:LocalBox();
+		if ((greyBounds := ShapeBounds(greyBox)).left < box.left) then begin
+				greyBounds.left := box.left
+			end;
+		if (greyBounds.top < box.top) then begin
+				greyBounds.top := box.top
+			end;
+		if (greyBounds.right > box.right) then begin
+				greyBounds.right := box.right
+			end;
+		if (greyBounds.bottom > box.bottom) then begin
+				greyBounds.bottom := box.bottom
+			end;
+		ScaleShape(greyBox, nil, greyBounds)
+	end,
+	// the rectangle the image is fitted into
+	thumbnailBounds: nil,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV,
+	// Update(): moves the grey box to the current scroll position and
+	// redraws
+	Update: func() begin
+		if (self:GetScalingInfo exists) then begin
+				self:RelocateGreyBox(self:GetScalingInfo())
+			end;
+		self:DoDrawing('viewDrawScript, [Array: ]);
+		(needToUpdate := nil)
+	end,
+	// the reduced bitmap
+	thumbnail: nil,
+	// viewClickScript(unit): drags the grey box - the tap centres it under
+	// the pen, then it follows the pen (scrolling the view as it goes when
+	// trackWhileScrolling); on lifting, scrolls to the final place
+	viewClickScript: func(unit) begin
+		local box, l2, l3, l4, l5, scalingInfo, l7, l8, most2, most, most3;
+		if (not (self:ScrollTo exists)) then begin
+				return true
+			end;
+		InkOff(unit);
+		BusyBoxControl(2);
+		self:?PrepareToScroll();
+		box := self:GlobalBox();
+		// l2, l3: the tap within the thumbnail; l4, l5: the pen's movement
+		l2 := (GetPoint(firstX, unit) - box.left);
+		l3 := (GetPoint(firstY, unit) - box.top);
+		l4 := 0;
+		l5 := 0;
+		// l7, l8: the largest scroll offsets; most2: the scale from the
+		// thumbnail to the image; most, most3: the offsets that centre the
+		// box under the tap
+		l7 := ((scalingInfo := self:GetScalingInfo()).extent.right - scalingInfo.viewBox.right);
+		l8 := (scalingInfo.extent.bottom - scalingInfo.viewBox.bottom);
+		most := max(min(floor(round(((most2 := max((scalingInfo.extent.right / (box.right - box.left)), (scalingInfo.extent.bottom / (box.bottom - box.top)))) * (l2 - ((greyBounds.right - greyBounds.left) div 2))))), l7), 0);
+		most3 := max(min(floor(round((most2 * (l3 - ((greyBounds.bottom - greyBounds.top) div 2))))), l8), 0);
+		(while (not StrokeDone(unit)) do begin
+				l4 := ((GetPoint(finalX, unit) - box.left) - l2);
+				l5 := ((GetPoint(finalY, unit) - box.top) - l3);
+				scalingInfo.offsetX := max(min((most + ceiling((most2 * l4))), l7), 0);
+				scalingInfo.offsetY := max(min((most3 + ceiling((most2 * l5))), l8), 0);
+				needToUpdate := true;
+				self:LockScreen(true);
+				if trackWhileScrolling then begin
+						self:ScrollTo(scalingInfo.offsetX, scalingInfo.offsetY);
+						RefreshViews()
+					end;
+				if needToUpdate then begin
+						self:RelocateGreyBox(scalingInfo);
+						self:DoDrawing('DrawShape, [Array: theShape, '{transferMode: 0}])
+					end;
+				self:LockScreen(nil)
+			end);
+		needToUpdate := true;
+		l4 := ((GetPoint(finalX, unit) - box.left) - l2);
+		l5 := ((GetPoint(finalY, unit) - box.top) - l3);
+		// (unlike the drag, this final ScrollTo does not clamp the offsets)
+		self:ScrollTo((most + ceiling((most2 * l4))), (most3 + ceiling((most2 * l5))));
+		if needToUpdate then begin
+				self:Update()
+			end;
+		self:?DoneScrolling();
+		true
+	end,
+	viewClass: clView,
+	// setup(image): draws the image reduced into a bitmap the size of the
+	// view, centred; with a scrolling view it makes the shape list that greys
+	// the thumbnail (modeBic) except inside the grey box, which is framed
+	setup: func(a1) begin
+		local box, shapeBounds2, scalingInfo;
+		box := self:LocalBox();
+		thumbnailBox := MakeShape((thumbnailBounds := FitToBox((shapeBounds2 := ShapeBounds(a1)), box, viewJustify)));
+		thumbnail := MakeBitmap((box.right - box.left), (box.bottom - box.top), nil);
+		DrawIntoBitmap(a1, {transform: [Array: shapeBounds2, thumbnailBounds]}, thumbnail);
+		ClearVBOCache(thumbnail);
+		(if (self:GetScalingInfo exists) then begin
+				greyBox := MakeShape(RelBounds(0, 0, 1, 1));
+				theShape := [Array: thumbnail, '{pensize: 0, fillPattern: 3, transferMode: 3}, MakeShape(self:LocalBox()), {transferMode: modeCopy, clipping: greyBox}, thumbnail, '{pensize: 2, penPattern: 3, transferMode: 0}, greyBox];
+				(if (scalingInfo := self:GetScalingInfo()) then self:RelocateGreyBox(self:GetScalingInfo()))
+			end else (theShape := thumbnail))
+	end,
+	trackWhileScrolling: true,
+	// the grey box's bounds, kept inside the view
+	greyBounds: nil,
+	// ToggleThumbnail(image): closes the thumbnail if open (or given no
+	// image), opens it otherwise
+	ToggleThumbnail: func(andStashThumbnail) begin
+		(if ((not andStashThumbnail) or viewCObject) then self:Close() else self:OpenThumbnail(andStashThumbnail))
+	end,
+	// OpenThumbnail(image): opens on the image, or shows it if already open
+	OpenThumbnail: func(andStashThumbnail) begin
+		if Visible(self) then begin
+				self:setup(andStashThumbnail);
+				return nil
+			end;
+		tempImage := andStashThumbnail;
+		self:Open()
+	end,
+	tempImage: nil,
+	needToUpdate: nil
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewDrawScript_literal1 := same("protoThumbnail.viewDrawScript.literals[1]");

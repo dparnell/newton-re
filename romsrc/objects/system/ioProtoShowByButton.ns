@@ -1,0 +1,34 @@
+// ioProtoShowByButton (@820): the In/Out Box overview's Show button, a popup
+// choosing how the items are sorted (by date, service or status); kept in
+// the application's preferences as sortby.
+
+ioProtoShowByButton := {
+	width: nil,
+	viewBounds: {left: -57, top: 14, right: -7, bottom: 30},
+	viewJustify: vjCenterH + vjParentRightH,
+	text: show_2,
+	popup: [|Array|:
+		{item: date_2, val: 'Date},
+		{item: "Service", val: 'transport},
+		{item: status, val: 'status}
+	],
+	// viewSetupFormScript: sizes the button to its text; hidden unless the
+	// application has a sortPicker.
+	viewSetupFormScript: func() begin
+		width := (StrFontWidth(text, viewFont) + 6);
+		(viewBounds := Clone(viewBounds)).left := (viewBounds.right - width);
+		if (not sortPicker) then begin
+				self.viewFlags := BAnd(self.viewFlags, bnot(vVisible))
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	// pickActionScript(index): a new sort order saved and the list refiltered.
+	pickActionScript: func(index) begin
+		inherited:pickActionScript(index);
+		(if (self:GetAppPreferences().sortby <> popup[index].val) then begin
+				self:GetAppPreferences().sortby := popup[index].val;
+				self:FilterChanged()
+			end)
+	end,
+	_proto: @protoPopupButton
+};

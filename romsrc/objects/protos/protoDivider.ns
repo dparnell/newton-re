@@ -1,0 +1,46 @@
+// protoDivider: a divider bar across the whole width of its parent - a thick
+// line (the divider child, a protoBorder) with the client's `title` near its
+// left end (dividerText, a lightweight text view on white); and those two
+// children.
+
+protoDivider := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: 0,
+	viewFont: @fontSystem9Bold,
+	viewJustify: vjParentFullH,
+	titleWidth: nil,
+	titleHeight: nil,
+	viewBounds: nil,
+	// viewSetupChildrenScript: sizes the children from the title in viewFont -
+	// the line 3 pixels thick at the middle of the title's height (titleHeight
+	// may be preset), the title 16 pixels in with 3 pixels' margin each side.
+	// A client overriding it must call the inherited one (documented).
+	viewSetupChildrenScript: func() begin
+		if (not titleHeight) then begin
+				titleHeight := FontHeight(viewFont)
+			end;
+		titleWidth := (StrFontWidth(title, viewFont) + 6);
+		divider.viewBounds := SetBounds(0, ((titleHeight div 2) - 1), 0, ((titleHeight div 2) + 2));
+		dividerText.text := title;
+		(dividerText.viewBounds := RelBounds(16, 0, titleWidth, titleHeight))
+	end,
+	// debug: a number whose meaning is not known (the ROM's own value)
+	debug: 181408,
+	viewChildren: [viewChildren: divider, dividerText],
+	divider: nil,
+	allocateContext: [|Array|: 'divider, divider, 'dividerText, dividerText],
+	dividerText: nil
+};
+
+divider := {_proto: @protoBorder, viewJustify: vjParentFullH, viewBounds: nil, preallocatedContext: 'divider};
+
+dividerText := {
+	viewClass: clTextView,
+	viewFlags: vVisible + vReadOnly,
+	viewJustify: vjCenterH,
+	viewFormat: vfFillWhite,
+	viewBounds: nil,
+	text: nil,
+	preallocatedContext: 'dividerText
+};

@@ -1,0 +1,15 @@
+// protoCheckbox: a checkbox with a text label to its right - protoCheckboxIcon
+// (which holds the behaviour) plus a read-only text child for the label.
+
+protoCheckbox := {
+	_proto: @protoCheckboxIcon,
+	viewChildren: [viewChildren:
+		{
+			viewClass: clTextView,
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
+			// 16 pixels in from the left, past the box
+			viewBounds: {left: 16, top: 0, right: 0, bottom: 0}
+		}
+	]
+};

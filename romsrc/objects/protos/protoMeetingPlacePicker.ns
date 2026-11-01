@@ -1,0 +1,26 @@
+// protoMeetingPlacePicker: a full-size protoListpicker over the Names soup
+// for choosing a meeting's place (the list of protoMeetingPlacePopup); its
+// dataClass names, or is, the data definition (pickerDef) to list with.
+
+protoMeetingPlacePicker := {
+	_proto: @protoListpicker,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vVisible + vApplication + vClickable,
+	appObject: [|Array|: "Place", "Places"],
+	AppAll: "All places",
+	soupToQuery: @cardfileSoupName,
+	// Before opening: the Names application's appSymbol unless one is given, and
+	// the pickerDef - dataClass itself when it is a frame (dataClass then
+	// becomes its class), else the data def registered for it. This replaces
+	// protoListpicker's viewSetupFormScript (it does not call inherited).
+	viewSetupFormScript: func() begin
+		if (not self.appSymbol) then begin
+				self.appSymbol := GetRoot().cardfile.appSymbol
+			end;
+		(if IsFrame(dataClass) then begin
+				self.pickerDef := dataClass;
+				(dataClass := ClassOf(pickerDef))
+			end else (self.pickerDef := GetDataDefs(dataClass)))
+	end
+};

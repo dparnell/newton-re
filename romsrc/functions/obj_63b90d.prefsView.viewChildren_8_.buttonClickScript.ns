@@ -1,5 +1,0 @@
-@@ 0x50c35d
-func() begin
-	AddDeferredSend(theApp, 'RememberedClose, [Array: base])
-end
-@@end

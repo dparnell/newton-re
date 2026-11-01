@@ -1,5 +1,0 @@
-@@ 0x56b2c5
-func(a1) begin
-	CardAlert('SRAMCardLowBattery, a1, nil)
-end
-@@end

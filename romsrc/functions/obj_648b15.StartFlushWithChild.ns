@@ -1,5 +1,0 @@
-@@ 0x4b77a5
-func(a1) begin
-	parentView:StartFlushWithChild(a1)
-end
-@@end

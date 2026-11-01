@@ -1,0 +1,37 @@
+// letterheader (@537): the default letterhead printed at the top of a
+// letter or fax (userConfiguration's letterheadForm): the owner's name in
+// bold, then the address and city line, centred, from userConfiguration.
+
+letterheader := {
+	viewClass: clView,
+	viewBounds: {left: 0, top: 10, right: 400, bottom: 62},
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: 0,
+	viewJustify: vjParentCenterH,
+	viewChildren: [|Array|:
+		{
+			viewClass: clTextView,
+			viewBounds: {left: 0, top: 10, right: 400, bottom: 26},
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjCenterH,
+			viewFont: tsSimple + tsSize(12) + tsBold,
+			text: nil,
+			// the owner's name
+			viewSetupFormScript: func() begin
+				(text := userConfiguration.name)
+			end
+		},
+		{
+			viewClass: clParagraphView,
+			viewBounds: {left: 0, top: 26, right: 400, bottom: 52},
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjCenterH,
+			viewFont: tsSimple + tsSize(10),
+			text: nil,
+			// the address, a line break, then the city, region and postal code
+			viewSetupFormScript: func() begin
+				(text := Stringer([Array: userConfiguration.address, $\n, userConfiguration.cityZip]))
+			end
+		}
+	]
+};

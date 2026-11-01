@@ -1,0 +1,59 @@
+// newtStatusBarNoClose: the NewtApp status bar without a close box (NPR 2.0): lays
+// out the buttons of menuLeftButtons from the left and those of menuRightButtons
+// from the right, each as wide as its text (or its own bounds).
+//
+// This file holds newtStatusBarNoClose and what only it reaches.
+
+newtStatusBarNoClose := {
+	_proto: @protoStatus,
+	viewBounds: {left: 0, top: -18, right: 0, bottom: 0},
+	viewChildren: nil,
+	// outset: added to a text button's text width; spacing: between buttons; firstLeft,
+	// firstRight: where the first button on each side goes
+	outset: 6,
+	spacing: 7,
+	firstLeft: 6,
+	firstRight: -5,
+	height: 13,
+	menuLeftButtons: nil,
+	menuRightButtons: nil,
+	// the width of a button: its text's, or its bounds'
+	CalcWidth: func(value) begin
+		(if (if HasPath(value, 'text) then value.text) then (StrFontWidth(value.text, value.viewFont) + outset) else (value.viewBounds.right - value.viewBounds.left))
+	end,
+	// the children: the left buttons, the first at firstLeft and each next one right of
+	// the one before; then the right buttons from firstRight leftwards (the decompiler put
+	// some local declarations after their first use; l1, the total width, is unused)
+	viewSetupChildrenScript: func() begin
+		viewChildren := [Array: ];
+		l1 := 0;
+		l2 := 0;
+		if menuLeftButtons then begin
+				SetLength(viewChildren, (l2 + Length(menuLeftButtons)));
+				local l1;
+				local l2;
+				(foreach key, value in menuLeftButtons do begin
+						width := self:CalcWidth(value);
+						l1 := ((l1 + width) + 8);
+						viewChildren[l2] := (if (key > 0) then {_proto: value, viewBounds: RelBounds(spacing, 0, width, height), viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV + oneLineOnly} else {_proto: value, viewBounds: RelBounds(firstLeft, 2, width, height), viewJustify: vjCenterH + vjCenterV + oneLineOnly});
+						l2 := (l2 + 1)
+					end)
+			end;
+		l7 := l2;
+		(if menuRightButtons then begin
+				SetLength(viewChildren, (l2 + Length(menuRightButtons)));
+				(foreach key, value in menuRightButtons do begin
+						local width, l7, firstRight2;
+						width := self:CalcWidth(value);
+						l1 := ((l1 + width) + 8);
+						viewChildren[l2] := (if (key > 0) then {_proto: value, viewBounds: RelBounds(((-width) - spacing), 0, width, height), viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly} else begin
+								if (not (firstRight2 := firstRight)) then begin
+										firstRight2 := -5
+									end;
+								{_proto: value, viewBounds: RelBounds(((-width) + firstRight2), 2, width, height), viewJustify: vjCenterH + vjCenterV + vjParentRightH + oneLineOnly}
+							end);
+						l2 := (l2 + 1)
+					end)
+			end)
+	end
+};

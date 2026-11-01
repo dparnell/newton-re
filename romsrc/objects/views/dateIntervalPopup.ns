@@ -1,0 +1,217 @@
+// dateIntervalPopup: a pop-up for a range of dates: two date pickers (start
+// and stop) with the duration between them drawn below; tapping the duration
+// offers fixed lengths (pop) and "Ongoing". Opened by :New([start, stop],
+// bbox, context) - stop kForever meaning ongoing; the context may supply its
+// own durationPop and GetDuration. It tells the context NewTime(start,
+// stop) as they change and pickActionScript(start, stop) when closed.
+// On a screen less than 320 high it lays the pickers side by side
+// (wideBodied).
+
+dateIntervalPopup := {
+	stoplabel: "Stop date",
+	// SetPopup: protoGeneralPopup's own (placing the popup).
+	viewSetupDoneScript: func() begin
+		self:SetPopup()
+	end,
+	// The close box: hands the range to the context (kForever if ongoing).
+	Affirmative: func() begin
+		context:?pickActionScript(startTime, (if Ongoing then kForever else stopTime))
+	end,
+	stopBounds: {left: 6, top: 150, right: 141, bottom: 262},
+	// Draws the labels and the duration (two lines, from GetDuration) with a
+	// popup diamond beside it. Times are in minutes; 1440 is a day, so the
+	// duration counts whole days.
+	viewDrawScript: func() begin
+		local box, list, basicWeekTop2, l4, strFontWidth2, l6, list2;
+		box := self:LocalBox();
+		if Ongoing then begin
+				list := [Array: "Ongoing", ""]
+			end else begin
+				list := self:GetDuration((((stopTime div 1440) - (startTime div 1440)) * 1440))
+			end;
+		l4 := ((basicWeekTop2 := basicWeekTop) + 12);
+		strFontWidth2 := 0;
+		if (not StrFilled(list[0])) then begin
+				l4 := (basicWeekTop2 := (l4 - 6))
+			end else begin
+				strFontWidth2 := StrFontWidth(list[0], tsSystem + tsSize(10))
+			end;
+		if (not StrFilled(list[1])) then begin
+				basicWeekTop2 := (l4 := (basicWeekTop2 + 6))
+			end else begin
+				strFontWidth2 := max(strFontWidth2, StrFontWidth(list[1], tsSystem + tsSize(10)))
+			end;
+		strFontWidth2 := (((box.right - strFontWidth2) div 2) - 11);
+		l6 := ((l4 + basicWeekTop2) div 2);
+		self:DrawShape((list2 := [Array: MakeText(startlabel, 0, 0, 147, 16), MakeText(stoplabel, stopLabelLeft, stopLabelTop, ((stopLabelLeft + 135) + 12), (stopLabelTop + 16)), '{font: tsSystem + tsSize(10), justification: center}, MakeText(list[0], 0, basicWeekTop2, box.right, (basicWeekTop2 + 16)), MakeText(list[1], 0, l4, box.right, (l4 + 16)), '{font: tsSystem + tsSize(9) + tsBold}, MakeText("\uFC01\u", strFontWidth2, l6, (strFontWidth2 + 20), (l6 + 16))]), '{font: tsSystem + tsSize(10) + tsBold, justification: center})
+	end,
+	stopLabelTop: 128,
+	startTime: nil,
+	spread: nil,
+	context: nil,
+	viewBounds: {left: 0, top: 0, right: 147, bottom: 298},
+	basicWeekTop: 256,
+	_proto: @protoGeneralPopup,
+	stop: nil,
+	startlabel: "Start date",
+	// Opens the popup: a1 is [start, stop], a2 the bounds, a3 the context.
+	New: func(a1, a2, a3) begin
+		(init := self:Init()).startTime := a1[0];
+		init.Ongoing := (a1[1] = kForever);
+		init.stopTime := a1[(if init.Ongoing then 0 else 1)];
+		init.spread := (init.stopTime - init.startTime);
+		init.context := a3;
+		if a3.durationPop then begin
+				init.pop := a3.durationPop
+			end;
+		if a3.GetDuration then begin
+				init.GetDuration := a3.GetDuration
+			end;
+		if (displayParams.appAreaHeight < 320) then begin
+				local init;
+				(foreach key, value in wideBodied do begin
+						init.(key) := value
+					end)
+			end;
+		init:popup(a2)
+	end,
+	stepallocatecontext: [|Array|: 'start, start_2, 'stop, stop_3],
+	// Either picker changed: a new start keeps the length (spread) if one was
+	// picked from pop, else the stop is kept no earlier than the start. Tells
+	// the context.
+	IntervalChanged: func() begin
+		startTime := start.selectedDates[0];
+		if spread then begin
+				stopTime := (stop.selectedDates[0] := (startTime + spread));
+				stop:Refresh()
+			end else begin
+				if ((stopTime := stop.selectedDates[0]) < startTime) then begin
+						stopTime := (stop.selectedDates[0] := startTime);
+						stop:Refresh()
+					end;
+				Ongoing := nil
+			end;
+		context:?NewTime(startTime, (if Ongoing then kForever else stopTime));
+		base:Dirty()
+	end,
+	// the durations offered by tapping the duration text
+	pop: [|Array|:
+		{item: "1 Week", skipDay: 7},
+		{item: "2 Weeks", skipDay: 14},
+		{item: "3 Weeks", skipDay: 21},
+		{item: "4 Weeks", skipDay: 28},
+		{item: "6 Months", skipMonth: 6},
+		{item: "1 Year", skipMonth: 12},
+		{item: ongoing, Ongoing: true}
+	],
+	// Gives both pickers their dates.
+	viewSetupFormScript: func() begin
+		start.selectedDates := [Array: startTime];
+		(stop.selectedDates := [Array: stopTime])
+	end,
+	stopTime: nil,
+	// A tap on the duration text (away from its edges) pops up the durations.
+	viewClickScript: func(unit) begin
+		local box, l2, l3;
+		box := self:GlobalBox();
+		l2 := (GetPoint(firstX, unit) - box.left);
+		l3 := (box.right - box.left);
+		(if (if (if (GetPoint(firstY, unit) > (box.top + basicWeekTop)) then (l2 > 30)) then (l2 < (l3 - 30))) then DoPopup(pop, (l3 div 2), basicWeekTop, self))
+	end,
+	stopLabelLeft: 0,
+	// A duration was picked: the stop is moved that many days or months after
+	// the start, less a day (the range includes its last day) unless the item
+	// says plusDay; skipToMonthEnd moves it to the end of that month.
+	pickActionScript: func(index) begin
+		local popItem, date2, l3, l4;
+		popItem := pop[index];
+		date2 := Date(startTime);
+		if popItem.skipDay then begin
+				date2.Date := (date2.Date + popItem.skipDay)
+			end else begin
+				if popItem.skipMonth then begin
+						date2.year := (date2.year + (popItem.skipMonth div 12));
+						date2.month := (date2.month + (popItem.skipMonth mod 12));
+						if (date2.month > 12) then begin
+								date2.month := (date2.month - 12);
+								date2.year := (date2.year + 1)
+							end
+					end else begin
+						if popItem.skipYear then begin
+								date2.year := (date2.year + popItem.skipYear)
+							end
+					end
+			end;
+		if ((Ongoing := popItem.Ongoing) or popItem.plusDay) then begin
+				l3 := 0
+			end else begin
+				l3 := -1440
+			end;
+		l4 := (TotalMinutes(date2) + l3);
+		if popItem.skipToMonthEnd then begin
+				date2 := Date(l4);
+				l4 := (l4 + ((date2.daysInMonth - date2.Date) * 1440))
+			end;
+		spread := ((stopTime := (stop.selectedDates[0] := l4)) - startTime);
+		context:?NewTime(startTime, (if Ongoing then kForever else stopTime));
+		stop:Refresh();
+		base:Dirty()
+	end,
+	stepChildren: [stepChildren: start_2, stop_3],
+	// The duration text of a1 minutes, counted inclusively (a day added).
+	GetDuration: func(a1) begin
+		DurationStr((a1 + 1440))
+	end,
+	Ongoing: nil,
+	start: nil,
+	// the layout used on a short screen (less than 320 high)
+	wideBodied: {
+		viewBounds: {left: 0, top: 0, right: 294, bottom: 164},
+		basicWeekTop: 128,
+		stopBounds: {left: 153, top: 22, right: 288, bottom: 134},
+		stopLabelLeft: 147,
+		stopLabelTop: 0
+	}
+};
+
+ongoing := "Ongoing";
+
+// the start date picker
+start_2 := {
+	viewBounds: {left: 6, top: 22, right: 141, bottom: 134},
+	viewFormat: 0,
+	labelFont: @fontSystem9Bold,
+	titleFont: @fontSystem12,
+	datesFont: @fontSystem12,
+	// The start changed: the interval worked out again.
+	DateChanged: func(selectedDates) begin
+		self:IntervalChanged()
+	end,
+	preallocatedContext: 'start,
+	_proto: @protoDatepicker
+};
+
+// the stop date picker; picking a stop by hand forgets the fixed length
+stop_3 := {
+	viewBounds: nil,
+	viewFormat: 0,
+	labelFont: @fontSystem9Bold,
+	titleFont: @fontSystem12,
+	datesFont: @fontSystem12,
+	// Placed at stopBounds.
+	viewSetupFormScript: func() begin
+		(viewBounds := stopBounds)
+	end,
+	// The stop changed: no fixed length any more, the interval worked out
+	// again.
+	DateChanged: func(selectedDates) begin
+		spread := nil;
+		self:IntervalChanged()
+	end,
+	preallocatedContext: 'stop,
+	_proto: @protoDatepicker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+DateChanged_code := same("stop_3.DateChanged.instructions");

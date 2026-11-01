@@ -1,6 +1,0 @@
-@@ 0x1016e51
-func(a1, a2, a3) begin
-	fConfigOptionsAfter_Bind := a2;
-	(if a3 then self:DoEvent('BindFailure, [Array: a3]) else self:DoEvent('BindSuccess, nil))
-end
-@@end

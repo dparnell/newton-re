@@ -1,0 +1,66 @@
+// newtStationerMenu: a New button that lists all the registered dataDefs of the
+// application (superSymbol), each with its icon, and adds an entry of the one chosen
+// (the older form of newtNewStationeryButton).
+//
+// This file holds newtStationerMenu and what only it reaches.
+
+newtStationerMenu := {
+	_proto: @protoPopupButton,
+	viewBounds: {left: 7, top: 0, right: 39, bottom: 13},
+	viewJustify: vjSiblingRightH + vjSiblingTopV,
+	text: new_3,
+	popup: nil,
+	sorter: '|str<|,
+	keyButton: '_newKeyButton,
+	// register as one of the application's key buttons: newtAppBase.(keyButton) is this view
+	// (the buttons the keyboard's and other commands can find)
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		(if keyButton then (newtAppBase.(keyButton) := self))
+	end,
+	// add an entry made from the dataDef chosen; the result is AddEntryFromStationery's
+	pickActionScript: func(index) begin
+		local addEntryFromStationery;
+		inherited:pickActionScript(index);
+		addEntryFromStationery := self:AddEntryFromStationery(popup[index].symbol);
+		popup := nil;
+		addEntryFromStationery
+	end,
+	// no choice: forget the items
+	pickCancelledScript: func() begin
+		inherited:pickCancelledScript();
+		(popup := nil)
+	end,
+	// the picker: every dataDef in the global _dataDefs registry of this application
+	buttonClickScript: func() begin
+		box := self:GlobalBox();
+		popup := [Array: ];
+		local box;
+		(foreach item deeply in GetGlobals()._dataDefs do begin
+				local l4;
+				if (item.superSymbol = superSymbol) then begin
+						l4 := (if item.title then item.title else item.name);
+						AddArraySlot(popup, {item: l4, icon: item.icon, symbol: item.symbol, indent: 24})
+					end
+			end);
+		if sorter then begin
+				Sort(popup, sorter, 'item)
+			end;
+		inherited:buttonClickScript()
+	end,
+	// no longer a key button
+	viewQuitScript: func() begin
+		if keyButton then begin
+				RemoveSlot(newtAppBase, keyButton)
+			end;
+		inherited:?viewQuitScript()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewQuitScript_code := same("newtStationerMenu.viewQuitScript.instructions");
+
+viewSetupDoneScript_code_4 := same("newtStationerMenu.viewSetupDoneScript.instructions");
+
+pickCancelledScript_code_3 := same("newtStationerMenu.pickCancelledScript.instructions");

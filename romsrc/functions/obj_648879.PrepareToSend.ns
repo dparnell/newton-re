@@ -1,5 +1,0 @@
-@@ 0x47934d
-func(a1) begin
-	self:ContinueSend(a1)
-end
-@@end

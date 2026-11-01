@@ -1,9 +1,0 @@
-@@ 0x42c3c5
-func() begin
-	if (not titleHeight) then begin
-			titleHeight := FontHeight(viewFont)
-		end;
-	titleWidth := StrFontWidth(title, viewFont);
-	(self.viewBounds := SetBounds(0, ((-titleHeight) + 2), 0, 2))
-end
-@@end

@@ -1,0 +1,35 @@
+// vConfirm, and what only it reaches
+//
+// A layout of protoStatusTemplate's status slips for asking the user to
+// confirm: status text beside the icon, the default button and a
+// 'secondary button above it. Named 'vConfirm by SetStatusDialog; height
+// in pixels.
+
+vConfirm := {
+	height: 96,
+	name: 'vConfirm,
+	kids: [|Array|:
+		{_proto: @protoStatusText, viewBounds: {left: 42, top: 5, right: 175, bottom: 65}, viewJustify: 0},
+		{
+			_proto: @protoDefaultStatusButton,
+			viewBounds: {left: 0, top: -18, right: 132, bottom: -5},
+			viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjParentBottomV + oneLineOnly,
+			// no item to make room for: protoStatusButton would otherwise move the
+			// button beside a visible shiftItem
+			shiftItem: func() begin
+				nil
+			end
+		},
+		{
+			debug: 20601,
+			_proto: @protoStatusButton,
+			viewBounds: {left: 0, top: -21, right: 132, bottom: -8},
+			viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingTopV + oneLineOnly,
+			name: 'secondary,
+			// as above
+			shiftItem: func() begin
+				nil
+			end
+		}
+	]
+};

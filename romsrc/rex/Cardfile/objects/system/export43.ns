@@ -1,0 +1,71 @@
+// The A-Z tabs of the Names card layout (@8235, newtAZTabs): tapping a letter
+// goes to the first card filed under it.
+
+export43 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 18},
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH,
+	// Shows the current card's letter: the first letter of the slot the cursor is
+	// sorted on (or of its sort name).
+	RetargetNotify: func() begin
+		local entry, l2, l3, indexPath;
+		(if (entry := layout.dataCursor:entry()) then begin
+				if (ClassOf((indexPath := layout.dataCursor:IndexPath())) = 'Array) then begin
+						indexPath := indexPath[0]
+					end;
+				if IsInstance((l2 := entry.(indexPath)), 'string) then begin
+						l3 := (if (StrLen(l2) > 0) then l2[0])
+					end else begin
+						l3 := (if (StrLen(entry.sorton) > 0) then entry.sorton[0])
+					end;
+				(if l3 then AddProcrastinatedSend('cardfileAZTabs, self, 'SetLetter, [Array: l3, true], 0))
+			end)
+	end,
+	// Goes to the first card from letter part.  A sort by class or postal code has
+	// no letters, so the sort-name order is used for the move.  Returns {newEntry,
+	// currEntry}, or nil to stay on the card (the same tab tapped again on a card
+	// already under it).
+	PickLetterScript: func(part) begin
+		local dataCursor2, l2, dataCursor, entry, gotoKey, l6, l7;
+		dataCursor2 := nil;
+		l2 := (dataCursor := layout.dataCursor):IndexPath();
+		entry := dataCursor:entry();
+		if (ClassOf(l2) = 'Array) then begin
+				l2 := l2[0]
+			end;
+		if ((l2 = 'class) or (l2 = 'zipcode)) then begin
+				dataCursor2 := dataCursor;
+				layout.dataCursor := layout.dataSoup:Query('{type: index, IndexPath: sorton, tagSpec: {none: _ownerNames}})
+			end;
+		if (gotoKey := layout.dataCursor:GotoKey(part)) then begin
+				if pickedSameTab then begin
+						if ((BeginsWith((l7 := (if dataCursor2 then gotoKey.sorton else gotoKey.(l2))), part) or (part[0] < $A)) or (part[0] = $Z)) then begin
+								l6 := true
+							end
+					end else begin
+						l6 := true
+					end
+			end else begin
+				l6 := true
+			end;
+		if ((not l6) or (not gotoKey)) then begin
+				if (if (gotoKey := entry) then (not dataCursor2)) then begin
+						layout.dataCursor:Goto(gotoKey)
+					end
+			end;
+		if dataCursor2 then begin
+				layout.dataCursor := dataCursor2;
+				if gotoKey then begin
+						dataCursor2:Goto(gotoKey)
+					end
+			end;
+		(if l6 then {newEntry: gotoKey, currEntry: entry})
+	end,
+	// A tap on a letter: goes there; outside the overview the overview is shown,
+	// in it the layout flips to the card found.
+	indexClickScript: func(curIndex) begin
+		local l1;
+		l1 := inherited:indexClickScript(curIndex);
+		(if (currentLayout <> 'overview) then newtAppBase:ShowLayout('overview) else (if l1 then (if (l1.newEntry <> l1.currEntry) then layout:Effect(133120, nil, @flip, 'Retarget, [Array: true]) else self:RetargetNotify())))
+	end,
+	_proto: @newtaztabs
+};

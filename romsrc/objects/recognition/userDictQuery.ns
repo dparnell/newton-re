@@ -1,0 +1,6 @@
+// userDictQuery: the soup query that finds the user dictionary's entry (its
+// tag is userDictionary) in the system soup, where it is saved.
+
+userDictQuery := {type: 'index, indexPath: 'tag, startKey: userDictionary};
+
+userDictionary := "UserDictionary";

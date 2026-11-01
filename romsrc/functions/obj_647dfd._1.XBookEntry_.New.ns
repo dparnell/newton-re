@@ -1,5 +1,0 @@
-@@ 0x538ce5
-func() begin
-	Clone(iconEntry)
-end
-@@end

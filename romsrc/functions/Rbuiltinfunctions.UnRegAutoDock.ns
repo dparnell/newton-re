@@ -1,6 +1,0 @@
-@@ 0x3c6569
-func(a1) begin
-	RemoveSlot(AutoDockRegistry, a1);
-	nil
-end
-@@end

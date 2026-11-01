@@ -90,14 +90,48 @@
 		stepChildren: [],
 	},
 
-	// the panel's children for the settings this host has
-	MakeChildren: func()
+	// The pages: the screen's settings (an e-paper panel's refreshes, the
+	// reMarkable's pen and size, the colour screen) on a "Screen" page of
+	// their own, the rest on "Host"; and a page that would be taller than
+	// the screen's application area split in two ("Host 2" ...).  The
+	// ROM's Prefs cannot open a panel taller than that: OpenPrefsTo's slip
+	// (@809, viewBounds nil) is a protoFloatNGo, whose base (@132) takes
+	// its viewBounds out at setup when its box is off the application area
+	// - leaving the template's nil, and the view is not made (-8505,
+	// kViewErrNoViewBounds).  The T-Deck Pro's single page, 314 pixels on
+	// a 320-pixel screen, was not opened at all (2026-10-25).
+	kScreenSettings: ['waveform, 'directPen, 'touch, 'screenScale, 'colourScreen,
+		'bigChange, 'cleanCount, 'cleanAfter, 'cleanArea, 'localClean, 'clearGhosts],
+	kRowStep: 22,
+	pages: nil,									// [{symbol, panel}], as registered
+
+	// the settings in pages of at most so many rows: each a panel made from
+	// the template above, the first under symbol, the others after it
+	AddPages: func(name, heading, items, most, symbol)
+	begin
+		local start := 0;
+		local n := 0;
+		while start < Length(items) do begin
+			local count := Min(most, Length(items) - start);
+			local part := [];
+			for i := start to start + count - 1 do AddArraySlot(part, items[i]);
+			n := n + 1;
+			local page := {_proto: panel, overview: if n = 1 then name else name & " " & NumberStr(n),
+				icon: panel.icon, height: 60, viewBounds: nil, stepChildren: nil};
+			:MakeChildren(page, heading, part);
+			AddArraySlot(pages, {symbol: if n = 1 then symbol else Intern(SymbolName(symbol) & NumberStr(n)), panel: page});
+			start := start + count;
+		end;
+	end,
+
+	// a page's children for these settings
+	MakeChildren: func(page, heading, items)
 	begin
 		local children := [
 			{_proto: @218, viewBounds: {left: 10, top: 20, right: -10, bottom: 36},		// protoStaticText
-			 viewJustify: 48, text: "The machine newton runs on:"}];
+			 viewJustify: 48, text: heading}];
 		local top := 42;
-		foreach item in HostSettingsList() do begin
+		foreach item in items do begin
 			if item.kind = 'choice then
 				AddArraySlot(children,
 					{_proto: @190,												// protoLabelPicker
@@ -145,9 +179,9 @@
 						else HostSetSetting(setting, true)});
 			top := top + 22;
 		end;
-		panel.stepChildren := children;
-		panel.height := top + 8;
-		panel.viewBounds := {left: 0, top: 0, right: 0, bottom: panel.height};
+		page.stepChildren := children;
+		page.height := top + 8;
+		page.viewBounds := {left: 0, top: 0, right: 0, bottom: page.height};
 	end,
 
 	// The font chooser: every family the host has in a list, those the
@@ -255,7 +289,18 @@
 	begin
 		:Restore();
 		panel.icon := :MakeIcon();
-		:MakeChildren();
-		RegPrefs(kAppSymbol, panel);
+		local host := [];
+		local screen := [];
+		foreach item in HostSettingsList() do
+			AddArraySlot(if SetContains(kScreenSettings, item.setting) then screen else host, item);
+		// (rows that fit the application area either way up: the screen may
+		// be turned while the machine runs)
+		local p := GetAppParams();
+		local most := Max(3, (Min(p.appAreaWidth, p.appAreaHeight) - 50) div kRowStep);
+		pages := [];
+		:AddPages("Host", "The machine newton runs on:", host, most, kAppSymbol);
+		:AddPages("Screen", "The screen:", screen, most, '|HostScreen:host|);
+		foreach page in pages do
+			RegPrefs(page.symbol, page.panel);
 	end,
 }

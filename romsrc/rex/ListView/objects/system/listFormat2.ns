@@ -1,0 +1,4 @@
+// listFormat2: the "Visible Topics" print format - only the topics not collapsed
+// (reflowOptions 'Visible). The file holds it and what only it reaches.
+
+listFormat2 := {_proto: @8322, title: "Visible Topics", symbol: 'listFormat2, reflowOptions: 'Visible};

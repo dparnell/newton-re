@@ -1,0 +1,80 @@
+// protoContentArea: the page area of a book reader (protoBook): sized to the
+// book's page, twice as wide (plus a 15-pixel gutter) when two pages show.
+// At setup it takes as its proto a copy of protoBookScripts, overridden by
+// the book's own scripts (pairs of name and function in its scripts array).
+
+protoContentArea := {
+	_proto: protoContentAreaProto,
+	viewFlags: vVisible + vReadOnly + vClipping + vGesturesAllowed,
+	// at setup: builds bookScripts, makes it the view's proto and sizes the
+	// view to the page.  The decompiler places the locals after their uses.
+	viewSetupFormScript: func() begin
+		self.bookScripts := Clone(protoBookScripts);
+		if (l3 := (currentBook := self:CurrentBook()).scripts) then begin
+				local currentBook;
+				local i;
+				local l3;
+				// l3: the book's scripts, [name, function, name, function, ...]
+				(for i := 0 to (Length(l3) - 1) by 2 do begin
+						local pageSize;
+						self.bookScripts.(l3[i]) := l3[(i + 1)]
+					end)
+			end;
+		self._proto := bookScripts;
+		pageSize := self:PageSize(nil);
+		self.viewBounds := RelBounds(0, 0, pageSize.width, pageSize.height);
+		(if (pagesShowing = 2) then (viewBounds.right := ((pageSize.width * 2) + 15)))
+	end,
+	// the default scripts a book's content area has
+	protoBookScripts: {
+		_proto: protoContentAreaProto,
+		mungeContentScript: nil,
+		// sent when markup (the user's own marks on the page) is hidden: the
+		// page's scrollers come back
+		HideMarkup: func() begin
+			local item;
+			local childViewFrames;
+			(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+					if item.Scroller then begin
+							item:ShowScroller()
+						end
+				end)
+		end,
+		// sent when markup is shown: the page's scrollers are hidden
+		ShowMarkup: func() begin
+			local item;
+			local childViewFrames;
+			(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+					if item.Scroller then begin
+							item:HideScroller()
+						end
+				end)
+		end,
+		edgeWidth: 1,
+		// viewQuitScript, viewShowScript: nothing to do.
+		viewQuitScript: func() begin
+			true
+		end,
+		viewShowScript: func() begin
+			true
+		end,
+		// the book's hook for a tap on the page; nothing by default
+		buttonClickScript: func() begin
+			nil
+		end,
+		// a tap on the page sends buttonClickScript and is handled
+		viewClickScript: func(unit) begin
+			self:buttonClickScript();
+			true
+		end,
+		debug: 71595
+	},
+	debug: contentArea,
+	preallocatedContext: 'contentArea
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+HideMarkup_code_2 := same("protoContentArea.protoBookScripts.HideMarkup.instructions");
+
+viewClickScript_code_4 := same("protoContentArea.protoBookScripts.viewClickScript.instructions");

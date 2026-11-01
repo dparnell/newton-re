@@ -1,0 +1,36 @@
+// auststdPhoneFilter: the Australian fixed phone format "555 1212": a comb of
+// eight digit cells (format_2 and string_2 are shared with usStdPhoneFilter).
+
+auststdPhoneFilter := {
+	item: "555 1212",
+	format: format_2,
+	|string|: string_2,
+	filters: [|Array|: digits],
+	// Lays the digits of currentWord2 into the comb from the right, skipping the
+	// format's fixed cells (currentWord is the filter frame).
+	SetupString: func(currentWord, currentWord2) begin
+		local sPrintObject2, len, len2;
+		currentWord2 := StringFilter(currentWord2, currentWord.filters[0], 'passAll);
+		sPrintObject2 := SPrintObject("   -    ");
+		len := StrLen(currentWord2);
+		len2 := StrLen(sPrintObject2);
+		i := 1;
+		j := 1;
+		(while (if (i <= len) then (j <= len2)) do begin
+				if (currentWord.format[(len2 - j)] <> $_) then begin
+						sPrintObject2[(len2 - j)] := currentWord2[(len - i)];
+						i := (i + 1)
+					end;
+				(j := (j + 1))
+			end);
+		return sPrintObject2
+	end,
+	// Turns the comb's text back into a phone number: drops the padding and
+	// separator, so "555-1212" comes out as "555 1212".
+	CleanupString: func(currentWord) begin
+		StrReplace(currentWord, " -", "", nil);
+		StrReplace(currentWord, " ", "", nil);
+		StrReplace(currentWord, "-", " ", nil);
+		return currentWord
+	end
+};

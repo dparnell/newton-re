@@ -1,0 +1,14 @@
+// protoApp: the simple application base view - a framed, round-cornered
+// container centred in its parent with a title (protoAppItem) and a status
+// bar; it declares itself to its children as base.
+
+protoApp := {
+	_proto: @protoContainerView,
+	viewBounds: nil,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1) + vfInset(1) + vfRound(5),
+	viewFlags: vApplication,
+	viewJustify: vjParentCenterH,
+	declareSelf: 'base,
+	viewChildren: [|Array|: protoAppItem, @protoStatus],
+	debug: 11340
+};

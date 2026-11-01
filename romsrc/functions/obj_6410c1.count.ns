@@ -1,5 +1,0 @@
-@@ 0x55ed5d
-func() begin
-	(if self.cacheCount then cacheCount else (self.cacheCount := cursor:CountEntries()))
-end
-@@end

@@ -1,7 +1,7 @@
 # the objects' area: 0x10014a0, 0x17974 bytes; the byte between objects; the objects' alignment
 area	10014a0	17974	bf	4
-10014a0	obj_10014a1	41	gc=1
-10014b0	obj_10014a1[0]	43	map=map_10014d1
+10014a0	part	41	gc=1
+10014b0	part[0]	43	map=map_10014d1
 10014d0	map_10014d1	41
 10014e4	map_10014e5	41
 1001504	'installScript	40
@@ -9,19 +9,19 @@ area	10014a0	17974	bf	4
 1001544	'UnitsInstalledScript	40
 100156c	'UnitsRemovedScript	40
 1001590	'_ExportTable	40
-10015b0	obj_10014a1[0].installScript	43	map=map_10015d1
+10015b0	part[0].installScript	43	map=map_10015d1
 10015d0	map_10015d1	41
 10015f4	'class	40
 100160c	'instructions	40
 100162c	'literals	40
 1001648	'argFrame	40
 1001664	'numArgs	40
-100167c	obj_10014a1[0].installScript.instructions	40
-1001690	obj_10014a1[0].installScript.literals	41
+100167c	part[0].installScript.instructions	40
+1001690	part[0].installScript.literals	41
 10016a4	'|NIE Protos:NIE|	40
-10016c4	obj_10014a1[0].installScript.literals[1]	43	map=map_10015d1
-10016e4	obj_10014a1[0].installScript.literals[1].instructions	40
-1001724	obj_10014a1[0].installScript.literals[1].literals	41
+10016c4	part[0].installScript.literals[1]	43	map=map_10015d1
+10016e4	part[0].installScript.literals[1].instructions	40
+1001724	part[0].installScript.literals[1].literals	41
 1001760	'clientSymbol	40
 1001780	'clientFrame	40
 100179c	'ObjectPkgRef	40
@@ -29,41 +29,41 @@ area	10014a0	17974	bf	4
 10017dc	'clientRemoveFrame	40
 1001800	'fUnitsInstalled	40
 1001820	'WaitForUnitsRemoveScript	40
-100184c	obj_10014a1[0].installScript.literals[1].literals[8]	43	map=map_10015d1
-100186c	obj_10014a1[0].installScript.literals[1].literals[8].instructions	40
-10018a0	obj_10014a1[0].installScript.literals[1].literals[8].literals	41
+100184c	part[0].installScript.literals[1].literals[8]	43	map=map_10015d1
+100186c	part[0].installScript.literals[1].literals[8].instructions	40
+10018a0	part[0].installScript.literals[1].literals[8].literals	41
 10018cc	'|evt.ex|	40
-10018e4	obj_10018e5	40
+10018e4	installScript_literal1	40
 1001904	'|string|	40
 100191c	'UnRegSoupChange	40
-100193c	obj_10014a1[0].installScript.literals[1].literals[8].argFrame	43	map=map_1001955
+100193c	part[0].installScript.literals[1].literals[8].argFrame	43	map=map_1001955
 1001954	map_1001955	41
 1001970	'_nextArgFrame	40
 1001990	'_parent	40
 10019a8	'_implementor	40
-10019c8	obj_10014a1[0].installScript.literals[1].literals[10]	43	map=map_10015d1
-10019e8	obj_10014a1[0].installScript.literals[1].literals[10].instructions	40
-1001a00	obj_10014a1[0].installScript.literals[1].literals[10].literals	41
-1001a18	obj_10014a1[0].installScript.literals[1].literals[10].literals[1]	43	map=map_10015d1
-1001a38	obj_10014a1[0].installScript.literals[1].literals[10].literals[1].instructions	40
-1001a7c	obj_10014a1[0].installScript.literals[1].literals[10].literals[1].literals	41
+10019c8	part[0].installScript.literals[1].literals[10]	43	map=map_10015d1
+10019e8	part[0].installScript.literals[1].literals[10].instructions	40
+1001a00	part[0].installScript.literals[1].literals[10].literals	41
+1001a18	part[0].installScript.literals[1].literals[10].literals[1]	43	map=map_10015d1
+1001a38	part[0].installScript.literals[1].literals[10].literals[1].instructions	40
+1001a7c	part[0].installScript.literals[1].literals[10].literals[1].literals	41
 1001ab8	'MissingImports	40
 1001ad8	'GetGlobalFn	40
 1001af4	'|Array|	40
 1001b0c	'AddDeferredCall	40
-1001b2c	obj_10014a1[0].installScript.literals[1].literals[10].literals[1].argFrame	43	map=map_1001955
+1001b2c	part[0].installScript.literals[1].literals[10].literals[1].argFrame	43	map=map_1001955
 1001b44	'AddProcrastinatedCall	40
-1001b6c	obj_10014a1[0].installScript.literals[1].literals[10].argFrame	43	map=map_1001955
+1001b6c	part[0].installScript.literals[1].literals[10].argFrame	43	map=map_1001955
 1001b84	'RegSoupChange	40
-1001ba4	obj_10014a1[0].installScript.literals[1].argFrame	43	map=map_1001bcd
+1001ba4	part[0].installScript.literals[1].argFrame	43	map=map_1001bcd
 1001bcc	map_1001bcd	41
-1001bf8	obj_10014a1[0].removeScript	43	map=map_10015d1
-1001c18	obj_1001c19	40
-1001c28	obj_10014a1[0].UnitsInstalledScript	43	map=map_10015d1
-1001c48	obj_1001c49	40
-1001c5c	obj_10014a1[0].UnitsInstalledScript.literals	41
+1001bf8	part[0].removeScript	43	map=map_10015d1
+1001c18	removeScript_code	40
+1001c28	part[0].UnitsInstalledScript	43	map=map_10015d1
+1001c48	UnitsInstalledScript_code	40
+1001c5c	part[0].UnitsInstalledScript.literals	41
 1001c74	'worksite	40
-1001c90	obj_10014a1[0].UnitsInstalledScript.literals[1]	43	map=map_1001cd5
+1001c90	part[0].UnitsInstalledScript.literals[1]	43	map=map_1001cd5
 1001cd4	map_1001cd5	41
 1001d1c	'viewBounds	40
 1001d38	'viewFlags	40
@@ -79,34 +79,34 @@ area	10014a0	17974	bf	4
 1001e48	'stepChildren	40
 1001e68	'BuildLabelCommands	40
 1001e8c	'viewClass	40
-1001ea8	obj_10014a1[0].UnitsInstalledScript.literals[1].viewBounds	43	map=map_1001ec5
+1001ea8	part[0].UnitsInstalledScript.literals[1].viewBounds	43	map=map_1001ec5
 1001ec4	map_1001ec5	41
 1001ee4	'left	40
 1001efc	'top	40
 1001f10	'right	40
 1001f28	'bottom	40
-1001f40	obj_10014a1[0].UnitsInstalledScript.literals[1].infoFrame	43	map=map_1001f59
+1001f40	part[0].UnitsInstalledScript.literals[1].infoFrame	43	map=map_1001f59
 1001f58	map_1001f59	41
 1001f74	'checkPrefix	40
 1001f90	'checkPaths	40
 1001fac	'formatFunc	40
-1001fc8	obj_10014a1[0].UnitsInstalledScript.literals[1].infoFrame.checkPrefix	41
-1001fdc	obj_10014a1[0].UnitsInstalledScript.literals[1].infoFrame.checkPaths	41
+1001fc8	part[0].UnitsInstalledScript.literals[1].infoFrame.checkPrefix	41
+1001fdc	part[0].UnitsInstalledScript.literals[1].infoFrame.checkPaths	41
 1001fec	'InetDefaultLink	40
-100200c	obj_10014a1[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc	43	map=map_10015d1
-100202c	obj_10014a1[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc.instructions	40
-100205c	obj_10014a1[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc.literals	41
+100200c	part[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc	43	map=map_10015d1
+100202c	part[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc.instructions	40
+100205c	part[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc.literals	41
 1002080	'InetGetLinkEntry	40
 10020a4	'setupName	40
-10020c0	obj_10014a1[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc.literals[2]	40
+10020c0	part[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc.literals[2]	40
 10020f4	'ParamStr	40
-1002110	obj_1002111	40
-1002120	obj_10014a1[0].UnitsInstalledScript.literals[1].name	40
+1002110	_literals_11Item_7	40
+1002120	part[0].UnitsInstalledScript.literals[1].name	40
 100214c	'private	40
 1002164	'INETSetup	40
 1002180	'editor	40
-1002198	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren	41
-10021a8	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0]	43	map=map_10021d9
+1002198	part[0].UnitsInstalledScript.literals[1].stepChildren	41
+10021a8	part[0].UnitsInstalledScript.literals[1].stepChildren[0]	43	map=map_10021d9
 10021d8	map_10021d9	41
 100220c	'text	40
 1002224	'alwaysCallPickActionScript	40
@@ -115,16 +115,16 @@ area	10014a0	17974	bf	4
 100228c	'labelActionScript	40
 10022b0	'textSetup	40
 10022cc	'_proto	40
-10022e4	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].text	40
-1002310	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].viewBounds	43	map=map_100232d
+10022e4	part[0].UnitsInstalledScript.literals[1].stepChildren[0].text	40
+1002310	part[0].UnitsInstalledScript.literals[1].stepChildren[0].viewBounds	43	map=map_100232d
 100232c	map_100232d	41
-100234c	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].viewSetupFormScript	43	map=map_10015d1
-100236c	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].viewSetupFormScript.instructions	40
-1002380	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].viewSetupFormScript.literals	41
+100234c	part[0].UnitsInstalledScript.literals[1].stepChildren[0].viewSetupFormScript	43	map=map_10015d1
+100236c	part[0].UnitsInstalledScript.literals[1].stepChildren[0].viewSetupFormScript.instructions	40
+1002380	part[0].UnitsInstalledScript.literals[1].stepChildren[0].viewSetupFormScript.literals	41
 1002398	'labelCommands	40
-10023b8	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].labelActionScript	43	map=map_10015d1
-10023d8	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].labelActionScript.instructions	40
-1002430	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].labelActionScript.literals	41
+10023b8	part[0].UnitsInstalledScript.literals[1].stepChildren[0].labelActionScript	43	map=map_10015d1
+10023d8	part[0].UnitsInstalledScript.literals[1].stepChildren[0].labelActionScript.instructions	40
+1002430	part[0].UnitsInstalledScript.literals[1].stepChildren[0].labelActionScript.literals	41
 1002478	'id	40
 100248c	'edit	40
 10024a4	'updateText	40
@@ -137,43 +137,43 @@ area	10014a0	17974	bf	4
 100256c	'IsSameEntry	40
 1002588	'InetSetDefaultLinkID	40
 10025b0	'StartFlush	40
-10025cc	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].textSetup	43	map=map_10015d1
-10025ec	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].textSetup.instructions	40
-100262c	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].textSetup.literals	41
+10025cc	part[0].UnitsInstalledScript.literals[1].stepChildren[0].textSetup	43	map=map_10015d1
+10025ec	part[0].UnitsInstalledScript.literals[1].stepChildren[0].textSetup.instructions	40
+100262c	part[0].UnitsInstalledScript.literals[1].stepChildren[0].textSetup.literals	41
 1002654	'IsFrame	40
 100266c	'item	40
-1002684	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands	43	map=map_10015d1
-10026a4	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.instructions	40
-1002708	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals	41
-100275c	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[0]	40
-1002774	obj_1002775	41
+1002684	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands	43	map=map_10015d1
+10026a4	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.instructions	40
+1002708	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals	41
+100275c	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[0]	40
+1002774	BuildLabelCommands_literal1	41
 100278c	'pickSeparator	40
-10027ac	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[4]	40
+10027ac	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[4]	40
 10027d8	'GetUnionSoupAlways	40
 10027fc	'index	40
-1002814	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[8]	41
+1002814	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[8]	41
 100282c	'IndexPath	40
 1002848	'Query	40
-1002860	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[10]	43	map=map_10015d1
-1002880	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[10].instructions	40
-1002898	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[10].literals	41
+1002860	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[10]	43	map=map_10015d1
+1002880	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[10].instructions	40
+1002898	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[10].literals	41
 10028b0	'linkID	40
 10028c8	'MapCursor	40
 10028e4	'ArrayMunger	40
-1002900	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[15]	40
+1002900	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[15]	40
 1002924	'RegDataView	40
-1002940	obj_10014a1[0].UnitsRemovedScript	43	map=map_10015d1
-1002960	obj_10014a1[0].UnitsRemovedScript.literals	41
+1002940	part[0].UnitsRemovedScript	43	map=map_10015d1
+1002960	part[0].UnitsRemovedScript.literals	41
 1002978	'UnRegDataView	40
-1002998	obj_10014a1[0]._ExportTable	41
-10029a8	obj_10014a1[0]._ExportTable[0]	43	map=map_10029c5
+1002998	part[0]._ExportTable	41
+10029a8	part[0]._ExportTable[0]	43	map=map_10029c5
 10029c4	map_10029c5	41
 10029e4	'major	40
 10029fc	'minor	40
 1002a14	'objects	40
 1002a2c	'|Inet Protos:NIE|	40
-1002a4c	obj_10014a1[0]._ExportTable[0].objects	41
-1002a68	obj_1002a69	43	map=map_1002ae5
+1002a4c	part[0]._ExportTable[0].objects	41
+1002a68	objectsProto	43	map=map_1002ae5
 1002ae4	map_1002ae5	41
 1002b64	'DoEvent	40
 1002b7c	'Instantiate	40
@@ -203,17 +203,17 @@ area	10014a0	17974	bf	4
 1002e7c	'DoUniqueEvent	40
 1002e9c	'InstantiateAndPerform	40
 1002ec4	'version	40
-1002edc	obj_1002a69.DoEvent	43	map=map_1002f01
+1002edc	objectsProto.DoEvent	43	map=map_1002f01
 1002f00	map_1002f01	41
 1002f28	'code	40
 1002f40	'closure	40
 1002f58	'offset	40
 1002f70	'bcFunc	40
-1002f88	obj_1002f89	40
-1011e2c	obj_1002a69.DoEvent.closure	43	map=map_1011e49
+1002f88	code	40
+1011e2c	objectsProto.DoEvent.closure	43	map=map_1011e49
 1011e48	map_1011e49	41
 1011e68	'_literals	40
-1011e84	obj_1011e85	41
+1011e84	_literals	41
 1011ebc	'|protoFSM:DoEvent|	40
 1011ee0	'pendingEventQueue	40
 1011f04	'EnQueue	40
@@ -223,16 +223,16 @@ area	10014a0	17974	bf	4
 1011f74	'SetupIdle	40
 1011f90	'turtle	40
 1011fa8	'AddDelayedSend	40
-1011fc8	obj_1002a69.DoEvent.bcFunc	43	map=map_10015d1
-1011fe8	obj_1002a69.DoEvent.bcFunc.instructions	40
-1012034	obj_1002a69.DoEvent.bcFunc.argFrame	43	map=map_1001955
-101204c	obj_1002a69.Instantiate	43	map=map_10015d1
-101206c	obj_1002a69.Instantiate.instructions	40
-1012118	obj_1002a69.Instantiate.literals	41
+1011fc8	objectsProto.DoEvent.bcFunc	43	map=map_10015d1
+1011fe8	objectsProto.DoEvent.bcFunc.instructions	40
+1012034	objectsProto.DoEvent.bcFunc.argFrame	43	map=map_1001955
+101204c	objectsProto.Instantiate	43	map=map_10015d1
+101206c	objectsProto.Instantiate.instructions	40
+1012118	objectsProto.Instantiate.literals	41
 101218c	'fsm_private_states	40
 10121b0	'BuildContext	40
 10121d0	'Genesis	40
-10121e8	obj_1002a69.Instantiate.literals[7]	41
+10121e8	objectsProto.Instantiate.literals[7]	41
 1012240	'fsm	40
 1012254	'ancestors	40
 1012270	'level	40
@@ -245,31 +245,31 @@ area	10014a0	17974	bf	4
 101233c	'currentState	40
 101235c	'currentEvent	40
 101237c	'currentParams	40
-101239c	obj_1002a69.Instantiate.literals[8]	41
+101239c	objectsProto.Instantiate.literals[8]	41
 10123c4	'currentStateFrame	40
 10123e8	'currentEventFrame	40
 101240c	'fsm_private_context	40
-1012430	obj_1002a69.Instantiate.literals[10]	41
+1012430	objectsProto.Instantiate.literals[10]	41
 1012444	'pathExpr	40
-1012460	obj_1012461	41
-1012478	obj_1002a69.Instantiate.literals[13]	41
+1012460	_literals_2Item	41
+1012478	objectsProto.Instantiate.literals[13]	41
 101248c	'ChildViewFrames	40
 10124ac	'IsArray	40
-10124c4	obj_1002a69.Instantiate.literals[18]	41
-10124d8	obj_1002a69.Instantiate.literals[19]	41
+10124c4	objectsProto.Instantiate.literals[18]	41
+10124d8	objectsProto.Instantiate.literals[19]	41
 10124ec	'MoveBehind	40
-1012508	obj_1002a69.Instantiate.literals[21]	41
+1012508	objectsProto.Instantiate.literals[21]	41
 101251c	'Hide	40
-1012534	obj_1002a69.Instantiate.literals[23]	41
-101254c	obj_1002a69.Instantiate.literals[24]	41
-1012560	obj_1002a69.Dispose	43	map=map_10015d1
-1012580	obj_1002a69.Dispose.instructions	40
-10125d8	obj_1002a69.Dispose.literals	41
+1012534	objectsProto.Instantiate.literals[23]	41
+101254c	objectsProto.Instantiate.literals[24]	41
+1012560	objectsProto.Dispose	43	map=map_10015d1
+1012580	objectsProto.Dispose.instructions	40
+10125d8	objectsProto.Dispose.literals	41
 1012608	'Reset	40
 1012620	'Close	40
-1012638	obj_1002a69.DoEvent_Loop	43	map=map_1002f01
-101265c	obj_1002a69.DoEvent_Loop.closure	43	map=map_1011e49
-1012678	obj_1012679	41
+1012638	objectsProto.DoEvent_Loop	43	map=map_1002f01
+101265c	objectsProto.DoEvent_Loop.closure	43	map=map_1011e49
+1012678	_literals_2	41
 1012758	'|protoFSM:DoEvent_Loop|	40
 1012780	'Peek	40
 1012798	'|fsm_private_event:Release|	40
@@ -289,94 +289,94 @@ area	10014a0	17974	bf	4
 1012930	'PostAction	40
 101294c	'nextState	40
 1012968	'terminal	40
-1012984	obj_1012679[46]	43	map=map_10015d1
-10129a4	obj_1012679[46].instructions	40
-10129c0	obj_1012679[46].literals	41
+1012984	_literals_2[46]	43	map=map_10015d1
+10129a4	_literals_2[46].instructions	40
+10129c0	_literals_2[46].literals	41
 10129d4	'AddDelayedCall	40
 10129f4	'IsEmpty	40
 1012a0c	'nextNoIdle	40
-1012a28	obj_1002a69.DoEvent_Loop.bcFunc	43	map=map_10015d1
-1012a48	obj_1002a69.DoEvent_Loop.bcFunc.instructions	40
-1012dc4	obj_1002a69.DoEvent_Loop.bcFunc.argFrame	43	map=map_1001955
-1012ddc	obj_1002a69.SetSpeed	43	map=map_10015d1
-1012dfc	obj_1002a69.SetSpeed.instructions	40
-1012e10	obj_1002a69.SetSpeed.literals	41
-1012e24	obj_1002a69.IsBusy	43	map=map_10015d1
-1012e44	obj_1012e45	40
-1012e54	obj_1002a69.IsBusy.literals	41
-1012e68	obj_1002a69.GetSpeed	43	map=map_10015d1
-1012e88	obj_1002a69.GetSpeed.literals	41
-1012e9c	obj_1002a69.GoToState	43	map=map_10015d1
-1012ebc	obj_1002a69.GoToState.instructions	40
-1012edc	obj_1002a69.GoToState.literals	41
-1012efc	obj_1002a69.QueueTemplate	43	map=map_1012f25
+1012a28	objectsProto.DoEvent_Loop.bcFunc	43	map=map_10015d1
+1012a48	objectsProto.DoEvent_Loop.bcFunc.instructions	40
+1012dc4	objectsProto.DoEvent_Loop.bcFunc.argFrame	43	map=map_1001955
+1012ddc	objectsProto.SetSpeed	43	map=map_10015d1
+1012dfc	objectsProto.SetSpeed.instructions	40
+1012e10	objectsProto.SetSpeed.literals	41
+1012e24	objectsProto.IsBusy	43	map=map_10015d1
+1012e44	IsBusy_code	40
+1012e54	objectsProto.IsBusy.literals	41
+1012e68	objectsProto.GetSpeed	43	map=map_10015d1
+1012e88	objectsProto.GetSpeed.literals	41
+1012e9c	objectsProto.GoToState	43	map=map_10015d1
+1012ebc	objectsProto.GoToState.instructions	40
+1012edc	objectsProto.GoToState.literals	41
+1012efc	objectsProto.QueueTemplate	43	map=map_1012f25
 1012f24	map_1012f25	41
 1012f50	'GetQueueSize	40
-1012f70	obj_1002a69.QueueTemplate.Instantiate	43	map=map_10015d1
-1012f90	obj_1002a69.QueueTemplate.Instantiate.instructions	40
-1012fa4	obj_1002a69.QueueTemplate.Instantiate.literals	41
-1012fb8	obj_1002a69.QueueTemplate.Instantiate.literals[1]	41
+1012f70	objectsProto.QueueTemplate.Instantiate	43	map=map_10015d1
+1012f90	objectsProto.QueueTemplate.Instantiate.instructions	40
+1012fa4	objectsProto.QueueTemplate.Instantiate.literals	41
+1012fb8	objectsProto.QueueTemplate.Instantiate.literals[1]	41
 1012fd0	'queue	40
-1012fe8	obj_1002a69.QueueTemplate.Reset	43	map=map_10015d1
-1013008	obj_1002a69.QueueTemplate.Reset.instructions	40
-101301c	obj_1002a69.QueueTemplate.Reset.literals	41
+1012fe8	objectsProto.QueueTemplate.Reset	43	map=map_10015d1
+1013008	objectsProto.QueueTemplate.Reset.instructions	40
+101301c	objectsProto.QueueTemplate.Reset.literals	41
 1013030	'SetLength	40
-101304c	obj_1002a69.QueueTemplate.Peek	43	map=map_1002f01
-1013070	obj_1002a69.QueueTemplate.Peek.closure	43	map=map_1011e49
-101308c	obj_101308d	41
-101309c	obj_1002a69.QueueTemplate.Peek.bcFunc	43	map=map_10015d1
-10130bc	obj_1002a69.QueueTemplate.Peek.bcFunc.instructions	40
-10130dc	obj_1002a69.QueueTemplate.Peek.bcFunc.argFrame	43	map=map_1001955
-10130f4	obj_1002a69.QueueTemplate.DeQueue	43	map=map_1002f01
-1013118	obj_1002a69.QueueTemplate.DeQueue.closure	43	map=map_1011e49
-1013134	obj_1013135	41
+101304c	objectsProto.QueueTemplate.Peek	43	map=map_1002f01
+1013070	objectsProto.QueueTemplate.Peek.closure	43	map=map_1011e49
+101308c	_literals_3	41
+101309c	objectsProto.QueueTemplate.Peek.bcFunc	43	map=map_10015d1
+10130bc	objectsProto.QueueTemplate.Peek.bcFunc.instructions	40
+10130dc	objectsProto.QueueTemplate.Peek.bcFunc.argFrame	43	map=map_1001955
+10130f4	objectsProto.QueueTemplate.DeQueue	43	map=map_1002f01
+1013118	objectsProto.QueueTemplate.DeQueue.closure	43	map=map_1011e49
+1013134	_literals_4	41
 1013148	'RemoveSlot	40
-1013164	obj_1002a69.QueueTemplate.DeQueue.bcFunc	43	map=map_10015d1
-1013184	obj_1002a69.QueueTemplate.DeQueue.bcFunc.instructions	40
-10131ac	obj_1002a69.QueueTemplate.DeQueue.bcFunc.argFrame	43	map=map_1001955
-10131c4	obj_1002a69.QueueTemplate.EnQueue	43	map=map_1002f01
-10131e8	obj_1002a69.QueueTemplate.EnQueue.closure	43	map=map_1011e49
-1013204	obj_1013205	41
-1013214	obj_1002a69.QueueTemplate.EnQueue.bcFunc	43	map=map_10015d1
-1013234	obj_1002a69.QueueTemplate.EnQueue.bcFunc.instructions	40
-1013248	obj_1002a69.QueueTemplate.EnQueue.bcFunc.argFrame	43	map=map_1001955
-1013260	obj_1002a69.QueueTemplate.GetQueueSize	43	map=map_1002f01
-1013284	obj_1002a69.QueueTemplate.GetQueueSize.closure	43	map=map_1011e49
-10132a0	obj_10132a1	41
-10132b0	obj_1002a69.QueueTemplate.GetQueueSize.bcFunc	43	map=map_10015d1
-10132d0	obj_1002a69.QueueTemplate.GetQueueSize.bcFunc.instructions	40
-10132e4	obj_1002a69.QueueTemplate.GetQueueSize.bcFunc.argFrame	43	map=map_1001955
-10132fc	obj_1002a69.QueueTemplate.IsEmpty	43	map=map_1002f01
-1013320	obj_1002a69.QueueTemplate.IsEmpty.closure	43	map=map_1011e49
-101333c	obj_101333d	41
-101334c	obj_1002a69.QueueTemplate.IsEmpty.bcFunc	43	map=map_10015d1
-101336c	obj_1002a69.QueueTemplate.IsEmpty.bcFunc.instructions	40
-1013380	obj_1002a69.QueueTemplate.IsEmpty.bcFunc.argFrame	43	map=map_1001955
-1013398	obj_1002a69.ProtoClone	43	map=map_10015d1
-10133b8	obj_1002a69.ProtoClone.instructions	40
-10133cc	obj_1002a69.ProtoClone.literals	41
-10133e0	obj_10133e1	43	map=map_1002f01
-1013404	obj_10133e1.closure	43	map=map_1011e49
-1013420	obj_1013421	43	map=map_101342d
+1013164	objectsProto.QueueTemplate.DeQueue.bcFunc	43	map=map_10015d1
+1013184	objectsProto.QueueTemplate.DeQueue.bcFunc.instructions	40
+10131ac	objectsProto.QueueTemplate.DeQueue.bcFunc.argFrame	43	map=map_1001955
+10131c4	objectsProto.QueueTemplate.EnQueue	43	map=map_1002f01
+10131e8	objectsProto.QueueTemplate.EnQueue.closure	43	map=map_1011e49
+1013204	_literals_5	41
+1013214	objectsProto.QueueTemplate.EnQueue.bcFunc	43	map=map_10015d1
+1013234	objectsProto.QueueTemplate.EnQueue.bcFunc.instructions	40
+1013248	objectsProto.QueueTemplate.EnQueue.bcFunc.argFrame	43	map=map_1001955
+1013260	objectsProto.QueueTemplate.GetQueueSize	43	map=map_1002f01
+1013284	objectsProto.QueueTemplate.GetQueueSize.closure	43	map=map_1011e49
+10132a0	_literals_6	41
+10132b0	objectsProto.QueueTemplate.GetQueueSize.bcFunc	43	map=map_10015d1
+10132d0	objectsProto.QueueTemplate.GetQueueSize.bcFunc.instructions	40
+10132e4	objectsProto.QueueTemplate.GetQueueSize.bcFunc.argFrame	43	map=map_1001955
+10132fc	objectsProto.QueueTemplate.IsEmpty	43	map=map_1002f01
+1013320	objectsProto.QueueTemplate.IsEmpty.closure	43	map=map_1011e49
+101333c	_literals_7	41
+101334c	objectsProto.QueueTemplate.IsEmpty.bcFunc	43	map=map_10015d1
+101336c	objectsProto.QueueTemplate.IsEmpty.bcFunc.instructions	40
+1013380	objectsProto.QueueTemplate.IsEmpty.bcFunc.argFrame	43	map=map_1001955
+1013398	objectsProto.ProtoClone	43	map=map_10015d1
+10133b8	objectsProto.ProtoClone.instructions	40
+10133cc	objectsProto.ProtoClone.literals	41
+10133e0	frame	43	map=map_1002f01
+1013404	frame.closure	43	map=map_1011e49
+1013420	_nextArgFrame	43	map=map_101342d
 101342c	map_101342d	41
-101343c	obj_101343d	41
+101343c	_literals_8	41
 1013464	'IsFunction	40
 1013480	'|evt.ex.msg|	40
-101349c	obj_101343d[3]	40
+101349c	_literals_8[3]	40
 10134f0	'Throw	40
-1013508	obj_101343d[5]	41
+1013508	_literals_8[5]	41
 101351c	'f	40
-1013530	obj_10133e1.bcFunc	43	map=map_10015d1
-1013550	obj_10133e1.bcFunc.instructions	40
-10135bc	obj_10133e1.bcFunc.argFrame	43	map=map_1001955
-10135d4	obj_1002a69.ProtoClone.argFrame	43	map=map_10135f1
+1013530	frame.bcFunc	43	map=map_10015d1
+1013550	frame.bcFunc.instructions	40
+10135bc	frame.bcFunc.argFrame	43	map=map_1001955
+10135d4	objectsProto.ProtoClone.argFrame	43	map=map_10135f1
 10135f0	map_10135f1	41
-1013610	obj_1002a69.WaitForTerminal	43	map=map_10015d1
-1013630	obj_1002a69.WaitForTerminal.instructions	40
-1013684	obj_1002a69.WaitForTerminal.literals	41
+1013610	objectsProto.WaitForTerminal	43	map=map_10015d1
+1013630	objectsProto.WaitForTerminal.instructions	40
+1013684	objectsProto.WaitForTerminal.literals	41
 10136b8	'SetOwnerContext	40
 10136d8	'ModalDialog	40
-10136f4	obj_1002a69.waitViewTemplate	43	map=map_1013735
+10136f4	objectsProto.waitViewTemplate	43	map=map_1013735
 1013734	map_1013735	41
 1013778	'statusView	40
 1013794	'statusViewOptions	40
@@ -386,72 +386,72 @@ area	10014a0	17974	bf	4
 101380c	'viewSetupDoneScript	40
 1013830	'viewQuitScript	40
 1013850	'statusViewTemplate	40
-1013874	obj_1002a69.waitViewTemplate.viewBounds	43	map=map_1013891
+1013874	objectsProto.waitViewTemplate.viewBounds	43	map=map_1013891
 1013890	map_1013891	41
-10138b0	obj_1002a69.waitViewTemplate.SetOwnerContext	43	map=map_10015d1
-10138d0	obj_1002a69.waitViewTemplate.SetOwnerContext.instructions	40
-10138f0	obj_1002a69.waitViewTemplate.SetOwnerContext.literals	41
-101390c	obj_1002a69.waitViewTemplate.viewIdleScript	43	map=map_10015d1
-101392c	obj_1002a69.waitViewTemplate.viewIdleScript.instructions	40
-1013948	obj_1002a69.waitViewTemplate.viewIdleScript.literals	41
-101396c	obj_1002a69.waitViewTemplate.viewSetupDoneScript	43	map=map_10015d1
-101398c	obj_1002a69.waitViewTemplate.viewSetupDoneScript.instructions	40
-10139c8	obj_1002a69.waitViewTemplate.viewSetupDoneScript.literals	41
+10138b0	objectsProto.waitViewTemplate.SetOwnerContext	43	map=map_10015d1
+10138d0	objectsProto.waitViewTemplate.SetOwnerContext.instructions	40
+10138f0	objectsProto.waitViewTemplate.SetOwnerContext.literals	41
+101390c	objectsProto.waitViewTemplate.viewIdleScript	43	map=map_10015d1
+101392c	objectsProto.waitViewTemplate.viewIdleScript.instructions	40
+1013948	objectsProto.waitViewTemplate.viewIdleScript.literals	41
+101396c	objectsProto.waitViewTemplate.viewSetupDoneScript	43	map=map_10015d1
+101398c	objectsProto.waitViewTemplate.viewSetupDoneScript.instructions	40
+10139c8	objectsProto.waitViewTemplate.viewSetupDoneScript.literals	41
 10139e4	'delayUntilStatusVisible	40
-1013a0c	obj_1002a69.waitViewTemplate.viewQuitScript	43	map=map_10015d1
-1013a2c	obj_1002a69.waitViewTemplate.viewQuitScript.instructions	40
-1013a4c	obj_1002a69.waitViewTemplate.viewQuitScript.literals	41
-1013a70	obj_1002a69.waitViewTemplate.statusViewTemplate	43	map=map_1013aa1
+1013a0c	objectsProto.waitViewTemplate.viewQuitScript	43	map=map_10015d1
+1013a2c	objectsProto.waitViewTemplate.viewQuitScript.instructions	40
+1013a4c	objectsProto.waitViewTemplate.viewQuitScript.literals	41
+1013a70	objectsProto.waitViewTemplate.statusViewTemplate	43	map=map_1013aa1
 1013aa0	map_1013aa1	41
 1013ad4	'initialSetup	40
 1013af4	'delayUntilAbortTimer	40
 1013b1c	'delayUntilAbortVisible	40
 1013b44	'abortButtonText	40
-1013b64	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript	43	map=map_10015d1
-1013b84	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.instructions	40
-1013bdc	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.literals	41
+1013b64	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript	43	map=map_10015d1
+1013b84	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.instructions	40
+1013bdc	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals	41
 1013c1c	'vBarber	40
-1013c34	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[2]	41
+1013c34	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[2]	41
 1013c48	'barber	40
-1013c60	obj_1013c61	41
+1013c60	viewIdleScript_literal3	41
 1013c78	'values	40
-1013c90	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[6]	41
+1013c90	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[6]	41
 1013ca4	'primary	40
-1013cbc	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[8]	43	map=map_10015d1
-1013cdc	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[8].instructions	40
-1013cf4	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[8].literals	41
-1013d0c	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[8].argFrame	43	map=map_1001955
-1013d24	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[9]	41
+1013cbc	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[8]	43	map=map_10015d1
+1013cdc	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[8].instructions	40
+1013cf4	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[8].literals	41
+1013d0c	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[8].argFrame	43	map=map_1001955
+1013d24	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[9]	41
 1013d3c	'script	40
 1013d54	'base	40
 1013d6c	'ViewSet	40
 1013d84	'UpdateIndicator	40
-1013da4	obj_1002a69.waitViewTemplate.statusViewTemplate.viewSetupDoneScript	43	map=map_10015d1
-1013dc4	obj_1002a69.waitViewTemplate.statusViewTemplate.viewSetupDoneScript.instructions	40
-1013de0	obj_1002a69.waitViewTemplate.statusViewTemplate.viewSetupDoneScript.literals	41
-1013df8	obj_1002a69.waitViewTemplate.statusViewTemplate.SetOwnerContext	43	map=map_10015d1
-1013e18	obj_1002a69.waitViewTemplate.statusViewTemplate.SetOwnerContext.instructions	40
-1013e80	obj_1002a69.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals	41
-1013eb8	obj_1013eb9	40
+1013da4	objectsProto.waitViewTemplate.statusViewTemplate.viewSetupDoneScript	43	map=map_10015d1
+1013dc4	objectsProto.waitViewTemplate.statusViewTemplate.viewSetupDoneScript.instructions	40
+1013de0	objectsProto.waitViewTemplate.statusViewTemplate.viewSetupDoneScript.literals	41
+1013df8	objectsProto.waitViewTemplate.statusViewTemplate.SetOwnerContext	43	map=map_10015d1
+1013e18	objectsProto.waitViewTemplate.statusViewTemplate.SetOwnerContext.instructions	40
+1013e80	objectsProto.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals	41
+1013eb8	action_literal0	40
 1013ed0	'statusText	40
-1013eec	obj_1002a69.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals[7]	40
+1013eec	objectsProto.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals[7]	40
 1013f18	'titleText	40
-1013f34	obj_1002a69.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals[9]	41
+1013f34	objectsProto.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals[9]	41
 1013f5c	'icon	40
 1013f74	'closeBox	40
-1013f90	obj_1002a69.ExceptionHandler	43	map=map_10015d1
-1013fb0	obj_1002a69.ExceptionHandler.instructions	40
-1014010	obj_1002a69.ExceptionHandler.literals	41
-1014054	obj_1002a69.ExceptionHandler.literals[1]	40
-10140b8	obj_1002a69.ExceptionHandler.literals[3]	40
-10140e0	obj_1002a69.ExceptionHandler.literals[5]	40
-1014124	obj_1002a69.ExceptionHandler.literals[6]	41
+1013f90	objectsProto.ExceptionHandler	43	map=map_10015d1
+1013fb0	objectsProto.ExceptionHandler.instructions	40
+1014010	objectsProto.ExceptionHandler.literals	41
+1014054	objectsProto.ExceptionHandler.literals[1]	40
+10140b8	objectsProto.ExceptionHandler.literals[3]	40
+10140e0	objectsProto.ExceptionHandler.literals[5]	40
+1014124	objectsProto.ExceptionHandler.literals[6]	41
 1014138	'declareSelf	40
-1014154	obj_1002a69.ExceptionHandler.literals[7]	40
-101416c	obj_1002a69.ExceptionHandler.literals[9]	40
-10141c0	obj_1002a69.ExceptionHandler.literals[10]	40
-1014244	obj_1002a69.ObjectToString	43	map=map_1002f01
-1014268	obj_1002a69.ObjectToString.closure	43	map=map_10142a9
+1014154	objectsProto.ExceptionHandler.literals[7]	40
+101416c	objectsProto.ExceptionHandler.literals[9]	40
+10141c0	objectsProto.ExceptionHandler.literals[10]	40
+1014244	objectsProto.ObjectToString	43	map=map_1002f01
+1014268	objectsProto.ObjectToString.closure	43	map=map_10142a9
 10142a8	map_10142a9	41
 10142ec	'backIndex	40
 1014308	'backList	40
@@ -461,167 +461,167 @@ area	10014a0	17974	bf	4
 1014378	'runProto	40
 1014394	'p	40
 10143a8	'floatFormat	40
-10143c4	obj_10143c5	41
+10143c4	_literals_9	41
 1014438	'printProto	40
 1014454	'GetGlobalVar	40
 1014474	'printParent	40
 1014490	'printReal	40
 10144ac	'IsString	40
-10144c8	obj_10143c5[11]	40
+10144c8	_literals_9[11]	40
 10144e0	'printDepth	40
 10144fc	'IsNumber	40
 1014518	'printLength	40
-1014534	obj_1014535	43	map=map_1002f01
-1014558	obj_1014535.closure	43	map=map_1011e49
-1014574	obj_1014575	43	map=map_101342d
-1014580	obj_1014581	41
-101459c	obj_101459d	40
+1014534	_literals_9Item	43	map=map_1002f01
+1014558	_literals_9Item.closure	43	map=map_1011e49
+1014574	_nextArgFrame_2	43	map=map_101342d
+1014580	_literals_10	41
+101459c	_literals_10Item	40
 10145b0	'EndsWith	40
 10145cc	'StrLen	40
 10145e4	'StrMunger	40
-1014600	obj_1014535.bcFunc	43	map=map_10015d1
-1014620	obj_1014535.bcFunc.instructions	40
-1014648	obj_1014649	43	map=map_1002f01
-101466c	obj_1014649.closure	43	map=map_1011e49
-1014688	obj_1014689	43	map=map_101342d
-1014694	obj_1014695	41
+1014600	_literals_9Item.bcFunc	43	map=map_10015d1
+1014620	_literals_9Item.bcFunc.instructions	40
+1014648	_literals_9Item_2	43	map=map_1002f01
+101466c	_literals_9Item_2.closure	43	map=map_1011e49
+1014688	_nextArgFrame_3	43	map=map_101342d
+1014694	_literals_11	41
 1014798	'IsValid	40
-10147b0	obj_1014695[1]	40
+10147b0	_literals_11[1]	40
 10147f4	'IsMagicPtr	40
-1014810	obj_1014695[3]	40
+1014810	_literals_11[3]	40
 1014824	'refOf	40
 101483c	'GetFunctionArgCount	40
-1014860	obj_1014695[8]	40
+1014860	_literals_11[8]	40
 1014894	'|=|	40
 10148a8	'LSearch	40
-10148c0	obj_10148c1	40
-10148d0	obj_10148d1	40
-10148e0	obj_1014695[17]	40
-10148f4	obj_10148f5	40
-1014908	obj_1014909	40
-1014918	obj_1014919	40
-101492c	obj_101492d	40
-1014940	obj_1014695[28]	40
-1014964	obj_1014695[31]	40
-1014974	obj_1014695[35]	40
-1014988	obj_1014695[40]	40
+10148c0	_literals_11Item	40
+10148d0	_literals_11Item_2	40
+10148e0	_literals_11[17]	40
+10148f4	_literals_11Item_3	40
+1014908	_literals_11Item_4	40
+1014918	_literals_11Item_5	40
+101492c	_literals_11Item_6	40
+1014940	_literals_11[28]	40
+1014964	_literals_11[31]	40
+1014974	_literals_11[35]	40
+1014988	_literals_11[40]	40
 1014998	'IsSymbol	40
 10149b4	'IsInteger	40
 10149d0	'NumberStr	40
 10149ec	'FormattedNumberStr	40
 1014a10	'IsImmediate	40
-1014a2c	obj_1014695[53]	40
-1014a40	obj_1014695[54]	40
+1014a2c	_literals_11[53]	40
+1014a40	_literals_11[54]	40
 1014a58	'SPrintObject	40
 1014a78	'IsBinary	40
-1014a94	obj_1014695[58]	40
+1014a94	_literals_11[58]	40
 1014ab4	'stringer	40
-1014ad0	obj_1014649.bcFunc	43	map=map_10015d1
-1014af0	obj_1014649.bcFunc.instructions	40
-1014df8	obj_1014649.bcFunc.argFrame	43	map=map_1001955
+1014ad0	_literals_9Item_2.bcFunc	43	map=map_10015d1
+1014af0	_literals_9Item_2.bcFunc.instructions	40
+1014df8	_literals_9Item_2.bcFunc.argFrame	43	map=map_1001955
 1014e10	'|evt.ex.outofmem|	40
-1014e30	obj_10143c5[24]	40
-1014e68	obj_10143c5[25]	40
-1014ea0	obj_1002a69.ObjectToString.bcFunc	43	map=map_10015d1
-1014ec0	obj_1002a69.ObjectToString.bcFunc.instructions	40
-1014f88	obj_1002a69.ObjectToString.bcFunc.argFrame	43	map=map_1014fc5
+1014e30	_literals_9[24]	40
+1014e68	_literals_9[25]	40
+1014ea0	objectsProto.ObjectToString.bcFunc	43	map=map_10015d1
+1014ec0	objectsProto.ObjectToString.bcFunc.instructions	40
+1014f88	objectsProto.ObjectToString.bcFunc.argFrame	43	map=map_1014fc5
 1014fc4	map_1014fc5	41
-1015004	obj_1002a69.DoEvent_Check	43	map=map_1002f01
-1015028	obj_1002a69.DoEvent_Check.closure	43	map=map_1011e49
-1015044	obj_1015045	41
-1015054	obj_1002a69.DoEvent_Check.bcFunc	43	map=map_10015d1
-1015074	obj_1002a69.DoEvent_Check.bcFunc.instructions	40
-101508c	obj_1002a69.DoEvent_Check.bcFunc.argFrame	43	map=map_1001955
-10150a4	obj_1002a69.ExceptionHandler_Notify	43	map=map_10015d1
-10150c4	obj_1002a69.ExceptionHandler_Notify.instructions	40
-10150dc	obj_1002a69.ExceptionHandler_Notify.literals	41
-10150f4	obj_1002a69.ExceptionHandler_Notify.literals[0]	40
+1015004	objectsProto.DoEvent_Check	43	map=map_1002f01
+1015028	objectsProto.DoEvent_Check.closure	43	map=map_1011e49
+1015044	_literals_12	41
+1015054	objectsProto.DoEvent_Check.bcFunc	43	map=map_10015d1
+1015074	objectsProto.DoEvent_Check.bcFunc.instructions	40
+101508c	objectsProto.DoEvent_Check.bcFunc.argFrame	43	map=map_1001955
+10150a4	objectsProto.ExceptionHandler_Notify	43	map=map_10015d1
+10150c4	objectsProto.ExceptionHandler_Notify.instructions	40
+10150dc	objectsProto.ExceptionHandler_Notify.literals	41
+10150f4	objectsProto.ExceptionHandler_Notify.literals[0]	40
 1015130	'Notify	40
-1015148	obj_1002a69.DoPeriodicEvent	43	map=map_10015d1
-1015168	obj_1002a69.DoPeriodicEvent.instructions	40
-101520c	obj_1002a69.DoPeriodicEvent.literals	41
+1015148	objectsProto.DoPeriodicEvent	43	map=map_10015d1
+1015168	objectsProto.DoPeriodicEvent.instructions	40
+101520c	objectsProto.DoPeriodicEvent.literals	41
 1015244	'|protoFSM:DoPeriodicEvent|	40
-1015270	obj_1002a69.DoPeriodicEvent.literals[5]	41
-1015284	obj_1002a69.DoPeriodicEvent.literals[7]	41
+1015270	objectsProto.DoPeriodicEvent.literals[5]	41
+1015284	objectsProto.DoPeriodicEvent.literals[7]	41
 10152b4	'event	40
 10152cc	'params	40
 10152e4	'unique	40
 10152fc	'occurrences	40
 1015318	'delay	40
 1015330	'AddStepView	40
-101534c	obj_1002a69.PeriodicTemplate	43	map=map_1015375
+101534c	objectsProto.PeriodicTemplate	43	map=map_1015375
 1015374	map_1015375	41
 10153a0	'ReorientToScreen	40
-10153c4	obj_1002a69.PeriodicTemplate.viewBounds	43	map=map_1013891
-10153e0	obj_1002a69.PeriodicTemplate.viewIdleScript	43	map=map_1002f01
-1015404	obj_1002a69.PeriodicTemplate.viewIdleScript.closure	43	map=map_1011e49
-1015420	obj_1015421	41
-1015450	obj_1002a69.PeriodicTemplate.viewIdleScript.bcFunc	43	map=map_10015d1
-1015470	obj_1002a69.PeriodicTemplate.viewIdleScript.bcFunc.instructions	40
-10154c8	obj_1002a69.PeriodicTemplate.viewIdleScript.bcFunc.argFrame	43	map=map_1001955
-10154e0	obj_1002a69.PeriodicTemplate.viewSetupDoneScript	43	map=map_1002f01
-1015504	obj_1002a69.PeriodicTemplate.viewSetupDoneScript.closure	43	map=map_1011e49
-1015520	obj_1015521	41
-1015534	obj_1002a69.PeriodicTemplate.viewSetupDoneScript.bcFunc	43	map=map_10015d1
-1015554	obj_1002a69.PeriodicTemplate.viewSetupDoneScript.bcFunc.instructions	40
-1015568	obj_1002a69.PeriodicTemplate.viewSetupDoneScript.bcFunc.argFrame	43	map=map_1001955
-1015580	obj_1002a69.PeriodicTemplate.ReorientToScreen	43	map=map_10015d1
-10155a0	obj_1002a69.KillPeriodicEvent	43	map=map_1002f01
-10155c4	obj_1002a69.KillPeriodicEvent.closure	43	map=map_1011e49
-10155e0	obj_10155e1	41
+10153c4	objectsProto.PeriodicTemplate.viewBounds	43	map=map_1013891
+10153e0	objectsProto.PeriodicTemplate.viewIdleScript	43	map=map_1002f01
+1015404	objectsProto.PeriodicTemplate.viewIdleScript.closure	43	map=map_1011e49
+1015420	_literals_13	41
+1015450	objectsProto.PeriodicTemplate.viewIdleScript.bcFunc	43	map=map_10015d1
+1015470	objectsProto.PeriodicTemplate.viewIdleScript.bcFunc.instructions	40
+10154c8	objectsProto.PeriodicTemplate.viewIdleScript.bcFunc.argFrame	43	map=map_1001955
+10154e0	objectsProto.PeriodicTemplate.viewSetupDoneScript	43	map=map_1002f01
+1015504	objectsProto.PeriodicTemplate.viewSetupDoneScript.closure	43	map=map_1011e49
+1015520	_literals_14	41
+1015534	objectsProto.PeriodicTemplate.viewSetupDoneScript.bcFunc	43	map=map_10015d1
+1015554	objectsProto.PeriodicTemplate.viewSetupDoneScript.bcFunc.instructions	40
+1015568	objectsProto.PeriodicTemplate.viewSetupDoneScript.bcFunc.argFrame	43	map=map_1001955
+1015580	objectsProto.PeriodicTemplate.ReorientToScreen	43	map=map_10015d1
+10155a0	objectsProto.KillPeriodicEvent	43	map=map_1002f01
+10155c4	objectsProto.KillPeriodicEvent.closure	43	map=map_1011e49
+10155e0	_literals_15	41
 1015610	'|protoFSM:KillPeriodicEvent|	40
 101563c	'LFetch	40
-1015654	obj_1002a69.KillPeriodicEvent.bcFunc	43	map=map_10015d1
-1015674	obj_1002a69.KillPeriodicEvent.bcFunc.instructions	40
-10156b8	obj_1002a69.KillPeriodicEvent.bcFunc.argFrame	43	map=map_1001955
-10156d0	obj_1002a69.EngineTemplate	43	map=map_10156f5
+1015654	objectsProto.KillPeriodicEvent.bcFunc	43	map=map_10015d1
+1015674	objectsProto.KillPeriodicEvent.bcFunc.instructions	40
+10156b8	objectsProto.KillPeriodicEvent.bcFunc.argFrame	43	map=map_1001955
+10156d0	objectsProto.EngineTemplate	43	map=map_10156f5
 10156f4	map_10156f5	41
-101571c	obj_1002a69.EngineTemplate.viewBounds	43	map=map_1013891
-1015738	obj_1002a69.EngineTemplate.viewIdleScript	43	map=map_1002f01
-101575c	obj_1002a69.EngineTemplate.viewIdleScript.closure	43	map=map_1011e49
-1015778	obj_1015779	41
-101578c	obj_1002a69.EngineTemplate.viewIdleScript.bcFunc	43	map=map_10015d1
-10157ac	obj_1002a69.EngineTemplate.viewIdleScript.bcFunc.instructions	40
-10157bc	obj_1002a69.EngineTemplate.viewIdleScript.bcFunc.argFrame	43	map=map_1001955
-10157d4	obj_1002a69.EngineTemplate.ReorientToScreen	43	map=map_10015d1
-10157f4	obj_1002a69.MCollectAncestorStates	43	map=map_1002f01
-1015818	obj_1002a69.MCollectAncestorStates.closure	43	map=map_1011e49
-1015834	obj_1015835	43	map=map_101342d
-1015840	obj_1015841	41
-1015850	obj_1002a69.MCollectAncestorStates.bcFunc	43	map=map_10015d1
-1015870	obj_1002a69.MCollectAncestorStates.bcFunc.instructions	40
-10158cc	obj_1002a69.MCollectAncestorEvents	43	map=map_1002f01
-10158f0	obj_1002a69.MCollectAncestorEvents.closure	43	map=map_1011e49
-101590c	obj_101590d	43	map=map_101342d
-1015918	obj_1015919	41
-1015928	obj_1002a69.MCollectAncestorEvents.bcFunc	43	map=map_10015d1
-1015948	obj_1002a69.MCollectAncestorEvents.bcFunc.instructions	40
-10159c8	obj_1002a69.MBuildAncestorList	43	map=map_10015d1
-10159e8	obj_1002a69.MBuildAncestorList.instructions	40
-1015a20	obj_1002a69.MBuildAncestorList.literals	41
+101571c	objectsProto.EngineTemplate.viewBounds	43	map=map_1013891
+1015738	objectsProto.EngineTemplate.viewIdleScript	43	map=map_1002f01
+101575c	objectsProto.EngineTemplate.viewIdleScript.closure	43	map=map_1011e49
+1015778	_literals_16	41
+101578c	objectsProto.EngineTemplate.viewIdleScript.bcFunc	43	map=map_10015d1
+10157ac	objectsProto.EngineTemplate.viewIdleScript.bcFunc.instructions	40
+10157bc	objectsProto.EngineTemplate.viewIdleScript.bcFunc.argFrame	43	map=map_1001955
+10157d4	objectsProto.EngineTemplate.ReorientToScreen	43	map=map_10015d1
+10157f4	objectsProto.MCollectAncestorStates	43	map=map_1002f01
+1015818	objectsProto.MCollectAncestorStates.closure	43	map=map_1011e49
+1015834	_nextArgFrame_4	43	map=map_101342d
+1015840	_literals_17	41
+1015850	objectsProto.MCollectAncestorStates.bcFunc	43	map=map_10015d1
+1015870	objectsProto.MCollectAncestorStates.bcFunc.instructions	40
+10158cc	objectsProto.MCollectAncestorEvents	43	map=map_1002f01
+10158f0	objectsProto.MCollectAncestorEvents.closure	43	map=map_1011e49
+101590c	_nextArgFrame_5	43	map=map_101342d
+1015918	_literals_18	41
+1015928	objectsProto.MCollectAncestorEvents.bcFunc	43	map=map_10015d1
+1015948	objectsProto.MCollectAncestorEvents.bcFunc.instructions	40
+10159c8	objectsProto.MBuildAncestorList	43	map=map_10015d1
+10159e8	objectsProto.MBuildAncestorList.instructions	40
+1015a20	objectsProto.MBuildAncestorList.literals	41
 1015a3c	'getSlot	40
 1015a54	'ArrayInsert	40
-1015a70	obj_1002a69.Release	43	map=map_10015d1
-1015a90	obj_1002a69.Release.instructions	40
-1015aac	obj_1002a69.Release.literals	41
-1015acc	obj_1002a69.InheritedSlot	43	map=map_10015d1
-1015aec	obj_1002a69.InheritedSlot.instructions	40
-1015b2c	obj_1002a69.InheritedSlot.literals	41
+1015a70	objectsProto.Release	43	map=map_10015d1
+1015a90	objectsProto.Release.instructions	40
+1015aac	objectsProto.Release.literals	41
+1015acc	objectsProto.InheritedSlot	43	map=map_10015d1
+1015aec	objectsProto.InheritedSlot.instructions	40
+1015b2c	objectsProto.InheritedSlot.literals	41
 1015b40	'HasSlot	40
-1015b58	obj_1002a69.DoUniqueEvent	43	map=map_1002f01
-1015b7c	obj_1002a69.DoUniqueEvent.closure	43	map=map_1011e49
-1015b98	obj_1015b99	41
+1015b58	objectsProto.DoUniqueEvent	43	map=map_1002f01
+1015b7c	objectsProto.DoUniqueEvent.closure	43	map=map_1011e49
+1015b98	_literals_19	41
 1015bbc	'|protoFSM:DoUniqueEvent|	40
-1015be4	obj_1015b99[2]	41
-1015bf8	obj_1002a69.DoUniqueEvent.bcFunc	43	map=map_10015d1
-1015c18	obj_1002a69.DoUniqueEvent.bcFunc.instructions	40
-1015c48	obj_1002a69.DoUniqueEvent.bcFunc.argFrame	43	map=map_1001955
-1015c60	obj_1002a69.InstantiateAndPerform	43	map=map_10015d1
-1015c80	obj_1002a69.InstantiateAndPerform.instructions	40
-1015cac	obj_1002a69.InstantiateAndPerform.literals	41
-1015cd0	obj_1002a69.InstantiateAndPerform.literals[2]	41
-1015ce4	obj_1002a69.InstantiateAndPerform.literals[4]	41
-1015cf8	obj_10014a1[0]._ExportTable[0].objects[1]	43	map=map_1015dd1
+1015be4	_literals_19[2]	41
+1015bf8	objectsProto.DoUniqueEvent.bcFunc	43	map=map_10015d1
+1015c18	objectsProto.DoUniqueEvent.bcFunc.instructions	40
+1015c48	objectsProto.DoUniqueEvent.bcFunc.argFrame	43	map=map_1001955
+1015c60	objectsProto.InstantiateAndPerform	43	map=map_10015d1
+1015c80	objectsProto.InstantiateAndPerform.instructions	40
+1015cac	objectsProto.InstantiateAndPerform.literals	41
+1015cd0	objectsProto.InstantiateAndPerform.literals[2]	41
+1015ce4	objectsProto.InstantiateAndPerform.literals[4]	41
+1015cf8	part[0]._ExportTable[0].objects[1]	43	map=map_1015dd1
 1015dd0	map_1015dd1	41
 1015eac	'BuildCompletionSpec_Bind	40
 1015ed8	'BuildCompletionSpec_Listen	40
@@ -670,98 +670,98 @@ area	10014a0	17974	bf	4
 1016564	'BuildCompletionSpec_Disconnect	40
 1016594	'fConfigOptionsAfter_Accept	40
 10165c0	'fConfigOptions_Instantiate	40
-10165ec	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Bind	43	map=map_10015d1
-101660c	obj_101660d	40
-1016620	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Bind.literals	41
-1016634	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Listen	43	map=map_10015d1
-1016654	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Listen.literals	41
-1016668	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Connect	43	map=map_10015d1
-1016688	obj_1016689	40
-1016698	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Connect.literals	41
-10166a8	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Accept	43	map=map_10015d1
-10166c8	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Accept.literals	41
-10166d8	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Instantiate	43	map=map_10015d1
-10166f8	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Instantiate.literals	41
+10165ec	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Bind	43	map=map_10015d1
+101660c	BuildCompletionSpec_Bind_code	40
+1016620	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Bind.literals	41
+1016634	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Listen	43	map=map_10015d1
+1016654	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Listen.literals	41
+1016668	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Connect	43	map=map_10015d1
+1016688	BuildConfigOptions_Connect_code	40
+1016698	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Connect.literals	41
+10166a8	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Accept	43	map=map_10015d1
+10166c8	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Accept.literals	41
+10166d8	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Instantiate	43	map=map_10015d1
+10166f8	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Instantiate.literals	41
 1016708	'Disconnected	40
-1016728	obj_10014a1[0]._ExportTable[0].objects[1].SetAbort	43	map=map_10015d1
-1016748	obj_10014a1[0]._ExportTable[0].objects[1].SetAbort.instructions	40
-101675c	obj_10014a1[0]._ExportTable[0].objects[1].SetAbort.literals	41
-101676c	obj_10014a1[0]._ExportTable[0].objects[1].SetEndpoint	43	map=map_10015d1
-101678c	obj_101678d	40
-101679c	obj_10014a1[0]._ExportTable[0].objects[1].SetEndpoint.literals	41
-10167ac	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Bind	43	map=map_10015d1
-10167cc	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Bind.literals	41
-10167dc	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Listen	43	map=map_10015d1
-10167fc	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Listen.literals	41
-101680c	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Connect	43	map=map_1016825
+1016728	part[0]._ExportTable[0].objects[1].SetAbort	43	map=map_10015d1
+1016748	part[0]._ExportTable[0].objects[1].SetAbort.instructions	40
+101675c	part[0]._ExportTable[0].objects[1].SetAbort.literals	41
+101676c	part[0]._ExportTable[0].objects[1].SetEndpoint	43	map=map_10015d1
+101678c	SetEndpoint_code	40
+101679c	part[0]._ExportTable[0].objects[1].SetEndpoint.literals	41
+10167ac	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Bind	43	map=map_10015d1
+10167cc	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Bind.literals	41
+10167dc	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Listen	43	map=map_10015d1
+10167fc	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Listen.literals	41
+101680c	part[0]._ExportTable[0].objects[1].fCompletionSpec_Connect	43	map=map_1016825
 1016824	map_1016825	41
 1016840	'async	40
 1016858	'reqTimeout	40
 1016874	'completionScript	40
-1016898	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Connect.completionScript	43	map=map_10015d1
-10168b8	obj_10168b9	40
-10168dc	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Connect.completionScript.literals	41
+1016898	part[0]._ExportTable[0].objects[1].fCompletionSpec_Connect.completionScript	43	map=map_10015d1
+10168b8	completionScript_code	40
+10168dc	part[0]._ExportTable[0].objects[1].fCompletionSpec_Connect.completionScript.literals	41
 10168fc	'ConnectFailure	40
 101691c	'ConnectSuccess	40
-101693c	obj_10014a1[0]._ExportTable[0].objects[1].DoClientCallback	43	map=map_10015d1
-101695c	obj_10014a1[0]._ExportTable[0].objects[1].DoClientCallback.instructions	40
-1016988	obj_10014a1[0]._ExportTable[0].objects[1].DoClientCallback.literals	41
-10169a8	obj_10014a1[0]._ExportTable[0].objects[1].GetState	43	map=map_10015d1
-10169c8	obj_10014a1[0]._ExportTable[0].objects[1].GetState.literals	41
-10169d8	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Accept	43	map=map_10015d1
-10169f8	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Accept.literals	41
-1016a08	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Connect	43	map=map_10015d1
-1016a28	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Connect.literals	41
-1016a3c	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_UnBind	43	map=map_1016825
-1016a54	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_UnBind.completionScript	43	map=map_10015d1
-1016a74	obj_1016a75	40
-1016a94	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_UnBind.completionScript.literals	41
+101693c	part[0]._ExportTable[0].objects[1].DoClientCallback	43	map=map_10015d1
+101695c	part[0]._ExportTable[0].objects[1].DoClientCallback.instructions	40
+1016988	part[0]._ExportTable[0].objects[1].DoClientCallback.literals	41
+10169a8	part[0]._ExportTable[0].objects[1].GetState	43	map=map_10015d1
+10169c8	part[0]._ExportTable[0].objects[1].GetState.literals	41
+10169d8	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Accept	43	map=map_10015d1
+10169f8	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Accept.literals	41
+1016a08	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Connect	43	map=map_10015d1
+1016a28	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Connect.literals	41
+1016a3c	part[0]._ExportTable[0].objects[1].fCompletionSpec_UnBind	43	map=map_1016825
+1016a54	part[0]._ExportTable[0].objects[1].fCompletionSpec_UnBind.completionScript	43	map=map_10015d1
+1016a74	completionScript_code_2	40
+1016a94	part[0]._ExportTable[0].objects[1].fCompletionSpec_UnBind.completionScript.literals	41
 1016ab0	'UnBindFailure	40
 1016ad0	'UnBindSuccess	40
-1016af0	obj_10014a1[0]._ExportTable[0].objects[1].DoErrorCallback	43	map=map_10015d1
-1016b10	obj_10014a1[0]._ExportTable[0].objects[1].DoErrorCallback.instructions	40
-1016b28	obj_10014a1[0]._ExportTable[0].objects[1].DoErrorCallback.literals	41
+1016af0	part[0]._ExportTable[0].objects[1].DoErrorCallback	43	map=map_10015d1
+1016b10	part[0]._ExportTable[0].objects[1].DoErrorCallback.instructions	40
+1016b28	part[0]._ExportTable[0].objects[1].DoErrorCallback.literals	41
 1016b44	'error	40
-1016b5c	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Bind	43	map=map_10015d1
-1016b7c	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Bind.literals	41
-1016b8c	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Listen	43	map=map_10015d1
-1016bac	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Listen.literals	41
-1016bbc	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Accept	43	map=map_1016825
-1016bd4	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Accept.completionScript	43	map=map_10015d1
-1016bf4	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Accept.completionScript.literals	41
+1016b5c	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Bind	43	map=map_10015d1
+1016b7c	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Bind.literals	41
+1016b8c	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Listen	43	map=map_10015d1
+1016bac	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Listen.literals	41
+1016bbc	part[0]._ExportTable[0].objects[1].fCompletionSpec_Accept	43	map=map_1016825
+1016bd4	part[0]._ExportTable[0].objects[1].fCompletionSpec_Accept.completionScript	43	map=map_10015d1
+1016bf4	part[0]._ExportTable[0].objects[1].fCompletionSpec_Accept.completionScript.literals	41
 1016c14	'AcceptFailure	40
 1016c34	'AcceptSuccess	40
 1016c54	'protoEndpointFSM	40
-1016c78	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_UnBind	43	map=map_10015d1
-1016c98	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_UnBind.literals	41
-1016cac	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Disconnect	43	map=map_1016825
-1016cc4	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Disconnect.completionScript	43	map=map_10015d1
-1016ce4	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Disconnect.completionScript.literals	41
+1016c78	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_UnBind	43	map=map_10015d1
+1016c98	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_UnBind.literals	41
+1016cac	part[0]._ExportTable[0].objects[1].fCompletionSpec_Disconnect	43	map=map_1016825
+1016cc4	part[0]._ExportTable[0].objects[1].fCompletionSpec_Disconnect.completionScript	43	map=map_10015d1
+1016ce4	part[0]._ExportTable[0].objects[1].fCompletionSpec_Disconnect.completionScript.literals	41
 1016d00	'DisconnectFailure	40
 1016d24	'DisconnectSuccess	40
-1016d48	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Connect	43	map=map_10015d1
-1016d68	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Connect.literals	41
-1016d78	obj_10014a1[0]._ExportTable[0].objects[1].SetState	43	map=map_10015d1
-1016d98	obj_10014a1[0]._ExportTable[0].objects[1].SetState.literals	41
-1016da8	obj_10014a1[0]._ExportTable[0].objects[1].GetAbort	43	map=map_10015d1
-1016dc8	obj_10014a1[0]._ExportTable[0].objects[1].GetAbort.literals	41
-1016dd8	obj_10014a1[0]._ExportTable[0].objects[1].GetEndpoint	43	map=map_10015d1
-1016df8	obj_10014a1[0]._ExportTable[0].objects[1].GetEndpoint.literals	41
-1016e08	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Instantiate	43	map=map_10015d1
-1016e28	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Instantiate.literals	41
-1016e38	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Bind	43	map=map_1016825
-1016e50	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Bind.completionScript	43	map=map_10015d1
-1016e70	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Bind.completionScript.literals	41
+1016d48	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Connect	43	map=map_10015d1
+1016d68	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Connect.literals	41
+1016d78	part[0]._ExportTable[0].objects[1].SetState	43	map=map_10015d1
+1016d98	part[0]._ExportTable[0].objects[1].SetState.literals	41
+1016da8	part[0]._ExportTable[0].objects[1].GetAbort	43	map=map_10015d1
+1016dc8	part[0]._ExportTable[0].objects[1].GetAbort.literals	41
+1016dd8	part[0]._ExportTable[0].objects[1].GetEndpoint	43	map=map_10015d1
+1016df8	part[0]._ExportTable[0].objects[1].GetEndpoint.literals	41
+1016e08	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Instantiate	43	map=map_10015d1
+1016e28	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Instantiate.literals	41
+1016e38	part[0]._ExportTable[0].objects[1].fCompletionSpec_Bind	43	map=map_1016825
+1016e50	part[0]._ExportTable[0].objects[1].fCompletionSpec_Bind.completionScript	43	map=map_10015d1
+1016e70	part[0]._ExportTable[0].objects[1].fCompletionSpec_Bind.completionScript.literals	41
 1016e90	'BindFailure	40
 1016eac	'BindSuccess	40
-1016ec8	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Listen	43	map=map_1016825
-1016ee0	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Listen.completionScript	43	map=map_10015d1
-1016f00	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Listen.completionScript.literals	41
+1016ec8	part[0]._ExportTable[0].objects[1].fCompletionSpec_Listen	43	map=map_1016825
+1016ee0	part[0]._ExportTable[0].objects[1].fCompletionSpec_Listen.completionScript	43	map=map_10015d1
+1016f00	part[0]._ExportTable[0].objects[1].fCompletionSpec_Listen.completionScript.literals	41
 1016f20	'ListenFailure	40
 1016f40	'ListenSuccess	40
-1016f60	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Accept	43	map=map_10015d1
-1016f80	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Accept.literals	41
-1016f94	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states	43	map=map_1016fe5
+1016f60	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Accept	43	map=map_10015d1
+1016f80	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Accept.literals	41
+1016f94	part[0]._ExportTable[0].objects[1].fsm_private_states	43	map=map_1016fe5
 1016fe4	map_1016fe5	41
 1017038	'ReadyToConnect	40
 1017058	'Instantiating	40
@@ -777,347 +777,347 @@ area	10014a0	17974	bf	4
 1017164	'UnBinding	40
 1017180	'Disposing	40
 101719c	'CleanUp	40
-10171b4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Genesis	43	map=map_10171c9
+10171b4	part[0]._ExportTable[0].objects[1].fsm_private_states.Genesis	43	map=map_10171c9
 10171c8	map_10171c9	41
 10171e0	'Create	40
-10171f8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create	43	map=map_101720d
+10171f8	part[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create	43	map=map_101720d
 101720c	map_101720d	41
-1017224	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create.action	43	map=map_10015d1
-1017244	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create.action.instructions	40
-1017278	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create.action.literals	41
-10172b0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect	43	map=map_10172cd
+1017224	part[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create.action	43	map=map_10015d1
+1017244	part[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create.action.instructions	40
+1017278	part[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create.action.literals	41
+10172b0	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect	43	map=map_10172cd
 10172cc	map_10172cd	41
 10172ec	'Listen	40
 1017304	'Cancel	40
-101731c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.connect	43	map=map_1017335
+101731c	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.connect	43	map=map_1017335
 1017334	map_1017335	41
-1017350	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.connect.action	43	map=map_10015d1
-1017370	obj_1017371	40
-1017388	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.connect.action.literals	41
-10173ac	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Listen	43	map=map_1017335
-10173c4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Listen.action	43	map=map_10015d1
-10173e4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Listen.action.literals	41
-1017408	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Cancel	43	map=map_1017419
+1017350	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.connect.action	43	map=map_10015d1
+1017370	action_code	40
+1017388	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.connect.action.literals	41
+10173ac	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Listen	43	map=map_1017335
+10173c4	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Listen.action	43	map=map_10015d1
+10173e4	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Listen.action.literals	41
+1017408	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Cancel	43	map=map_1017419
 1017418	map_1017419	41
-101742c	obj_101742d	43	map=map_10015d1
-101744c	obj_101742d.instructions	40
-1017460	obj_101742d.literals	41
-1017470	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Dispose	43	map=map_1017481
+101742c	action	43	map=map_10015d1
+101744c	action.instructions	40
+1017460	action.literals	41
+1017470	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Dispose	43	map=map_1017481
 1017480	map_1017481	41
-1017494	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate	43	map=map_10174ad
+1017494	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate	43	map=map_10174ad
 10174ac	map_10174ad	41
 10174c8	'Abort	40
-10174e0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Instantiate	43	map=map_101720d
-10174f4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Instantiate.action	43	map=map_10015d1
-1017514	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Instantiate.action.instructions	40
-1017574	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Instantiate.action.literals	41
+10174e0	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Instantiate	43	map=map_101720d
+10174f4	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Instantiate.action	43	map=map_10015d1
+1017514	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Instantiate.action.instructions	40
+1017574	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Instantiate.action.literals	41
 10175c0	'InstantiateFailure	40
 10175e4	'InstantiateSuccess	40
-1017608	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort	43	map=map_101720d
-101761c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action	43	map=map_10015d1
-101763c	obj_101763d	40
-1017654	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action.literals	41
-1017674	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Cancel	43	map=map_1017419
-1017684	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating	43	map=map_101769d
+1017608	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort	43	map=map_101720d
+101761c	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action	43	map=map_10015d1
+101763c	action_code_2	40
+1017654	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action.literals	41
+1017674	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Cancel	43	map=map_1017419
+1017684	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating	43	map=map_101769d
 101769c	map_101769d	41
-10176b8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateSuccess	43	map=map_101720d
-10176cc	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateSuccess.action	43	map=map_10015d1
-10176ec	obj_10176ed	40
-101770c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateSuccess.action.literals	41
-1017728	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure	43	map=map_101720d
-101773c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure.action	43	map=map_10015d1
-101775c	obj_101775d	40
-1017774	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure.action.literals	41
-1017790	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure.action.literals[0]	40
-10177c8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.Cancel	43	map=map_1017419
-10177d8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind	43	map=map_10177f1
+10176b8	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateSuccess	43	map=map_101720d
+10176cc	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateSuccess.action	43	map=map_10015d1
+10176ec	action_code_3	40
+101770c	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateSuccess.action.literals	41
+1017728	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure	43	map=map_101720d
+101773c	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure.action	43	map=map_10015d1
+101775c	action_code_4	40
+1017774	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure.action.literals	41
+1017790	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure.action.literals[0]	40
+10177c8	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.Cancel	43	map=map_1017419
+10177d8	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind	43	map=map_10177f1
 10177f0	map_10177f1	41
-101780c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Bind	43	map=map_1017821
+101780c	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Bind	43	map=map_1017821
 1017820	map_1017821	41
-1017838	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Bind.action	43	map=map_10015d1
-1017858	obj_1017859	40
-1017894	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Bind.action.literals	41
-10178c8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort	43	map=map_101720d
-10178dc	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort.action	43	map=map_10015d1
-10178fc	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort.action.literals	41
-101791c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Cancel	43	map=map_1017419
-101792c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding	43	map=map_1017945
+1017838	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Bind.action	43	map=map_10015d1
+1017858	action_code_5	40
+1017894	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Bind.action.literals	41
+10178c8	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort	43	map=map_101720d
+10178dc	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort.action	43	map=map_10015d1
+10178fc	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort.action.literals	41
+101791c	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Cancel	43	map=map_1017419
+101792c	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding	43	map=map_1017945
 1017944	map_1017945	41
-1017960	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindSuccess	43	map=map_101720d
-1017974	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindSuccess.action	43	map=map_10015d1
-1017994	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindSuccess.action.literals	41
-10179b0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure	43	map=map_101720d
-10179c4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure.action	43	map=map_10015d1
-10179e4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure.action.literals	41
-1017a00	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure.action.literals[0]	40
-1017a28	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.Cancel	43	map=map_1017419
-1017a38	obj_1017a39	43	map=map_10015d1
-1017a58	obj_1017a39.instructions	40
-1017a84	obj_1017a39.literals	41
+1017960	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindSuccess	43	map=map_101720d
+1017974	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindSuccess.action	43	map=map_10015d1
+1017994	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindSuccess.action.literals	41
+10179b0	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure	43	map=map_101720d
+10179c4	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure.action	43	map=map_10015d1
+10179e4	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure.action.literals	41
+1017a00	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure.action.literals[0]	40
+1017a28	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.Cancel	43	map=map_1017419
+1017a38	action_2	43	map=map_10015d1
+1017a58	action_2.instructions	40
+1017a84	action_2.literals	41
 1017aa0	'|evt.ex.comm|	40
-1017abc	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect	43	map=map_1017ad5
+1017abc	part[0]._ExportTable[0].objects[1].fsm_private_states.connect	43	map=map_1017ad5
 1017ad4	map_1017ad5	41
-1017af0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.connect	43	map=map_101720d
-1017b04	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.connect.action	43	map=map_10015d1
-1017b24	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.connect.action.instructions	40
-1017ba4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.connect.action.literals	41
-1017bf0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort	43	map=map_101720d
-1017c04	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort.action	43	map=map_10015d1
-1017c24	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort.action.literals	41
-1017c44	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.Cancel	43	map=map_1017419
-1017c54	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting	43	map=map_1017c75
+1017af0	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.connect	43	map=map_101720d
+1017b04	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.connect.action	43	map=map_10015d1
+1017b24	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.connect.action.instructions	40
+1017ba4	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.connect.action.literals	41
+1017bf0	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort	43	map=map_101720d
+1017c04	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort.action	43	map=map_10015d1
+1017c24	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort.action.literals	41
+1017c44	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.Cancel	43	map=map_1017419
+1017c54	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting	43	map=map_1017c75
 1017c74	map_1017c75	41
-1017c98	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectSuccess	43	map=map_101720d
-1017cac	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectSuccess.action	43	map=map_10015d1
-1017ccc	obj_1017ccd	40
-1017cf0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectSuccess.action.literals	41
-1017d10	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure	43	map=map_101720d
-1017d24	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure.action	43	map=map_10015d1
-1017d44	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure.action.literals	41
-1017d60	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure.action.literals[0]	40
-1017d90	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenSuccess	43	map=map_101720d
-1017da4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenSuccess.action	43	map=map_10015d1
-1017dc4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenSuccess.action.literals	41
-1017de0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure	43	map=map_101720d
-1017df4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure.action	43	map=map_10015d1
-1017e14	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure.action.literals	41
-1017e30	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure.action.literals[0]	40
-1017e5c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.Cancel	43	map=map_1017419
-1017e6c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept	43	map=map_1017e85
+1017c98	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectSuccess	43	map=map_101720d
+1017cac	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectSuccess.action	43	map=map_10015d1
+1017ccc	action_code_6	40
+1017cf0	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectSuccess.action.literals	41
+1017d10	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure	43	map=map_101720d
+1017d24	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure.action	43	map=map_10015d1
+1017d44	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure.action.literals	41
+1017d60	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure.action.literals[0]	40
+1017d90	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenSuccess	43	map=map_101720d
+1017da4	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenSuccess.action	43	map=map_10015d1
+1017dc4	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenSuccess.action.literals	41
+1017de0	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure	43	map=map_101720d
+1017df4	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure.action	43	map=map_10015d1
+1017e14	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure.action.literals	41
+1017e30	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure.action.literals[0]	40
+1017e5c	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.Cancel	43	map=map_1017419
+1017e6c	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept	43	map=map_1017e85
 1017e84	map_1017e85	41
-1017ea0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Accept	43	map=map_101720d
-1017eb4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Accept.action	43	map=map_10015d1
-1017ed4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Accept.action.literals	41
-1017f08	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort	43	map=map_101720d
-1017f1c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort.action	43	map=map_10015d1
-1017f3c	obj_1017f3d	40
-1017f58	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort.action.literals	41
+1017ea0	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Accept	43	map=map_101720d
+1017eb4	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Accept.action	43	map=map_10015d1
+1017ed4	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Accept.action.literals	41
+1017f08	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort	43	map=map_101720d
+1017f1c	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort.action	43	map=map_10015d1
+1017f3c	action_code_7	40
+1017f58	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort.action.literals	41
 1017f7c	'Disconnect	40
-1017f98	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Cancel	43	map=map_1017419
-1017fa8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting	43	map=map_1017fc1
+1017f98	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Cancel	43	map=map_1017419
+1017fa8	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting	43	map=map_1017fc1
 1017fc0	map_1017fc1	41
-1017fdc	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptSuccess	43	map=map_101720d
-1017ff0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptSuccess.action	43	map=map_10015d1
-1018010	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptSuccess.action.literals	41
-1018030	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure	43	map=map_101720d
-1018044	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure.action	43	map=map_10015d1
-1018064	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure.action.literals	41
-1018080	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure.action.literals[0]	40
-10180ac	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.Cancel	43	map=map_1017419
-10180bc	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected	43	map=map_10180d9
+1017fdc	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptSuccess	43	map=map_101720d
+1017ff0	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptSuccess.action	43	map=map_10015d1
+1018010	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptSuccess.action.literals	41
+1018030	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure	43	map=map_101720d
+1018044	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure.action	43	map=map_10015d1
+1018064	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure.action.literals	41
+1018080	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure.action.literals[0]	40
+10180ac	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.Cancel	43	map=map_1017419
+10180bc	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected	43	map=map_10180d9
 10180d8	map_10180d9	41
-10180f8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Connected	43	map=map_1017419
-1018108	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Connected.action	43	map=map_10015d1
-1018128	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Connected.action.instructions	40
-1018148	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Connected.action.literals	41
-1018168	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Disconnect	43	map=map_101720d
-101817c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Disconnect.action	43	map=map_10015d1
-101819c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Disconnect.action.instructions	40
-10181f4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Disconnect.action.literals	41
-101823c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort	43	map=map_1017419
-101824c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort.action	43	map=map_10015d1
-101826c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort.action.literals	41
-1018290	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Cancel	43	map=map_1017419
-10182a0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting	43	map=map_10182b9
+10180f8	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Connected	43	map=map_1017419
+1018108	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Connected.action	43	map=map_10015d1
+1018128	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Connected.action.instructions	40
+1018148	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Connected.action.literals	41
+1018168	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Disconnect	43	map=map_101720d
+101817c	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Disconnect.action	43	map=map_10015d1
+101819c	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Disconnect.action.instructions	40
+10181f4	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Disconnect.action.literals	41
+101823c	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort	43	map=map_1017419
+101824c	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort.action	43	map=map_10015d1
+101826c	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort.action.literals	41
+1018290	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Cancel	43	map=map_1017419
+10182a0	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting	43	map=map_10182b9
 10182b8	map_10182b9	41
-10182d4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectSuccess	43	map=map_101720d
-10182e8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectSuccess.action	43	map=map_10015d1
-1018308	obj_1018309	40
-101831c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectSuccess.action.literals	41
-1018330	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure	43	map=map_101720d
-1018344	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure.action	43	map=map_10015d1
-1018364	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure.action.literals	41
-1018380	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure.action.literals[0]	40
-10183b4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.Cancel	43	map=map_1017419
-10183c4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBind	43	map=map_10183d9
+10182d4	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectSuccess	43	map=map_101720d
+10182e8	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectSuccess.action	43	map=map_10015d1
+1018308	action_code_8	40
+101831c	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectSuccess.action.literals	41
+1018330	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure	43	map=map_101720d
+1018344	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure.action	43	map=map_10015d1
+1018364	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure.action.literals	41
+1018380	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure.action.literals[0]	40
+10183b4	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.Cancel	43	map=map_1017419
+10183c4	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBind	43	map=map_10183d9
 10183d8	map_10183d9	41
-10183f0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.UnBind	43	map=map_101720d
-1018404	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.UnBind.action	43	map=map_10015d1
-1018424	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.UnBind.action.instructions	40
-1018454	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.UnBind.action.literals	41
-1018480	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.Cancel	43	map=map_1017419
-1018490	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding	43	map=map_10184a9
+10183f0	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.UnBind	43	map=map_101720d
+1018404	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.UnBind.action	43	map=map_10015d1
+1018424	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.UnBind.action.instructions	40
+1018454	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.UnBind.action.literals	41
+1018480	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBind.Cancel	43	map=map_1017419
+1018490	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding	43	map=map_10184a9
 10184a8	map_10184a9	41
-10184c4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindSuccess	43	map=map_101720d
-10184d8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindSuccess.action	43	map=map_10015d1
-10184f8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindSuccess.action.literals	41
-101850c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure	43	map=map_101720d
-1018520	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure.action	43	map=map_10015d1
-1018540	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure.action.literals	41
-101855c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure.action.literals[0]	40
-1018588	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.Cancel	43	map=map_1017419
-1018598	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Dispose	43	map=map_10185ad
+10184c4	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindSuccess	43	map=map_101720d
+10184d8	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindSuccess.action	43	map=map_10015d1
+10184f8	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindSuccess.action.literals	41
+101850c	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure	43	map=map_101720d
+1018520	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure.action	43	map=map_10015d1
+1018540	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure.action.literals	41
+101855c	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure.action.literals[0]	40
+1018588	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.Cancel	43	map=map_1017419
+1018598	part[0]._ExportTable[0].objects[1].fsm_private_states.Dispose	43	map=map_10185ad
 10185ac	map_10185ad	41
-10185c4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Dispose	43	map=map_101720d
-10185d8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Dispose.action	43	map=map_10015d1
-10185f8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Dispose.action.instructions	40
-101862c	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Dispose.action.literals	41
+10185c4	part[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Dispose	43	map=map_101720d
+10185d8	part[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Dispose.action	43	map=map_10015d1
+10185f8	part[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Dispose.action.instructions	40
+101862c	part[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Dispose.action.literals	41
 1018658	'DisposeFailure	40
 1018678	'DisposeSuccess	40
-1018698	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Cancel	43	map=map_1017419
-10186a8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing	43	map=map_10186c1
+1018698	part[0]._ExportTable[0].objects[1].fsm_private_states.Dispose.Cancel	43	map=map_1017419
+10186a8	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing	43	map=map_10186c1
 10186c0	map_10186c1	41
-10186dc	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeSuccess	43	map=map_101720d
-10186f0	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeSuccess.action	43	map=map_10015d1
-1018710	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeSuccess.action.literals	41
-1018724	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure	43	map=map_101720d
-1018738	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure.action	43	map=map_10015d1
-1018758	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure.action.literals	41
-1018774	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure.action.literals[0]	40
-10187a4	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.Cancel	43	map=map_10187b5
+10186dc	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeSuccess	43	map=map_101720d
+10186f0	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeSuccess.action	43	map=map_10015d1
+1018710	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeSuccess.action.literals	41
+1018724	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure	43	map=map_101720d
+1018738	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure.action	43	map=map_10015d1
+1018758	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure.action.literals	41
+1018774	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure.action.literals[0]	40
+10187a4	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.Cancel	43	map=map_10187b5
 10187b4	map_10187b5	41
-10187c8	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp	43	map=map_10187d9
+10187c8	part[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp	43	map=map_10187d9
 10187d8	map_10187d9	41
-10187ec	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp.CleanUp	43	map=map_101720d
-1018800	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp.CleanUp.action	43	map=map_10015d1
-1018820	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp.CleanUp.action.instructions	40
-1018850	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp.CleanUp.action.literals	41
-1018880	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Disconnect	43	map=map_10015d1
-10188a0	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Disconnect.literals	41
-10188b4	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate	41
-10188d0	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[0]	43	map=map_10188ed
+10187ec	part[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp.CleanUp	43	map=map_101720d
+1018800	part[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp.CleanUp.action	43	map=map_10015d1
+1018820	part[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp.CleanUp.action.instructions	40
+1018850	part[0]._ExportTable[0].objects[1].fsm_private_states.CleanUp.CleanUp.action.literals	41
+1018880	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Disconnect	43	map=map_10015d1
+10188a0	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Disconnect.literals	41
+10188b4	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate	41
+10188d0	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[0]	43	map=map_10188ed
 10188ec	map_10188ed	41
 101890c	'label	40
 1018924	'opCode	40
 101893c	'result	40
-1018954	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[0].label	40
+1018954	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[0].label	40
 101896c	'service	40
-1018984	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1]	43	map=map_10189a9
+1018984	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1]	43	map=map_10189a9
 10189a8	map_10189a9	41
 10189d0	'form	40
 10189e8	'data	40
-1018a00	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1].label	40
+1018a00	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1].label	40
 1018a18	'option	40
 1018a30	'template	40
-1018a4c	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1].data	43	map=map_1018a61
+1018a4c	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1].data	43	map=map_1018a61
 1018a60	map_1018a61	41
 1018a78	'arglist	40
 1018a90	'typeList	40
-1018aac	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1].data.arglist	41
-1018ac8	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1].data.typeList	41
+1018aac	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1].data.arglist	41
+1018ac8	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[1].data.typeList	41
 1018ae8	'struct	40
 1018b00	'long	40
-1018b18	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2]	43	map=map_10189a9
-1018b3c	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2].label	40
-1018b54	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2].data	43	map=map_1018a61
-1018b68	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2].data.arglist	41
-1018b8c	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2].data.typeList	41
+1018b18	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2]	43	map=map_10189a9
+1018b3c	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2].label	40
+1018b54	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2].data	43	map=map_1018a61
+1018b68	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2].data.arglist	41
+1018b8c	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[2].data.typeList	41
 1018bb4	'byte	40
 1018bcc	'boolean	40
-1018be4	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3]	43	map=map_10189a9
-1018c08	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3].label	40
-1018c20	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3].data	43	map=map_1018a61
-1018c34	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3].data.arglist	41
-1018c58	obj_10014a1[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3].data.typeList	41
-1018c80	obj_10014a1[0]._ExportTable[0].objects[2]	43	map=map_1018c95
+1018be4	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3]	43	map=map_10189a9
+1018c08	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3].label	40
+1018c20	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3].data	43	map=map_1018a61
+1018c34	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3].data.arglist	41
+1018c58	part[0]._ExportTable[0].objects[1].fConfigOptions_Instantiate[3].data.typeList	41
+1018c80	part[0]._ExportTable[0].objects[2]	43	map=map_1018c95
 1018c94	map_1018c95	41
 1018cac	'bits	40
 1018cc4	'bounds	40
-1018cdc	obj_10014a1[0]._ExportTable[0].objects[2].bits	40
-1018d70	obj_10014a1[0]._ExportTable[0].objects[2].bounds	43	map=map_1001ec5
-1018d8c	obj_10014a1[0]._ExportTable[0].objects[3]	43	map=map_1018c95
-1018da0	obj_10014a1[0]._ExportTable[0].objects[3].bits	40
-1018df8	obj_10014a1[0]._ExportTable[0].objects[3].bounds	43	map=map_1001ec5
-alias	obj_10014a1[0].installScript.literals[1].literals[8].literals[1]	obj_10018e5
-alias	obj_10014a1[0].installScript.literals[1].literals[9]	obj_10018e5
-alias	obj_10014a1[0].installScript.literals[1].literals[10].literals[1].literals[6]	obj_10018e5
-alias	obj_10014a1[0].removeScript.instructions	obj_1001c19
-alias	obj_10014a1[0].UnitsInstalledScript.instructions	obj_1001c49
-alias	obj_10014a1[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc.literals[5]	obj_1002111
-alias	obj_10014a1[0].UnitsInstalledScript.literals[1].stepChildren[0].textSetup.literals[6]	obj_1002111
-alias	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[1]	obj_1002775
-alias	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[10].literals[2]	obj_1002775
-alias	obj_10014a1[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[17]	obj_1002775
-alias	obj_10014a1[0].UnitsRemovedScript.instructions	obj_1001c49
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Bind.instructions	obj_101660d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Bind.literals[1]	obj_1012461
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Listen.instructions	obj_101660d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Listen.literals[1]	obj_1012461
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Connect.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Accept.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Instantiate.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].SetEndpoint.instructions	obj_101678d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Bind.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Listen.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Connect.completionScript.instructions	obj_10168b9
-alias	obj_10014a1[0]._ExportTable[0].objects[1].GetState.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Accept.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Connect.instructions	obj_101660d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Connect.literals[1]	obj_1012461
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_UnBind.completionScript.instructions	obj_1016a75
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Bind.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildConfigOptions_Listen.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Accept.completionScript.instructions	obj_10168b9
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_UnBind.instructions	obj_101660d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_UnBind.literals[1]	obj_1012461
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Disconnect.completionScript.instructions	obj_1016a75
-alias	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Connect.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].SetState.instructions	obj_101678d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].GetAbort.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].GetEndpoint.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Instantiate.instructions	obj_1016689
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Bind.completionScript.instructions	obj_10168b9
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fCompletionSpec_Listen.completionScript.instructions	obj_10168b9
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Accept.instructions	obj_101660d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Accept.literals[1]	obj_1012461
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create.action.literals[9]	obj_1012461
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.connect.action.instructions	obj_1017371
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Listen.action.instructions	obj_1017371
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action.instructions	obj_101763d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action.literals[0]	obj_1013eb9
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateSuccess.action.instructions	obj_10176ed
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure.action.instructions	obj_101775d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Bind.action.instructions	obj_1017859
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort.action.instructions	obj_101763d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort.action.literals[0]	obj_1013eb9
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindSuccess.action.instructions	obj_10176ed
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure.action.instructions	obj_101775d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort.action.instructions	obj_101763d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort.action.literals[0]	obj_1013eb9
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectSuccess.action.instructions	obj_1017ccd
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure.action.instructions	obj_101775d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenSuccess.action.instructions	obj_10176ed
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure.action.instructions	obj_101775d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Accept.action.instructions	obj_1017859
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort.action.instructions	obj_1017f3d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort.action.literals[0]	obj_1013eb9
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptSuccess.action.instructions	obj_1017ccd
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure.action.instructions	obj_101775d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort.action.instructions	obj_1017f3d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort.action.literals[0]	obj_1013eb9
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectSuccess.action.instructions	obj_1018309
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure.action.instructions	obj_101775d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindSuccess.action.instructions	obj_1018309
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure.action.instructions	obj_101775d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeSuccess.action.instructions	obj_1018309
-alias	obj_10014a1[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure.action.instructions	obj_101775d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Disconnect.instructions	obj_101660d
-alias	obj_10014a1[0]._ExportTable[0].objects[1].BuildCompletionSpec_Disconnect.literals[1]	obj_1012461
-alias	obj_1002a69.DoEvent.bcFunc.literals	obj_1011e85
-alias	obj_1002a69.Instantiate.literals[12]	obj_1012461
-alias	obj_1002a69.DoEvent_Loop.bcFunc.literals	obj_1012679
-alias	obj_1002a69.IsBusy.instructions	obj_1012e45
-alias	obj_1002a69.GetSpeed.instructions	obj_1012e45
-alias	obj_1002a69.QueueTemplate.Peek.bcFunc.literals	obj_101308d
-alias	obj_1002a69.QueueTemplate.DeQueue.bcFunc.literals	obj_1013135
-alias	obj_1002a69.QueueTemplate.EnQueue.bcFunc.literals	obj_1013205
-alias	obj_1002a69.QueueTemplate.GetQueueSize.bcFunc.literals	obj_10132a1
-alias	obj_1002a69.QueueTemplate.IsEmpty.bcFunc.literals	obj_101333d
-alias	obj_1002a69.ProtoClone.literals[0]	obj_10133e1
-alias	obj_1002a69.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[3]	obj_1013c61
-alias	obj_1002a69.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals[3]	obj_1013eb9
-alias	obj_1002a69.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals[10]	obj_1013c61
-alias	obj_1002a69.ObjectToString.bcFunc.literals	obj_10143c5
-alias	obj_1002a69.DoEvent_Check.bcFunc.literals	obj_1015045
-alias	obj_1002a69.PeriodicTemplate.viewIdleScript.bcFunc.literals	obj_1015421
-alias	obj_1002a69.PeriodicTemplate.viewSetupDoneScript.bcFunc.literals	obj_1015521
-alias	obj_1002a69.PeriodicTemplate.ReorientToScreen.instructions	obj_1001c19
-alias	obj_1002a69.KillPeriodicEvent.bcFunc.literals	obj_10155e1
-alias	obj_1002a69.EngineTemplate.viewIdleScript.bcFunc.literals	obj_1015779
-alias	obj_1002a69.EngineTemplate.ReorientToScreen.instructions	obj_1001c19
-alias	obj_1002a69.MCollectAncestorStates.bcFunc.literals	obj_1015841
-alias	obj_1002a69.MCollectAncestorEvents.bcFunc.literals	obj_1015919
-alias	obj_1002a69.DoUniqueEvent.bcFunc.literals	obj_1015b99
-alias	obj_10133e1.bcFunc.literals	obj_101343d
-alias	obj_1014535.bcFunc.literals	obj_1014581
-alias	obj_1014649.bcFunc.literals	obj_1014695
+1018cdc	part[0]._ExportTable[0].objects[2].bits	40
+1018d70	part[0]._ExportTable[0].objects[2].bounds	43	map=map_1001ec5
+1018d8c	part[0]._ExportTable[0].objects[3]	43	map=map_1018c95
+1018da0	part[0]._ExportTable[0].objects[3].bits	40
+1018df8	part[0]._ExportTable[0].objects[3].bounds	43	map=map_1001ec5
+alias	part[0].installScript.literals[1].literals[8].literals[1]	installScript_literal1
+alias	part[0].installScript.literals[1].literals[9]	installScript_literal1
+alias	part[0].installScript.literals[1].literals[10].literals[1].literals[6]	installScript_literal1
+alias	part[0].removeScript.instructions	removeScript_code
+alias	part[0].UnitsInstalledScript.instructions	UnitsInstalledScript_code
+alias	part[0].UnitsInstalledScript.literals[1].infoFrame.formatFunc.literals[5]	_literals_11Item_7
+alias	part[0].UnitsInstalledScript.literals[1].stepChildren[0].textSetup.literals[6]	_literals_11Item_7
+alias	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[1]	BuildLabelCommands_literal1
+alias	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[10].literals[2]	BuildLabelCommands_literal1
+alias	part[0].UnitsInstalledScript.literals[1].BuildLabelCommands.literals[17]	BuildLabelCommands_literal1
+alias	part[0].UnitsRemovedScript.instructions	UnitsInstalledScript_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Bind.instructions	BuildCompletionSpec_Bind_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Bind.literals[1]	_literals_2Item
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Listen.instructions	BuildCompletionSpec_Bind_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Listen.literals[1]	_literals_2Item
+alias	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Connect.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Accept.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Instantiate.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].SetEndpoint.instructions	SetEndpoint_code
+alias	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Bind.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Listen.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].fCompletionSpec_Connect.completionScript.instructions	completionScript_code
+alias	part[0]._ExportTable[0].objects[1].GetState.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Accept.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Connect.instructions	BuildCompletionSpec_Bind_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Connect.literals[1]	_literals_2Item
+alias	part[0]._ExportTable[0].objects[1].fCompletionSpec_UnBind.completionScript.instructions	completionScript_code_2
+alias	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Bind.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].BuildConfigOptions_Listen.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].fCompletionSpec_Accept.completionScript.instructions	completionScript_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_UnBind.instructions	BuildCompletionSpec_Bind_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_UnBind.literals[1]	_literals_2Item
+alias	part[0]._ExportTable[0].objects[1].fCompletionSpec_Disconnect.completionScript.instructions	completionScript_code_2
+alias	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Connect.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].SetState.instructions	SetEndpoint_code
+alias	part[0]._ExportTable[0].objects[1].GetAbort.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].GetEndpoint.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].GetConfigOptionsAfter_Instantiate.instructions	BuildConfigOptions_Connect_code
+alias	part[0]._ExportTable[0].objects[1].fCompletionSpec_Bind.completionScript.instructions	completionScript_code
+alias	part[0]._ExportTable[0].objects[1].fCompletionSpec_Listen.completionScript.instructions	completionScript_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Accept.instructions	BuildCompletionSpec_Bind_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Accept.literals[1]	_literals_2Item
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Genesis.Create.action.literals[9]	_literals_2Item
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.connect.action.instructions	action_code
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.ReadyToConnect.Listen.action.instructions	action_code
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action.instructions	action_code_2
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiate.Abort.action.literals[0]	action_literal0
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateSuccess.action.instructions	action_code_3
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Instantiating.InstantiateFailure.action.instructions	action_code_4
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Bind.action.instructions	action_code_5
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort.action.instructions	action_code_2
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Bind.Abort.action.literals[0]	action_literal0
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindSuccess.action.instructions	action_code_3
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Binding.BindFailure.action.instructions	action_code_4
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort.action.instructions	action_code_2
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.connect.Abort.action.literals[0]	action_literal0
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectSuccess.action.instructions	action_code_6
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ConnectFailure.action.instructions	action_code_4
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenSuccess.action.instructions	action_code_3
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Connecting.ListenFailure.action.instructions	action_code_4
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Accept.action.instructions	action_code_5
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort.action.instructions	action_code_7
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Accept.Abort.action.literals[0]	action_literal0
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptSuccess.action.instructions	action_code_6
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Accepting.AcceptFailure.action.instructions	action_code_4
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort.action.instructions	action_code_7
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Connected.Abort.action.literals[0]	action_literal0
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectSuccess.action.instructions	action_code_8
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Disconnecting.DisconnectFailure.action.instructions	action_code_4
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindSuccess.action.instructions	action_code_8
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.UnBinding.UnBindFailure.action.instructions	action_code_4
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeSuccess.action.instructions	action_code_8
+alias	part[0]._ExportTable[0].objects[1].fsm_private_states.Disposing.DisposeFailure.action.instructions	action_code_4
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Disconnect.instructions	BuildCompletionSpec_Bind_code
+alias	part[0]._ExportTable[0].objects[1].BuildCompletionSpec_Disconnect.literals[1]	_literals_2Item
+alias	objectsProto.DoEvent.bcFunc.literals	_literals
+alias	objectsProto.Instantiate.literals[12]	_literals_2Item
+alias	objectsProto.DoEvent_Loop.bcFunc.literals	_literals_2
+alias	objectsProto.IsBusy.instructions	IsBusy_code
+alias	objectsProto.GetSpeed.instructions	IsBusy_code
+alias	objectsProto.QueueTemplate.Peek.bcFunc.literals	_literals_3
+alias	objectsProto.QueueTemplate.DeQueue.bcFunc.literals	_literals_4
+alias	objectsProto.QueueTemplate.EnQueue.bcFunc.literals	_literals_5
+alias	objectsProto.QueueTemplate.GetQueueSize.bcFunc.literals	_literals_6
+alias	objectsProto.QueueTemplate.IsEmpty.bcFunc.literals	_literals_7
+alias	objectsProto.ProtoClone.literals[0]	frame
+alias	objectsProto.waitViewTemplate.statusViewTemplate.viewIdleScript.literals[3]	viewIdleScript_literal3
+alias	objectsProto.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals[3]	action_literal0
+alias	objectsProto.waitViewTemplate.statusViewTemplate.SetOwnerContext.literals[10]	viewIdleScript_literal3
+alias	objectsProto.ObjectToString.bcFunc.literals	_literals_9
+alias	objectsProto.DoEvent_Check.bcFunc.literals	_literals_12
+alias	objectsProto.PeriodicTemplate.viewIdleScript.bcFunc.literals	_literals_13
+alias	objectsProto.PeriodicTemplate.viewSetupDoneScript.bcFunc.literals	_literals_14
+alias	objectsProto.PeriodicTemplate.ReorientToScreen.instructions	removeScript_code
+alias	objectsProto.KillPeriodicEvent.bcFunc.literals	_literals_15
+alias	objectsProto.EngineTemplate.viewIdleScript.bcFunc.literals	_literals_16
+alias	objectsProto.EngineTemplate.ReorientToScreen.instructions	removeScript_code
+alias	objectsProto.MCollectAncestorStates.bcFunc.literals	_literals_17
+alias	objectsProto.MCollectAncestorEvents.bcFunc.literals	_literals_18
+alias	objectsProto.DoUniqueEvent.bcFunc.literals	_literals_19
+alias	frame.bcFunc.literals	_literals_8
+alias	_literals_9Item.bcFunc.literals	_literals_10
+alias	_literals_9Item_2.bcFunc.literals	_literals_11

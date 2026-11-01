@@ -1,5 +1,0 @@
-@@ 0x45b061
-func() begin
-	(if place then place else "")
-end
-@@end

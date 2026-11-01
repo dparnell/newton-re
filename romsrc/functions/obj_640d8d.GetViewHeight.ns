@@ -1,5 +1,0 @@
-@@ 0x439805
-func() begin
-	return viewHeight
-end
-@@end

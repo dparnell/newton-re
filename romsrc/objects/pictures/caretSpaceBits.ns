@@ -1,0 +1,11 @@
+// The space key of the caret's punctuation picker. A picker image: bits and bounds, a grid
+// of width x height cells, and the text each cell enters (words). Magic pointer @803. Used
+// by viewRoot.
+
+caretSpaceBits := {
+	bits: bitmap('bits, "resources/bits/46e321.png", "00000000000800c300c3023800d40263", 1),
+	bounds: {left: 0, top: 0, right: 43, bottom: 17},
+	width: 1,
+	height: 1,
+	words: [|Array|: groupSepStr]
+};

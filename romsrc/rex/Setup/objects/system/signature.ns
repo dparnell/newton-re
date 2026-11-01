@@ -1,0 +1,103 @@
+// signature: Setup's "Sign your Name" page - an edit view the owner signs in, whose ink
+// (its viewChildren) is kept as the owner card's owner.signature; an Erase button clears
+// it. The file holds the page and what only it reaches.
+
+signature := {
+	stepChildren: [stepChildren:
+		nameItem,
+		{
+			viewBounds: {top: 245, left: 0, right: 236, bottom: 286},
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewJustify: vjCenterH + vjParentCenterH,
+			viewClass: clPictureView,
+			icon: picture('picture, "resources/picture/7b2ad9")
+		},
+		x,
+		signatureItem,
+		erase
+	],
+	// TearDown: when the page is left, stores the signature ink in the owner card.
+	TearDown: func() begin
+		if fPersona.owner then begin
+				fPersona.owner.signature := sigCapture.viewChildren
+			end else begin
+				fPersona.owner := {};
+				fPersona.owner.signature := sigCapture.viewChildren
+			end;
+		(fReviewDone := true)
+	end,
+	titleTExt: "Sign \u000dyour Name",
+	description: "Sign your name at the \"X\" by writing inside the box.  This allows you to add your signature to documents you create.\u000d\u000d",
+	declareSelf: 'PageBase,
+	debug: "signature",
+	_proto: @8353,
+	xline: nil,
+	stepAllocateContext: [|Array|:
+		'_defaultButton,
+		nameItem_2,
+		'vGoBackButton,
+		nameItem_3,
+		'vCloser,
+		nameItem_4,
+		'vFeedback,
+		nameItem_5,
+		'xline,
+		x,
+		'sigCapture,
+		signatureItem,
+		'eraseButton,
+		erase
+	],
+	sigCapture: nil,
+	eraseButton: nil
+};
+
+x := {
+	text: "X",
+	viewBounds: {left: 0, top: 100, right: 236, bottom: 250},
+	viewJustify: vjCenterV + vjParentCenterH,
+	viewFont: tsSimple + tsSize(12) + tsBold,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'xline
+};
+
+signatureItem := {
+	viewFlags: vVisible + vClipping + vClickable + vStrokesAllowed + vGesturesAllowed,
+	viewFormat: vfFrameGray + vfPen(1) + vfLinesGray,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 58},
+	viewJustify: vjParentFullH + vjParentCenterV + vjSiblingFullH + vjSiblingCenterV + oneLineOnly,
+	viewLineSpacing: 40,
+	// viewSetupFormScript: shows the signature already stored, if any.
+	viewSetupFormScript: func() begin
+		(if fPersona.owner.signature then (self.viewChildren := fPersona.owner.signature))
+	end,
+	// Erase: removes the ink and redraws the "X".
+	Erase: func() begin
+		self.viewChildren := nil;
+		self:RedoChildren();
+		xline:dirty()
+	end,
+	viewClass: clEditView,
+	preAllocatedContext: 'sigCapture
+};
+
+erase := {
+	text: "Erase",
+	viewBounds: {left: 90, top: 10, right: 90, bottom: 25},
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV,
+	viewFont: @fontSystem9Bold,
+	// buttonPressedScript: Erase - clears the signature.
+	buttonPressedScript: func() begin
+		sigCapture:Erase()
+	end,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	// viewSetupFormScript: sizes the button to its text, from its left edge.
+	viewSetupFormScript: func() begin
+		(viewBounds := Clone(viewBounds)).right := ((viewBounds.left + StrFontWidth(text, viewFont)) + 6);
+		(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
+	end,
+	viewTransferMode: 0,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'eraseButton
+};

@@ -1,0 +1,7 @@
+// canonicalMeetingDropText, and what only it reaches
+//
+// What a meeting dragged out of the day view gives as 'text
+// (src/views/MeetingView.cpp, GetDropData): its text, font, styles and
+// bounds, marked as coming from a meeting.
+
+canonicalMeetingDropText := {text: nil, viewFont: nil, styles: nil, viewBounds: nil, originType: 'meeting};

@@ -1,0 +1,5 @@
+// canonicalPackageData, and what only it reaches
+//
+// A frame holding a package's data (packageData).
+
+canonicalPackageData := {packageData: nil};

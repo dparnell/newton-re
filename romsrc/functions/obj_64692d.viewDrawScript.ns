@@ -1,5 +1,0 @@
-@@ 0x477ec5
-func() begin
-	(if (not when) then inherited:?viewDrawScript())
-end
-@@end

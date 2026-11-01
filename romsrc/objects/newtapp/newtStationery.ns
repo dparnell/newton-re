@@ -1,0 +1,40 @@
+// newtStationery: the proto of a dataDef, the stationery that defines a kind of
+// entry (NPR 2.0 "Stationery Reference"; registered with RegDataDef).  It is not a
+// view.  The defaults here are what a dataDef that leaves them out gets.
+//
+// This file holds newtStationery and what only it reaches.
+
+newtStationery := {
+	// the class of the entries this dataDef makes; superSymbol the application's
+	symbol: nil,
+	superSymbol: nil,
+	// name: the New picker's item; description: for the information slip ("" each)
+	name: uCardPositionAlertButton,
+	description: uCardPositionAlertButton,
+	icon: @filledStarBitmap,
+	version: 0,
+	// the default height of an entry in a roll (Notes-like) application
+	height: 200,
+	metadata: nil,
+	// a new entry for the soup (used when there is no FillNewEntry)
+	MakeNewEntry: func() begin
+		{}
+	end,
+	// the bounds the entry's data needs, for a roll whose entries vary in height (NPR 2.0
+	// MinimalBounds); nil here
+	MinimalBounds: func(target) begin
+		nil
+	end,
+	// SetupForm(entry, entryView): change the data before it is shown (NPR 2.0); nothing here
+	SetupForm: func(entry, a2) begin
+		nil
+	end,
+	// the entry described in nLines lines of text, for overviews and Find
+	StringExtract: func(entry, nLines) begin
+		""
+	end,
+	// the entry as text, for routing (NPR 2.0: TextScript(item, target))
+	TextScript: func(entry, target) begin
+		""
+	end
+};

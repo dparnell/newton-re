@@ -1,0 +1,80 @@
+// protoListView: the native outline list view (clListView) - a lined list of
+// topics, each a paragraph (canonicalParaTopic) at an indent level up to
+// maxLevel, with markers (topicMarkers, checkBitmaps) on the left that can
+// be dragged and collapsed, as the To Do list and outlines use it. Most of
+// its methods are native functions (the class #132 frames: funcPtr and
+// numArgs describe a function implemented in native code).
+
+protoListView := {
+	// the list's topics (the data), and the last one
+	topics: nil,
+	lastTopic: nil,
+	leftMarkGap: 0,
+	MakeDragRef: {class: #132, funcPtr: 7023974, numArgs: 1},
+	topicMarkers: @topicMarkers,
+	viewFormat: vfFillWhite + vfLinesLtGray,
+	viewLineSpacing: 28,
+	ReFlow: nil,
+	ListBottom: {class: #132, funcPtr: 7023973, numArgs: 0},
+	IsCollapsed: {class: #132, funcPtr: 7023972, numArgs: 1},
+	VisibleTopicIndex: {class: #132, funcPtr: 7023980, numArgs: 1},
+	baseLeftGap: 8,
+	rightIndent: 0,
+	nTopics: 0,
+	editChildren: true,
+	viewFlags: vVisible + vClipping + vClickable + vStrokesAllowed + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed + vPhoneField + vDateField + vTimeField,
+	minimalChildren: nil,
+	// the index of the topic holding the caret (set by canonicalParaTopic)
+	curTopic: nil,
+	priorityItems: @priorityItems,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	ChildTemplateFromTopic: {class: #132, funcPtr: 7023968, numArgs: 1},
+	rightMarkGap: 0,
+	// what may be dropped on the list, and on its markers
+	allDropTypes: [|Array|: 'topic, 'task, 'text],
+	markerdropTypes: [|Array|: 'topic, 'task],
+	recConfig: @rcInkorText,
+	CollapseTopic: {class: #132, funcPtr: 7023969, numArgs: 2},
+	textFlags: 192,
+	SetupVisibleChildren: {class: #132, funcPtr: 7023977, numArgs: 3},
+	TopicIndexToView: {class: #132, funcPtr: 7023979, numArgs: 1},
+	// the deepest indent level a topic may have
+	maxLevel: 8,
+	viewJustify: vjParentFullH + vjParentFullV,
+	topicsLabel: items,
+	listViewFlags: 0,
+	TopicBottom: {class: #132, funcPtr: 7023978, numArgs: 1},
+	uniqueSymbol: 'listView,
+	ExpandTopic: {class: #132, funcPtr: 7023970, numArgs: 2},
+	checkBitmaps: @checkBitmaps,
+	// the template of the paragraph view made for a topic
+	canonicalParaTopic: {
+		viewBounds: nil,
+		viewFlags: vVisible + vCalculateBounds,
+		viewStationery: 'para,
+		styles: [|Array|: ],
+		text: nil,
+		textFlags: 257,
+		// the topic's index in the list
+		index: nil,
+		// Called when the caret comes into (a1 true) or leaves the paragraph: the
+		// list's current topic becomes this one when it comes in.
+		viewCaretActivateScript: func(a1) begin
+			(if a1 then (curTopic := index))
+		end
+	},
+	declareSelf: 'list,
+	rightMargin: 240,
+	doingScrub: nil,
+	MarkerBounds: {class: #132, funcPtr: 7023975, numArgs: 1},
+	AdjustParagraph: {class: #132, funcPtr: 7022941, numArgs: 4},
+	topMargin: 0,
+	viewClass: clListView,
+	debug: 10185,
+	// how a topic is dragged: as a topic or as text
+	topicDragInfo: {types: [|Array|: 'topic, 'text], dragRef: nil, label: item},
+	viewFont: nil,
+	topicFont: nil,
+	firstTopic: 0,
+	MungeStyles: {class: #132, funcPtr: 7023976, numArgs: 2}
+};

@@ -1,0 +1,116 @@
+// protoInfoButton: the "i" information button (a protoPictureButton), placed
+// beside a sibling such as another status bar button. A tap pops up a picker of
+// About, Help and Prefs - each only if the client has the method it sends
+// (DoInfoAbout, DoInfoHelp, DoInfoPrefs) - and the client's own items.
+
+protoInfoButton := {
+	_proto: @protoPictureButton,
+	viewBounds: {left: 6, top: 0, right: 19, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV,
+	// the "i" picture; an upper-case "I" is shown while caps lock is down (only
+	// with a keyboard connected)
+	icon: protoInfoButtonIcon,
+	lowerCaseIcon: protoInfoButtonIcon,
+	upperCaseIcon: {
+		bits: bitmap('bits, "resources/bits/43131d.png", "00000000000400000000000000090005", 1),
+		bounds: {left: 0, top: 0, right: 5, bottom: 9}
+	},
+	// the items of the open picker, of which auxItems are the client's own
+	items: nil,
+	auxItems: nil,
+	// the standard items, each shown only when the button (or what it inherits
+	// from) has its message's method: About, Help, Prefs
+	stdItems: [|Array|:
+		{item: about, msg: 'DoInfoAbout},
+		{item: help, msg: 'DoInfoHelp},
+		{item: prefs, msg: 'DoInfoPrefs}
+	],
+	// the open picker
+	popUpView: nil,
+	// viewSetupFormScript: with a keyboard connected, registers the button in
+	// vars._infoButtons (so caps lock changes reach it, SetCapsLock) and shows
+	// the upper-case icon if caps lock (key code 57) is down
+	viewSetupFormScript: func() begin
+		(if CommandKeyboardConnected() then begin
+				if (not vars._infoButtons) then begin
+						vars._infoButtons := [Array: ]
+					end;
+				SetAdd(vars._infoButtons, self, true);
+				(if IsKeyDown(57, true) then (self.icon := self.upperCaseIcon))
+			end)
+	end,
+	// viewQuitScript: unregisters the button and closes its picker
+	viewQuitScript: func() begin
+		if vars._infoButtons then begin
+				SetRemove(vars._infoButtons, self)
+			end;
+		(if popUpView then popUpView:?Close())
+	end,
+	// SetCapsLock(down): shows the upper- or lower-case icon
+	SetCapsLock: func(a1) begin
+		(if a1 then SetValue(self, 'icon, self.upperCaseIcon) else SetValue(self, 'icon, self.lowerCaseIcon))
+	end,
+	// viewClickScript(unit): if the pen is lifted on the button, pops up the
+	// standard items the button has methods for and the client's own
+	// (GenInfoAuxItems, optional); nothing to show just unhighlights. Returns
+	// true.
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
+				if (not (auxItems := self:?GenInfoAuxItems())) then begin
+						auxItems := '[Array: ]
+					end;
+				if (Length((items := self:GenInfoItems(auxItems))) > 0) then begin
+						popUpView := self:PopupMenu(items, nil)
+					end else begin
+						self:hilite(nil)
+					end
+			end else begin
+				self:hilite(nil)
+			end;
+		true
+	end,
+	// GenInfoItems(aux): the picker's items - the standard ones that have their
+	// methods, a separator, then aux. The `local` line after the use is the
+	// decompiler's layout.
+	GenInfoItems: func(auxItems) begin
+		list := [Array: ];
+		local list;
+		(foreach item in stdItems do begin
+				if GetVariable(self, item.msg) then begin
+						AddArraySlot(list, item)
+					end
+			end);
+		if (if (Length(list) > 0) then (Length(auxItems) > 0)) then begin
+				AddArraySlot(list, 'pickseparator)
+			end;
+		ArrayMunger(list, Length(list), nil, auxItems, 0, nil);
+		list
+	end,
+	// pickActionScript(index): a standard item sends its message (DoInfoAbout and
+	// so on); one of the client's sends DoInfoAux(auxItems, its index among
+	// them); then cleans up as for a cancel
+	pickActionScript: func(index) begin
+		local l1;
+		l1 := (Length(items) - Length(auxItems));
+		if (index < l1) then begin
+				Perform(self, items[index].msg, '[Array: ])
+			end else begin
+				self:DoInfoAux(auxItems, (index - l1))
+			end;
+		self:pickCancelledScript()
+	end,
+	// pickCancelledScript(): unhighlights and forgets the picker's items
+	pickCancelledScript: func() begin
+		self:hilite(nil);
+		items := nil;
+		auxItems := nil;
+		(popUpView := nil)
+	end
+};
+
+protoInfoButtonIcon := {
+	bits: bitmap('bits, "resources/bits/430df5.png", "000000000004000b000b000d00140012", 1),
+	bounds: {left: 0, top: 0, right: 5, bottom: 9}
+};
+
+about := "About";

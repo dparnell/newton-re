@@ -1,0 +1,32 @@
+// confirmButtonLists: magic pointer @543, the standard button sets of
+// ModalConfirm and AsyncConfirm: a buttonList given as a symbol ('okCancel,
+// 'yesNoDefaultNo, ...) is looked up here, anything else that is not an array
+// means okCancel.  value is what the button answers; keyValue 'default is the
+// button Return chooses, 'Close the one closing the slip chooses.
+
+confirmButtonLists := {
+	okCancel: [|Array|:
+		{value: true, text: uErasePersistentConfirmButton1Str},
+		{value: nil, text: uErasePersistentConfirmButton0Str}
+	],
+	okCancelDefaultOk: [|Array|:
+		{value: true, text: uErasePersistentConfirmButton1Str, keyValue: 'default},
+		{value: nil, text: uErasePersistentConfirmButton0Str, keyValue: 'Close}
+	],
+	okCancelDefaultCancel: [|Array|:
+		{value: true, text: uErasePersistentConfirmButton1Str, keyValue: nil},
+		{value: nil, text: uErasePersistentConfirmButton0Str, keyValue: 'default}
+	],
+	yesNo: [|Array|:
+		{value: true, text: uErasePersistentDataButton1Str},
+		{value: nil, text: uErasePersistentDataButton0Str}
+	],
+	yesNoDefaultYes: [|Array|:
+		{value: true, text: uErasePersistentDataButton1Str, keyValue: 'default},
+		{value: nil, text: uErasePersistentDataButton0Str, keyValue: 'Close}
+	],
+	yesNoDefaultNo: [|Array|:
+		{value: true, text: uErasePersistentDataButton1Str, keyValue: nil},
+		{value: nil, text: uErasePersistentDataButton0Str, keyValue: 'default}
+	]
+};

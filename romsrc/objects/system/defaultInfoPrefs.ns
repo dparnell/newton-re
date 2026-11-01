@@ -1,0 +1,21 @@
+// defaultInfoPrefs: the proto of protoTransportPrefs' infoPrefs - the "i" (info)
+// button of a transport's preferences slip: help, the transport's title, and
+// closing the slip.
+
+defaultInfoPrefs := {
+	// the help item: closes the help book if it is open, else opens help at
+	// "Route" (l1, the transport, is fetched but not used)
+	DoInfoHelp: func() begin
+		local l1, tinyTim;
+		l1 := GetRoot().(appSymbol);
+		(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else OpenHelpTo("Route"))
+	end,
+	// The transport's title.
+	GetTitle: func() begin
+		GetRoot().(appSymbol).title
+	end,
+	// Closing it closes the slip.
+	RememberedClose: func(a1) begin
+		self:viewQuitScript()
+	end
+};

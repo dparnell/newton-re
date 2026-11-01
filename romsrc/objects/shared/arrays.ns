@@ -1,0 +1,71 @@
+// objects several roots reach, none alone (naturalize.py)
+//
+// Arrays that more than one root of the ROM's object world holds, so they
+// are defined once here: rows of the dialling keypads' key definitions,
+// the letter and memo formats' second-page children, and the built-in
+// applications' entries' _tagList.
+//
+// A keyboard row (keyDefinitions, Newton Programmer's Guide "Defining Keys
+// in a Keyboard View"): the row's height and its tallest key's, in key
+// units, then legend, result and descriptor for each key.  288360456 is
+// the descriptor keyHUnit + keyVUnit + 2 * keyFramed + 3 * keyRoundingUnit
+// + keyAutoHilite: one unit square, a 2-pixel frame with 3-pixel rounded
+// corners, hilited when pressed.
+
+// The touch-tone keypad's rows (the phone keypad in shared/frames.ns): each
+// key's legend is its DTMF bitmap, its result the character dialled.
+touchtonePadProtoItem := [|Array|: keyVUnit, keyVUnit, @dtmf1, $1, 288360456, @dtmf2, $2, 288360456, @dtmf3, $3, 288360456];
+
+touchtonePadProtoItem_2 := [|Array|: keyVUnit, keyVUnit, @dtmf4, $4, 288360456, @dtmf5, $5, 288360456, @dtmf6, $6, 288360456];
+
+touchtonePadProtoItem_3 := [|Array|: keyVUnit, keyVUnit, @dtmf7, $7, 288360456, @dtmf8, $8, 288360456, @dtmf9, $9, 288360456];
+
+touchtonePadProtoItem_4 := [|Array|: keyVUnit, keyVUnit, @dtmfStar, $*, 288360456, @dtmf0, $0, 288360456, @dtmfpound, $#, 288360456];
+
+// The phone-number keypad's (phonePad) rows: x and "del" (a backspace),
+// ( and ), / and bullet, comma and period, - and +.
+phonePadItem := [|Array|: keyVUnit, keyVUnit, $x, $x, 288360456, del, $\u0008, 288360456];
+
+phonePadItem_2 := [|Array|: keyVUnit, keyVUnit, @keyLeftParenBitmap, $(, 288360456, @keyRightParenBitmap, $), 288360456];
+
+phonePadItem_3 := [|Array|: keyVUnit, keyVUnit, @keyslashBitmap, $/, 288360456, @keyBulletBitmap, $\u2022, 288360456];
+
+phonePadItem_4 := [|Array|: keyVUnit, keyVUnit, @keyCommaBitmap, $,, 288360456, @keyPeriodBitmap, $., 288360456];
+
+phonePadItem_5 := [|Array|: keyVUnit, keyVUnit, @keyMinusBitmap, $-, 288360456, @keyPlusBitmap, $+, 288360456];
+
+// The letter and memo formats' (protoLetterFormat, prLetterFormat,
+// prMemoFormat) page after the first: one view that pours the rest of the
+// data (ReFlow from reflowStart) into its box, leaving 60 pixels at the
+// bottom, and counts on reflowStart past the children it made.
+page2GutsViewChildren := [|Array|:
+	{
+		viewClass: clView,
+		viewBounds: nil,
+		viewFlags: vVisible + vReadOnly,
+		viewFormat: 0,
+		viewJustify: vjParentCenterH + vjReflow,
+		// The parent's size.
+		viewSetupFormScript: func() begin
+			(self.viewBounds := self:Parent():LocalBox())
+		end,
+		// Reflows the data (once) into the page, 60 pixels short of the bottom, and
+		// shows the pieces from reflowStart on.
+		viewSetupChildrenScript: func() begin
+			local box;
+			if (if (not kids) then data) then begin
+					(box := self:LocalBox()).bottom := (box.bottom - 60);
+					kids := ReFlow(data, '{reflowFont: tsFancy + tsSize(12), unistyle: nil, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28}, fields.targetBox, box)
+				end;
+			(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+		end,
+		// The next page starts after the pieces shown.
+		viewSetupDoneScript: func() begin
+			(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
+		end
+	}
+];
+
+// The _tagList (the tags '_icon and '_noBackup) of the entries
+// bootSoupwannabes and extraProtos make for the built-in applications.
+_tagList := [|Array|: '_icon, '_noBackup];

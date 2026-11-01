@@ -1,6 +1,0 @@
-@@ 0x4b87cd
-func(a1) begin
-	self:SetupIdle(1000);
-	nil
-end
-@@end

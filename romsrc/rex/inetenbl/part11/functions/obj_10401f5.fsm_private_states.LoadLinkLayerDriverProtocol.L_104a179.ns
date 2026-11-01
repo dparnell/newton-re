@@ -1,8 +1,0 @@
-@@ 0x104a179
-func() begin
-	self:MUpdateProgressSlip('Update, nil, 20);
-	fLinkLayerServiceFSM:DoEvent('SetCCE, [Array: fCCE]);
-	fLinkLayerServiceFSM:DoEvent('SetLinkEntry, [Array: fLinkEntry]);
-	fLinkLayerServiceFSM:DoEvent('LoadDriverProtocol, [Array: self, 'MLoadDriverProtocolCallback])
-end
-@@end

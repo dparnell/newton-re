@@ -1,0 +1,4 @@
+// gtscenes: magic pointer @106, an array holding one nil.  Nothing in the
+// ROM's NewtonScript refers to it.
+
+gtscenes := [|Array|: nil];

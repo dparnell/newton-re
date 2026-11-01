@@ -1,5 +1,0 @@
-@@ 0x103f989
-func() begin
-	InetStartUp():MGetLinkDefaultID()
-end
-@@end

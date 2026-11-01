@@ -1,5 +1,0 @@
-@@ 0x4a82e9
-func(a1) begin
-	(not a1.labels)
-end
-@@end

@@ -1,0 +1,19 @@
+// protoLettersPreferencesField: a labelled input line (protoLabelInputLine)
+// that edits one item of the user configuration - its configPath names the
+// item; the field shows the item's value and writes every change back.
+
+protoLettersPreferencesField := {
+	viewLineSpacing: 24,
+	indent: 65,
+	// protoLabelInputLine asks for the text to show when it opens: the
+	// configuration item's current value.
+	TextSetup: func() begin
+		GetUserConfig(configPath)
+	end,
+	// Called by protoLabelInputLine when the text was edited: stores it in the
+	// user configuration.
+	textChanged: func() begin
+		SetUserConfig(configPath, text)
+	end,
+	_proto: @protoLabelInputLine
+};

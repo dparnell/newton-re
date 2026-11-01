@@ -1,5 +1,0 @@
-@@ 0x495ef1
-func(a1) begin
-	(self._openedForStore := a1)
-end
-@@end

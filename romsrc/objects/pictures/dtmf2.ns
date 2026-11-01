@@ -1,0 +1,7 @@
+// The 2 key of the phone keypad. A 1-bit bitmap frame (bits, bounds), 20 x 20 pixels. Magic
+// pointer @695. Used by arrays.
+
+dtmf2 := {
+	bits: bitmap('bits, "resources/bits/3d7aad.png", "00000000000400c700c7013400db0148", 1),
+	bounds: {left: 0, top: 0, right: 20, bottom: 20}
+};

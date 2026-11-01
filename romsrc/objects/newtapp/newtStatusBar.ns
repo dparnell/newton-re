@@ -1,0 +1,21 @@
+// newtStatusBar: the NewtApp status bar (NPR 2.0): newtStatusBarNoClose with a close
+// box at its right - except in the backdrop application (the user's blessedApp), which
+// cannot be closed.
+//
+// This file holds newtStatusBar and what only it reaches.
+
+newtStatusBar := {
+	_proto: @newtStatusBarNoClose,
+	firstRight: -26, // the right buttons start left of the close box
+	// lay the buttons out as newtStatusBarNoClose does, then add the close box
+	viewSetupChildrenScript: func() begin
+		local blessedapp;
+		if (if (blessedapp := GetUserConfig('blessedapp)) then (GetRoot().(blessedapp) = base)) then begin
+				firstRight := @newtStatusBarNoClose.firstRight
+			end else begin
+				firstRight := -26
+			end;
+		inherited:viewSetupChildrenScript();
+		(if (not (if blessedapp then (GetRoot().(blessedapp) = base))) then AddArraySlot(viewChildren, '{viewBounds: {left: -19, top: -16, right: -6, bottom: -3}, _proto: @protoCancelButton}))
+	end
+};

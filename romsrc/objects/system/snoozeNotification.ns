@@ -1,0 +1,41 @@
+// snoozeNotification (@86): a notification item (messageNotification) with a
+// Snooze popup button: an alarm notice BHNotify shows for a snoozable alarm
+// (nfType 9); picking a time sets the alarm again that much later.
+
+snoozeNotification := {
+	_proto: @messageNotification,
+	viewChildren: [viewChildren:
+		snoozeNotificationItem,
+		timeStampField,
+		snoozeNotificationItem_2,
+		{
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly,
+			text: "  Snooze",
+			viewBounds: {left: 3, top: -18, right: 48, bottom: -5},
+			// viewSetupFormScript / viewQuitScript: the button is the item's default
+			// button while it is open.
+			viewSetupFormScript: func() begin
+				(base._defaultButton := self)
+			end,
+			// viewQuitScript: no longer the default button.
+			viewQuitScript: func() begin
+				RemoveSlot(base, '_defaultButton)
+			end,
+			// buttonClickScript: the popup's items, one per snooze time in the
+			// notification's snoozeARoos (minutes: 60 an hour, 1440 a day).
+			// looks like a ROM bug: the "^0 hours" and "^0 days" branches divide the
+			// array [item] rather than item (([Array: item] div 60)); they are never
+			// reached with the ROM's snoozeARoos (5, 9, 15, 30, 60, 1440).
+			buttonClickScript: func() begin
+				popup := (foreach item in snoozeARoos collect (if (item = 60) then "1 hour" else (if (item = 1440) then "1 day" else (if (item < 60) then ParamStr("^0 minutes", [Array: item]) else (if (item < 1440) then ParamStr("^0 hours", ([Array: item] div 60)) else ParamStr("^0 days", ([Array: item] div 1440)))))));
+				inherited:buttonClickScript()
+			end,
+			// pickActionScript(index): snoozes the notice for the time picked.
+			pickActionScript: func(index) begin
+				notification:YouSnoozeYouLose(snoozeARoos[index]);
+				inherited:?pickActionScript(index)
+			end,
+			_proto: @protoPopupButton
+		}
+	]
+};

@@ -1,5 +1,0 @@
-@@ 0x73044d
-func() begin
-	GetGlobals().creditCardTypes.creditCardClasses
-end
-@@end

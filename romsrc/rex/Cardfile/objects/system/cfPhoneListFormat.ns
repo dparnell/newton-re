@@ -1,0 +1,84 @@
+// The "Phone Book" print format (@8232): the cards in sort order, each card's
+// data beside its phone and pager numbers, under a heading for each letter.
+
+cfPhoneListFormat := {
+	routingType: 'Print,
+	type: 'printFormat,
+	name: phoneBook,
+	title: phoneBook,
+	symbol: 'cfPhoneListFormat,
+	usesCursors: true,
+	// A heading for the next card's letter when it starts a new one (an
+	// "Untitled" heading for cards with no sort name); returns the height added.
+	AddHeader: func() begin
+		local target2, none;
+		none := 0;
+		target2 := target;
+		if (not currentLetter) then begin
+				if (IsRichString(target2.sorton) or (not StrFilled(target2.sorton))) then begin
+						none := self:StartNewLetter('none)
+					end else begin
+						none := self:StartNewLetter(target2.sorton[0])
+					end
+			end else begin
+				if ((currentLetter = 'none) or (StrCompare(SPrintObject(target2.sorton[0]), SPrintObject(currentLetter)) > 0)) then begin
+						none := self:StartNewLetter(target2.sorton[0])
+					end
+			end;
+		none
+	end,
+	// Adds a card (target2) at a3, a4: its data but its phones in one column, the
+	// phones and pagers in another; nil when the card belongs under a new letter
+	// (so the page ends and the next one starts with its heading).
+	AddPrintChild: func(layout, target2, a3, a4) begin
+		local frame2, addStepView2, l3;
+		if (currentLetter = 'none) then begin
+				if (if (not IsRichString(target2.sorton)) then StrFilled(target2.sorton)) then begin
+						return nil
+					end
+			end else begin
+				if (StrCompare(SPrintObject(target2.sorton[0]), SPrintObject(currentLetter)) > 0) then begin
+						return nil
+					end
+			end;
+		// The card's views, without its phones and pagers.
+		frame2 := {_proto: infoDisplay, target: target2, viewSetupFormScript: func() begin
+			local l1, l2;
+			(if (if target then target.class) then begin
+					if (not layouts) then begin
+							layouts := {}
+						end;
+					if (not layouts.(target.class)) then begin
+							layouts.(target.class) := call GetRoot().cardfile.kViewsToDisplay with (target)
+						end;
+					SetRemove(layouts.(target.class), 'phone);
+					SetRemove(layouts.(target.class), 'pager);
+					(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then (self.viewFlags := vVisible))
+				end)
+		end, viewBounds: RelBounds(a3, a4, 150, 2000), viewJustify: 0, showMultipleData: true, boldTitle: true};
+		l3 := (addStepView2 := AddStepView(self, frame2)):GetBottom();
+		RemoveStepView(self, addStepView2);
+		self.stepChildren := Clone(self.stepChildren);
+		frame2.viewBounds := RelBounds(a3, a4, 150, l3);
+		AddArraySlot(stepChildren, frame2);
+		AddArraySlot(stepChildren, {_proto: infoDisplay, target: target2, viewBounds: RelBounds(((a3 + 150) + 20), a4, 150, l3), viewJustify: 0, layouts: {person: '[Array: phone, pager], owner: '[Array: phone], company: '[Array: phone]}, showMultipleData: true});
+		{bottom: l3, right: 320}
+	end,
+	currentLetter: nil,
+	infoDisplay: @8242,
+	// Draws a letter's heading: a grey rule and the letter in New York bold 14;
+	// returns its height, 25.
+	StartNewLetter: func(sortonItem) begin
+		local l1, frame2;
+		l1 := (if (sortonItem = 'none) then "Untitled" else SPrintObject(sortonItem));
+		frame2 := {family: 'newyork, size: 14, face: 1};
+		AddStepView(self, {_proto: @protoBorder, viewJustify: vjParentFullH, viewBounds: SetBounds(0, 15, 0, 18), viewFormat: vfFillGray});
+		AddStepView(self, {_proto: @protoStaticText, viewBounds: RelBounds(5, 10, (StrFontWidth(l1, frame2) + 2), fontHeight(frame2)), viewFont: frame2, viewFormat: vfFillWhite, text: l1});
+		currentLetter := sortonItem;
+		25
+	end,
+	protection: 'private,
+	_proto: @8238
+};
+
+phoneBook := "Phone Book";

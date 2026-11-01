@@ -1,3 +1,0 @@
-obj_1000ae1 := array(nil, {_ExportTable: [|Array|: {name: '|NameServerInterface:NSG|, major: 1, minor: 0, objects: [|Array|: {class: 'BinCFunction, code: obj_1000d71, numArgs: 4, offset: 972}, {class: 'BinCFunction, code: obj_1000d71, numArgs: 3, offset: 892}, {class: 'BinCFunction, code: obj_1000d71, numArgs: 2, offset: 456}]}], installScript: function("functions/obj_1000ae1_0_.installScript.ns"), devInstallScript: function("functions/obj_1000ae1_0_.devInstallScript.ns"), devRemoveScript: function("functions/obj_1000ae1_0_.devRemoveScript.ns")});
-obj_1000d71 := native('nativeModule, "resources/nativeModule/1000d71.s");
-obj_10015a9 := same("obj_1000ae1[0].devInstallScript.instructions");

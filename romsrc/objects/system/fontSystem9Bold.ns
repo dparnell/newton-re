@@ -1,0 +1,4 @@
+// fontSystem9Bold: a font frame for the 9-point System (Espy) font, bold - one of
+// the system's standard fonts, ready made for templates and code to use.
+
+fontSystem9Bold := {family: 'espy, face: kFaceBold, size: 9};

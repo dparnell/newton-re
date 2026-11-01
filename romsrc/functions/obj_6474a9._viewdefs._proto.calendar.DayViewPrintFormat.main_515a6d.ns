@@ -1,5 +1,0 @@
-@@ 0x515a6d
-func() begin
-	DrawMeetingGrid(13)
-end
-@@end

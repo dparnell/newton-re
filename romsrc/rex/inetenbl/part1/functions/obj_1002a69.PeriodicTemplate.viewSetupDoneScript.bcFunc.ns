@@ -1,5 +1,0 @@
-@@ 0x1015535 argframe=nil,0
-func() begin
-	self:SetupIdle(delay)
-end
-@@end

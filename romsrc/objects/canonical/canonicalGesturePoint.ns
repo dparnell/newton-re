@@ -1,0 +1,7 @@
+// canonicalGesturePoint, and what only it reaches
+//
+// The frame GesturePoint(index, unit) answers
+// (src/recognition/StrokeBundle.cpp): a corner of the gesture, x and y, and
+// `line`, the gesture's angle.
+
+canonicalGesturePoint := {x: nil, y: nil, line: nil};

@@ -1,9 +1,0 @@
-@@ 0x1045e81
-func(inetMgr) begin
-	local l1;
-	l1 := func(a1) begin
-		(if inetMgr.fNotifyIconObj then (if a1 then inetMgr:DoEvent('ReleaseTimerExpired, nil) else inetMgr:MNotifyIconOn()))
-	end;
-	AsyncConfirm("You are still connected to the Internet. Do you want to close the connection now?", 'yesNoDefaultNo, l1)
-end
-@@end

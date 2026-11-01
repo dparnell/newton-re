@@ -1,5 +1,0 @@
-@@ 0x44480d
-func(a1) begin
-	DurationStr((a1 + 1440))
-end
-@@end

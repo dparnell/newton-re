@@ -1,0 +1,9 @@
+// A business card's frame (@8236): a 240 x 160 bordered view, centred.
+
+export44 := {
+	viewFlags: vVisible + vClipping + vClickable,
+	viewFormat: vfFrameBlack + vfPen(1),
+	viewBounds: {left: 0, top: 0, right: 240, bottom: 160},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewClass: clView
+};

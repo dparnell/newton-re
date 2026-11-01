@@ -1,5 +1,0 @@
-@@ 0x4c073d
-func() begin
-	(clusterValue := currentSoupSymbol)
-end
-@@end

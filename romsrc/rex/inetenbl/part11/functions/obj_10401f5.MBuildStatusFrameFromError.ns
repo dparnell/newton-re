@@ -1,5 +1,0 @@
-@@ 0x1043749
-func(a1) begin
-	self:MBuildStatusFrame((if fLinkEntry then fLinkEntry.linkID), (if a1 then 'error else fLinkStatus), a1, nil, nil, nil)
-end
-@@end

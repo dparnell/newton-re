@@ -1,0 +1,26 @@
+// yearPopup: protoYearPopup, a pop-up that sets a year (protoYearPicker).
+// Opened by :New(year, bbox, context) (this year by default); tells the
+// context newYear(year) as it changes and DoneYear(year) when closed.
+
+yearPopup := {
+	viewBounds: {left: 0, top: 0, right: 104, bottom: 32},
+	viewJustify: 0,
+	value: nil,
+	// Opens it at year a1 (this year if nil) over box a2, for context a3.
+	New: func(a1, a2, a3) begin
+		local init;
+		(init := self:Init()).context := a3;
+		init.value := (if a1 then a1 else Date(Time()).year);
+		init:popup(a2)
+	end,
+	// ClickDone: the picker changed the year.
+	ClickDone: func() begin
+		context:?newYear(value)
+	end,
+	// The close box.
+	Affirmative: func() begin
+		context:?DoneYear(value)
+	end,
+	stepChildren: [stepChildren: {viewBounds: {left: 2, top: 2, right: 86, bottom: 30}, _proto: @protoYearPicker}],
+	_proto: @protoGeneralPopup
+};

@@ -1,7 +1,0 @@
-@@ 0x5971f5
-func() begin
-	viewOriginY := 0;
-	messageField.viewBounds := Clone(messageField.viewBounds);
-	(messageField.viewBounds.bottom := self:LocalBox().bottom)
-end
-@@end

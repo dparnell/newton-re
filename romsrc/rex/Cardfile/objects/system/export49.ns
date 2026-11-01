@@ -1,0 +1,26 @@
+// An edit slip's title (@8241): the card's name and the layout's name, with the
+// class's icon.
+
+export49 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+	// Redraws when the slip's card changes.
+	Retarget: func() begin
+		(if self.viewCObject then self:SyncView())
+	end,
+	title: title,
+	// "Name  Layout" (only the name for the default layout).
+	viewSetupFormScript: func() begin
+		local stringExtract, l2, l3;
+		stringExtract := GetDataDefs(target.class):StringExtract(target, 1);
+		if (if GetVariable(self, 'selectedLayout) then (selectedLayout <> 'default)) then begin
+				if (l3 := GetViewDefs(target.class).(selectedLayout)) then begin
+						l2 := (if l3.nameByClass then l3.nameByClass.(target.class) else l3.name)
+					end
+			end;
+		self.title := ParamStr("^?0^0 || ^1", [Array: stringExtract, l2]);
+		self.titleIcon := GetDataDefs(target.class).overviewIcon;
+		inherited:?viewSetupFormScript()
+	end,
+	viewFlags: vVisible + vReadOnly + vClipping,
+	_proto: @protoTitle
+};

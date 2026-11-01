@@ -1,0 +1,7 @@
+// The indexes of the Names soup. An array of soup index specifications (the indexes of a
+// soup definition). Magic pointer @44. Used by cardfile, cardfileSoupDef.
+
+cardfileIndices := [|Array|:
+	{structure: 'slot, path: 'sorton, type: '|string|},
+	{structure: 'slot, path: 'labels, type: 'tags, tags: nil}
+];

@@ -1,0 +1,297 @@
+// dictionaryList: the built-in dictionaries the recognisers know, one
+// protoDictionary frame each, from which the system's dictionary list is made
+// at boot (src/recognition/Dictionaries.h). In each frame: dictID is the id
+// scripts use (GetDictionary, recConfig.dictionaries); ROMDictID the
+// dictionary's number among the ROM's own Airus dictionaries, or
+// localDictSlot the slot of the locale bundle that holds it; linkedDictID a
+// further dictionary looked up with it; dictType 0 a word list, 1 a reverse
+// (spelling) list, 4 a lexical (format) dictionary; domainType the input
+// mask (view flags) whose fields it serves, its bottom bit (4097) marking a
+// word list the spelling checker is not to offer from; status 1 for one
+// enabled by default. The user (31), Expand (35) and Auto Add (36) ones are
+// RAM dictionaries the user fills (limit: the most words they take).
+
+dictionaryList := [|Array|:
+	{
+		_proto: @protoDictionary,
+		name: "User (forward)",
+		dictID: kUserDictionary,
+		dictType: 0,
+		domainType: vCharsAllowed + vNameField,
+		order: 0,
+		status: 1,
+		count: 0,
+		limit: 1000,
+		addDuplicates: true
+	},
+	{
+		_proto: @protoDictionary,
+		name: "DarkStar (forward)",
+		dictID: 32,
+		ROMDictID: 2,
+		dictType: 0,
+		domainType: vCharsAllowed,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "letters",
+		dictID: 33,
+		ROMDictID: 0,
+		dictType: 0,
+		domainType: vCharsAllowed,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "symbols",
+		dictID: 40, // kSymbolsDictionary in the NPR (rcSingleCharacterConfig)
+		localDictSlot: 'recogSymbolsDictionary,
+		dictType: 0,
+		domainType: vCharsAllowed,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "address abbreviations",
+		dictID: 121,
+		ROMDictID: 28,
+		dictType: 0,
+		domainType: vAddressField,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "ParaGraph prefixes",
+		dictID: 122,
+		ROMDictID: 124,
+		dictType: 0,
+		domainType: 4097,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "ParaGraph suffixes",
+		dictID: 123,
+		ROMDictID: 125,
+		dictType: 0,
+		domainType: 4097,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "commons (attributed) (forward)",
+		dictID: 0, // the common words, the first of a chain of four linked ones
+		linkedDictID: 15,
+		ROMDictID: 19,
+		reverseDictID: 15,
+		dictType: 0,
+		domainType: vCharsAllowed + vNameField + vAddressField,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "commons (attributed) (reverse)",
+		dictID: 15,
+		linkedDictID: 6,
+		ROMDictID: 20,
+		dictType: 1,
+		domainType: vCharsAllowed + vNameField + vAddressField,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared commons",
+		dictID: 6,
+		linkedDictID: 3,
+		ROMDictID: 17,
+		dictType: 0,
+		domainType: vCharsAllowed + vNameField + vAddressField,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local commons",
+		dictID: 3,
+		linkedDictID: 0,
+		localDictSlot: 'recogCommonsDictionary,
+		dictType: 0,
+		domainType: vCharsAllowed + vNameField + vAddressField,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "days & months",
+		dictID: 34,
+		ROMDictID: 3,
+		dictType: 0,
+		domainType: vDateField,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared first names",
+		dictID: 48,
+		ROMDictID: 22,
+		dictType: 0,
+		domainType: vCharsAllowed + vNameField,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared honorifics",
+		dictID: 45,
+		ROMDictID: 24,
+		dictType: 0,
+		domainType: vCharsAllowed + vNameField,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared world cities",
+		dictID: 24,
+		ROMDictID: 29,
+		dictType: 0,
+		domainType: vCharsAllowed,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared countries",
+		dictID: 8,
+		ROMDictID: 30,
+		dictType: 0,
+		domainType: vCharsAllowed,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared world regions",
+		dictID: 26,
+		ROMDictID: 31,
+		dictType: 0,
+		domainType: vCharsAllowed + vNameField,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local time",
+		dictID: kLocalTimeDictionary,
+		localDictSlot: 'recogTimeDictionary,
+		dictType: 4,
+		domainType: vTimeField,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local date",
+		dictID: kLocalDateDictionary,
+		localDictSlot: 'recogDateDictionary,
+		dictType: 4,
+		domainType: vDateField,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local phone",
+		dictID: kLocalPhoneDictionary,
+		localDictSlot: 'recogPhoneDictionary,
+		dictType: 4,
+		domainType: vPhoneField,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "postal codes",
+		dictID: kPostalCodeDictionary,
+		ROMDictID: 107,
+		dictType: 4,
+		domainType: vNumbersAllowed,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "calcsheet",
+		dictID: 124,
+		ROMDictID: 109,
+		dictType: 4,
+		domainType: 0,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local numbers&money",
+		dictID: kLocalNumberDictionary,
+		linkedDictID: kMoneyOnlyDictionary,
+		localDictSlot: 'recogNumbersOnlyDictionary,
+		dictType: 4,
+		domainType: vNumbersAllowed,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local numbers only",
+		dictID: kNumbersOnlyDictionary,
+		localDictSlot: 'recogNumbersOnlyDictionary,
+		dictType: 4,
+		domainType: 0,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local money only",
+		dictID: kMoneyOnlyDictionary,
+		localDictSlot: 'recogMoneyOnlyDictionary,
+		dictType: 4,
+		domainType: 0,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "Expand (forward)",
+		dictID: 35,
+		dictType: 0,
+		domainType: 0,
+		order: 0,
+		status: 0,
+		list: nil,
+		count: 0,
+		limit: 256
+	},
+	{
+		_proto: @protoDictionary,
+		name: "Auto Add (forward)",
+		dictID: 36,
+		dictType: 0,
+		domainType: 0,
+		order: 0,
+		status: 0,
+		list: nil,
+		count: 0,
+		limit: 100
+	}
+];

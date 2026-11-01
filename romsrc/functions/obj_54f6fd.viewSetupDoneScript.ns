@@ -1,8 +1,0 @@
-@@ 0x54f65d
-func() begin
-	self.userConfigChangeSym := Intern(Stringer([Array: "ContrastSlider.", viewCObject]));
-	RegUserConfigChange(userConfigChangeSym, func(a1) begin
-		self:HandleConfigChange(a1)
-	end)
-end
-@@end

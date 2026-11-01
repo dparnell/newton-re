@@ -1,7 +1,0 @@
-@@ 0x102d3ad
-func() begin
-	local l1;
-	l1 := self:LocalBox();
-	(appEmptyStr := [Array: (kAppEmptyFont := {font: 1058816, justification: 'center}), MakeTextLines("A script editor was not found.", l1, fontHeight(kAppEmptyFont.font), kAppEmptyFont.font)])
-end
-@@end

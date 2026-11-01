@@ -1,5 +1,0 @@
-@@ 0x101676d
-func(a1) begin
-	(fEndpoint := a1)
-end
-@@end

@@ -1,0 +1,6 @@
+// canonicalGrayFontSpec, and what only it reaches
+//
+// A font spec with a colour: canonicalFontSpec with `color`, as a gray text
+// shape is drawn with it (src/views/DrawShape.cpp).
+
+canonicalGrayFontSpec := {size: nil, face: nil, family: nil, color: nil};

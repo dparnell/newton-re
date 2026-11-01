@@ -1,0 +1,26 @@
+// protoKeypad: a keyboard view (clKeyboardView) ready to be given its keys -
+// keyDefinitions describes the keys; taps are sent as key codes to the view
+// with the key focus ('viewfrontkey), with a typewriter click. It registers
+// itself as an open keyboard while it is open.
+
+protoKeypad := {
+	viewClass: clKeyboardView,
+	viewFlags: vVisible + vClickable,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	viewFormat: vfFillWhite,
+	keyArrayIndex: 0,
+	keyHighlightKeys: nil,
+	keyResultsAreKeycodes: true,
+	keyReceiverView: 'viewfrontkey,
+	keySound: @typewriter,
+	keyDefinitions: nil,
+	// On opening: tell the system a key code keyboard for input is open
+	// (which shows the caret if needed).
+	viewSetupFormScript: func() begin
+		self:RegisterOpenKeyboard(kKbdUsesKeyCodes + kKbdforInput)
+	end,
+	// On closing: the keyboard is no longer open.
+	viewQuitScript: func() begin
+		self:UnregisterOpenKeyboard()
+	end
+};

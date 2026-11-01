@@ -1,5 +1,0 @@
-@@ 0x535759
-func(a1) begin
-	GetRoot().(appSymbol):DialingComplete(a1)
-end
-@@end

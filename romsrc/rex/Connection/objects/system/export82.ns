@@ -1,0 +1,359 @@
+// The which-connection slip (@8274): what to do once connected to the desktop -
+// Backup (synchronize), Restore, Install package, Import, Synchronize and
+// Keyboard - as picture buttons laid out for the ones the desktop offers
+// (whichIcons); a desktop application may give a button its own icon and
+// script.  While it is up the connection idles, and a command from the desktop
+// starts the session it asks for.
+
+export82 := {
+	viewBounds: {left: 0, top: 40, right: 180, bottom: 198},
+	stepChildren: [stepChildren:
+		{
+			title: dock,
+			titleIcon: {bits: titleIconBits, bounds: {left: 0, top: 0, right: 19, bottom: 11}},
+			_proto: @protoTitle
+		},
+		{
+			// The close box: disconnects ('disc'), the connection finished a second later.
+			buttonClickScript: func() begin
+				local error;
+				closing := true;
+				protoContext:RemoveOpenWindow(base);
+				error := 0;
+				try begin
+						endpoint.disconnecting := true;
+						endpoint:WriteCommand("disc", nil, nil)
+					end onexception |evt.ex| do begin
+						error := CurrentException().error
+					end;
+				if (error = 0) then begin
+						AddDelayedCall(func() begin
+							endpoint:ConnectionDone(0)
+						end, nil, 1000)
+					end else begin
+						endpoint:ConnectionDone(error)
+					end;
+				inherited:?buttonClickScript()
+			end,
+			_proto: @protoClosebox
+		},
+		{
+			viewBounds: {left: 10, top: 27, right: 60, bottom: 77},
+			buttonClickScript: compile(
+				constants: {
+					kROM_8269: @8269,
+					kROM_8259: @8259
+				},
+				// Backup: everything (the progress slip on 'all) when the preferences say so or
+				// the desktop cannot sync selectively, else the sync options slip (@8259);
+				// 'ntic' tells a desktop of protocol version 11 or later that the Newton is
+				// choosing.
+				func() begin
+					local state, context;
+					endpoint:SetState(kDockStateSync);
+					state := endpoint:GetState();
+					if (protoContext:ConnectionPrefsRead('alwaysSyncall) or (not state.selectiveSyncOK)) then begin
+							kROM_8269:OpenOnEndpoint('all, endpoint, nil)
+						end else begin
+							(context := BuildContext(kROM_8259)).endpoint := endpoint;
+							context:FilterDialog();
+							if (state.protocolVersion > 10) then begin
+									endpoint:WriteCommand("ntic", true, true)
+								end
+						end;
+					self:DoneForNow()
+				end),
+			// Hidden unless the desktop offers it.
+			viewSetupDoneScript: func() begin
+				self:MyHide('backup)
+			end,
+			// Placed where the layout puts it, with the desktop's icon or script.
+			viewSetupFormScript: func() begin
+				self:SetupViewBounds('backup);
+				self:SetupButton()
+			end,
+			viewFormat: vfFillWhite + vfFrameWhite + vfPen(2) + vfRound(4),
+			buttonID: 'button0,
+			_proto: @protoPictureButton,
+			icon: @8284
+		},
+		{
+			viewBounds: {left: 65, top: 27, right: 115, bottom: 77},
+			// Restore: the file browser on the desktop's backup files (whichFiles 2).
+			buttonClickScript: func() begin
+				endpoint:SetState(kDockStateRestore);
+				self:DoneForNow();
+				(try begin
+						ConnOpenFileBrowser(endpoint, 2, '[Array: "Dock", "Select a file to restore", "Restore"], 'syncFiles, protoContext.FileBrowserDone)
+					end onexception |evt.ex| do begin
+						endpoint:ConnectionDone(CurrentException().error)
+					end)
+			end,
+			// Hidden unless the desktop offers 'Restore.
+			viewSetupDoneScript: func() begin
+				self:MyHide('Restore)
+			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
+			viewSetupFormScript: func() begin
+				self:SetupViewBounds('Restore);
+				self:SetupButton()
+			end,
+			viewFormat: vfFillWhite + vfFrameWhite + vfPen(2) + vfRound(4),
+			buttonID: 'button1,
+			_proto: @protoPictureButton,
+			icon: @8285
+		},
+		{
+			viewBounds: {left: 120, top: 27, right: 170, bottom: 77},
+			// Install package: the file browser on the desktop's packages (whichFiles 0).
+			buttonClickScript: func() begin
+				endpoint:SetState(kDockStateLoadPackage);
+				self:DoneForNow();
+				(try begin
+						ConnOpenFileBrowser(endpoint, 0, '[Array: "Dock", "Select a package to install", "Install"], 'packages, protoContext.FileBrowserDone)
+					end onexception |evt.ex| do begin
+						endpoint:ConnectionDone(CurrentException().error)
+					end)
+			end,
+			// Hidden unless the desktop offers 'install.
+			viewSetupDoneScript: func() begin
+				self:MyHide('install)
+			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
+			viewSetupFormScript: func() begin
+				self:SetupViewBounds('install);
+				self:SetupButton()
+			end,
+			viewFormat: vfFillWhite + vfFrameWhite + vfPen(2) + vfRound(4),
+			buttonID: 'button2,
+			_proto: @protoPictureButton,
+			icon: @8286
+		},
+		{
+			viewBounds: {left: 10, top: 82, right: 60, bottom: 132},
+			// Import: the file browser on files to import (whichFiles 1), in session state
+			// 8.
+			buttonClickScript: func() begin
+				endpoint:SetState(8);
+				self:DoneForNow();
+				(try begin
+						ConnOpenFileBrowser(endpoint, 1, '[Array: "Dock", "Select a file to import", "Import"], 'Import, protoContext.FileBrowserDone)
+					end onexception |evt.ex| do begin
+						endpoint:ConnectionDone(CurrentException().error)
+					end)
+			end,
+			// Hidden unless the desktop offers 'Import.
+			viewSetupDoneScript: func() begin
+				self:MyHide('Import)
+			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
+			viewSetupFormScript: func() begin
+				self:SetupViewBounds('Import);
+				self:SetupButton()
+			end,
+			viewFormat: vfFillWhite + vfFrameWhite + vfPen(2) + vfRound(4),
+			buttonID: 'button3,
+			_proto: @protoPictureButton,
+			icon: @8287
+		},
+		{
+			viewBounds: {left: 65, top: 82, right: 115, bottom: 132},
+			buttonClickScript: compile(
+				constants: {
+					kROM_8269: @8269
+				},
+				// Synchronize: sends 'sync' and shows the progress slip.
+				func() begin
+					endpoint:SetState(kDockStateSync);
+					endpoint:WriteCommand("sync", nil, nil);
+					kROM_8269:OpenOnEndpoint('all, endpoint, nil);
+					self:DoneForNow()
+				end),
+			// Hidden unless the desktop offers 'sync.
+			viewSetupDoneScript: func() begin
+				self:MyHide('sync)
+			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
+			viewSetupFormScript: func() begin
+				self:SetupViewBounds('sync);
+				self:SetupButton()
+			end,
+			viewFormat: vfFillWhite + vfFrameWhite + vfPen(2) + vfRound(4),
+			buttonID: 'button4,
+			_proto: @protoPictureButton,
+			icon: @8288
+		},
+		{
+			viewBounds: {left: 120, top: 82, right: 170, bottom: 132},
+			// Keyboard: the keyboard passthrough.
+			buttonClickScript: func() begin
+				AddDeferredSend(protoContext, 'ToggleKeyboardPassthrough, [Array: nil])
+			end,
+			// Hidden unless the desktop offers 'Keyboard.
+			viewSetupDoneScript: func() begin
+				self:MyHide('Keyboard)
+			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
+			viewSetupFormScript: func() begin
+				self:SetupViewBounds('Keyboard);
+				self:SetupButton()
+			end,
+			viewFormat: vfFillWhite + vfFrameWhite + vfPen(2) + vfRound(4),
+			buttonID: 'button5,
+			_proto: @protoPictureButton,
+			icon: @8289
+		}
+	],
+	// Lays the buttons out three to a row in the order of whichIcons' bits
+	// (backup, restore, install, import, sync, keyboard), the slip a row shorter
+	// when one is enough, and takes the desktop's preferences (desktopApps[0]).
+	viewSetupFormScript: func() begin
+		whichConnectionOpen := true;
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		self.closing := nil;
+		try begin
+				endpoint:SetState(kDockStateNone);
+				if (if (if (desktopApps := endpoint:GetState().desktopApps) then IsArray(desktopApps)) then (Length(desktopApps) > 0)) then begin
+						self.desktopPrefs := desktopApps[0]
+					end
+			end onexception |evt.ex| do begin end;
+		if endpoint.whichIcons then begin
+				whichIcons := endpoint.whichIcons;
+				l3 := 4;
+				l4 := 0;
+				l5 := 1;
+				self.layout := {};
+				local desktopApps;
+				local whichIcons;
+				local l3;
+				local l4;
+				local l5;
+				(for i := 0 to 5 do begin
+						if (BAnd(whichIcons, l5) > 0) then begin
+								if (l3 > 3) then begin
+										l4 := (l4 + 1);
+										l3 := 1
+									end;
+								layout.('[Array: backup, Restore, install, Import, sync, Keyboard][i]) := {row: l4, col: l3};
+								l3 := (l3 + 1)
+							end;
+						l5 := (l5 * 2)
+					end);
+				if (l4 = 1) then begin
+						self.viewBounds := Clone(viewBounds);
+						self.viewBounds.bottom := ((self.viewBounds.bottom - 50) - 5)
+					end
+			end;
+		self:StartIdle()
+	end,
+	potoContext: nil,
+	// Ends the connection when the slip was closed some other way.
+	viewQuitScript: func() begin
+		endpoint:StopIdle(self);
+		protoContext:RemoveOpenWindow(self);
+		whichConnectionOpen := nil;
+		protoContext:WhichConnectionDone();
+		(if (not closing) then endpoint:ConnectionDone(0))
+	end,
+	// Every 2 seconds: with no slip using the connection, a command from the
+	// desktop - but a cancel or 'opdn' - starts its session (the progress slip on
+	// 'allWithSoups); otherwise keeps the connection alive.
+	viewIdleScript: compile(
+		constants: {
+			kROM_8269: @8269
+		},
+		func() begin
+			local bytesAvailable, l2, processBuiltinCommand, error, commandHeader;
+			if (endpoint.idleUseCount = 0) then begin
+					return 0
+				end;
+			try begin
+					bytesAvailable := endpoint:BytesAvailable()
+				end onexception |evt.ex| do begin
+					endpoint:ConnectionDone(CurrentException().error)
+				end;
+			l2 := true;
+			processBuiltinCommand := nil;
+			if (bytesAvailable >= 2) then begin
+					error := 0;
+					try begin
+							commandHeader := endpoint:ReadCommandHeader(nil);
+							processBuiltinCommand := endpoint:ProcessBuiltinCommand()
+						end onexception |evt.ex| do begin
+							error := CurrentException().error
+						end;
+					l2 := nil;
+					if ((error <> 0) or processBuiltinCommand) then begin
+							endpoint:ConnectionDone(error)
+						end else begin
+							if (StrEqual(commandHeader.command, "opca") or StrEqual(commandHeader.command, "opdn")) then begin
+									l2 := true
+								end else begin
+									kROM_8269:OpenOnEndpoint('allWithSoups, endpoint, nil);
+									self:DoneForNow()
+								end
+						end
+				end;
+			(if l2 then return endpoint:IdleConnection(nil) else return 0)
+		end),
+	viewFlags: vApplication + vFloating + vClickable,
+	whichConnectionOpen: nil,
+	closing: nil,
+	layout: nil,
+	// Places a button by its row and column: 50 x 50, 55 apart.
+	SetupViewBounds: func(a1) begin
+		local l1, l2, col;
+		(if (if layout then layout.(a1)) then begin
+				l2 := (l1 := layout.(a1)).row;
+				col := l1.col;
+				self.viewBounds := Clone(viewBounds);
+				viewBounds.left := (10 + ((col - 1) * 55));
+				viewBounds.right := (viewBounds.left + 50);
+				viewBounds.top := (27 + ((l2 - 1) * 55));
+				(viewBounds.bottom := (viewBounds.top + 50))
+			end)
+	end,
+	// Hides a button the desktop does not offer.
+	MyHide: func(a1) begin
+		(if (if layout then (not layout.(a1))) then protoContext:HideIfVisible(self))
+	end,
+	// Stops this slip's idle while a session runs.
+	DoneForNow: func() begin
+		endpoint:StopIdle(base)
+	end,
+	idleStopped: nil,
+	// Idles the connection every 2 seconds.
+	StartIdle: func() begin
+		endpoint:StartIdle(self, 2000)
+	end,
+	desktopPrefs: {},
+	// A button's icon and script from the desktop's preferences, by buttonID.
+	SetupButton: func() begin
+		local l1;
+		(if (l1 := desktopPrefs.(buttonID)) then begin
+				if l1.icon then begin
+						icon := l1.icon
+					end;
+				(if l1.buttonClickScript then (buttonClickScript := l1.buttonClickScript))
+			end)
+	end,
+	_proto: @protoFloater
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_code_7 := same("export82.stepChildren[1].buttonClickScript.literals[11].instructions");
+
+viewSetupDoneScript_code_3 := same("export82.stepChildren[2].viewSetupDoneScript.instructions");
+
+viewSetupFormScript_code_7 := same("export82.stepChildren[2].viewSetupFormScript.instructions");
+
+viewIdleScript_literal10 := same("export82.viewIdleScript.literals[10]");
+
+DoneForNow_code := same("export82.DoneForNow.instructions");

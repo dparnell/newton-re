@@ -1,0 +1,304 @@
+// recToggle: the recognition toggle, the popup button (with an icon for the
+// current choice) that lets the user pick what a view recognises: Text, Ink
+// Text, Shapes, Sketches, or the handwriting preferences. Every recToggle
+// on screen is kept in the root's recTogglers array and they all show the
+// same choice, which is kept compactly in the root's _recogSettings (an
+// item index with recogniser bits, see CompactSettingsFrame). The choices'
+// meanings come from recognizerUserChoices. Views that recognise for
+// themselves read it through BuildInputMask (rcreRecognizeConfig).
+
+recToggle := {
+	_proto: @protoPopupButton,
+	viewClass: clPictureView,
+	viewBounds: {left: 25, top: 2, right: 43, bottom: 15},
+	viewJustify: vjCenterH + vjCenterV + oneLineOnly,
+	icon: @recTextBitmap,
+	defaultItem: nil,
+	_cachedSettings: nil,
+	// the popup's items: symbols looked up in recognizerUserChoices (SetupPopup)
+	_recogPopup: [|Array|:
+		'recogText,
+		'recogInkText,
+		'pickseparator,
+		'recogShapes,
+		'recogSketches,
+		'pickseparator,
+		'recToggleSettings
+	],
+	// The input mask (view flags) the current settings ask for: words,
+	// letters, numbers (with phone, date and time fields), punctuation (only
+	// with one of those) and shapes. Returns the mask.
+	BuildInputMask: func() begin
+		local bOr2, settings;
+		bOr2 := 0;
+		if ((settings := self:GetSettings()).doTextRecognition or settings.doInkWordRecognition) then begin
+				if settings.wordsCursiveOption then begin
+						bOr2 := BOr(bOr2, vCharsAllowed)
+					end;
+				if settings.lettersCursiveOption then begin
+						bOr2 := BOr(bOr2, vLettersAllowed + vNumbersAllowed)
+					end;
+				if settings.numbersCursiveOption then begin
+						bOr2 := BOr(bOr2, vNumbersAllowed + vPhoneField + vDateField + vTimeField)
+					end;
+				if (if (bOr2 <> 0) then settings.punctuationcursiveoption) then begin
+						bOr2 := BOr(bOr2, vPunctuationAllowed)
+					end
+			end;
+		if settings.doShapeRecognition then begin
+				bOr2 := BOr(bOr2, vShapesAllowed)
+			end;
+		return bOr2
+	end,
+	// Makes sure the root has _recogSettings (from defaultItem, the first item
+	// if that is not valid; one kept as a frame is compacted) and expands it
+	// into _cachedSettings.
+	InitRecogSettings: func() begin
+		if (not (_recogSettings exists)) then begin
+				GetRoot()._recogSettings := nil
+			end;
+		if (not self:ValidItem(defaultItem)) then begin
+				defaultItem := _recogPopup[0]
+			end;
+		if (not _recogSettings) then begin
+				_recogSettings := self:itemIndex(defaultItem)
+			end;
+		if IsFrame(_recogSettings) then begin
+				_recogSettings := self:CompactSettingsFrame(_recogSettings)
+			end;
+		(self._cachedSettings := self:ExpandSettingsFrame(_recogSettings))
+	end,
+	// Makes symbol2 the current item, if it is one of the popup's.
+	SetItem: func(symbol2) begin
+		(if self:ValidItem(symbol2) then (_cachedSettings.curItem := symbol2))
+	end,
+	// Clears every recogniser's on/off slot and option slots in the settings.
+	ClearSettings: func() begin
+		recognizers := self:GetRecognizers();
+		settings := self:GetSettings();
+		local recognizers;
+		local settings;
+		(foreach key, value in recognizers do begin
+				settings.(value.symbol) := nil;
+				if value.all then begin
+						(foreach item in value.all do begin
+								settings.(item) := nil
+							end)
+					end else begin
+						settings.(value.targetSymbol) := nil
+					end
+			end)
+	end,
+	// Leaves the shared list of togglers.
+	viewQuitScript: func() begin
+		SetRemove(recTogglers, self)
+	end,
+	viewDrawScript: nil,
+	// Whether any popup item turns recogniser a1 ('text, 'shapes, 'ink) on.
+	RecognizerUsed: func(a1) begin
+		(foreach item in popup do begin
+				if (item <> 'pickseparator) then begin
+						if (if (if HasPath(item, 'commands) then (item.commands.(a1) exists)) then item.commands.(a1).recState) then begin
+								return true
+							end
+					end
+			end);
+		return nil
+	end,
+	// Sets recogniser key's option slots to its defaults. Returns the settings.
+	GetDefaultSettings: func(key) begin
+		defaults := self:GetDefaults(key);
+		if (settings := self:GetSettings()) then begin
+				if (l3 := self:GetRecognizers().(key)) then begin
+						if l3.all then begin
+								local defaults;
+								local settings;
+								local l3;
+								(foreach item in l3.all do begin
+										settings.(item) := (if SetContains(defaults, item) then true)
+									end)
+							end else begin
+								settings.(l3.targetSymbol) := defaults
+							end
+					end
+			end;
+		return settings
+	end,
+	// The default options of recogniser key (its frame's default slot).
+	GetDefaults: func(key) begin
+		local l1;
+		(if (l1 := self:GetRecognizers().(key)) then l1.default)
+	end,
+	// Pops up the choices (as the inherited button does).
+	buttonClickScript: func() begin
+		inherited:buttonClickScript()
+	end,
+	// Applies a popup item's commands: for each recogniser, on or off, and its
+	// options (the defaults or the one named option set).
+	ParseCommands: func(a1) begin
+		recognizers := self:GetRecognizers();
+		settings := self:GetSettings();
+		local recognizers;
+		local settings;
+		(foreach key, value in a1.commands do begin
+				local l6, recSettings;
+				if (l6 := recognizers.(key)) then begin
+						settings.(l6.symbol) := value.recState;
+						if ((recSettings := value.recSettings) = 'default) then begin
+								self:GetDefaultSettings(key)
+							end else begin
+								settings.(recSettings) := true
+							end
+					end
+			end)
+	end,
+	// Packs a settings frame into an integer: the item index in the low 5
+	// bits, then 32 text, 64 ink words, 128 shapes, 256 words, 512 numbers.
+	CompactSettingsFrame: func(a1) begin
+		local itemIndex, settings;
+		itemIndex := self:itemIndex(a1.curItem);
+		if (settings := a1.settings).doTextRecognition then begin
+				itemIndex := BOr(itemIndex, 32)
+			end;
+		if settings.doShapeRecognition then begin
+				itemIndex := BOr(itemIndex, 128)
+			end;
+		if settings.doInkWordRecognition then begin
+				itemIndex := BOr(itemIndex, 64)
+			end;
+		if settings.wordsCursiveOption then begin
+				itemIndex := BOr(itemIndex, 256)
+			end;
+		if settings.numbersCursiveOption then begin
+				itemIndex := BOr(itemIndex, 512)
+			end;
+		return itemIndex
+	end,
+	// The recognisers' descriptions (recognizerUserChoices.recognizers).
+	GetRecognizers: func() begin
+		GetRoot()._recognizerUserChoices.recognizers
+	end,
+	// Unpacks the integer _recogSettings into {settings, curItem}; the
+	// settings slots are made by ExpandSettings (a native).
+	ExpandSettingsFrame: func(_recogSettings) begin
+		local copy;
+		(copy := Clone('{settings: nil, curItem: nil})).curItem := _recogPopup[BAnd(_recogSettings, 31)];
+		copy.settings := ExpandSettings(_recogSettings);
+		return copy
+	end,
+	// Makes popup, the items the button shows, from _recogPopup.
+	SetupPopup: func() begin
+		popup := Clone(_recogPopup);
+		userChoices := self:GetUserChoices();
+		local userChoices;
+		(foreach key, value in popup do begin
+				if (value <> 'pickseparator) then begin
+						popup[key] := userChoices.(value)
+					end
+			end)
+	end,
+	// Picks the item whose symbol is a1 and shows it on every toggler.
+	JamIt: func(a1) begin
+		(foreach key, value in popup do begin
+				if (if (ClassOf(value) = 'frame) then (value.symbol = a1)) then begin
+						self:PickItem(value);
+						self:UpdateTogglers();
+						break
+					end
+			end)
+	end,
+	// Makes item a1 current: sets the settings from its commands, tells the
+	// view (RecogSettingsChanged with the new input mask, if it has one) and
+	// the system (RecSettingsChanged), and stores the packed settings.
+	PickItem: func(a1) begin
+		self:SetItem(a1.symbol);
+		self:ClearSettings();
+		self:ParseCommands(a1);
+		PurgeAreaCache();
+		if (RecogSettingsChanged exists) then begin
+				self:RecogSettingsChanged(self:BuildInputMask())
+			end;
+		_recogSettings := self:CompactSettingsFrame(_cachedSettings);
+		RecSettingsChanged()
+	end,
+	// The index of item a1 in the popup, 0 if it is not one.
+	itemIndex: func(a1) begin
+		local validItem;
+		if (not (validItem := self:ValidItem(a1))) then begin
+				validItem := 0
+			end;
+		return validItem
+	end,
+	// The index of defaultItem in _recogPopup, or nil (separators are not items).
+	ValidItem: func(defaultItem) begin
+		(if (defaultItem <> 'pickseparator) then SetContains(_recogPopup, defaultItem))
+	end,
+	// The popup item that is current.
+	GetItem: func() begin
+		local setContains2;
+		(if (setContains2 := SetContains(_recogPopup, _cachedSettings.curItem)) then popup[setContains2])
+	end,
+	// The current recognition settings frame.
+	GetSettings: func() begin
+		_cachedSettings.settings
+	end,
+	// Joins the togglers, takes the first one's icon, installs the user
+	// choices in the root if needed, and shows the current choice.
+	viewSetupFormScript: func() begin
+		if (not GetRoot().recTogglers) then begin
+				GetRoot().recTogglers := [Array: ]
+			end;
+		SetAdd(recTogglers, self, true);
+		if (icon <> recTogglers[0].icon) then begin
+				self.icon := recTogglers[0].icon
+			end;
+		if (not HasPath(GetRoot(), '_recognizerUserChoices)) then begin
+				GetRoot()._recognizerUserChoices := @recognizerUserChoices
+			end;
+		self:SetupPopup();
+		self:InitRecogSettings();
+		if (not _cachedSettings.curItem) then begin
+				self:JamIt(defaultItem)
+			end else begin
+				self:JamIt(_cachedSettings.curItem)
+			end;
+		(_cachedSettings := nil)
+	end,
+	// The root's copy of recognizerUserChoices.
+	GetUserChoices: func() begin
+		GetRoot()._recognizerUserChoices
+	end,
+	// The user picked item index: either opens the handwriting recognition
+	// preferences, or makes the item current on every toggler.
+	pickActionScript: func(index) begin
+		local popupItem;
+		_cachedSettings := self:ExpandSettingsFrame(_recogSettings);
+		if IsFrame((popupItem := popup[index])) then begin
+				if (popupItem.symbol = 'recToggleSettings) then begin
+						OpenPrefsTo(PrefsRegistry.HWRecPreferencesForm)
+					end else begin
+						self:PickItem(popupItem);
+						self:UpdateTogglers()
+					end;
+				inherited:pickActionScript(index)
+			end;
+		(_cachedSettings := nil)
+	end,
+	// Makes every toggler show the current choice.
+	UpdateTogglers: func() begin
+		(foreach item in recTogglers do begin
+				item:SetRecognizers()
+			end)
+	end,
+	// Shows the current item's icon.
+	SetRecognizers: func() begin
+		local _cachedSettings2, item;
+		if (not (_cachedSettings2 := _cachedSettings)) then begin
+				self._cachedSettings := self:ExpandSettingsFrame(_recogSettings)
+			end;
+		if (item := self:GetItem()) then begin
+				SetValue(self, 'icon, item.icon)
+			end;
+		(_cachedSettings := _cachedSettings2)
+	end
+};

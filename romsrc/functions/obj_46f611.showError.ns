@@ -1,5 +1,0 @@
-@@ 0x46f5d1
-func(a1) begin
-	self:CloseAndNotify(ParamStr("The chooser found a problem...(^0).", [Array: NumberStr(a1)]))
-end
-@@end

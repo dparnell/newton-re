@@ -1,0 +1,78 @@
+// protoKeyboardButton: the keyboard button of a status bar - tapping it opens
+// the default keyboard or, when a keyboard is already open, pops up the list
+// of keyboards (_popupKeyboards, the names of keyboard views) with the
+// current one checked. An application can change the default keyboard and
+// the list (SetDefaultKeyboard, SetKeyboardList).
+
+protoKeyboardButton := {
+	viewBounds: {left: 5, top: 0, right: 28, bottom: 13},
+	icon: @keyButtonBitmap,
+	// the name of the keyboard to open; nil: the first of _popupKeyboards
+	defaultKeyboard: nil,
+	// Called by protoPictureButton when the button is tapped. Makes sure
+	// defaultKeyboard names a keyboard that exists (else the first of the list),
+	// follows the keyboard already open if it is another one, then either shows
+	// the popup of keyboards (some keyboard is open) or opens the default one.
+	buttonClickScript: func() begin
+		if (not (if defaultKeyboard then GetVariable(self, defaultKeyboard))) then begin
+				defaultKeyboard := _popupKeyboards[0]
+			end;
+		if (if root.currentKeyboard then (root.currentKeyboard <> defaultKeyboard)) then begin
+				if HasPath(root, 'currentKeyboard.keyboardSymbol) then begin
+						defaultKeyboard := root.currentKeyboard.keyboardSymbol
+					end else begin
+						defaultKeyboard := root.currentKeyboard.preallocatedContext
+					end
+			end;
+		userName := GetVariable(self, defaultKeyboard).userName;
+		local userName;
+		local l2;
+		// l2: the keyboards' names as shown to the user
+		l2 := (foreach item in _popupKeyboards collect begin
+			local value;
+			GetVariable(self, item).userName
+		end);
+		// (defaultPos is not declared local: a free variable)
+		if (defaultPos := ArrayPos(l2, userName, 0, nil)) then begin
+				// $\uFC0B: the check mark character
+				l2[defaultPos] := {item: userName, mark: $\uFC0B, pickable: true}
+			end;
+		(if root.currentKeyboard then self:PopupMenu(l2, nil) else (if (value := GetVariable(self, defaultKeyboard)) then value:Open()))
+	end,
+	// Called when a keyboard is chosen from the popup (index into _popupKeyboards):
+	// one already open is brought to the front; otherwise the default keyboard is
+	// closed and the chosen one becomes the default and is opened.
+	pickActionScript: func(index) begin
+		local _popupKeyboard, value, value2;
+		_popupKeyboard := _popupKeyboards[index];
+		(if (value := GetVariable(self, _popupKeyboard)).viewCObject then value:MoveBehind(nil) else begin
+				if (value2 := GetVariable(self, defaultKeyboard)) then begin
+						value2:Close()
+					end;
+				defaultKeyboard := _popupKeyboard;
+				value:Open()
+			end)
+	end,
+	// button:SetDefaultKeyboard(keyboardSymbol) - makes it the default, if it is
+	// in the list.
+	SetDefaultKeyboard: func(a1) begin
+		(if ArrayPos(_popupKeyboards, a1, 0, nil) then (defaultKeyboard := a1))
+	end,
+	// button:SetKeyboardList(add, remove) - adds the keyboard names in add to the
+	// list and removes those in remove; remove = 'noGlobalKeyboards leaves only add.
+	SetKeyboardList: func(a1, a2) begin
+		local copy;
+		copy := Clone(GetVariable(self, '_popupKeyboards));
+		if (if (ClassOf(a2) = 'symbol) then (a2 = 'noGlobalKeyboards)) then begin
+				copy := SetUnion([Array: ], a1, true)
+			end else begin
+				copy := SetUnion((copy := SetDifference(copy, a2)), a1, true)
+			end;
+		(self._popupKeyboards := copy)
+	end,
+	// Returns the list of keyboard names the popup offers.
+	GetKeyboardList: func() begin
+		_popupKeyboards
+	end,
+	_proto: @protoPictureButton
+};

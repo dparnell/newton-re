@@ -1,5 +1,0 @@
-@@ 0x1016729
-func(a1) begin
-	(fAbort := (a1 <> nil))
-end
-@@end

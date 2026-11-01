@@ -1,0 +1,29 @@
+// protoTableDef: the definition frame of a protoTable - how many columns
+// and rows, their sizes, the proto of each row's view (protoTableEntry) and
+// the values they show. A protoTable's def slot holds one.
+
+protoTableDef := {
+	// the width of the column and the height of every row, in pixels
+	tabWidths: 50,
+	tabHeights: 0,
+	// the template (or array of templates) each row's view is made from
+	tabProtos: @protoTableEntry,
+	// the slot of each row's view a value from tabValues is put in
+	tabValueSlot: 'text,
+	// the number of columns (must be 1: protoTable has no multicolumn
+	// tables) and of rows
+	tabAcross: 1,
+	tabValues: nil,
+	tabDown: 0,
+	// TabSetup(view, column, row): called before each row's view is made, with
+	// 1-based column and row; records them 0-based in the view's hIndex and
+	// vIndex, which the selection uses
+	tabSetup: func(a1, a2, a3) begin
+		a1.hIndex := (a2 - 1);
+		(a1.vIndex := (a3 - 1))
+	end,
+	// non-nil: only one cell selected at a time
+	tabUniqueSelection: true,
+	// reserved for internal use (NPR)
+	indentX: 2
+};

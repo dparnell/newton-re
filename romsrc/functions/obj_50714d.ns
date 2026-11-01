@@ -1,5 +1,0 @@
-@@ 0x50714d
-func(a1) begin
-	GetDataDefs('|nameRef.people|):Get(a1, 'name, 'text)
-end
-@@end

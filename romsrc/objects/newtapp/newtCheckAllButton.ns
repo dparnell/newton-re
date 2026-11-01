@@ -1,0 +1,22 @@
+// newtCheckAllButton: the "Check All" text button of a NewtApp overview: checks every
+// entry of the overview, and on the next tap unchecks them.
+//
+// This file holds newtCheckAllButton and what only it reaches.
+
+newtCheckAllButton := {
+	viewBounds: {left: -36, top: 0, right: -1, bottom: 14},
+	keyButton: nil,
+	text: "ﰋAll", // the check mark character and "All"
+	// only in the overview: check all, or uncheck all if the last tap checked them
+	buttonClickScript: func() begin
+		(if (newtAppBase.currentLayout = 'overview) then begin
+				if layout.checkAllPrimed then begin
+						layout:UnCheckAll()
+					end else begin
+						layout:checkAll()
+					end;
+				(layout.checkAllPrimed := (not layout.checkAllPrimed))
+			end)
+	end,
+	_proto: @protoTextButton
+};

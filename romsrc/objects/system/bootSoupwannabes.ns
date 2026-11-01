@@ -1,0 +1,356 @@
+// bootSoupwannabes: the soups every internal store has.  bootRunInitScripts
+// creates each one the store lacks from its soupDef, and adds the
+// initialEntries (an array, or a function returning one): the alarms, In and
+// Out Boxes, the Extras Drawer's entries, the Notepad, the calendar and to-do
+// soups, and the directory of the built-in applications' soups.
+
+bootSoupwannabes := [|Array|:
+	{initialEntries: nil, soupDef: soupDef},
+	{initialEntries: nil, soupDef: @inboxSoupDef},
+	{initialEntries: nil, soupDef: @outboxSoupDef},
+	// the Extras Drawer soup, with an entry for each built-in icon: the
+	// applications and tools (ROMFormEntry: opens app), actions (ROMScriptEntry:
+	// TapAction runs; it returns whether the drawer closes afterwards), the soups'
+	// icons in the Storage folder (ROMSoupEntry, labels '_soups) and the button
+	// bar's icons (labels '_buttonBar).  icon and iconPro index the ROM's icons
+	// (extrasRomIcons.ns), sequence orders them
+	{
+		initialEntries: [|Array|:
+			{
+				class: 'ROMFormEntry,
+				text: @paperrollSoupName,
+				icon: 11,
+				sequence: 2,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'paperroll,
+				iconPro: 11
+			},
+			{
+				class: 'ROMFormEntry,
+				text: calls,
+				icon: 12,
+				sequence: 3,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'callapp,
+				iconPro: 12,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: @freshCardName,
+				icon: 13,
+				sequence: 5,
+				labels: nil,
+				_tagList: [|Array|: '_icon, '_noBackup],
+				// Tapped: opens the storage card's slip (the extras drawer is closed if
+				// the user configuration says so).
+				TapAction: func() begin
+					OpenForCardIcon();
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 13,
+				app: 'card
+			},
+			{
+				class: 'ROMFormEntry,
+				text: "Calculator",
+				icon: 14,
+				sequence: 7,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'calculator,
+				iconPro: 14,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMFormEntry,
+				text: "Time\u000dZones",
+				icon: 15,
+				sequence: 9,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'worldClock,
+				iconPro: 15,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMFormEntry,
+				text: clock_3,
+				icon: 16,
+				sequence: 10,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'alarm,
+				iconPro: 16,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMFormEntry,
+				text: styles,
+				icon: 17,
+				sequence: 11,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'stylePalette,
+				iconPro: 17,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMFormEntry,
+				text: prefs,
+				icon: 18,
+				sequence: 20,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'preferenceRoll,
+				iconPro: 18
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: "Owner\u000dInfo",
+				icon: 19,
+				sequence: 21,
+				labels: nil,
+				_tagList: [|Array|: '_icon, '_noBackup],
+				// Tapped: opens Names on the owner card (deferred).
+				TapAction: func() begin
+					AddDeferredSend(GetRoot().cardfile, 'OpenAsOwner, '[Array: true]);
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 19,
+				app: 'OwnerInfo
+			},
+			{
+				class: 'ROMFormEntry,
+				text: "Writing\u000dPractice",
+				icon: 20,
+				sequence: 23,
+				labels: '_setup,
+				_tagList: [|Array|: '_icon, '_noBackup, '_setup],
+				app: 'handwritingpractice,
+				iconPro: 20,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: calls,
+				icon: 4,
+				sequence: 25,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: "calls"],
+				closeControl: 'leaveOpen,
+				ownerApp: 'callapp,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: dates_2,
+				icon: 4,
+				sequence: 26,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: @calendarSoupName, @repeatMeetingName, @calendarNotesName, @repeatNotesName],
+				closeControl: 'leaveOpen,
+				ownerApp: 'calendar,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: "In/Out\u000dItems",
+				icon: 4,
+				sequence: 27,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: inBox_3, outBox_2],
+				closeControl: 'leaveOpen,
+				ownerApp: 'iobox,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: @cardfileSoupName,
+				icon: 4,
+				sequence: 28,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: "names"],
+				closeControl: 'leaveOpen,
+				ownerApp: 'cardfile,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: @paperrollSoupName,
+				icon: 4,
+				sequence: 29,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: @paperrollSoupName],
+				closeControl: 'leaveOpen,
+				ownerApp: 'paperroll,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: "To do\u000dTasks",
+				icon: 4,
+				sequence: 30,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: @todoSoupName, toDoList],
+				closeControl: 'leaveOpen,
+				ownerApp: 'calendar,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMFormEntry,
+				text: "InOut",
+				icon: 21,
+				sequence: 30,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				app: 'iobox,
+				iconPro: 21
+			},
+			{
+				class: 'ROMFormEntry,
+				text: @cardfileSoupName,
+				icon: 22,
+				sequence: 31,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				app: 'cardfile,
+				iconPro: 22
+			},
+			{
+				class: 'ROMFormEntry,
+				text: dates_2,
+				icon: 23,
+				sequence: 32,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				app: 'calendar,
+				iconPro: 23
+			},
+			{
+				class: 'ROMFormEntry,
+				text: extras,
+				icon: 24,
+				sequence: -1,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				app: 'ExtrasDrawer,
+				iconPro: 24
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: undo,
+				icon: 25,
+				sequence: 34,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				// Tapped: undo.
+				TapAction: func() begin
+					// 114 is the undo command's code (as the Undo button posts it)
+					PostCommand('application, 114);
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 25,
+				app: 'undo
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: find,
+				icon: 26,
+				sequence: 35,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				// Tapped: opens Find.
+				TapAction: func() begin
+					GetRoot().findDrawer:PrimeAndOpen();
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 26,
+				app: 'findDrawer
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: assist,
+				icon: 27,
+				sequence: 36,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				// Tapped: opens the Assistant.
+				TapAction: func() begin
+					GetRoot().assistant:PrimeAndOpen();
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 27,
+				app: 'assistant
+			}
+		],
+		soupDef: @extrasSoupDef
+	},
+	{
+		// the Notepad soup starts empty
+		initialEntries: func() begin
+			[Array: ]
+		end,
+		soupDef: @paperrollSoupDef
+	},
+	{initialEntries: nil, soupDef: @calendarSoupDef},
+	{initialEntries: nil, soupDef: @repeatMeetingSoupDef},
+	{initialEntries: nil, soupDef: @calendarNotesSoupDef},
+	{initialEntries: nil, soupDef: @repeatNotesSoupDef},
+	{initialEntries: nil, soupDef: @todoSoupDef},
+	{initialEntries: nil, soupDef: @todo2SoupDef},
+	{
+		// the system directory ("meta") soup: an entry per built-in application's data
+		// saying the application provides its own description of its soups
+		// (builtInMetaData)
+		initialEntries: [|Array|:
+			{soup: uCardPositionAlertButton, app: 'calendar, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'cardfile, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'paperroll, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'iobox, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'ExtrasDrawer, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'system, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'systemDirectory, builtInMetaData: true}
+		],
+		soupDef: {
+			name: @metaSoupName,
+			userName: @metaSoupName,
+			ownerApp: 'systemDirectory,
+			userDescr: private,
+			indexes: [|Array|:
+				{structure: 'slot, path: 'soup, type: '|string|},
+				{structure: 'slot, path: 'app, type: 'symbol}
+			]
+		}
+	}
+];
+
+alarms := "Alarms";
+
+// the alarms soup (soupDef: the first of the array above)
+soupDef := {
+	name: systemAlarmSoup,
+	userName: alarms,
+	ownerApp: 'alarms,
+	ownerAppName: alarms,
+	userDescr: "alarm data",
+	indexes: [|Array|:
+		{structure: 'slot, type: 'int, path: 'TimeInSeconds},
+		{structure: 'slot, type: 'int, path: 'Time},
+		{structure: 'slot, type: '|string|, path: 'key}
+	]
+};
+
+clock_3 := "Clock";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TapAction_code := same("bootSoupwannabes[3].initialEntries[21].TapAction.instructions");

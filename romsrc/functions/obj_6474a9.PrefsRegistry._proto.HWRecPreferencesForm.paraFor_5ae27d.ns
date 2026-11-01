@@ -1,7 +1,0 @@
-@@ 0x5ae27d
-func() begin
-	ResetLetterDefaults();
-	letterShapes:Dirty();
-	enableCluster:getNewSetting()
-end
-@@end

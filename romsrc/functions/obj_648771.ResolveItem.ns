@@ -1,5 +1,0 @@
-@@ 0x4ba2a5
-func(a1) begin
-	targetView:jamFromEntry(ResolveEntryAlias(a1.id))
-end
-@@end

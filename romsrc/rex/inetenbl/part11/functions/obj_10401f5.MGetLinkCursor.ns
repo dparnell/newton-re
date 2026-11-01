@@ -1,6 +1,0 @@
-@@ 0x1040b55
-func() begin
-	local l1;
-	(if (l1 := self:MGetLinkSoup()) then l1:Query(nil))
-end
-@@end

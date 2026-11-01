@@ -1,5 +1,0 @@
-@@ 0x509abd
-func() begin
-	SetKeyView(self, 0)
-end
-@@end

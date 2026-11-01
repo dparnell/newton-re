@@ -1,0 +1,6 @@
+// starterProperties, and what only it reaches
+//
+// The starter frame of a text's properties as the natives build one: a
+// `styles` array of two elements that the caller fills in.
+
+starterProperties := {styles: [|Array|: nil, nil]};

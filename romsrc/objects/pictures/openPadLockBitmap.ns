@@ -1,0 +1,7 @@
+// An open padlock (an unlocked item). A 1-bit bitmap frame (bits, bounds), 12 x 11 pixels.
+// Magic pointer @600. Used by backupSlip.
+
+openPadLockBitmap := {
+	bits: bitmap('bits, "resources/bits/3d9ed1.png", "00000000000401a301a3013d01ae0149", 1),
+	bounds: {left: 0, top: 0, right: 12, bottom: 11}
+};

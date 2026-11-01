@@ -1,0 +1,5 @@
+// protoPictureView: the bare clPictureView view class, a view that draws the
+// bitmap, PICT or shape in its icon slot. Nothing but the view class over
+// protoView.
+
+protoPictureView := {viewClass: clPictureView, _proto: @protoView};

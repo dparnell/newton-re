@@ -1,0 +1,14 @@
+// paragraphData (@684): the tables of the Paragraph handwriting recogniser in
+// one frame - its DTE and PPD tables and trigrams, letter images, the handwriting style
+// images and the two compression codebooks.
+
+paragraphData := {
+	DTEHeader: DTEHeader,
+	DTEMain: DTEMain,
+	PPDMain: PPDMain,
+	DTETrigrams: DTETrigrams,
+	letterimages: letterimages,
+	hwImages: @handwritingStyleImages,
+	codebook1: texttable('Comp, "resources/Comp/5bc4ed.txt"),
+	codebook2: @paragraphCodebook2
+};

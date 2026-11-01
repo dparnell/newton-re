@@ -1,0 +1,26 @@
+// eworldCountries: magic pointer @825, the countries offered in the eWorld
+// (Apple's online service) registration slip's country picker (mailRegister.ns).
+
+eworldCountries := [|Array|:
+	australia,
+	belgium,
+	canada,
+	denmark,
+	finland,
+	france,
+	germany,
+	hongKong,
+	ireland,
+	israel,
+	italy,
+	japan,
+	netherlands,
+	newZealand,
+	norway,
+	singapore,
+	southAfrica,
+	sweden,
+	switzerland,
+	unitedKingdom,
+	uSA
+];

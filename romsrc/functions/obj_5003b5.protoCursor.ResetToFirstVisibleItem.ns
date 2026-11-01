@@ -1,5 +1,0 @@
-@@ 0x50e831
-func() begin
-	(index := baseIndex)
-end
-@@end

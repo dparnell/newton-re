@@ -1,9 +1,0 @@
-@@ 0x104cfe1
-func(a1, a2) begin
-	(try begin
-			LFetch(a1, a2, 0, GetGlobalFn('StrExactCompare), 'label).result
-		end onexception |evt.ex| do begin
-			nil
-		end)
-end
-@@end

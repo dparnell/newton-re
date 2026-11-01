@@ -1,5 +1,0 @@
-@@ 0x103f91d
-func() begin
-	InetStartUp():MGetLinkStatusAll()
-end
-@@end

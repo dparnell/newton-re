@@ -1,0 +1,29 @@
+// protoInputLine: a one-line input field (a paragraph view with gray dotted
+// lines, the handwriting font) that the user writes or types into; the text
+// is in its text slot.
+
+protoInputLine := {
+	viewClass: clParagraphView,
+	viewBounds: nil,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	viewFormat: vfLinesGray,
+	// the line spacing, taken from the parent when it has one (the setup below)
+	viewLineSpacing: 20,
+	textFlags: vFixedTextStyle,
+	viewJustify: oneLineOnly,
+	viewFont: tsHWFont + tsSize(12),
+	viewTransferMode: modeOr,
+	styles: nil,
+	tabs: nil,
+	text: nil,
+	// viewSetupFormScript: uses the parent's viewLineSpacing, if it has one
+	viewSetupFormScript: func() begin
+		(if HasPath(self:Parent(), 'viewLineSpacing) then (self.viewLineSpacing := self:Parent().viewLineSpacing))
+	end,
+	// viewSetupDoneScript: an empty line gets an empty string, so that what is
+	// written has somewhere to go
+	viewSetupDoneScript: func() begin
+		(if (text = nil) then (text := ""))
+	end,
+	debug: 728989
+};

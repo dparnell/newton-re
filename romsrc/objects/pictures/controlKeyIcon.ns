@@ -1,0 +1,7 @@
+// The Control key symbol (as keyboard command lists show it). A 1-bit bitmap frame (bits,
+// bounds), 5 x 7 pixels.
+
+controlKeyIcon := {
+	bits: bitmap('bits, "resources/bits/3c8cad.png", "00000000000400000000000000070005", 1),
+	bounds: {left: 0, top: 0, right: 5, bottom: 7}
+};

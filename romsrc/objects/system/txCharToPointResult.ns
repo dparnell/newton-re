@@ -1,0 +1,6 @@
+// txCharToPointResult, and what only it reaches
+//
+// The result frame of a text view's CharToPoint(offset): where the
+// character is and the height of its line (src/text/TXViewNatives.cpp).
+
+txCharToPointResult := {x: nil, y: nil, lineHeight: nil};

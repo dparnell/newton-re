@@ -1,5 +1,0 @@
-@@ 0x4ab365
-func(a1) begin
-	(if layout then layout:FilterChanged())
-end
-@@end

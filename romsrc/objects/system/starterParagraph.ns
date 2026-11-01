@@ -1,0 +1,7 @@
+// starterParagraph, and what only it reaches
+//
+// The starter form of a paragraph as the clipboard and the edit views make
+// one (cloned by src/views/ClipboardView.cpp): the 'para stationery with
+// its text and bounds filled in by the caller.
+
+starterParagraph := {viewStationery: 'para, viewBounds: nil, text: nil};

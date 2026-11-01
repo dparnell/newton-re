@@ -1,6 +1,0 @@
-@@ 0x1048b7d
-func(a1) begin
-	self:MNotifyIconOff();
-	self:DoEvent('AddLinkClient, [Array: a1])
-end
-@@end

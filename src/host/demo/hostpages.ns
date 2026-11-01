@@ -1,0 +1,66 @@
+// The Host preferences pages fit the screen (host/HostSettings.ns): ctest
+// host.NewtonHostPages, on the T-Deck Pro's 240x320 screen.
+//
+// The ROM's Prefs (OpenPrefsTo) cannot open a panel taller than the
+// application area: the T-Deck Pro's Host page did not open once it had
+// grown to 314 pixels (kViewErrNoViewBounds).  The settings are now on a
+// Host page and a Screen page, a page too tall for the screen split in
+// two.  Here every page registered opens as the Prefs roll opens it, and
+// a page split from more rows than fit (made with AddPages from pretend
+// settings) opens too, each part.
+//
+//   build/host/host/newton --display 240x320 --headless 120 --erase --gps fixed:-37.81,144.96 \
+//       --store build/hp.store --script src/host/demo/hostpages.ns
+
+HostInclude("common.ns");			// waitFor
+
+hpFailures := 0;
+hpCheck := func(what, ok, why) begin
+	if ok then
+		Print("hostpages: " & what & " ok")
+	else begin
+		Print("hostpages: " & what & " FAILED - " & why);
+		hpFailures := hpFailures + 1;
+	end;
+end;
+
+// a page opened as the Prefs roll opens it ==> whether its view was made
+hpOpens := func(page) begin
+	local slip := nil;
+	try
+		slip := OpenPrefsTo(page)
+	onexception |evt.ex| do
+		slip := nil;
+	local made := slip and slip.viewCObject;
+	if made then slip:Close();
+	made;
+end;
+
+hpRun := func() begin
+	local hs := GetGlobalVar('|HostSettings:host|);
+	local p := GetAppParams();
+	foreach page in hs.pages do
+		call hpCheck with ("the " & page.panel.overview & " page (" & NumberStr(page.panel.height) & " high) opens",
+			call hpOpens with (page.panel), "it did not");
+	// more rows than fit: split, every part opening
+	local items := [];
+	for i := 1 to 20 do
+		AddArraySlot(items, {setting: Intern("pretend" & NumberStr(i)), label: "Pretend " & NumberStr(i), kind: 'check, value: nil});
+	local kept := hs.pages;
+	hs.pages := [];
+	local most := Max(3, (Min(p.appAreaWidth, p.appAreaHeight) - 50) div hs.kRowStep);
+	hs:AddPages("Pretend", "Pretend settings:", items, most, '|PretendSettings:host|);
+	call hpCheck with ("twenty rows split into pages", Length(hs.pages) > 1 and StrEqual(hs.pages[1].panel.overview, "Pretend 2"),
+		Length(hs.pages) & " pages");
+	foreach page in hs.pages do
+		call hpCheck with ("the " & page.panel.overview & " page opens", call hpOpens with (page.panel), "it did not");
+	hs.pages := kept;
+	Print("hostpages: done, " & hpFailures & " failed");
+	HostQuit();
+end;
+
+// (Setup closed rather than walked: its taps are placed for 320x480)
+call waitFor with ("hostpages: setup", func() GetRoot().setup and GetRoot().setup.viewCObject, func() begin
+	GetRoot().setup:Close();
+	call hpRun with ();
+end, 90);

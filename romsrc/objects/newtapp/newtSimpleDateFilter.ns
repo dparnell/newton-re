@@ -1,0 +1,49 @@
+// newtSimpleDateFilter: the NewtApp filter for a date that may have no year, such as a
+// birthday or anniversary (NPR 2.0 Table 3-1).  A date written without a year is stored
+// in the year 2920, which stands for "no year": it is shown with longFormat (by default
+// monthDayStrSpec, month and day), a date with a real year with yearMonthDayStrSpec.
+//
+// This file holds newtSimpleDateFilter and what only it reaches.
+
+newtSimpleDateFilter := {
+	_proto: @newtDateFilter,
+	// recFlags: the entry line's view flags (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vDateField,
+	longFormat: 745, // monthDayStrSpec's value (@datetimeStrSpecs)
+	shortFormat: nil,
+	// l3: the date has a year of its own (one before 2920, the "no year" year)
+	PathToText: func() begin
+		local l1, year, l3, longFormat2;
+		(if IsString((l1 := target.(path))) then Clone(l1) else begin
+				l3 := (if (year := Date(l1).year) then (year < 2920));
+				(if longFormat then begin
+						if l3 then begin
+								longFormat2 := @datetimeStrSpecs.yearMonthDayStrSpec
+							end else begin
+								longFormat2 := longFormat
+							end;
+						LongDateStr(l1, longFormat2)
+					end else begin
+						if l3 then begin
+								longFormat2 := @datetimeStrSpecs.yearMonthDayStrSpec
+							end else begin
+								longFormat2 := shortFormat
+							end;
+						ShortDateStr(l1, longFormat2)
+					end)
+			end)
+	end,
+	// like newtDateFilter's, but a date written without a year gets the year 2920
+	TextToPath: func(a1) begin
+		local stringToDateFrame2, totalMinutes2, l3;
+		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else begin
+				validDate := IsValidDate((stringToDateFrame2 := StringToDateFrame(a1)));
+				if (stringToDateFrame2.year = nil) then begin
+						stringToDateFrame2.year := 2920
+					end;
+				totalMinutes2 := TotalMinutes(stringToDateFrame2);
+				l3 := target.(path);
+				(if totalMinutes2 then (if (if l3 then IsImmediate(l3)) then ((totalMinutes2 - (totalMinutes2 mod 1440)) + (l3 mod 1440)) else (totalMinutes2 - (totalMinutes2 mod 1440))))
+			end)
+	end
+};

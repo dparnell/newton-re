@@ -1,9 +1,0 @@
-@@ 0x1045cd9
-func(a1, a2) begin
-	(if a1 then (try begin
-				Perform(a1.fFrame, a1.fSymbol, a2)
-			end onexception |evt.ex| do begin
-				nil
-			end))
-end
-@@end

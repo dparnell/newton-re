@@ -1,6 +1,0 @@
-@@ 0x49e205
-func() begin
-	self:EndFlush();
-	nil
-end
-@@end

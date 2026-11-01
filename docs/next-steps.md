@@ -204,6 +204,29 @@ Where the binaries-to-text work left off (`docs/rom-free/README.md`,
   the same way (`romsrc.py package unpack`); only the NIE's three are.
 - The ARM sources of the protocol parts are not run: the host has its own
   screen driver, and armcpu runs no protocol part (below, Comms).
+- **Left of the natural form** (2026-10-31, `romsrc/README.md`, "Reading
+  it"): about 40% of the functions' arguments and locals are still the
+  decompiler's `a1`, `l1` (25,005 of 62,975 uses) - what neither a
+  script's signature, nor the calls of its function, nor its first value
+  names, and every variable of a function with more than 17 (its argument
+  frame's map is sorted, so a name moves a variable); naming more is
+  hand work, the build unchanged.  A number in a function's source is
+  named only in a view's slot and as an error code: masks (`BAnd(x.viewFlags,
+  -65)`), the time zones' offsets, the NIE's -60xxx codes (no header names
+  them) and the rest are numbers; a few made-up names read oddly
+  (`japanPrefectuRename`, `viewSetupFormScript_literal6`): `romsrc.py
+  rename` fixes one.
+- **Left of the comments** (2026-10-31, `romsrc/README.md` "Comments and
+  constants"): every function is commented; the 79 places marked `looks
+  like a ROM bug:` are untried - each could be confirmed on the host and,
+  where real, fixed behind a switch like the C++ ones (`docs/rom-bugs.md`).
+  Numbers still bare: key descriptors (written as products such as
+  `2*keyFramed`, which a constant sum cannot say), `viewEffect` values
+  that are no table entry, `PostCommand` codes, `textFlags`, the NIE's
+  -60xxx codes, two Gestalt selectors no header names (0x200000B,
+  0x200000C).  `src/views/TextView.h`'s `vjNoLineLimits = 0x01000000`
+  disagrees with the Programmer's Guide (`noLineLimits` 0; 0x1000000 is
+  `oneWordOnly`): check it against the text view's drawing.
 
 ### Left by decision or out of reach
 

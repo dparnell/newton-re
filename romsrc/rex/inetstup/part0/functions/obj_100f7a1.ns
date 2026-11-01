@@ -1,8 +1,0 @@
-@@ 0x100f7a1
-func() begin
-	local l1, l2, l3;
-	l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
-	l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
-	SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
-end
-@@end

@@ -1,0 +1,9 @@
+// The "i" (information) button's icon. A 1-bit bitmap frame (bits, bounds) with a mask, 12
+// x 12 pixels. Magic pointer @381. Used by newtEntryPageHeader, newtEntryRollHeader,
+// newtOverLayout, newtRolloverLayout.
+
+infoBitmap := {
+	mask: bitmap('mask, "resources/mask/3c9221.png", "000000000004005a005a00e3006600ef", 1),
+	bits: bitmap('bits, "resources/bits/3c926d.png", "000000000004005a005a00e3006600ef", 1),
+	bounds: {left: 0, top: 0, right: 12, bottom: 12}
+};

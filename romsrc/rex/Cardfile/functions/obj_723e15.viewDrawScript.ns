@@ -1,5 +1,0 @@
-@@ 0x72480d
-func() begin
-	(if shapeArray then self:DrawShape(shapeArray, {font: viewFont, justification: viewJustSym}))
-end
-@@end

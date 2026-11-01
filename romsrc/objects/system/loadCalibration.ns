@@ -1,0 +1,31 @@
+// loadCalibration (@117): restores the pen tablet's calibration at start-up
+// from the "Calibration" entry of the internal store's system soup.
+
+loadCalibration := compile(
+	constants: {
+		kLiteral_491521: "Calibration",
+		// Finds the internal store's system-soup entry tagged "Calibration" and
+		// returns it (or nil). If the tablet still says it needs calibrating, the
+		// entry's rotated slot is reset to four nils and the entry saved.
+		kFunction_5acb89: func() begin
+			local entry, store, soup;
+			store := GetStores()[0];
+			if store:HasSoup(@systemSoupName) then begin
+					soup := store:GetSoup(@systemSoupName);
+					if (if (entry := soup:Query({type: 'index, indexPath: 'tag, beginKey: kLiteral_491521, endKey: kLiteral_491521}):entry()) then IsTabletCalibrationNeeded()) then begin
+							entry.rotated := Array(4, nil);
+							EntryChange(entry)
+						end
+				end;
+			entry
+		end
+	},
+	// Called at boot with no arguments: hands the saved calibration data (l1 is
+	// the entry) to SetCalibration; true if there was some, else nil.
+	func() begin
+		local l1;
+		(if (if (l1 := call (kFunction_5acb89) with ()) then l1.data) then begin
+				SetCalibration(l1.data);
+				true
+			end)
+	end);

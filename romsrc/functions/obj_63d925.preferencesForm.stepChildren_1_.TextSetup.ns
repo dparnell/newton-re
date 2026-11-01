@@ -1,5 +1,0 @@
-@@ 0x59d4ad
-func() begin
-	labelCommands[self:GetIndex()]
-end
-@@end

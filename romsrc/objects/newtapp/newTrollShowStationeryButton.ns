@@ -1,0 +1,36 @@
+// newTrollShowStationeryButton: the Show button of a NewtApp roll (the NPR's
+// newtRollShowStationeryButton): lists the viewDefs of all the dataDefs of the
+// entries in the roll, each viewDef once.
+//
+// This file holds newTrollShowStationeryButton and what only it reaches.
+
+newTrollShowStationeryButton := {
+	// as newtShowStationeryButton's
+	statScript: func(statArrayItem) begin
+		if (newtAppBase.currentLayout = 'overview) then begin
+				newtAppBase:ShowLayout(nil)
+			end;
+		preferredViewDef := statArrayItem.symbol;
+		layout.viewDef := statArrayItem.symbol;
+		layout:Retarget(true)
+	end,
+	// the viewDefs for the classes of the entries the layout shows, without duplicates
+	// (the decompiler put the local declarations after their first use)
+	SetUpStatArray: func() begin
+		local l1;
+		l1 := (foreach item in layout.entries collect (if item then item.class));
+		defs := GetDefs(form, l1, types);
+		list := [Array: ];
+		local defs;
+		local list;
+		(foreach item2 in defs do begin
+				if (not SetContains(list, item2.symbol)) then begin
+						SetAdd(list, item2.symbol, true)
+					end else begin
+						SetRemove(defs, item2)
+					end
+			end);
+		defs
+	end,
+	_proto: @newtShowStationeryButton
+};

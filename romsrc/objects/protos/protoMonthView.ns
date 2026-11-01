@@ -1,0 +1,4 @@
+// protoMonthView: the bare month calendar view class (clMonthView) on
+// protoView, the native view that draws a month's grid of days.
+
+protoMonthView := {viewClass: clMonthView, _proto: @protoView};

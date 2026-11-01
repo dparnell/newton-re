@@ -1,6 +1,0 @@
-@@ 0x3c668d
-func(a1) begin
-	RemoveSlot(PowerOnRegistry, a1);
-	nil
-end
-@@end

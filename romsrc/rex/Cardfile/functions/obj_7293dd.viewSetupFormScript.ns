@@ -1,5 +1,0 @@
-@@ 0x729ba5
-func() begin
-	(if (Length(target.phones) < 2) then SetLength(target.phones, 2))
-end
-@@end

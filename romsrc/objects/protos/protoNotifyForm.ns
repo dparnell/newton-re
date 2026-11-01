@@ -1,0 +1,68 @@
+// protoNotifyForm: the floating notification box of the system's alerts -
+// a picture view with the "notify cloud" icon, centred on the screen and
+// zooming open, taking the key focus. While gyreOn, it animates the cloud
+// (the "gyre") by XOR-ing its mask over it gyreReps times, gyreRate
+// milliseconds apart.
+
+protoNotifyForm := {
+	// After the view is open: take the key focus (so a key can dismiss it), and
+	// start the animation if gyreOn.
+	viewSetupDoneScript: func() begin
+		SetKeyView(self, 0);
+		(if gyreOn then self:GyreStart())
+	end,
+	viewFormat: vfFillWhite,
+	// On closing: drop the viewBounds viewSetupFormScript may have put in the view
+	// itself, so the next opening starts from the proto's again.
+	viewQuitScript: func() begin
+		(if HasSlot(self, 'viewBounds) then RemoveSlot(self, 'viewBounds))
+	end,
+	// Starts the animation: the count from 0, the idle script every gyreRate ms.
+	GyreStart: func() begin
+		self.gyreCount := 0;
+		self:SetupIdle(gyreRate)
+	end,
+	// animate the icon when the box opens
+	gyreOn: true,
+	viewFlags: vApplication + vFloating,
+	// how many animation steps
+	gyreReps: 12,
+	_DoDefaultButton: _DoDefaultButton,
+	// One animation step: XOR the cloud's mask over it (copyBitsArgs) and ask to be
+	// called again in gyreRate ms; after gyreReps steps returns nil, which stops
+	// the idling.
+	viewIdleScript: func() begin
+		(if (gyreCount < gyreReps) then begin
+				self:DoDrawing('CopyBits, copyBitsArgs);
+				gyreCount := (gyreCount + 1);
+				gyreRate
+			end)
+	end,
+	ReOrientToScreen: @defRotateFunc,
+	viewBounds: {left: 0, top: 0, right: 208, bottom: 154},
+	viewKeyDownScript: viewKeyDownScript,
+	_proto: @protoPictureView,
+	textFlags: 50176,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	icon: @notifycloud,
+	// milliseconds between animation steps
+	gyreRate: 300,
+	declareSelf: 'base,
+	// Before opening: if the sleep screen is up and the application area is
+	// narrower than the screen, move the box by half the difference (to the left
+	// when the application area is not at the screen's left), so that it is
+	// centred on the whole screen rather than the application area.
+	viewSetupFormScript: func() begin
+		local l1;
+		(if (if GetRoot().SleepScreen.viewCObject then (displayParams.appAreaWidth <> displayParams.scrWidth)) then begin
+				l1 := ((displayParams.scrWidth - displayParams.appAreaWidth) div 2);
+				if (displayParams.appAreaGlobalLeft <> 0) then begin
+						l1 := (-l1)
+					end;
+				(self.viewBounds := OffsetRect(self._proto.viewBounds, l1, 0))
+			end)
+	end,
+	viewEffect: fxZoomOpenEffect,
+	// CopyBits(bitmap, left, top, transfer mode) for each animation step
+	copyBitsArgs: [|Array|: @notifycloudMask, 0, 0, modeXor]
+};

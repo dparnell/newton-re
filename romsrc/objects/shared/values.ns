@@ -1,0 +1,456 @@
+// objects several roots reach, none alone (naturalize.py)
+//
+// Strings that more than one root of the ROM's object world holds - the
+// compiler kept one copy of each - mostly the user-visible words of the US
+// ROM (button titles, labels, country names, status words), with a few
+// class names, format strings and characters.  Each is named after the slot
+// or variable it was first found in, so a name says where it is used, not
+// always what it says (`areacode` is "095", `uCardPositionAlertButton` in
+// objects/values.ns the empty string).  A string starting with U+FC01 is a
+// picker's label after the diamond that marks it as a popup (Apple's
+// kPopChar, it seems).
+
+decimalpoint := ".";
+
+// The class names of sound codecs (TDTMFCodec: touch-tone dialling; TIMACodec
+// below: IMA ADPCM compression, protoRouteSlip's and the recorder's).
+tDTMFCodec := "TDTMFCodec";
+
+// Punctuation of the corrector's leading, trailing and middle punctuation
+// pictures' word lists (pictures/correctorleadBits and the others).
+correctorleadBitsItem := "(";
+
+andFaster := "28.8 and faster";
+
+editing := "Editing";
+
+viewing := "Viewing";
+
+creating := "Creating";
+
+general := "General";
+
+stop := "Stop";
+
+readyToRecord := "Ready to record.";
+
+tIMACodec := "TIMACodec";
+
+soundRecorder_2 := "Sound Recorder";
+
+overview := "Overview";
+
+phone := "Phone";
+
+mCI := "MCI";
+
+masterCard := "MasterCard";
+
+// Sample numbers and prefixes of the phone dialling options (an area code,
+// outgoing prefixes such as "00" and "001").
+areacode := "095";
+
+sanFrancisco := "San Francisco";
+
+dateKeyboardItem := "1";
+
+outgoing := "00";
+
+belgium := "Belgium";
+
+finland := "Finland";
+
+germany := "Germany";
+
+hongKong := "Hong Kong";
+
+ireland := "Ireland";
+
+italy := "Italy";
+
+japan := "Japan";
+
+norway := "Norway";
+
+singapore := "Singapore";
+
+sweden := "Sweden";
+
+russia := "Russia";
+
+assist := "Assist";
+
+help := "Help";
+
+correctortrailBitsItem := "!";
+
+correctortrailBitsItem_2 := "?";
+
+correctorleadBitsItem_2 := "'";
+
+usStdDateFilterItem := "01";
+
+abcdefghijklmnopqrstuvwxyz := "abcdefghijklmnopqrstuvwxyz";
+
+words := "Words";
+
+time := "Time";
+
+// The time and phone-number filters' formats (usTimeFilter; usStdPhoneFilter
+// and auststdPhoneFilter, whose string_2 is the empty field).
+format := "10_30_4_";
+
+anyFormat := "Any format";
+
+string_2 := "   -    ";
+
+format_2 := "000_0000";
+
+allItems := "All Items";
+
+first := "First";
+
+none := "None";
+
+password := "Password";
+
+hour := "1 hour";
+
+routing := "Routing";
+
+delete := "Delete";
+
+correctorleadBitsItem_3 := "\"";
+
+currentZone := "*";
+
+sending := "Sending…";
+
+receiving := "Receiving…";
+
+ready := "Ready";
+
+sent := "Sent";
+
+read := "Read";
+
+logged := "Logged";
+
+pending := "Pending";
+
+later := "Later";
+
+send := "Send";
+
+item := "item";
+
+groupSepStr := " ";
+
+digits := "0123456789";
+
+sprintNet := "SprintNet";
+
+filing := "Filing";
+
+file := "File";
+
+erase := "Erase";
+
+restart := "Restart";
+
+restore := "Restore";
+
+backup := "Backup";
+
+timeSepStr1 := ":";
+
+closestCity := "ﰁClosest City";
+
+all := "ﰋ All";
+
+correctortrailBitsItem_3 := ")";
+
+outgoing_4 := "0";
+
+del := "del";
+
+bankrollText := "$";
+
+correctorMidBitsItem := "/";
+
+groupSepStr_2 := ",";
+
+uS := "U.S.";
+
+areaCode_2 := "Area Code";
+
+minusPrefix := "-";
+
+canada := "Canada";
+
+unitedKingdom := "United Kingdom";
+
+australia := "Australia";
+
+folder := "Folder";
+
+title_2 := "Title";
+
+show := "Show";
+
+inBox := "In Box";
+
+show_2 := "  Show";
+
+status := "Status";
+
+// The number format of NewtApp's number views (newtroNumView,
+// newtIntegerFilter): up to ten significant digits.
+g := "%.10g";
+
+inOutBox := "InOut Box";
+
+outBox := "Out Box";
+
+// Labels of communications options (cpst, cpcm, ctso), as protoTapiEndpoint
+// and the root's comm settings give them.
+cpst := "cpst";
+
+prefs := "Prefs";
+
+transport := "Transport";
+
+preview := "Preview";
+
+next := "Next";
+
+items := "items";
+
+name := "Name";
+
+titleLabel := "TitleLabel";
+
+uSA := "USA";
+
+fax := "Fax";
+
+none_2 := "(none)";
+
+creditCard := "Credit Card";
+
+schedule_2 := "Schedule";
+
+date := "ﰁDate";
+
+otherNames := "Other Names";
+
+thisMeetingOccursOn := "This meeting occurs on:";
+
+dates := "ﰁDates";
+
+toDoTask := "To Do Task";
+
+note := "Note";
+
+to_2 := "To";
+
+plain := "Plain";
+
+city := "City";
+
+outgoing_5 := "001";
+
+dateKeyboardItem_4 := "9";
+
+styles := "Styles";
+
+time_2 := "time";
+
+or_2 := "or";
+
+first_2 := "first";
+
+call_2 := "Call";
+
+phoneMessage := "Phone Message";
+
+donTRepeat := "Don't repeat";
+
+everyWeek := "Every week";
+
+everyDay := "Every day";
+
+everyOtherWeek := "Every other week";
+
+everyMonth := "Every month";
+
+everyYear := "Every year";
+
+second := "second";
+
+third := "third";
+
+fourth := "fourth";
+
+last := "last";
+
+to_3 := "to";
+
+date_2 := "Date";
+
+new_2 := "New";
+
+new_3 := "  New";
+
+dates_2 := "Dates";
+
+meeting_3 := "Meeting";
+
+time_3 := "ﰁTime";
+
+invitees_2 := "Invitees";
+
+location_2 := "Location";
+
+minutes := "30 minutes";
+
+toDoList := "To Do List";
+
+contentArea := "contentArea";
+
+book := "Book";
+
+choose := "Choose";
+
+do_2 := "Do";
+
+mail := "mail";
+
+dear := "dear";
+
+print := "Print";
+
+salutationSuffixItem := ";";
+
+at := "at";
+
+are := "are";
+
+hey := "hey";
+
+in_2 := "in";
+
+popItem := "3";
+
+cpcm := "cpcm";
+
+ctso := "ctso";
+
+default_3 := "Default";
+
+mods := "mods";
+
+// "File ^0 in": ^0 is replaced by ParamStr.
+fileIn := "File ^0 in";
+
+logEntries := "log entries";
+
+log := "Log";
+
+hangUp := "Hang Up";
+
+extras := "Extras";
+
+calls := "Calls";
+
+inBox_3 := "InBox";
+
+outBox_2 := "OutBox";
+
+undo := "Undo";
+
+find := "Find";
+
+// The name of the soup the system's alarms are kept in.
+systemAlarmSoup := "SystemAlarmSoup";
+
+learn := "Learn";
+
+item_2 := "Item";
+
+items_2 := "Items";
+
+update := "Update";
+
+where_2 := "Where";
+
+// The class names of the printer drivers (TDotPrinter, TSWGroupDriver).
+tDotPrinter := "TDotPrinter";
+
+tSWGroupDriver := "TSWGroupDriver";
+
+work := "Work";
+
+car := "Car";
+
+aTT := "AT&T";
+
+sprint_2 := "Sprint";
+
+newton := "Newton";
+
+popItem_2 := "2";
+
+popItem_3 := "4";
+
+autoDock := "Auto Dock";
+
+americaOnline := "America Online";
+
+letterText := "Letter Text";
+
+mail_2 := "Mail";
+
+enabled := "Enabled";
+
+options := "  Options";
+
+canceling := "Canceling…";
+
+denmark := "Denmark";
+
+france := "France";
+
+israel := "Israel";
+
+netherlands := "Netherlands";
+
+newZealand := "New Zealand";
+
+southAfrica := "South Africa";
+
+switzerland := "Switzerland";
+
+last_2 := "Last";
+
+address := "Address";
+
+country := "Country";
+
+discover := "Discover";
+
+private := "private";
+
+remove := "Remove";
+
+add := "Add";
+
+numbers := "Numbers";
+
+alarm_2 := "Alarm";
+
+preferences := "Preferences";
+
+ent := "ent";
+
+home := "Home";

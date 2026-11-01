@@ -1,5 +1,0 @@
-@@ 0x76cec5
-func() begin
-	SetValue(label, 'text, infoLineLabel)
-end
-@@end

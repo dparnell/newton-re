@@ -1,0 +1,128 @@
+// The Cardfile package's frames part: the Names application, which replaces the
+// ROM's own (OverrideBuiltinApp 'cardfile).  Its export table hands the
+// application and its layouts, info views and print formats (@8192-@8253) to
+// the system, which names them by those magic pointers.
+
+part := array(nil, {
+	// The part's installScript: installs the application (newtApplication's
+	// NewtInstallScript), puts it in place of the built-in Names, makes the Names
+	// soup with its sample cards when the internal store has none, and registers
+	// for changes to the soup and for a restore.  Returns the frame removeScript
+	// gets.
+	installScript: compile(
+		constants: {
+			// The soup-change callback: passes the change on to the application.
+			kFunction_720809: func(a1, a2, a3, a4) begin
+				GetRoot().cardfile:NewtSoupChangedNotify(a1, a2, a3, a4)
+			end
+		},
+		func(partFrame) begin
+			local namesSoup;
+			local theForm, context, copy, frame2;
+			theForm := partFrame.partData.theForm;
+			(frame2 := {}).(EnsureInternal('theStuff)) := theForm:NewtInstallScript(theForm);
+			frame2.(EnsureInternal('appSymbol)) := theForm.appSymbol;
+			context := BuildContext(theForm);
+			OverrideBuiltinApp('cardfile, context);
+			namesSoup := theForm.allSoups.names;
+			frame2.(EnsureInternal('soupName)) := namesSoup.soupName;
+			if (not GetStores()[0]:HasSoup(namesSoup.soupName)) then begin
+					copy := Clone(namesSoup);
+					copy:MakeSoup(theForm.appSymbol);
+					copy:AddWalletEntries()
+				end;
+			RegSoupChange(namesSoup.soupName, theForm.appSymbol, kFunction_720809);
+			// After a restore: when the Names soup came back, drops the cached soup and
+			// looks for new birthdays.
+			RegSoupRestore(theForm.appSymbol, func(a1) begin
+				local cardfile, l2;
+				(if BFetch(a1, namesSoup.soupName, '|str<|, nil) then begin
+						if (l2 := (cardfile := GetRoot().cardfile).allSoups.names).theSoup then begin
+								l2.theSoup := nil
+							end;
+						cardfile:CheckAllBdays()
+					end)
+			end);
+			frame2
+		end),
+	// Undoes the install script: the soup registrations and the application.
+	removeScript: func(partFrame) begin
+		UnRegSoupChange(partFrame.soupName, partFrame.appSymbol);
+		UnRegUnionSoup(partFrame.soupName, partFrame.appSymbol);
+		call partFrame.theStuff.NewtRemoveScript with (partFrame.theStuff);
+		nil
+	end,
+	partData: {theForm: @8192},
+	_ImportTable: [|Array|: {name: 'cardfile, major: 1, minor: 0}],
+	_ExportTable: [|Array|:
+		{
+			name: 'cardfile,
+			major: 1,
+			minor: 0,
+			objects: [|Array|:
+				@8192,
+				@8193,
+				@8194,
+				@8195,
+				@8196,
+				@8197,
+				@8198,
+				@8199,
+				@8200,
+				@8201,
+				@8202,
+				@8203,
+				@8204,
+				@8205,
+				@8206,
+				@8207,
+				@8208,
+				@8209,
+				@8210,
+				@8211,
+				@8212,
+				@8213,
+				@8214,
+				@8215,
+				@8216,
+				@8217,
+				@8218,
+				@8219,
+				@8220,
+				@8221,
+				@8222,
+				@8223,
+				@8224,
+				@8225,
+				@8226,
+				@8227,
+				@8228,
+				@8229,
+				@8230,
+				@8231,
+				@8232,
+				@8233,
+				@8234,
+				@8235,
+				@8236,
+				@8237,
+				@8238,
+				@8239,
+				@8240,
+				@8241,
+				@8242,
+				@8243,
+				@8244,
+				@8245,
+				@8246,
+				@8247,
+				@8248,
+				@8249,
+				@8250,
+				@8251,
+				@8252,
+				@8253
+			]
+		}
+	]
+});

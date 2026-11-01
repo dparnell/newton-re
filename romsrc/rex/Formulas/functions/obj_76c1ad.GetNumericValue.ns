@@ -1,5 +1,0 @@
-@@ 0x76c4fd
-func() begin
-	return value:GetNumericValue()
-end
-@@end

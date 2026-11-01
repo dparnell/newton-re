@@ -1,5 +1,0 @@
-@@ 0x47fec5
-func() begin
-	GetRoot().(owner):?Refresh()
-end
-@@end

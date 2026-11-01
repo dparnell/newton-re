@@ -1,5 +1,0 @@
-@@ 0x765cad
-func() begin
-	self:hilite(nil)
-end
-@@end

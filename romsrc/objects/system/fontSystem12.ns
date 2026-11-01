@@ -1,0 +1,4 @@
+// fontSystem12: a font frame for the 12-point System (Espy) font, plain - one of
+// the system's standard fonts, ready made for templates and code to use.
+
+fontSystem12 := {family: 'espy, face: kFaceNormal, size: 12};

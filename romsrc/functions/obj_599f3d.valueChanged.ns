@@ -1,6 +1,0 @@
-@@ 0x599ed5
-func() begin
-	SetUserConfig('mailReceipt, viewValue);
-	(fields.receipt := viewValue)
-end
-@@end

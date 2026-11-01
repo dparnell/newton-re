@@ -1,5 +1,0 @@
-@@ 0x728eb5
-func() begin
-	GetGlobals().phoneTypes.phoneText
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x101bd71
-func() begin
-	labelCommands[self:GetOption(ClassOf(target.(path)))].item
-end
-@@end

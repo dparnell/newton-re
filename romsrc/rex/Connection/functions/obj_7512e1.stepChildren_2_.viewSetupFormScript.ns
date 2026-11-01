@@ -1,5 +1,0 @@
-@@ 0x751715
-func() begin
-	(text := Clone(fileName))
-end
-@@end

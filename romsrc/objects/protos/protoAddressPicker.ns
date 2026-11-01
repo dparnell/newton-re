@@ -1,0 +1,282 @@
+// protoAddressPicker: the routing slip's "To:" picker (Newton Programmer's
+// Reference "protoAddressPicker"): a label picker showing the chosen
+// recipients.  Tapping it pops up a short list - the current choice, the
+// alternatives and the recently used addresses (remembered under memory) -
+// with "Other Names" at the end, which opens the full people picker
+// (_picker, protoPeoplePopup).
+//   class          the nameRef class of the addresses (e.g. '|nameRef.email|)
+//   selected       the chosen addresses, an array of nameRefs
+//   alternatives   other addresses to offer in the short list
+//   useMemory      remember chosen addresses and offer them again
+//   inPeoplePicker true while the next pick comes from the full picker
+
+protoAddressPicker := {
+	// the nameRefs behind the short list's lines (nil: a separator)
+	labelNameRefs: nil,
+	class: nil,
+	// on closing: remembers the chosen addresses (once, compared by their
+	// text) and closes the full picker if it is still open
+	viewQuitScript: func() begin
+		if (if (if useMemory then selected) then (Length(selected) > 0)) then begin
+				AddMemoryItemUnique(memory, selected, func(a1, a2) begin
+					self:ToRefEquality(a1, a2)
+				end)
+			end;
+		if (if pickerSlip then pickerSlip.viewCObject) then begin
+				pickerSlip:Close()
+			end;
+		(pickerSlip := nil)
+	end,
+	// answers the text of the choice, cut to fit the entry line
+	EntryLineSetup: func() begin
+		local box;
+		box := self:LocalBox();
+		StyledStrTruncate(Clone(self:TextFromRef(selected)), ((box.right - box.left) - indent), entryLine.viewFont)
+	end,
+	memory: nil,
+	_picker: @protoPeoplePopup,
+	viewBounds: {left: 30, top: 55, right: -20, bottom: 71},
+	_proto: @protoLabelPicker,
+	otherText: otherNames,
+	pickerSlip: nil,
+	// builds the short list (labelCommands) when it is stale (inPeoplePicker
+	// set), answering it, or nil when there is nothing to offer but the full
+	// picker.  Its order: the current choice and the alternatives - those
+	// also in memory first - then a separator and the remembered addresses
+	// not already listed, then a separator and otherText.
+	//   l1   the remembered items; l6 the listed ones found in memory, l7
+	//   the other remembered ones; l3/l4/l5 their counts; l8 whether the
+	//   selected line was among the remembered ones
+	// The decompiler places the locals after their uses.
+	pickerSetup: func() begin
+		if inPeoplePicker then begin
+				labelNameRefs := nil;
+				l1 := (if useMemory then GetMemoryItems(memory));
+				if (alternatives or l1) then begin
+						l2 := 0;
+						if (if selected then (Length(selected) > 0)) then begin
+								if (Length(selected) = 1) then begin
+										labelNameRefs := Clone(selected)
+									end else begin
+										labelNameRefs := [Array: selected]
+									end;
+								selectedIndex := 0
+							end else begin
+								labelNameRefs := [Array: ]
+							end;
+						if alternatives then begin
+								ArrayMunger(labelNameRefs, 1, 0, alternatives, 0, nil)
+							end;
+						labLen := Length(labelNameRefs);
+						if l1 then begin
+								l3 := 0;
+								l4 := 0;
+								l5 := 0;
+								l2 := Length(l1);
+								l6 := Array(labLen, nil);
+								l7 := Array(l2, nil);
+								l8 := nil;
+								local l1;
+								local l2;
+								local l3;
+								local l4;
+								local l5;
+								local l6;
+								local l7;
+								local l8;
+								(foreach l9, l10 in l1 do begin
+										l12 := l10.item;
+										if (l13 := ArrayPos(labelNameRefs, l12, 0, func(a1, a2) begin
+											self:ToRefEquality(a1, a2)
+										end)) then begin
+												l6[l4] := l12;
+												labelNameRefs[l13] := nil;
+												l3 := (l3 + 1);
+												if (if selectedIndex then (l13 = selectedIndex)) then begin
+														l8 := true;
+														selectedIndex := l4
+													end;
+												l4 := (l4 + 1)
+											end else begin
+												l7[l5] := l12;
+												l5 := (l5 + 1)
+											end
+									end);
+								if (if (not l8) then selectedIndex) then begin
+										selectedIndex := (selectedIndex + l4)
+									end;
+								if (l3 > 0) then begin
+										local l12;
+										local l13;
+										(foreach l10 in labelNameRefs do begin
+												if l10 then begin
+														l6[l4] := l10;
+														l4 := (l4 + 1)
+													end
+											end);
+										labelNameRefs := l6;
+										l2 := (l2 - l3);
+										SetLength(l7, l2)
+									end;
+								if (l2 > 0) then begin
+										if (labLen > 0) then begin
+												SetLength(labelNameRefs, ((labLen + l2) + 1));
+												labelNameRefs[labLen] := nil;
+												labLen := (labLen + 1)
+											end else begin
+												SetLength(labelNameRefs, l2)
+											end;
+										(foreach l10 in l7 do begin
+												labelNameRefs[labLen] := l10;
+												labLen := (labLen + 1)
+											end)
+									end
+							end;
+						labelCommands := Array(((labLen := Length(labelNameRefs)) + 2), nil);
+						(for l9 := 0 to (labLen - 1) do begin
+								labelCommands[l9] := (if (labelNameRefs[l9] = nil) then 'pickseparator else self:PopupSetup(labelNameRefs[l9]))
+							end);
+						labelCommands[labLen] := 'pickseparator;
+						labelCommands[(labLen + 1)] := otherText
+					end else begin
+						labelCommands := nil
+					end;
+				inPeoplePicker := nil
+			end;
+		labelCommands
+	end,
+	// the text of a line of the short list: the address cut to 200 pixels
+	PopupSetup: func(labelNameRef) begin
+		StyledStrTruncate(Clone(self:TextFromRef(labelNameRef)), 200, @fontSystem10Bold)
+	end,
+	viewJustify: vjParentFullH,
+	selected: nil,
+	// opens the full people picker on a copy of the choice (unless it is
+	// already open); its pick comes back through pickActionScript
+	DoOpenPicker: func() begin
+		if (if pickerSlip then pickerSlip.viewCObject) then begin
+				return nil
+			end;
+		inPeoplePicker := true;
+		(pickerSlip := _picker:New(class, DeepClone(selected), self, nil))
+	end,
+	labelCommands: nil,
+	// answers the text shown.  With alternatives and remembered addresses,
+	// the most recently used address among the choice and the alternatives
+	// becomes the choice first, swapping places with the old one (copy is
+	// the choice followed by the alternatives, so pos - 1 indexes
+	// alternatives - which assumes the choice is a single address).  The
+	// decompiler places the locals after their uses.
+	TextSetup: func() begin
+		memoryItems := GetMemoryItems(memory);
+		if (if alternatives then memoryItems) then begin
+				ArrayMunger((copy := Clone(alternatives)), 0, 0, selected, 0, nil);
+				local memoryItems;
+				local item;
+				local pos;
+				local copy;
+				(foreach key, value in memoryItems do begin
+						local copyItem;
+						item := value.item;
+						if (pos := ArrayPos(copy, item, 0, func(a1, a2) begin
+							self:ToRefEquality(a1, a2)
+						end)) then begin
+								break
+							end
+					end);
+				if (if pos then (pos > 0)) then begin
+						copyItem := copy[0];
+						selected := item;
+						alternatives[(pos - 1)] := copyItem
+					end
+			end;
+		return self:EntryLineSetup()
+	end,
+	// at setup: addresses are remembered under their class unless memory
+	// names another key
+	viewSetupFormScript: func() begin
+		if (memory = nil) then begin
+				memory := class
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	// sent on a tap: pops up the short list with a check mark on the current
+	// line, or opens the full picker when there is no short list
+	Popit: func(x) begin
+		if self:pickerSetup() then begin
+				pop := Clone(labelCommands);
+				if selectedIndex then begin
+						pop[selectedIndex] := {item: pop[selectedIndex], mark: $\uFC0B}
+					end;
+				DoPopup(pop, x, nil, self)
+			end else begin
+				self:DoOpenPicker()
+			end;
+		true
+	end,
+	// whether two addresses are the same: both have text and it is equal
+	// (dataDefs is fetched but not used)
+	ToRefEquality: func(a1, a2) begin
+		local dataDefs, textFromRef, textFromRef2;
+		dataDefs := GetDataDefs(class);
+		textFromRef := self:TextFromRef(a1);
+		textFromRef2 := self:TextFromRef(a2);
+		(if (if StrFilled(textFromRef) then StrFilled(textFromRef2)) then StrEqual(textFromRef, textFromRef2))
+	end,
+	// TextFromRef(refs): the routing title of a nameRef or an array of them,
+	// with the class's suffix (e.g. the address itself) for a single one
+	TextFromRef: func(selected) begin
+		local dataDefs, routingTitle, suffix;
+		dataDefs := GetDataDefs(class);
+		routingTitle := dataDefs:GetRoutingTitle(selected, nil, nil);
+		suffix := nil;
+		if (if IsArray(selected) then (Length(selected) = 1)) then begin
+				suffix := dataDefs:GetSuffix(selected[0])
+			end else begin
+				if IsFrame(selected) then begin
+						suffix := dataDefs:GetSuffix(selected)
+					end
+			end;
+		if suffix then begin
+				routingTitle := ParamStr("^0 ^1", [Array: routingTitle, suffix])
+			end;
+		routingTitle
+	end,
+	useMemory: true,
+	// a pick: from the full picker, index is the chosen addresses; from the
+	// short list, the line number - an address line becomes the choice, the
+	// last line ("Other Names") drops the alternatives and opens the full
+	// picker
+	pickActionScript: func(index) begin
+		local count;
+		(if inPeoplePicker then begin
+				selected := index;
+				self:UpdateText(self:EntryLineSetup());
+				base:hilite(nil);
+				(pickerSlip := nil)
+			end else begin
+				count := Length(labelNameRefs);
+				(if (index < count) then begin
+						selected := labelNameRefs[index];
+						selectedIndex := index;
+						if (not IsArray(selected)) then begin
+								selected := [Array: selected]
+							end;
+						self:UpdateText(self:EntryLineSetup());
+						base:hilite(nil)
+					end else begin
+						alternatives := nil;
+						self:DoOpenPicker()
+					end)
+			end)
+	end,
+	text: name,
+	debug: 265948,
+	alternatives: nil,
+	selectedIndex: nil,
+	inPeoplePicker: true
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ToRefEquality_code := same("protoAddressPicker.ToRefEquality.instructions");

@@ -1,0 +1,16 @@
+// The 9600 bps serial connection's options (@8291): the serial options (@8256)
+// at 9600.
+
+export99 := {
+	_proto: @8256,
+	speedOption: 9600,
+	useEOP: nil,
+	// As the serial options.
+	openOptions: func() begin
+		inherited:openOptions()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+openOptions_code := same("export99.openOptions.instructions");

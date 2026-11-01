@@ -1,5 +1,0 @@
-@@ 0x520229
-func() begin
-	(text := Stringer([Array: " of", " ", self:CountPages()]))
-end
-@@end

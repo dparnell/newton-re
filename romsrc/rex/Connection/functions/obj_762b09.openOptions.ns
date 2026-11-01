@@ -1,5 +1,0 @@
-@@ 0x762b45
-func() begin
-	inherited:openOptions()
-end
-@@end

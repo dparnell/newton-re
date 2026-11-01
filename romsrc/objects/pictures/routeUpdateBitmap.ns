@@ -1,0 +1,7 @@
+// The Action menu icon of Update (a package). A 1-bit bitmap frame (bits, bounds), 21 x 14
+// pixels. Magic pointer @761. Used by part, viewRoot.
+
+routeUpdateBitmap := {
+	bits: bitmap('bits, "resources/bits/3db1b1.png", "00000000000400d200d200db00e000f0", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 14}
+};

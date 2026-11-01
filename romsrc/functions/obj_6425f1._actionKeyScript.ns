@@ -1,5 +1,0 @@
-@@ 0x4db151
-func(a1) begin
-	self:CommonKeyScript(_actionKeyButton)
-end
-@@end

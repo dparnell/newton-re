@@ -1,5 +1,0 @@
-@@ 0x76f4d1
-func() begin
-	(self.text := Stringer([Array: "\u2022\u", " ", text]))
-end
-@@end

@@ -1,9 +1,0 @@
-@@ 0x100f929
-func() begin
-	newtAppBase.WhichPage := (newtAppBase.WhichPage - 1);
-	self:hilite(nil);
-	SetValue(base, 'viewBounds, base._proto.viewBounds);
-	base:SyncView();
-	newtAppBase.editSlipLayout:RedoChildren()
-end
-@@end

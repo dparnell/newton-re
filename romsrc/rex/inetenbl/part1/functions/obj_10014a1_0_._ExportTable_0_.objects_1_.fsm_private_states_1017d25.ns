@@ -1,6 +1,0 @@
-@@ 0x1017d25
-func(a1) begin
-	self:?DoErrorCallback("Endpoint Connect", a1);
-	self:DoEvent('UnBind, nil)
-end
-@@end

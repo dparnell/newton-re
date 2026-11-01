@@ -1,9 +1,0 @@
-@@ 0x1039a61
-func(a1, a2, a3) begin
-	local l1;
-	if (l1 := InetStartUp():MGetDomainService()) then begin
-			return l1:GetNameFromAddress(l1:MBuildCallback(a2, a3), a1)
-		end;
-	(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
-end
-@@end

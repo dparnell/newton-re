@@ -1,0 +1,87 @@
+// The time-value-of-money solvers (@8304, the panels' _proto, on the panel @8303): the
+// relation present value + payment x annuity(rate, periods) + future value x
+// compound(rate, -periods) = 0 solved for each term, with the rate given in
+// percent.  Each takes the other four of (periods, rate, present value, future
+// value, payment) in that order, and returns nil when there is no finite answer.
+
+export112 := {
+	// SolveForPayment(periods, rate, present value, future value).
+	SolveForPayment: func(listItem, listItem2, listItem3, listItem4) begin
+		local l1, l2;
+		l1 := nil;
+		l2 := (listItem2 / 100);
+		if (not IsFinite((l1 := ((-(listItem3 + (listItem4 * compound(l2, (-listItem))))) / annuity(l2, listItem))))) then begin
+				l1 := nil
+			end;
+		return l1
+	end,
+	// SolveForPeriod(rate, present value, future value, payment).
+	SolveForPeriod: func(listItem, listItem2, listItem3, listItem4) begin
+		local l1, l2;
+		l1 := nil;
+		l2 := (listItem / 100);
+		if (not IsFinite((l1 := ((-log(((listItem4 + (l2 * listItem2)) / (listItem4 - (l2 * listItem3))))) / log1p(l2))))) then begin
+				l1 := nil
+			end;
+		return l1
+	end,
+	// SolveForInterestRate(periods, present value, future value, payment), in %:
+	// by the secant method from 0.1% and 1%, at most 50 steps, to a relative change under 1e-7; nil when the signs of the values
+	// allow no rate (or the periods are negative) or it does not converge.
+	SolveForInterestRate: func(listItem, listItem2, listItem3, listItem4) begin
+		l1 := nil;
+		if (not ((((if (if (listItem2 >= 0.0) then (listItem3 >= 0.0)) then (listItem4 >= 0.0)) or (if (if (listItem2 <= 0.0) then (listItem3 <= 0.0)) then (listItem4 <= 0.0))) or (if (listItem2 = 0.0) then (listItem3 = 0.0))) or (listItem < 0))) then begin
+				i := 0;
+				l3 := 0.001;
+				l4 := 0.01;
+				l6 := ((listItem2 + (listItem4 * annuity(l3, listItem))) + (listItem3 / compound(l3, listItem)));
+				l7 := ((listItem2 + (listItem4 * annuity(l4, listItem))) + (listItem3 / compound(l4, listItem)));
+				local l1;
+				local i;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				local l7;
+				(for i := 1 to 50 do begin
+						if (abs(((l3 - l4) / l4)) < 1.0e-07) then begin
+								l1 := (l4 * 100);
+								break
+							end;
+						if ((l5 := (l4 - (l7 * ((l4 - l3) / (l7 - l6))))) <= (-1.0)) then begin
+								l5 := ((l4 - 1.0) / 2.0)
+							end;
+						l3 := l4;
+						l6 := l7;
+						l4 := l5;
+						l7 := ((listItem2 + (listItem4 * annuity(l4, listItem))) + (listItem3 / compound(l4, listItem)))
+					end)
+			end;
+		return l1
+	end,
+	// SolveForPresentValue(periods, rate, future value, payment).
+	SolveForPresentValue: func(listItem, listItem2, listItem3, listItem4) begin
+		local l1, l2;
+		l1 := nil;
+		l2 := (listItem2 / 100);
+		if (not IsFinite((l1 := (((-listItem4) * annuity(l2, listItem)) - (listItem3 * compound(l2, (-listItem))))))) then begin
+				l1 := nil
+			end;
+		return l1
+	end,
+	// SolveForFutureValue(periods, rate, present value, payment).
+	SolveForFutureValue: func(listItem, listItem2, listItem3, listItem4) begin
+		local l1, l2;
+		l1 := nil;
+		l2 := (listItem2 / 100);
+		if (not IsFinite((l1 := ((((-listItem4) * annuity(l2, listItem)) - listItem3) * compound(l2, listItem))))) then begin
+				l1 := nil
+			end;
+		return l1
+	end,
+	_proto: @8303
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SolveForInterestRate_literal0 := same("export112.SolveForInterestRate.literals[0]");

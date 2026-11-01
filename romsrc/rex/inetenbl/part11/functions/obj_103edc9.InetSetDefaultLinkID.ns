@@ -1,5 +1,0 @@
-@@ 0x103fbb1
-func(a1) begin
-	InetStartUp():MSetLinkDefaultID(a1)
-end
-@@end

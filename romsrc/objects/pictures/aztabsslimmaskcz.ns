@@ -1,0 +1,7 @@
+// The mask of the other tabs of the narrow A-Z index tabs. A 1-bit bitmap frame (bits,
+// bounds), 18 x 15 pixels. Magic pointer @561. Used by azTabs.
+
+aztabsslimmaskcz := {
+	bits: bitmap('bits, "resources/bits/43d619.png", "00000000000400d500d5016a00e4017c", 1),
+	bounds: {left: 0, top: 0, right: 18, bottom: 15}
+};

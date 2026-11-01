@@ -1,6 +1,0 @@
-@@ 0x59547d
-func() begin
-	self:EndTransaction();
-	self:?transactionAbortedScript(0)
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x73b31d
-func(a1) begin
-	newtAppBase:SetCustomInfo(a1)
-end
-@@end

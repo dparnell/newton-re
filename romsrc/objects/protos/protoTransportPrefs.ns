@@ -1,0 +1,162 @@
+// protoTransportPrefs: the preferences slip of a transport ("<transport>
+// Preferences"): a close box, an info button (About, Help), the title, and
+// pickers for the In Box and Out Box logging, how items are sent, and a
+// checkbox for a silent option. The *Prefs slots describe each part; nil
+// leaves a part hidden.
+
+protoTransportPrefs := {
+	viewBounds: {left: 0, top: 0, right: 215, bottom: 170},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	title: nil,
+	// the transport's application symbol, and the transport
+	appSymbol: nil,
+	transport: nil,
+	// the frames describing each part (the defaults' protos are the system's)
+	outboxPrefs: {_proto: @defaultOutboxPrefInfo},
+	inboxPrefs: {_proto: @defaultInboxPrefInfo},
+	sendPrefs: {_proto: @defaultSendPrefInfo},
+	silentPrefs: {_proto: @defaultSilentPrefInfo},
+	infoPrefs: {_proto: @defaultInfoPrefs},
+	// ClosePrefs(): closes the slip, through its owner's RememberedClose
+	// (deferred) when the transport's owner view is open
+	ClosePrefs: func() begin
+		local l1;
+		(if (if (l1 := GetRoot().(transport.owner)) then l1.viewCObject) then AddDeferredSend(l1, 'RememberedClose, [Array: self]) else self:Close())
+	end,
+	viewChildren: [viewChildren:
+		// the close box
+		{
+			// Closes the slip (ClosePrefs).
+			buttonClickScript: func() begin
+				base:ClosePrefs()
+			end,
+			_proto: @protoCancelButton
+		},
+		// the info button at the bottom left
+		{
+			viewBounds: {left: 5, top: -18, right: 18, bottom: -5},
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+			theAboutBox: nil,
+			// viewSetupFormScript(): without infoPrefs, hidden (vVisible
+			// cleared); otherwise takes infoPrefs' slots it lacks and offers
+			// About and Help for the DoInfoAbout and DoInfoHelp methods it has
+			viewSetupFormScript: func() begin
+				(if (infoPrefs = nil) then (self.viewFlags := BAnd(viewFlags, bnot(vVisible))) else begin
+						stdItems := [Array: ];
+						(foreach key, value deeply in infoPrefs do begin
+								if (not HasSlot(self, key)) then begin
+										self.(key) := value
+									end
+							end);
+						if (DoInfoAbout exists) then begin
+								AddArraySlot(stdItems, {item: "About", msg: 'DoInfoAbout})
+							end;
+						(if (DoInfoHelp exists) then AddArraySlot(stdItems, {item: "Help", msg: 'DoInfoHelp}))
+					end)
+			end,
+			// viewQuitScript(): closes the About box if it is open
+			viewQuitScript: func() begin
+				if theAboutBox then begin
+						theAboutBox:Close()
+					end;
+				(theAboutBox := nil)
+			end,
+			_proto: @protoInfoButton
+		},
+		// the title, "<title> Preferences" (the slip's title, else the
+		// transport application's)
+		{
+			title: nil,
+			// "<title> Preferences": the slip's title, else the transport's.
+			viewSetupFormScript: func() begin
+				local title2;
+				if ((title2 := self:Parent().title) = nil) then begin
+						title2 := GetRoot().(appSymbol).title
+					end;
+				title := ParamStr("^0 Preferences", [Array: title2]);
+				inherited:viewSetupFormScript()
+			end,
+			_proto: @protoTitle
+		},
+		// the In Box logging picker
+		siblingCheck,
+		// the Out Box logging picker; 8406576 = vjParentFullH +
+		// vjSiblingFullH + vjSiblingTopV + oneLineOnly (0x800000, the NPG's
+		// value)
+		{
+			viewBounds: {left: 0, top: -35, right: 0, bottom: -3},
+			viewJustify: vjParentFullH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
+			infoSymbol: 'outboxPrefs,
+			_proto: @protoLogPicker
+		},
+		// the "send" picker: how items are routed (sendPrefs' routeChoices,
+		// each with routeVerb, stored in the transport's routeConfig setting)
+		{
+			_proto: @protoMultiLinePicker,
+			viewBounds: {left: 0, top: -19, right: 0, bottom: -3},
+			viewJustify: vjParentFullH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
+			infoSymbol: 'sendPrefs,
+			// How items are sent: the info's text and choices (with its verb).
+			viewSetupFormScript: func() begin
+				self:doTheShuffle();
+				if info then begin
+						text := info.routeText;
+						labelCommands := (foreach item in info.routeChoices collect ParamStr(item, [Array: info.routeVerb]))
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			// GetIndex(): the choice matching the transport's current setting
+			GetIndex: func() begin
+				(if info then ArrayPos(info.routeActions, self:GetTransport():GetConfig(info.routeConfig), 0, nil))
+			end,
+			// LabelActionScript(index): stores the chosen action
+			LabelActionScript: func(index) begin
+				(if info then self:GetTransport():SetConfig(info.routeConfig, info.routeActions[index]))
+			end,
+			// The choice shown.
+			TextSetup: func() begin
+				local index;
+				(if info then begin
+						index := self:GetIndex();
+						ParamStr(info.routeChoices[index], [Array: info.routeVerb])
+					end)
+			end
+		},
+		// the silent-option checkbox; 8407044 = vjCenterV + vjSiblingLeftH +
+		// vjSiblingTopV + oneLineOnly (0x800000)
+		{
+			text: nil,
+			viewBounds: {left: 0, top: -19, right: 205, bottom: -3},
+			viewJustify: vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
+			viewFont: @fontSystem10,
+			viewValue: true,
+			// viewSetupFormScript(): without silentPrefs, hidden; otherwise
+			// its text and the transport's setting for it
+			viewSetupFormScript: func() begin
+				(if (silentPrefs = nil) then (self.viewFlags := BAnd(viewFlags, bnot(vVisible))) else begin
+						viewValue := GetRoot().(appSymbol):GetConfig(silentPrefs.configuration);
+						(text := silentPrefs.text)
+					end)
+			end,
+			// valueChanged(): stores the new setting
+			valueChanged: func() begin
+				GetRoot().(appSymbol):SetConfig(silentPrefs.configuration, viewValue)
+			end,
+			_proto: @protoCheckbox
+		}
+	],
+	siblingCheck: nil,
+	allocateContext: [|Array|: 'siblingCheck, siblingCheck],
+	_proto: @protoFloater,
+	ReOrientToScreen: @defRotateFunc
+};
+
+// the In Box logging picker; 8388784 = vjParentFullH + vjParentBottomV +
+// oneLineOnly (0x800000, the NPG's value)
+siblingCheck := {
+	viewBounds: {left: 10, top: -60, right: 10, bottom: -28},
+	viewJustify: vjParentFullH + vjParentBottomV + oneLineOnly,
+	infoSymbol: 'inboxPrefs,
+	preallocatedContext: 'siblingCheck,
+	_proto: @protoLogPicker
+};

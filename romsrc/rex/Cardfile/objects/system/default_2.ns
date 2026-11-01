@@ -1,0 +1,103 @@
+// The Company Info edit view of a company card (@8214, its 'default view): the
+// company name, its first phone, and a contact's first and last name and
+// honorific.
+
+default_2 := {
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	stepChildren: [|Array|:
+		{
+			path: 'company,
+			label: company,
+			newDictionaries: nil,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed + vPunctuationAllowed + vNameField + vCapsRequired + vCustomDictionaries,
+			// Takes the locale's company dictionaries.
+			viewSetupFormScript: func() begin
+				local locale;
+				newDictionaries := (locale := GetLocale()).recogCompanyDictionaries;
+				inherited:?viewSetupFormScript()
+			end,
+			memory: 'companyName,
+			_proto: addressItem_5Proto
+		},
+		{path: [pathExpr: 'phones, 0], _proto: defaultProto},
+		{
+			path: [pathExpr: 'name, 'first],
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			flavor: @newtCustomFilter,
+			label: first,
+			newDictionaries: newDictionaries,
+			_proto: @newtLabelInputLine
+		},
+		{
+			path: [pathExpr: 'name, 'last],
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			flavor: @newtCustomFilter,
+			label: last,
+			newDictionaries: newDictionaries_2,
+			memory: 'lastName,
+			_proto: @newtLabelInputLine
+		},
+		{
+			path: [pathExpr: 'name, 'honorific],
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			flavor: @newtCustomFilter,
+			label: nil_2,
+			labelCommands: nil,
+			newDictionaries: nil,
+			// The honorific line: the locale's dictionaries, its common honorifics as the
+			// label's popup and its label text.
+			viewSetupFormScript: func() begin
+				local locale;
+				newDictionaries := (locale := GetLocale()).recogHonorificDictionaries;
+				labelCommands := locale.commonHonorifics;
+				label := locale.honorificLabel;
+				inherited:?viewSetupFormScript()
+			end,
+			_proto: @newtLabelInputLine
+		}
+	],
+	name: "Company Info",
+	symbol: 'default,
+	type: 'editor,
+	protection: 'private,
+	// Makes sure the card has a first phone to edit.
+	viewSetupFormScript: func() begin
+		(if (Length(target.phones) < 1) then SetLength(target.phones, 1))
+	end,
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|: 'company, 'title],
+		// The company name.
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			ParamStr("^0", v20_wwwwwwwwwwvvvvvv)
+		end
+	},
+	fieldOrder: [|Array|: 0, 1, 2, 3, 4],
+	viewClass: clView,
+	reading: nil,
+	stepAllocateContext: [|Array|:
+		'reading,
+		// The company name's reading (allocated, not shown; for a localised ROM).
+		{
+			path: 'companyReading,
+			label: label,
+			newDictionaries: nil,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed + vPunctuationAllowed + vNameField + vCapsRequired + vCustomDictionaries,
+			// Takes the locale's company dictionaries.
+			viewSetupFormScript: func() begin
+				local locale;
+				newDictionaries := (locale := GetLocale()).recogCompanyDictionaries;
+				inherited:?viewSetupFormScript()
+			end,
+			memory: 'companyReading,
+			_proto: addressItem_5Proto,
+			preAllocatedContext: 'reading
+		}
+	]
+};

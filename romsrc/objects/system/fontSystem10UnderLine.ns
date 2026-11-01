@@ -1,0 +1,4 @@
+// fontSystem10UnderLine: a font frame for the 10-point System (Espy) font, underlined - one of
+// the system's standard fonts, ready made for templates and code to use.
+
+fontSystem10UnderLine := {family: 'espy, face: kFaceUnderline, size: 10};

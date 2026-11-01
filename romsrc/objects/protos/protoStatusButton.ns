@@ -1,0 +1,95 @@
+// protoStatusButton: a text button of a status slip (protoStatusTemplate),
+// "Stop" by default. The primary slot of the values given to
+// ViewSet/UpdateIndicator controls it: a frame with text (and an optional
+// script, its ButtonClickScript) shows it sized to the text; nil hides it.
+// When the view ShiftItem returns is hidden, the button moves into its place.
+
+protoStatusButton := {
+	debug: 188577,
+	text: stop,
+	viewBounds: {left: -55, top: -18, right: -25, bottom: -5},
+	// 8388774 = vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV +
+	// oneLineOnly (0x800000, the NPG's value)
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	// the bounds it has when the ShiftItem view is visible
+	constViewBounds: {left: -55, top: -18, right: -25, bottom: -5},
+	// the slot of the values frame this component goes with
+	name: 'primary,
+	// ShiftItem(): the view whose place the button takes when that view is
+	// hidden - the slip's close box (cancelButton)
+	shiftItem: func() begin
+		cancelButton
+	end,
+	// 'makeVisible or 'makeInvisible, decided at setup and done once the
+	// view exists (nil: leave it as it is)
+	visibleAction: nil,
+	// ButtonClickScript(): the default asks the slip's CancelRequest (or the
+	// application's, appSymbol's) to cancel with 'userCancel
+	buttonClickScript: func() begin
+		(if (CancelRequest exists) then base:CancelRequest('userCancel) else GetRoot().(appSymbol):CancelRequest('userCancel))
+	end,
+	// viewSetupFormScript(): decides from the values what to do (l3):
+	// 'create - the value is a frame with text: takes its text and script,
+	// sizes the button to the text (keeping the right edge when right
+	// justified); 'shiftOnly - no value but the button is visible; else
+	// hides it. Then places it in the ShiftItem view's place when that is
+	// hidden
+	viewSetupFormScript: func() begin
+		local path, l2, l3, l4, shiftItem, copy;
+		l2 := (path := self:path()).(name);
+		visibleAction := nil;
+		if (if (not HasSlot(path, name)) then (BAnd(self.viewFlags, vVisible) = vVisible)) then begin
+				l3 := 'shiftOnly
+			end else begin
+				if (if (ClassOf(l2) = 'frame) then l2.text) then begin
+						l3 := 'create
+					end else begin
+						l3 := nil
+					end
+			end;
+		if (l3 = 'create) then begin
+				buttonClickScript := l2.script;
+				// l4: the button's width, the text's and 10 pixels
+				l4 := (StrWidth((text := l2.text)) + 10);
+				self.constViewBounds := DeepClone(self.constViewBounds);
+				self.viewBounds := DeepClone(self.viewBounds);
+				// right justified (to the parent or the sibling): grows to the
+				// left; else, unless full width, grows to the right (a full
+				// parent width also has the vjParentRightH bit, so it takes the
+				// first branch)
+				if ((BAnd(viewJustify, vjParentRightH) = vjParentRightH) or (BAnd(viewJustify, vjSiblingRightH) = vjSiblingRightH)) then begin
+						constViewBounds.left := (constViewBounds.right - l4);
+						viewBounds.left := (viewBounds.right - l4)
+					end else begin
+						if (if (not (BAnd(viewJustify, vjParentFullH) = vjParentFullH)) then (not (BAnd(viewJustify, vjSiblingFullH) = vjSiblingFullH))) then begin
+								constViewBounds.right := (constViewBounds.left + l4);
+								viewBounds.right := (viewBounds.left + l4)
+							end
+					end;
+				visibleAction := 'makeVisible
+			end;
+		(if ((l3 = 'create) or (l3 = 'shiftOnly)) then (if (shiftItem := self:shiftItem()) then (if ((shiftItem.visibleAction = 'makeVisible) or (if (not shiftItem.visibleAction) then (BAnd(shiftItem.viewFlags, vVisible) = vVisible))) then (self.viewBounds := DeepClone(self.constViewBounds)) else begin
+						// the ShiftItem view is hidden: moves right so its right
+						// edge is that view's
+						(copy := DeepClone(self.constViewBounds)).right := shiftItem.viewBounds.right;
+						copy.left := (self.constViewBounds.left - (self.constViewBounds.right - shiftItem.viewBounds.right));
+						(self.viewBounds := copy)
+					end)) else (visibleAction := 'makeInvisible))
+	end,
+	// viewSetupDoneScript(): shows or hides the button as decided
+	viewSetupDoneScript: func() begin
+		(if visibleAction then (if (visibleAction = 'makeVisible) then self:Show() else self:Hide()))
+	end,
+	// viewUpdateFormScript(): sent by UpdateIndicator; does both again and,
+	// when shown, applies the new text and bounds
+	viewUpdateFormScript: func() begin
+		self:viewSetupFormScript();
+		self:viewSetupDoneScript();
+		(if (if visibleAction then (visibleAction = 'makeVisible)) then begin
+				SetValue(self, 'text, text);
+				SetValue(self, 'viewBounds, viewBounds)
+			end)
+	end,
+	_proto: @protoTextButton
+};

@@ -1,5 +1,0 @@
-@@ 0x532ee1
-func() begin
-	(base.keyedDigits := nil)
-end
-@@end

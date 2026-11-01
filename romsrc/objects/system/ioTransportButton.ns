@@ -1,0 +1,57 @@
+// ioTransportButton (@821): the In/Out Box's action (routing) button. Its
+// actions are the In/Out Box's own (ioboxscripts) followed by the item's
+// transport's (GetTransportScripts); it offers no transports to route to.
+
+ioTransportButton := {
+	icon: @transportScripts,
+	// registers the button as the _tagKeyButton while it is open
+	viewSetupFormScript: func() begin
+		_tagKeyButton := self;
+		inherited:?viewSetupFormScript()
+	end,
+	// GetActionTransports(target): none - In/Out Box items are not routed on.
+	GetActionTransports: func(a1) begin
+		return [Array: ]
+	end,
+	// GetActionScripts(targetInfo): the action items for the target. For a
+	// multiple selection (a cursor) the transport is the one all selected
+	// items share (their category), else none.
+	GetActionScripts: func(targetInfo) begin
+		local itemTransport, target, category, targetCursor, next, copy, transportScripts;
+		itemTransport := nil;
+		if TargetIsCursor((target := targetInfo.target)) then begin
+				category := nil;
+				next := (targetCursor := GetTargetCursor(target, nil)):entry();
+				(while next do begin
+						if (category = nil) then begin
+								category := next.category
+							end;
+						if (next.category <> category) then begin
+								category := nil;
+								break
+							end;
+						(next := targetCursor:Next())
+					end);
+				if category then begin
+						itemTransport := GetRoot().(category)
+					end
+			end else begin
+				if target then begin
+						itemTransport := GetItemTransport(target)
+					end
+			end;
+		copy := Clone(ioboxscripts);
+		if itemTransport then begin
+				transportScripts := itemTransport:?GetTransportScripts(target);
+				ArrayMunger(copy, Length(copy), 0, transportScripts, 0, nil)
+			end;
+		copy
+	end,
+	// forgets the _tagKeyButton
+	viewQuitScript: func() begin
+		_tagKeyButton := nil;
+		inherited:?viewQuitScript()
+	end,
+	debug: 1527504,
+	_proto: @protoRoutingSlip
+};

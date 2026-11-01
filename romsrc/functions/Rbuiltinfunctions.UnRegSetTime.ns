@@ -1,6 +1,0 @@
-@@ 0x3c69ad
-func(a1) begin
-	RemoveSlot(SetTimeRegistry, a1);
-	nil
-end
-@@end

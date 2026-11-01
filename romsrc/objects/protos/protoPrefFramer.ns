@@ -1,0 +1,12 @@
+// protoPrefFramer: protoPrefFrame without the close box - a plain protoFloater
+// centred on the screen holding a preferences panel; its viewSetupDoneScript
+// (shared, objects/shared/functions.ns) grows it to the height of a child
+// made from prefPanelProto.
+
+protoPrefFramer := {
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewBounds: nil,
+	stepChildren: nil,
+	viewSetupDoneScript: viewSetupDoneScript,
+	_proto: @protoFloater
+};

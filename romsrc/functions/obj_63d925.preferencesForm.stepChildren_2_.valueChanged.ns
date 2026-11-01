@@ -1,5 +1,0 @@
-@@ 0x59d609
-func() begin
-	SetUserConfig('mailautodisconnect, viewValue)
-end
-@@end

@@ -1,7 +1,0 @@
-@@ 0x435fed
-func() begin
-	local l1;
-	(l1 := Clone(self)).realCurs := realCurs:clone();
-	l1
-end
-@@end

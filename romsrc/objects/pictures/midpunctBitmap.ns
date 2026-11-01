@@ -1,0 +1,4 @@
+// The image of the middle-punctuation picker (the bits and bounds correctorMidBits shares).
+// A 1-bit bitmap frame (bits, bounds). Magic pointer @597.
+
+midpunctBitmap := {bits: midpunctBitmapBits, bounds: midpunctBitmapBounds};

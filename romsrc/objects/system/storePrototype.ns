@@ -1,0 +1,147 @@
+// storePrototype, and what only it reaches
+//
+// The prototype of a store object - what GetStores() answers - whose
+// _parent holds the store methods of the Newton Programmer's Reference
+// (GetName, CreateSoup, TotalSize, ...). Most are natives (class #132
+// frames: a native function by its pointer and argument count); the
+// NewtonScript ones wrap a native so as to tell StoreChangeRegistry's
+// functions of the change or to mark the card slot busy. The soup code
+// (src/stores/Soups.cpp) clones it to make a store's frame.
+
+storePrototype := {
+	_parent: {
+		GetName: {class: #132, funcPtr: 7281915, numArgs: 0},
+		HasSoup: {class: #132, funcPtr: 7281919, numArgs: 1},
+		GetKind: {class: #132, funcPtr: 7281914, numArgs: 0},
+		WriteWholeObject: {class: #132, funcPtr: 873508, numArgs: 4},
+		DeleteObject: {class: #132, funcPtr: 873619, numArgs: 1},
+		UsedSize: {class: #132, funcPtr: 7282953, numArgs: 0},
+		// The soups the store has open, as the store frame keeps them.
+		SoupsInUse: func() begin
+			self.soups
+		end,
+		CheckUnion: {class: #132, funcPtr: 6897123, numArgs: 0},
+		NewCompressedVBO: {class: #132, funcPtr: 6886573, numArgs: 4},
+		SetInfoQT: {class: #132, funcPtr: 6915105, numArgs: 2},
+		CheckWriteProtect: {class: #132, funcPtr: 869124, numArgs: 0},
+		// SetInfo(slot, value): sets one slot of the store's information frame,
+		// then tells StoreChangeRegistry ('storeInfoChanged).
+		SetInfo: func(a1, soupDef) begin
+			local setInfoQT;
+			setInfoQT := self:SetInfoQT(a1, soupDef);
+			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeInfoChanged, a1]);
+			setInfoQT
+		end,
+		// Runs function a3 with the store's card slot marked busy (a1 who is
+		// busy, a2 why), unmarking it whatever happens; answers what a3 answers.
+		BusyAction: func(a1, a2, a3) begin
+			local l1;
+			try begin
+					self:MarkBusy(a1, a2);
+					l1 := call a3 with ();
+					self:MarkNotBusy(a1)
+				end onexception |evt.ex| do begin
+					self:MarkNotBusy(a1);
+					Rethrow()
+				end;
+			l1
+		end,
+		CardSlot: {class: #132, funcPtr: 6907703, numArgs: 0},
+		cardType: {class: #132, funcPtr: 6907704, numArgs: 0},
+		Unlock: {class: #132, funcPtr: 7282952, numArgs: 0},
+		SetSignature: {class: #132, funcPtr: 6915106, numArgs: 1},
+		SetAllInfoQT: {class: #132, funcPtr: 6915104, numArgs: 1},
+		// Marks the store's card slot (if it is on a card) no longer busy.
+		MarkNotBusy: func(whoAmI) begin
+			local cardSlot;
+			(if (cardSlot := self:CardSlot()) then MarkSlotNotBusy(whoAmI, cardSlot))
+		end,
+		SetPassword: {class: #132, funcPtr: 6895034, numArgs: 2},
+		// SetAllInfo(frame): replaces the store's information frame, then tells
+		// StoreChangeRegistry ('storeInfoChanged).
+		SetAllInfo: func(a1) begin
+			local setAllInfoQT;
+			setAllInfoQT := self:SetAllInfoQT(a1);
+			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeInfoChanged, nil]);
+			setAllInfoQT
+		end,
+		Abort: {class: #132, funcPtr: 873793, numArgs: 0},
+		NewVBO: {class: #132, funcPtr: 262285, numArgs: 2},
+		SuckPackageFromEndPoint: {class: #132, funcPtr: 6898183, numArgs: 2},
+		EraseQT: {class: #132, funcPtr: 6895030, numArgs: 0},
+		// Marks the store's card slot (if it is on a card) busy, by whoAmI, with
+		// text saying why.
+		MarkBusy: func(whoAmI, text) begin
+			local cardSlot;
+			(if (cardSlot := self:CardSlot()) then MarkSlotBusy(whoAmI, cardSlot, text))
+		end,
+		ConvertSoupSortTables: {class: #132, funcPtr: 6897124, numArgs: 1},
+		// Erases the store, then tells StoreChangeRegistry ('storeErased) with the
+		// name it had.
+		Erase: func() begin
+			local name, eraseQT;
+			name := self:GetName();
+			eraseQT := self:EraseQT();
+			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeErased, name]);
+			eraseQT
+		end,
+		GetObjectSize: {class: #132, funcPtr: 873666, numArgs: 1},
+		WriteObject: {class: #132, funcPtr: 873547, numArgs: 4},
+		SetNameQT: {class: #132, funcPtr: 7282950, numArgs: 1},
+		GetSoupNames: {class: #132, funcPtr: 7281918, numArgs: 0},
+		// Renames the store, then tells StoreChangeRegistry ('storeReNamed) with the
+		// old name.
+		SetName: func(a1) begin
+			local name, setNameQT;
+			name := self:GetName();
+			setNameQT := self:SetNameQT(a1);
+			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeReNamed, name]);
+			setNameQT
+		end,
+		HasPassword: {class: #132, funcPtr: 870901, numArgs: 0},
+		TotalSize: {class: #132, funcPtr: 7282951, numArgs: 0},
+		GetSoup: {class: #132, funcPtr: 7281917, numArgs: 1},
+		Lock: {class: #132, funcPtr: 7282945, numArgs: 0},
+		CreateSoup: {class: #132, funcPtr: 7281911, numArgs: 2},
+		// CreateSoupXmit(name, indexes, changeSym): creates a soup and, given
+		// changeSym, broadcasts the change ('soupCreated) by XmitSoupChange.
+		CreateSoupXmit: func(text, a2, a3) begin
+			local soup;
+			soup := self:CreateSoup(text, a2);
+			if a3 then begin
+					XmitSoupChange(text, a3, 'soupCreated, soup)
+				end;
+			soup
+		end,
+		RestoreSegmentedPackage: {class: #132, funcPtr: 7051485, numArgs: 2},
+		// Runs function fn as one store transaction: the store is locked for it
+		// and the changes are aborted if it throws.
+		AtomicAction: func(fn) begin
+			local l1;
+			try begin
+					self:Lock();
+					l1 := call fn with ();
+					self:Unlock()
+				end onexception |evt.ex| do begin
+					self:Abort();
+					Rethrow()
+				end;
+			l1
+		end,
+		|1.XPackageToVBO|: {class: #132, funcPtr: 6898204, numArgs: 1},
+		RestorePackage: {class: #132, funcPtr: 6982777, numArgs: 1},
+		ReadObject: {class: #132, funcPtr: 873437, numArgs: 3},
+		GetInfo: {class: #132, funcPtr: 6914078, numArgs: 1},
+		IsValid: {class: #132, funcPtr: 6898205, numArgs: 0},
+		SetObjectSize: {class: #132, funcPtr: 873638, numArgs: 2},
+		GetSignature: {class: #132, funcPtr: 7281916, numArgs: 0},
+		NewObject: {class: #132, funcPtr: 873597, numArgs: 1},
+		IsReadOnly: {class: #132, funcPtr: 7282944, numArgs: 0},
+		GetAllInfo: {class: #132, funcPtr: 6914077, numArgs: 0},
+		SuckPackageFromBinary: {class: #132, funcPtr: 7039835, numArgs: 2}
+	},
+	_proto: nil,
+	store: nil,
+	soups: nil,
+	version: nil
+};

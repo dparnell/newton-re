@@ -1,0 +1,28 @@
+// The "Summary" print format (@8252): each card's All Info layout, as long as
+// its data needs.
+
+cfAllFieldsFormat := {
+	routingType: 'Print,
+	type: 'printFormat,
+	name: summary,
+	title: summary,
+	symbol: 'cfAllFieldsFormat,
+	usesCursors: true,
+	// Adds a card at a3, a4: lays out the All Info view to measure its height,
+	// then adds it 150 wide and that high; returns the size.
+	AddPrintChild: func(layout, target, a3, a4) begin
+		local frame2, addStepView2, l3;
+		frame2 := {_proto: allInfoLayout, target: target, viewBounds: RelBounds(a3, a4, 150, 2000), viewJustify: 0, showBullet: nil};
+		l3 := (addStepView2 := AddStepView(self, frame2)):GetBottom();
+		RemoveStepView(self, addStepView2);
+		self.stepChildren := Clone(self.stepChildren);
+		frame2.viewBounds := RelBounds(a3, a4, 150, l3);
+		AddArraySlot(stepChildren, frame2);
+		{bottom: l3, right: 150}
+	end,
+	allInfoLayout: @8195,
+	protection: 'private,
+	_proto: @8238
+};
+
+summary := "Summary";

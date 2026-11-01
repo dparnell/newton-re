@@ -1,0 +1,86 @@
+// The Notes edit slip of a card (@8226's slip, 'editNotes): the card's notes,
+// with a recognition toggle that also offers shapes and sketches.
+
+editNotes := {
+	name: notes,
+	stepChildren: [stepChildren:
+		{
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			_recogSettings: nil,
+			// Takes the recognition settings the notes were last edited with.
+			viewSetupFormScript: func() begin
+				_recogSettings := appBase._notesRecogSettings;
+				inherited:?viewSetupFormScript();
+				(self.newtAppBase := appBase)
+			end,
+			// Keeps the recognition settings for next time, and drops empty notes.
+			viewQuitScript: func() begin
+				appBase._notesRecogSettings := _recogSettings;
+				if (if target.notes then (Length(target.notes) = 0)) then begin
+						target.notes := nil
+					end;
+				inherited:?viewQuitScript()
+			end,
+			stepChildren: [stepChildren:
+				{
+					_proto: @8226,
+					// Scrolls to the end when the slip was opened to add notes.
+					viewSetupFormScript: func() begin
+						scrollToBottom := addingData;
+						inherited:?viewSetupFormScript()
+					end
+				},
+				{
+					_recogPopup: [|Array|:
+						'recogText,
+						'recogInkText,
+						'pickseparator,
+						'recogShapes,
+						'recogSketches,
+						'pickseparator,
+						'recToggleSettings
+					],
+					_proto: @8212
+				}
+			],
+			_proto: @newtEntryView
+		}
+	],
+	type: 'editor,
+	protection: 'private,
+	symbol: 'editNotes,
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|: 'notes],
+		// Notes never count as data the Add button need not offer.
+		hasDataFunc: func(a1, a2) begin
+			nil
+		end,
+		// The notes as text: the first paragraph's text in quotes, or "[notes]" when
+		// they hold ink or drawings first.
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			text := "";
+			if v20_wwwwwwwwwwvvvvvv[0] then begin
+					local text;
+					(foreach item in v20_wwwwwwwwwwvvvvvv[0] do begin
+							if item.text then begin
+									if (not StrFilled(text)) then begin
+											text := ParamStr("\"^0\"", [Array: MakeRichString(item.text, item.styles)])
+										end
+								end else begin
+									break (text := "[notes]")
+								end
+						end)
+				end;
+			text
+		end
+	},
+	noKeyboard: true,
+	viewFlags: vVisible,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFormat: nil,
+	nukeRecToggle: true,
+	viewClass: clView
+};

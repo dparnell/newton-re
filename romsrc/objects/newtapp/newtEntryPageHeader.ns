@@ -1,0 +1,36 @@
+// newtEntryPageHeader: the header bar of a NewtApp page entry view (NPR 2.0): the
+// stationery's icon, the entry's title (or its date) and its folder; tapping the
+// icon opens the information slip, newtInfoBox.  No filing or action buttons and no
+// resizing (hasFiling, resizable nil).
+//
+// This file holds newtEntryPageHeader and what only it reaches.
+
+newtEntryPageHeader := {
+	viewClass: clView,
+	viewFlags: vVisible + vClickable,
+	viewBounds: newtEntryPageHeaderViewBounds,
+	viewJustify: vjParentFullH,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	// the shapes drawn (icon, title, folder name), made once by viewDrawScript
+	pieces: nil,
+	hasFiling: nil,
+	resizable: nil,
+	// the icon at the left (the dataDef's when it has one); tapping it opens infoBox
+	headerIcon: @infoBitmap,
+	headerText: nil,
+	infoBox: @newtInfoBox,
+	// the open information slip (newtInfoBox), if any
+	info: nil,
+	// the functions all the NewtApp entry headers share (romsrc/objects/shared/functions.ns):
+	// the header is the application's _titleKeyButton; GetTitle is the entry's title or
+	// its date; Popit opens infoBox; InfoChanged redraws a changed title
+	viewSetupFormScript: viewSetupFormScript_2,
+	GetTitle: GetTitle,
+	viewDrawScript: viewDrawScript_3,
+	InfoChanged: InfoChanged,
+	InfoClosed: InfoClosed,
+	viewQuitScript: viewQuitScript_2,
+	Popit: Popit,
+	viewClickScript: viewClickScript_4,
+	viewChildren: nil
+};

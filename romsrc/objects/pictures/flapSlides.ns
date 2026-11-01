@@ -1,0 +1,7 @@
+// The flaps of the digital clock picker. A 1-bit bitmap frame (bits, bounds), 135 x 28
+// pixels. Magic pointer @651. Used by protoDigitalClock.
+
+flapSlides := {
+	bits: bitmap('bits, "resources/bits/3da39d.png", "000000000014013d013d0048015900cf", 1),
+	bounds: {left: 0, top: 0, right: 135, bottom: 28}
+};

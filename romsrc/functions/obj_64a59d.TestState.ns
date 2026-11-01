@@ -1,5 +1,0 @@
-@@ 0x4253cd
-func(a1) begin
-	return (BAnd(fSoundState, a1) <> 0)
-end
-@@end

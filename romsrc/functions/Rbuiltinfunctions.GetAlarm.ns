@@ -1,5 +1,0 @@
-@@ 0x421ed9
-func(a1) begin
-	GetStores()[0]:GetSoup("SystemAlarmSoup"):Query({indexPath: 'key, beginKey: a1, endKey: a1}):entry()
-end
-@@end

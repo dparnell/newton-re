@@ -1,0 +1,88 @@
+// azTabs: the A-Z index tabs (magic pointer @617) along the bottom of the Names
+// file and of list pickers (newtAZTabs, protoListPicker).  It is a
+// protoPictIndexer of 13 tabs of two letters each: tapping a tab picks its
+// first letter, tapping it again its second (sent as PickLetterScript), and
+// setLetter highlights the tab for a letter.  A narrower view gets the slim
+// bitmaps; azverttabs is the vertical version.
+
+azTabs := {
+	_proto: @protoPictIndexer,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 18},
+	viewJustify: vjCenterH + vjBottomV + vjParentFullH,
+	icon: @aztabsBitmap,
+	hiliteIcon: @aztabsmaskcz,
+	hiliteIconA: @aztabsMaskA,
+	iconBBox: {left: 0, top: 0, right: 237, bottom: 18},
+	indent: 1,
+	numIndices: 13,
+	lettersPerTab: 2,
+	pickedSameTab: nil,
+	curIndex: -1,
+	phase: 0,
+	phaseIndex: 0,
+	// the letters by tab and phase: the first letter of each of the 13 tabs, then
+	// the second (the first tab's " " sorts before all letters: the start of the list)
+	letters: " CEGIKMOQSUWYBDFHJLNPRTVXZ",
+	debug: 2323,
+	// uses the slim tab bitmaps when the view is narrower than the full ones
+	viewSetupFormScript: func() begin
+		local box;
+		if (((box := self:LocalBox()).right - box.left) < (iconBBox.right - iconBBox.left)) then begin
+				iconBBox := ShapeBounds(MakeShape((icon := @aztabsslimBitmap)));
+				hiliteIcon := @aztabsslimmaskcz;
+				hiliteIconA := @aztabsslimmaska;
+				indent := 2
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	// draws the highlight over tab hiliteShape (the first tab has a mask of its own)
+	hiliter: func(hiliteShape) begin
+		local l1, hiliteIconA2;
+		(if (if viewCObject then (hiliteShape >= 0)) then begin
+				l1 := (startLeft + ((hiliteShape * (iconBBox.right - 4)) div numIndices));
+				if (hiliteShape = 0) then begin
+						l1 := (l1 + 2);
+						hiliteIconA2 := hiliteIconA
+					end else begin
+						l1 := (l1 + indent);
+						hiliteIconA2 := hiliteIcon
+					end;
+				self:DoDrawing('CopyBits, [Array: hiliteIconA2, l1, ((viewBBox.bottom - (hiliteIcon.bounds.bottom - hiliteIcon.bounds.top)) - 2), 2])
+			end)
+	end,
+	// a tap on tab curIndex: a second tap on the same tab steps to its next letter
+	IndexClickScript: func(curIndex) begin
+		pickedSameTab := (phaseIndex = curIndex);
+		if (phaseIndex = curIndex) then begin
+				if ((phase := (phase + 1)) = lettersPerTab) then begin
+						phase := 0
+					end
+			end else begin
+				phase := 0;
+				phaseIndex := curIndex
+			end;
+		self:?PickLetterScript(Substr(letters, ((phase * numIndices) + curIndex), 1))
+	end,
+	// highlights the tab holding entryKeyItem's first letter (upper-cased, without
+	// diacriticals), and remembers which of the tab's letters it is
+	setLetter: func(entryKeyItem, a2) begin
+		stripDiacriticals2 := (stripDiacriticals2 := StripDiacriticals(Stringer([Array: (stripDiacriticals2 := Upcase(entryKeyItem)), ""])))[0];
+		local stripDiacriticals2;
+		(for i := (numIndices - 1) to 0 by -1 do begin
+				if (letters[i] <= stripDiacriticals2) then begin
+						phaseIndex := i;
+						phase := (for j := (lettersPerTab - 1) to 0 by -1 do begin
+								if (letters[(i + (j * numIndices))] <= stripDiacriticals2) then begin
+										break j
+									end
+							end);
+						if viewCObject then begin
+								self:DoDrawing('SetHilite, [Array: phaseIndex])
+							end else begin
+								self:SetHilite(phaseIndex)
+							end;
+						break
+					end
+			end)
+	end
+};

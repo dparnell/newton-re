@@ -1,0 +1,8 @@
+// A hollow star (a notification already read). A 1-bit bitmap frame (bits, bounds) with a
+// mask, 15 x 14 pixels. Magic pointer @15. Used by notifyIcon.
+
+hollowstarBitmap := {
+	mask: filledStarBitmapMask,
+	bits: bitmap('bits, "resources/bits/3d8b19.png", "00000000000400d600d601be00e401cd", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 14}
+};

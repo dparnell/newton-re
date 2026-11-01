@@ -1,9 +1,0 @@
-@@ 0x1039881
-func(a1, a2) begin
-	local l1;
-	if (l1 := InetStartUp():MGetDomainService()) then begin
-			return l1:CancelRequests(l1:MBuildCallback(a1, a2))
-		end;
-	(if a1 then PerformIfDefined(a1, a2, nil))
-end
-@@end

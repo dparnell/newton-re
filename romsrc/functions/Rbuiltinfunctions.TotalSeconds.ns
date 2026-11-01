@@ -1,5 +1,0 @@
-@@ 0x4207ed
-func(a1) begin
-	TimeToTimeInSeconds(TotalMinutes(a1), a1.second)
-end
-@@end

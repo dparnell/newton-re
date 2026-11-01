@@ -1,0 +1,76 @@
+// newtProtoLine: the base of the NewtApp labelled input lines (NPR 2.0): a label at the
+// left (newtProtoLineBase: the label, its picker and the lookups as the user writes)
+// and an entry line, a protoInputLine, to the right of it.  The entry line shows the
+// filter's text for target.(path) and, when the line can be written, recognises as the
+// filter says; what is written goes back through the filter into the entry.
+//
+// This file holds newtProtoLine and what only it reaches.
+
+newtProtoLine := {
+	// the entry line's font
+	entryFont: tsHWFont + tsSize(12),
+	// set the entry line up from the filter: its recognition (when the line may be
+	// written), its place right of the label (indent) and its text
+	viewSetupFormScript: func() begin
+		local box;
+		inherited:viewSetupFormScript();
+		if HasPath(self, 'viewLineSpacing) then begin
+				entryLine.viewLineSpacing := self.viewLineSpacing
+			end;
+		entryLine.viewFont := entryFont;
+		// 'readOnly and 'pickOnly lines keep the entry line's vVisible + vReadOnly
+		if (((access = 'readWrite) or (access = 'Query)) or (access = 'queryOnly)) then begin
+				entryLine.viewFlags := filter.recFlags;
+				entryLine.textFlags := filter.recTextFlags;
+				entryLine.dictionaries := filter.dictionaries;
+				entryLine.recConfig := filter.recConfig
+			end;
+		if (BAnd(entryLine.viewFlags, vReadOnly) <> 0) then begin
+				// a read-only entry line has no lines drawn under it
+				entryLine.viewFormat := 0
+			end;
+		box := self:LocalBox();
+		entryLine.viewBounds := SetBounds(indent, 0, box.right, 0);
+		(entryLine.text := (if (if (if target then path) then target.(path)) then filter:PathToText() else ""))
+	end,
+	// the entry view moved to another entry: show its value, and let the line react as
+	// to a change
+	Retarget: func() begin
+		SetValue(self.entryLine, 'text, (if (if (if target then path) then target.(path)) then filter:PathToText() else ""));
+		entryLine:viewChangedScript('text, entryLine)
+	end,
+	// replace the text with a1, undoably (NPR 2.0 UpdateText), and store it
+	UpdateText: func(a1) begin
+		AddUndoAction('UpdateText, [Array: Clone(entryLine:GetRichString())]);
+		SetValue(entryLine, 'text, a1);
+		entryLine:viewChangedScript('text, entryLine)
+	end,
+	// remember the text in the memory list (memory), unless it is the item last picked
+	viewQuitScript: func() begin
+		local richString;
+		richString := entryLine:GetRichString();
+		inherited:viewQuitScript();
+		(if ((not lastPicked) or (not StrEqual(lastPicked, richString))) then AddMemoryItem(memory, richString))
+	end,
+	// the entry line; allocateContext gives it the name entryLine in this view
+	viewChildren: [viewChildren: entryLine_5],
+	entryLine: nil,
+	allocateContext: [|Array|: 'entryLine, entryLine_5],
+	_proto: @newtProtoLineBase
+};
+
+// the entry line: a one-line protoInputLine filling the line's height, with gray
+// lines under the text; read-only until newtProtoLine gives it the filter's flags
+entryLine_5 := {
+	viewJustify: vjParentFullV + oneLineOnly,
+	viewFont: nil,
+	viewFormat: vfLinesGray,
+	viewFlags: vVisible + vReadOnly,
+	viewLineSpacing: 25,
+	preallocatedContext: 'entryLine,
+	// the text changed: the line (baseLine) stores it through the filter
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'text) then baseLine:viewChangedScript(slot, view))
+	end,
+	_proto: @protoInputLine
+};

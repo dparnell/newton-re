@@ -1,8 +1,0 @@
-@@ 0x10467fd
-func() begin
-	if fNotifyIconObj then begin
-			GetRoot().notifyIcon:KillAction(fNotifyIconObj)
-		end;
-	(fNotifyIconObj := nil)
-end
-@@end

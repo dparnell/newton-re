@@ -1,5 +1,0 @@
-@@ 0x758ee9
-func() begin
-	self:MyHide('install)
-end
-@@end

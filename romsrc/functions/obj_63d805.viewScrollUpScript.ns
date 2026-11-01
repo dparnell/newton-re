@@ -1,5 +1,0 @@
-@@ 0x596edd
-func() begin
-	messageHolder:viewScrollUpScript()
-end
-@@end

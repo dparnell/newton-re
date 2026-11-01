@@ -1,0 +1,7 @@
+// The indexes of the Notes soup. An array of soup index specifications (the indexes of a
+// soup definition). Magic pointer @142. Used by notesOverview, paperrollSoupDef.
+
+paperrollIndices := [|Array|:
+	{structure: 'slot, path: 'timestamp, type: 'int},
+	{structure: 'slot, path: 'labels, type: 'tags}
+];

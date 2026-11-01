@@ -1,5 +1,0 @@
-@@ 0x4b5fd5
-func() begin
-	(_sendKeyButton := nil)
-end
-@@end

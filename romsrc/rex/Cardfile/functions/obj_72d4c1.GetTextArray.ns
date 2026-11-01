@@ -1,5 +1,0 @@
-@@ 0x72d591
-func() begin
-	GetGlobals().pagerTypes.pagerText
-end
-@@end

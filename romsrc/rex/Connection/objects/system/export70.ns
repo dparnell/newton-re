@@ -1,0 +1,607 @@
+// The Windows (PC) file browser (@8262): laid out as a Windows 3.1 Open
+// dialog - file names, directories, the current directory, drives and file
+// types - over the desktop's folders and files to restore, install or import
+// from.  The file picked goes to callWhenDone(endpoint, cancelled, whichFiles,
+// file, path).
+
+export70 := {
+	// The drive part of a path name: up to its first ':' or space, with a ':'
+	// ("C:"); "" for none.
+	GetDriveFromName: func(name) begin
+		if (if name then (Length(name) > 0)) then begin
+				if ((i2 := (StrLen(name) - 1)) > 1) then begin
+						local text;
+						local i2;
+						(for i := 1 to i2 do begin
+								if ((name[i] = $:) or (name[i] = $ )) then begin
+										i2 := i;
+										break
+									end
+							end)
+					end;
+				text := Stringer([Array: Substr(name, 0, i2), ":"])
+			end;
+		if (not text) then begin
+				text := ""
+			end;
+		return text
+	end,
+	getinfoButton: nil,
+	// Asks for the new lists and shows them.
+	RebuildFileList: func(a1, callReadCommand) begin
+		self:GetNewFileFolderLists(a1, callReadCommand);
+		fileNameList:UpdateFileList(true);
+		folderList:UpdateFolderList(true);
+		directory:UpdateDirectoryText()
+	end,
+	// Asks the desktop for the folder's files (a1 'drive: the drive, 'sdrv; a1
+	// 'path: the path, 'spth; with callReadCommand given, uses those) and splits
+	// them into folders (type 2) and files.  With none while opening, the slip
+	// closes.
+	GetNewFileFolderLists: func(a1, callReadCommand) begin
+		currentFolders := [Array: ];
+		currentFiles := [Array: ];
+		(if (not aborting) then begin
+				if (not callReadCommand) then begin
+						if a1 then begin
+								if (a1 = 'drive) then begin
+										driveFromName := self:GetDriveFromName(currentPath[0].name);
+										text := "sdrv"
+									end else begin
+										(copy := DeepClone((driveFromName := Clone(currentPath))[0])).name := self:GetDriveFromName(copy.name);
+										driveFromName[0] := copy;
+										text := "spth"
+									end
+							end;
+						checkCommandsInIdle := nil;
+						callReadCommand := protoContext:GetNewFiles(endpoint, driveFromName, text, func(a1) begin
+							(if (a1 <> nil) then (currentPath := a1))
+						end);
+						checkCommandsInIdle := true
+					end;
+				local driveFromName;
+				local text;
+				local copy;
+				(if (not callReadCommand) then (if (not setupDone) then self:StopOpen(kCommErrRequestCanceled)) else (foreach item in callReadCommand do begin
+							if (item.type = 2) then begin
+									AddArraySlot(currentFolders, item)
+								end else begin
+									AddArraySlot(currentFiles, item)
+								end
+						end))
+			end)
+	end,
+	doitButton: nil,
+	// Once open: when the start failed (aborting), tells the desktop and closes;
+	// otherwise idles the connection every 2 seconds.
+	viewSetupDoneScript: func() begin
+		if callWhenSetup then begin
+				call callWhenSetup with ()
+			end;
+		if aborting then begin
+				if (if endpoint.connected then (aborting <> kCommErrRequestCanceled)) then begin
+						protoContext:SendCancelToDesktop(endpoint)
+					end;
+				protoContext:HandleErrorDuringStartup(endpoint, self, aborting);
+				if endpoint.connected then begin
+						if (callWhenDone exists) then begin
+								call callWhenDone with (endpoint, true, nil, nil, nil)
+							end
+					end
+			end else begin
+				endpoint:StartIdle(self, 2000)
+			end;
+		(self.setupDone := true)
+	end,
+	currentSelection: nil,
+	currentPath: nil,
+	// Ends the connection when the slip was closed some other way.
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self);
+		(if (not aborting) then (if (not closing) then endpoint:ConnectionDone(0)))
+	end,
+	// A picker's text in Fancy 10, or Fancy 9 when it does not fit.
+	SetFontForEntryLine: func(entryLine) begin
+		local viewBounds, l2;
+		viewBounds := entryLine.viewBounds;
+		if (StrFontWidth(entryLine.text, tsFancy + tsSize(10)) > (viewBounds.right - viewBounds.left)) then begin
+				l2 := tsFancy + tsSize(9)
+			end else begin
+				l2 := tsFancy + tsSize(10)
+			end;
+		(if (l2 <> entryLine.viewFont) then SetValue(entryLine, 'viewFont, l2))
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	// Keeps the connection alive; when the desktop has finished, closes the
+	// browser and tells callWhenDone it was cancelled.
+	viewIdleScript: func() begin
+		local idleConnection;
+		if (if ((idleConnection := endpoint:IdleConnection(checkCommandsInIdle)) = 0) then (not endpoint.closingDown)) then begin
+				closing := true;
+				protoContext:FileBrowserClose(endpoint);
+				if (callWhenDone exists) then begin
+						call callWhenDone with (endpoint, true, nil, nil, nil)
+					end
+			end;
+		return idleConnection
+	end,
+	directory: nil,
+	currentDevices: nil,
+	currentFiles: nil,
+	viewBounds: {top: 12, left: 0, right: 210, bottom: 296},
+	_proto: @protoFloater,
+	windowsFolder: {
+		bits: bitmap('bits, "resources/bits/74fc55.png", "000000000004000000000000000c0010", 1),
+		bounds: {left: 0, top: 0, right: 16, bottom: 12}
+	},
+	currentIndex: nil,
+	checkCommandsInIdle: true,
+	// The scroll keys scroll the directories.
+	viewScrollDownScript: func() begin
+		folderList:viewScrollDownScript()
+	end,
+	setupDone: nil,
+	windowsOpenFolder: {
+		bits: bitmap('bits, "resources/bits/74fd05.png", "000000000004000000000000000c0012", 1),
+		bounds: {left: 0, top: 0, right: 18, bottom: 12}
+	},
+	aborting: nil,
+	// An alias is checked with the desktop ('rali', answered 'alir' 1 when it
+	// resolves); an alert when it does not.
+	VerifyAlias: func(currentFile) begin
+		local l1, frame2;
+		l1 := true;
+		if currentFile.alias then begin
+				try begin
+						if HasPath(currentFile, 'whichVol) then begin
+								frame2 := {name: currentFile.name, whichVol: currentFile.whichVol}
+							end else begin
+								frame2 := currentFile.name
+							end;
+						checkCommandsInIdle := nil;
+						endpoint:WriteCommand("rali", frame2, true);
+						l1 := (protoContext:CallReadCommand(endpoint, "alir").data = 1);
+						checkCommandsInIdle := true
+					end onexception |evt.ex| do begin
+						l1 := nil
+					end
+			end;
+		if (not l1) then begin
+				AddDeferredSend(self, 'Notify, [Array: 5, "Dock", "The alias can\u2019\ut be resolved on the desktop."])
+			end;
+		return l1
+	end,
+	// Makes the slip close as it opens: error (-1 when none) is kept in aborting.
+	StopOpen: func(error) begin
+		if (not error) then begin
+				error := -1
+			end;
+		aborting := error;
+		endpoint:StopIdle(self)
+	end,
+	checks: nil,
+	// The scroll keys scroll the directories.
+	viewScrollUpScript: func() begin
+		folderList:viewScrollUpScript()
+	end,
+	stepAllocateContext: [|Array|:
+		'fileNameList,
+		export70Item,
+		'folderList,
+		export70Item_2,
+		'directory,
+		export70Item_3,
+		'doitButton,
+		export70Item_4,
+		'getinfoButton,
+		export70Item_5
+	],
+	closing: nil,
+	folderList: nil,
+	// Makes the folder icons shapes and asks the desktop for its drives ('gdev'
+	// answered 'devs'), file types ('gflt', 'filt') and the current path ('dpth',
+	// 'path'), then the files.
+	viewSetupFormScript: func() begin
+		local callReadCommand;
+		self.setupDone := nil;
+		self.closing := nil;
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		if (ClassOf(windowsFolder) <> 'bitMap) then begin
+				windowsFolder := MakeShape(windowsFolder);
+				windowsOpenFolder := MakeShape(windowsOpenFolder)
+			end;
+		aborting := nil;
+		currentDevices := [Array: ];
+		currentPath := [Array: ];
+		currentFilters := [Array: ];
+		try begin
+				endpoint:WriteCommand("gdev", nil, nil);
+				currentDevices := (callReadCommand := protoContext:CallReadCommand(endpoint, "devs")).data;
+				endpoint:WriteCommand("gflt", nil, nil);
+				currentFilters := (callReadCommand := protoContext:CallReadCommand(endpoint, "filt")).data;
+				endpoint:WriteCommand("dpth", nil, nil);
+				if (not IsArray((callReadCommand := protoContext:CallReadCommand(endpoint, "path")).data)) then begin
+						Throw('|evt.ex.error|, kDockErrDesktopError)
+					end;
+				currentPath := callReadCommand.data
+			end onexception |evt.ex| do begin
+				self:StopOpen(CurrentException().error)
+			end;
+		self:GetNewFileFolderLists(nil, nil)
+	end,
+	currentFolders: nil,
+	stepChildren: [stepChildren:
+		{
+			text: nil,
+			viewBounds: {left: 5, top: 9, right: 170, bottom: 21},
+			viewJustify: vjSiblingBottomV + oneLineOnly,
+			// The kind of file (labels[1]).
+			viewSetupFormScript: func() begin
+				(self.text := labels[1])
+			end,
+			viewFont: @fontSystem10Bold,
+			_proto: @protoStaticText
+		},
+		{
+			text: "File Name:",
+			viewBounds: {left: 15, top: 7, right: 162, bottom: 19},
+			viewJustify: vjSiblingBottomV + oneLineOnly,
+			_proto: @protoStaticText
+		},
+		export70Item,
+		export70Item_2,
+		export70Item_3,
+		{
+			text: "Directories:",
+			viewBounds: {top: -13, left: 15, right: 162, bottom: 0},
+			viewJustify: vjSiblingTopV + oneLineOnly,
+			_proto: @protoStaticText
+		},
+		{
+			viewBounds: {left: 15, top: 227, right: 188, bottom: 242},
+			labelCommands: nil,
+			text: "Drives:",
+			// The drives the desktop has.
+			viewSetupFormScript: func() begin
+				if currentDevices then begin
+						self.labelCommands := (foreach item in currentDevices collect item.name)
+					end else begin
+						self.labelCommands := '[Array: ]
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			// The current path's drive, or the first.
+			textSetup: func() begin
+				if (Length(labelCommands) > 0) then begin
+						if (if currentPath then (Length(currentPath) > 0)) then begin
+								driveFromName := self:GetDriveFromName(currentPath[0].name);
+								local labelCommand;
+								local driveFromName;
+								(for i := 0 to (Length(labelCommands) - 1) do begin
+										local driveFromName2;
+										driveFromName2 := self:GetDriveFromName(labelCommands[i]);
+										if StrEqual(driveFromName, driveFromName2) then begin
+												labelCommand := labelCommands[i];
+												break
+											end
+									end)
+							end;
+						if (not labelCommand) then begin
+								labelCommand := labelCommands[0]
+							end
+					end;
+				(if labelCommand then return labelCommand else return "")
+			end,
+			// A drive picked: its files.
+			labelActionScript: func(index) begin
+				currentPath := [Array: currentDevices[index]];
+				self:RebuildFileList('drive, nil)
+			end,
+			// The text in a smaller font when it does not fit.
+			textChanged: func() begin
+				self:SetFontForEntryLine(entryLine)
+			end,
+			// Fancy 10, or Fancy 9 when the text does not fit.
+			viewSetupChildrenScript: func() begin
+				local viewBounds;
+				inherited:?viewSetupChildrenScript();
+				entryLine.viewFont := tsFancy + tsSize(10);
+				viewBounds := entryLine.viewBounds;
+				(if (StrFontWidth(entryLine.text, entryLine.viewFont) > (viewBounds.right - viewBounds.left)) then (entryLine.viewFont := tsFancy + tsSize(9)))
+			end,
+			_proto: @protoLabelPicker
+		},
+		{
+			viewBounds: {left: 15, top: 3, right: 188, bottom: 18},
+			labelCommands: nil,
+			text: "File Type:",
+			// The file types (filters) the desktop offers.
+			viewSetupFormScript: func() begin
+				if currentFilters then begin
+						self.labelCommands := currentFilters
+					end else begin
+						self.labelCommands := '[Array: ]
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			// The type shown: (the same code as the drives' picker, matching the types'
+			// names against the current drive) the first type when none matches.
+			textSetup: func() begin
+				if (Length(labelCommands) > 0) then begin
+						if (if currentPath then (Length(currentPath) > 0)) then begin
+								driveFromName := self:GetDriveFromName(currentPath[0].name);
+								local labelCommand;
+								local driveFromName;
+								(for i := 0 to (Length(labelCommands) - 1) do begin
+										local driveFromName2;
+										driveFromName2 := self:GetDriveFromName(labelCommands[i]);
+										if StrEqual(driveFromName, driveFromName2) then begin
+												labelCommand := labelCommands[i];
+												break
+											end
+									end)
+							end;
+						if (not labelCommand) then begin
+								labelCommand := labelCommands[0]
+							end
+					end;
+				(if labelCommand then return labelCommand else return "")
+			end,
+			// A type picked: sent to the desktop ('sflt'), which answers with the files.
+			labelActionScript: func(index) begin
+				local callReadCommand, error;
+				(try begin
+						checkCommandsInIdle := nil;
+						endpoint:WriteCommand("sflt", index, true);
+						if (callReadCommand := protoContext:CallReadCommand(endpoint, "file")) then begin
+								callReadCommand := callReadCommand.data
+							end;
+						self:RebuildFileList(nil, callReadCommand);
+						(checkCommandsInIdle := true)
+					end onexception |evt.ex| do begin
+						error := CurrentException().error;
+						AddDeferredSend(GetRoot().Connection, 'HandleException, [Array: error, endpoint])
+					end)
+			end,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
+			// The text in a smaller font when it does not fit.
+			textChanged: func() begin
+				self:SetFontForEntryLine(entryLine)
+			end,
+			// Fancy 10, or Fancy 9 when the text does not fit.
+			viewSetupChildrenScript: func() begin
+				local viewBounds;
+				inherited:?viewSetupChildrenScript();
+				entryLine.viewFont := tsFancy + tsSize(10);
+				viewBounds := entryLine.viewBounds;
+				(if (StrFontWidth(entryLine.text, entryLine.viewFont) > (viewBounds.right - viewBounds.left)) then (entryLine.viewFont := tsFancy + tsSize(9)))
+			end,
+			_proto: @protoLabelPicker
+		},
+		{
+			// Cancel: tells the desktop ('opca') and closes the browser.
+			buttonClickScript: func() begin
+				closing := true;
+				endpoint:StopIdle(self:parent());
+				protoContext:SendCancelToDesktop(endpoint);
+				protoContext:FileBrowserClose(endpoint);
+				if (callWhenDone exists) then begin
+						call callWhenDone with (endpoint, true, nil, nil, nil)
+					end;
+				inherited:?buttonClickScript()
+			end,
+			_proto: @protoCancelButton
+		},
+		export70Item_4,
+		export70Item_5
+	],
+	fileNameList: nil,
+	currentFilters: nil
+};
+
+// The file names.
+export70Item := {
+	viewBounds: {left: 10, top: 3, right: 200, bottom: 73},
+	// Lists the files.
+	viewSetupFormScript: func() begin
+		self:UpdateFileList(nil)
+	end,
+	viewFont: @fontSystem10,
+	// A file tapped: selected, the buttons shown.
+	buttonClickScript: func(a1) begin
+		if (a1 >= Length(listItems)) then begin
+				return nil
+			end;
+		currentSelection := listItems[a1];
+		currentIndex := a1;
+		protoContext:ShowIfNotVisible(doitButton);
+		protoContext:ShowIfNotVisible(getinfoButton)
+	end,
+	// Lists the files, nothing selected, the buttons hidden.
+	UpdateFileList: func(a1) begin
+		self.listItems := (foreach item in currentFiles collect item.name);
+		self:SetupList();
+		self:SetOrigin(0, 0);
+		selection := nil;
+		protoContext:HideIfVisible(getinfoButton);
+		protoContext:HideIfVisible(doitButton);
+		(if a1 then self:RedoChildren())
+	end,
+	selection: nil,
+	useScrollers: true,
+	scrollAmounts: [|Array|: 1, 3, 5],
+	viewJustify: vjSiblingBottomV,
+	_proto: @protoTextList,
+	preAllocatedContext: 'fileNameList
+};
+
+// The directories: the path's folders open (indented a step each), then the
+// current folder's folders.
+export70Item_2 := {
+	viewBounds: {left: 10, top: 34, right: 200, bottom: 101},
+	// Lists them.
+	viewSetupFormScript: func() begin
+		self:UpdateFolderList(nil)
+	end,
+	viewFont: @fontSystem10,
+	// A path folder tapped goes back to it; a subfolder is opened.
+	buttonClickScript: func(a1) begin
+		local frame2;
+		if (a1 < Length(currentPath)) then begin
+				SetLength(currentPath, (a1 + 1))
+			end else begin
+				a1 := (a1 - Length(currentPath));
+				frame2 := {name: Clone(currentFolders[a1].name), type: currentFolders[a1].type};
+				if HasPath(currentFolders[a1], 'whichVol) then begin
+						frame2.whichVol := currentFolders[a1].whichVol
+					end;
+				AddArraySlot(currentPath, frame2)
+			end;
+		selection := nil;
+		currentIndex := nil;
+		self:RebuildFileList('path, nil)
+	end,
+	// Makes the list: each path folder with the open folder icon (the first as its
+	// drive and backslash), then the subfolders with the closed folder icon.
+	UpdateFolderList: func(a1) begin
+		self:SetOrigin(0, 0);
+		l1 := "";
+		l2 := [Array: ];
+		l3 := FontAscent(viewFont);
+		l4 := true;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		(foreach l5 in currentPath do begin
+				l7 := StrFontWidth(l1, viewFont);
+				OffsetShape((l8 := DeepClone(windowsOpenFolder)), l7, 0);
+				l9 := l5.name;
+				if l4 then begin
+						l4 := nil;
+						l9 := Stringer([Array: self:GetDriveFromName(l9), "\\"])
+					end;
+				l10 := [Array: l8, MakeText(l9, (l7 + 16), 0, ((StrFontWidth(l9, viewFont) + l7) + 16), l3)];
+				AddArraySlot(l2, l10);
+				l1 := Stringer([Array: l1, "    "])
+			end);
+		l7 := StrFontWidth(l1, viewFont);
+		OffsetShape((l8 := DeepClone(windowsFolder)), l7, 0);
+		local l7;
+		local l8;
+		local l9;
+		local l10;
+		(foreach l11 in currentFolders do begin
+				l10 := [Array: DeepClone(l8), MakeText(l11.name, (l7 + 16), 0, ((StrFontWidth(l11.name, viewFont) + l7) + 16), l3)];
+				AddArraySlot(l2, l10)
+			end);
+		self.listItems := l2;
+		self:SetupList();
+		(if a1 then self:RedoChildren())
+	end,
+	selection: nil,
+	useScrollers: true,
+	isShapeList: true,
+	scrollAmounts: [|Array|: 1, 3, 5],
+	viewJustify: vjSiblingBottomV,
+	_proto: @protoTextList,
+	preAllocatedContext: 'folderList
+};
+
+// The current directory.
+export70Item_3 := {
+	text: nil,
+	viewBounds: {top: -15, left: 15, right: 162, bottom: -3},
+	viewJustify: vjSiblingTopV + oneLineOnly,
+	// Shows it.
+	viewSetupFormScript: func() begin
+		self:UpdateDirectoryText()
+	end,
+	// "C:\folder\folder".  (For a path of the drive alone the count cannot be 0
+	// here, so no backslash is added.)
+	UpdateDirectoryText: func() begin
+		if (if currentPath then (Length(currentPath) > 0)) then begin
+				driveFromName := self:GetDriveFromName(currentPath[0].name);
+				if ((count := Length(currentPath)) = 0) then begin
+						driveFromName := Stringer([Array: driveFromName, "\\"])
+					end else begin
+						local driveFromName;
+						local count;
+						(for i := 1 to (count - 1) do begin
+								driveFromName := Stringer([Array: driveFromName, "\\", currentPath[i].name])
+							end)
+					end
+			end else begin
+				driveFromName := ""
+			end;
+		SetValue(self, 'text, driveFromName)
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'directory
+};
+
+// The do-it button (labels[2]): hands the file picked and the path to
+// callWhenDone.
+export70Item_4 := {
+	text: nil,
+	// Does it: the file picked and the path passed to callWhenDone, the browser
+	// closed.
+	buttonClickScript: func() begin
+		local currentFile;
+		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin
+					closing := true;
+					protoContext:FileBrowserClose(endpoint);
+					(if (callWhenDone exists) then call callWhenDone with (endpoint, nil, whichFiles, currentSelection, currentPath))
+				end))
+	end,
+	viewBounds: {top: -18, left: -47, right: -7, bottom: -5},
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Its text, sized to it.
+	viewSetupFormScript: func() begin
+		self.text := labels[2];
+		(self.viewBounds := SetBounds(((viewBounds.right - StrWidth(text)) - 7), viewBounds.top, viewBounds.right, viewBounds.bottom))
+	end,
+	// Hidden until a file is picked.
+	viewSetupDoneScript: func() begin
+		self:Hide();
+		inherited:?viewSetupDoneScript()
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'doitButton
+};
+
+// File Info: asks the desktop for the file's info and shows it.
+export70Item_5 := {
+	text: fileInfo,
+	// File Info: the desktop asked for the file's info.
+	buttonClickScript: func() begin
+		local currentFile;
+		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin
+					checkCommandsInIdle := nil;
+					protoContext:OpenGetInfoDialog(endpoint, currentSelection, currentSelection, currentPath);
+					AddDeferredCall(func() begin
+						(checkCommandsInIdle := true)
+					end, nil)
+				end))
+	end,
+	viewBounds: {left: -53, top: -18, right: -7, bottom: -5},
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Hidden until a file is picked.
+	viewSetupDoneScript: func() begin
+		self:Hide();
+		inherited:?viewSetupDoneScript()
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'getinfoButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+UpdateFolderList_literal12 := same("export70Item_2.UpdateFolderList.literals[12]");
+
+textSetup_code_2 := same("export70.stepChildren[6].textSetup.instructions");
+
+viewSetupChildrenScript_code := same("export70.stepChildren[6].viewSetupChildrenScript.instructions");
+
+labelActionScript_literal5 := same("export70.stepChildren[7].labelActionScript.literals[5]");

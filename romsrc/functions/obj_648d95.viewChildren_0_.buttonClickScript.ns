@@ -1,5 +1,0 @@
-@@ 0x47b8bd
-func() begin
-	base:ClosePrefs()
-end
-@@end

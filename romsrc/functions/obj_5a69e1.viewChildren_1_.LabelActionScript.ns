@@ -1,5 +1,0 @@
-@@ 0x5a6839
-func(a1) begin
-	(info.(configPath) := items[a1])
-end
-@@end

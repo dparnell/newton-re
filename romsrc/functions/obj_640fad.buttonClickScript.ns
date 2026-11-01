@@ -1,5 +1,0 @@
-@@ 0x49bc25
-func() begin
-	inherited:buttonClickScript()
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x42dc31
-func() begin
-	(viewValue := userConfiguration.(config))
-end
-@@end

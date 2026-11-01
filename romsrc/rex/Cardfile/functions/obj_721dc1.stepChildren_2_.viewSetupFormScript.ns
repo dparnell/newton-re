@@ -1,5 +1,0 @@
-@@ 0x7226fd
-func() begin
-	(viewValue := theApp:GetAppPreferences().beamNotes)
-end
-@@end

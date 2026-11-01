@@ -1,0 +1,83 @@
+// protoSchedulePicker: the pickers of the meeting slip (slips/scheduleSlip.ns:
+// its Invitees and location lines): a protoAddressPicker that shows the
+// chosen items (textSlot of each) joined with commas, cut to fit.
+
+protoSchedulePicker := {
+	_proto: @protoAddressPicker,
+	// the slot of a chosen item whose text is shown
+	textSlot: nil,
+	viewFont: tsSystem + tsSize(9) + tsBold,
+	// true lets only one item be picked
+	singleSelect: nil,
+	// Nothing to do on closing.
+	viewQuitScript: func() begin
+		nil
+	end,
+	// a tap opens the people picker on the selection (a copy), unless one is
+	// open already; a single-select picker gets a copy of the data class's
+	// definitions with singleSelect set
+	DoOpenPicker: func() begin
+		local copy;
+		if (if pickerSlip then pickerSlip.viewCObject) then begin
+				return nil
+			end;
+		inPeoplePicker := true;
+		if singleSelect then begin
+				(copy := Clone(GetDataDefs(class))).singleSelect := true
+			end else begin
+				copy := class
+			end;
+		(pickerSlip := _picker:New(copy, DeepClone(selected), self, nil))
+	end,
+	// remembers the selection in the picker's memory, unless an equal one
+	// (by ToRefEquality) is there already
+	AddMemoryItem: func() begin
+		(if (if selected then (Length(selected) > 0)) then AddMemoryItemUnique(memory, selected, func(a1, a2) begin
+				self:ToRefEquality(a1, a2)
+			end))
+	end,
+	// whether two selections read the same (both non-empty, equal text);
+	// dataDefs is fetched but not used
+	ToRefEquality: func(a1, a2) begin
+		local dataDefs, textFromRef, textFromRef2;
+		dataDefs := GetDataDefs(class);
+		textFromRef := self:TextFromRef(a1);
+		textFromRef2 := self:TextFromRef(a2);
+		(if (if StrFilled(textFromRef) then StrFilled(textFromRef2)) then StrEqual(textFromRef, textFromRef2))
+	end,
+	// the text shown for selected: one item's text, or the items' texts
+	// joined with ", " and cut to the line's width less the indent, "???"
+	// when they have none, "None" when nothing is selected. l7 := 12291 is
+	// set but never used. (The locals declared after their first use are the
+	// decompiler's layout.)
+	TextFromRef: func(selected) begin
+		dataDefs := GetDataDefs(class);
+		if (if (if selected then (IsArray(selected) = nil)) then dataDefs) then begin
+				text := dataDefs:Get(selected, textSlot, 'text)
+			end else begin
+				if (if (if selected then (Length(selected) > 0)) then dataDefs) then begin
+						local text;
+						local dataDefs;
+						(foreach item in selected do begin
+								local text2, box, l7;
+								text2 := dataDefs:Get(item, textSlot, 'text);
+								if (if text then StrFilled(text)) then begin
+										text := ParamStr("^0, ^1", [Array: text, text2])
+									end else begin
+										text := text2
+									end
+							end);
+						if (if text then StrFilled(text)) then begin
+								box := self:LocalBox();
+								l7 := 12291;
+								text := StrTruncate(text, ((box.right - box.left) - indent))
+							end else begin
+								text := "???"
+							end
+					end else begin
+						text := "None"
+					end
+			end;
+		text
+	end
+};

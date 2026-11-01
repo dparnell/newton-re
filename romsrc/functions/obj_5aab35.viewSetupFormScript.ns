@@ -1,5 +1,0 @@
-@@ 0x5aab15
-func() begin
-	(text := addText)
-end
-@@end

@@ -1,0 +1,11 @@
+// vGauge, and what only it reaches
+//
+// A layout of protoStatusTemplate's status slips: status text, a gauge
+// (progress bar), a title and the default button. Named 'vGauge by a
+// transport's SetStatusDialog; height is the slip's in pixels.
+
+vGauge := {
+	height: 105,
+	name: 'vGauge,
+	kids: [|Array|: @protoStatusText, @protoStatusGauge, @protoTitleText, @protoDefaultStatusButton]
+};

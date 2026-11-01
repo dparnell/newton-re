@@ -1,8 +1,0 @@
-@@ 0x104bd29
-func() begin
-	if fAbort then begin
-			self:DoEvent('Abort, nil)
-		end;
-	self:DoEvent('LoadLinkLayerDriverProtocol, nil)
-end
-@@end

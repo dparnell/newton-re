@@ -1,0 +1,51 @@
+// onlineservices (@138): the online-update slip (onlineslip's onlineForm):
+// asks for the phone number of a provider of Newton updates and has the
+// transport connect to it.
+
+onlineservices := {
+	viewBounds: {left: 0, top: 120, right: 200, bottom: 245},
+	declareSelf: 'base,
+	debug: 611997,
+	viewChildren: [viewChildren:
+		{
+			viewJustify: 0,
+			viewBounds: {left: 10, top: 10, right: 190, bottom: 60},
+			text: "Enter the phone number of a provider of Newton updates.",
+			_proto: @protoStaticText
+		},
+		phoneNum,
+		{_proto: @protoCancelButton},
+		{
+			viewBounds: {left: -42, top: -18, right: -7, bottom: -5},
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+			text: call_2,
+			// buttonClickScript (Call): closes the slip and has the transport ConnectNow
+			// to the number typed.
+			buttonClickScript: func() begin
+				local strtophone2;
+				strtophone2 := strtophone((strtophone2 := phoneNum.entryLine.text));
+				base:Close();
+				AddDeferredSend(transport, 'ConnectNow, [Array: strtophone2])
+			end,
+			_proto: @protoTextButton
+		}
+	],
+	phoneNum: nil,
+	allocateContext: [|Array|: 'phoneNum, phoneNum],
+	_proto: @protoFloater
+};
+
+// the phone number line
+phoneNum := {
+	indent: 55,
+	viewLineSpacing: 24,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
+	viewBounds: {left: 5, top: 55, right: 180, bottom: 90},
+	label: "Phone #",
+	// viewSetupFormScript: the entry line starts just after the label.
+	viewSetupFormScript: func() begin
+		(indent := (StrFontWidth(label, labelFont) + 16))
+	end,
+	preallocatedContext: 'phoneNum,
+	_proto: @protoLabelInputLine
+};

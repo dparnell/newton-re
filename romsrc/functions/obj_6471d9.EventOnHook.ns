@@ -1,5 +1,0 @@
-@@ 0x535529
-func() begin
-	GetRoot().(appSymbol):CancelRequest(0)
-end
-@@end

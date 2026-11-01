@@ -1,0 +1,7 @@
+// canonicalGestaltPatchInfo, and what only it reaches
+//
+// Gestalt's frame for the system patch (src/system/SystemNatives.cpp,
+// FGestalt): how many pages the patches take, and each patch
+// (canonicalGestaltPatchInfoArrayElement).
+
+canonicalGestaltPatchInfo := {fTotalPatchPageCount: 0, fPatch: nil};

@@ -1,5 +1,0 @@
-@@ 0x50b445
-func() begin
-	(theApp.prefsOpen := nil)
-end
-@@end

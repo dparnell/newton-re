@@ -1,5 +1,0 @@
-@@ 0x41a421
-func() begin
-	PowerOff('user)
-end
-@@end

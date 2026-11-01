@@ -1,0 +1,18 @@
+// canonicalBitmapInfo, and what only it reaches
+//
+// The frame GetBitmapInfo(bitmap) answers (src/qd/Pictures.cpp): what a bitmap
+// shape is made of - its bits and their bounds, depth, resolution and row
+// bytes, the store and compander of compressed bits.
+
+canonicalBitmapInfo := {
+	bits: nil,
+	bitsBounds: nil,
+	bounds: nil,
+	depth: nil,
+	resolution: nil,
+	rowbytes: nil,
+	scanOffset: nil,
+	store: nil,
+	compandername: nil,
+	companderdata: nil
+};

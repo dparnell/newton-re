@@ -1,0 +1,319 @@
+// protoDatepicker: a month calendar for picking dates (Newton Programmer's
+// Reference "protoDatePicker"): a title bar with the month and year between
+// arrows that step the month - tapping the title pops up the nearby months
+// and Today - over a month view (clMonthView) showing selectedDates.
+//   selectedDates   an array of the chosen dates (minutes); now if nil
+//   singleDay       only one day may be chosen
+//   noTodayShow     leave Today out of the month popup
+//   monthSpec, monthYearSpec   the date-string specs of a month's name
+//                   alone and with its year (packed LongDateStr specs)
+//   titleHeight     the title bar's height (else from the title font)
+// A date in year 2920 is one without a year: its title shows the month
+// alone and the arrows wrap within the year.  The owner's DateChanged
+// (selectedDates) and MonthPicked methods, if any, are told of changes.
+
+protoDatepicker := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 35, right: 120, bottom: 135},
+	declareSelf: 'pickerBase,
+	singleDay: true,
+	noTodayShow: nil,
+	datesFont: @fontSystem9,
+	labelFont: @fontSystem9Bold,
+	titleHeight: nil,
+	monthSpec: 11,
+	monthYearSpec: 716,
+	// before the children are made: passes the fonts to the month view,
+	// defaults the selection to now, hides Today for a yearless date and
+	// sets the title
+	viewSetupChildrenScript: func() begin
+		monthView.datesFont := datesFont;
+		monthView.labelFont := labelFont;
+		if (not selectedDates) then begin
+				selectedDates := [Array: Time()]
+			end;
+		if (Date(selectedDates[0]).year = 2920) then begin
+				noTodayShow := true
+			end;
+		(monthYearLabel.text := self:JamIt())
+	end,
+	// answers the title: the month (and year) of the first selected date -
+	// or, for a selection spanning months, of the month shown
+	JamIt: func() begin
+		local date2, count, monthSpec2, totalMinutes2;
+		date2 := Date(selectedDates[0]);
+		if ((count := Length(selectedDates)) > 1) then begin
+				if (if ((endDate := Date(selectedDates[(count - 1)])).month <> date2.month) then monthView.month) then begin
+						date2.month := monthView.month;
+						date2.year := monthView.year;
+						date2.Date := 1
+					end
+			end;
+		if (date2.year = 2920) then begin
+				monthSpec2 := monthSpec
+			end else begin
+				monthSpec2 := monthYearSpec
+			end;
+		LongDateStr((totalMinutes2 := TotalMinutes(date2)), monthSpec2)
+	end,
+	// sent by the month view when its month or selection changes
+	monthChangedScript: func() begin
+		self:Dirty();
+		self:SetTitle();
+		self:?DateChanged(selectedDates)
+	end,
+	// shows the current title
+	SetTitle: func() begin
+		SetValue(monthYearLabel, 'text, self:JamIt());
+		monthYearLabel:Dirty()
+	end,
+	// redraws the month and the title (after selectedDates was changed)
+	Refresh: func() begin
+		monthView:Dirty();
+		self:SetTitle()
+	end,
+	viewChildren: [viewChildren: titleBar, monthView],
+	titleBar: nil,
+	allocateContext: [|Array|: 'titleBar, titleBar, 'monthYearLabel, monthYearLabel, 'monthView, monthView],
+	monthYearLabel: nil,
+	monthView: nil
+};
+
+// the month arrows' proto: picture buttons that repeat while held, at most
+// every half second (30 ticks)
+titleBarProto := {
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewBounds: nil,
+	viewJustify: 0,
+	viewFormat: vfFillWhite,
+	lastPressTime: nil,
+	icon: nil,
+	// a new tap: the first press fires at once
+	viewClickScript: func(unit) begin
+		lastPressTime := 0;
+		inherited:viewClickScript(unit)
+	end,
+	// whether a repeat may fire now: 30 ticks since the last one
+	ReadyToFire: func() begin
+		if (not lastPressTime) then begin
+				lastPressTime := Ticks()
+			end else begin
+				if (Ticks() < (lastPressTime + 30)) then begin
+						return nil
+					end else begin
+						lastPressTime := Ticks()
+					end
+			end;
+		true
+	end,
+	// after an arrow changed selectedDates: redraws and tells the owner
+	buttonPressedScript: func() begin
+		self:?MonthPicked();
+		monthView:Dirty();
+		self:SetTitle();
+		self:?DateChanged(selectedDates);
+		RefreshViews()
+	end,
+	_proto: @protoPictureButton
+};
+
+// the title bar: left arrow, month label, right arrow
+titleBar := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
+	// CarefullIncrementMonth(date, months): the date months later, moved
+	// first to the 1st of the month shown if it is not in it; a yearless
+	// date wraps around within its year
+	CarefullIncrementMonth: func(selectedDate, inc) begin
+		local date2;
+		if (((date2 := Date(selectedDate)).month <> monthView.month) or (date2.year <> monthView.year)) then begin
+				date2.month := monthView.month;
+				date2.year := monthView.year;
+				date2.Date := 1
+			end;
+		if (if (date2.year = 2920) then ((date2.month + inc) > 12)) then begin
+				inc := (inc - 12)
+			end;
+		if (if (date2.year = 2920) then ((date2.month + inc) < 1)) then begin
+				inc := (inc + 12)
+			end;
+		IncrementMonth(TotalMinutes(date2), inc)
+	end,
+	// at setup: titleHeight high, or as high as the title font (at least 12)
+	viewSetupFormScript: func() begin
+		local viewFont2;
+		self.viewBounds := Clone(self.viewBounds);
+		(if titleHeight then (self.viewBounds.bottom := titleHeight) else begin
+				viewFont2 := viewFont;
+				if (titleFont exists) then begin
+						viewFont2 := titleFont
+					end;
+				(self.viewBounds.bottom := max(FontHeight(viewFont2), 12))
+			end)
+	end,
+	debug: 2574,
+	preallocatedContext: 'titleBar,
+	viewChildren: [viewChildren:
+		{
+			_proto: titleBarProto,
+			viewBounds: {left: 0, top: 0, right: 10, bottom: 0},
+			viewJustify: vjCenterV + vjParentFullV,
+			icon: @leftBitmap,
+			// a month back
+			buttonPressedScript: func() begin
+				(if self:ReadyToFire() then begin
+						selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], -1)];
+						inherited:buttonPressedScript()
+					end)
+			end
+		},
+		{
+			_proto: titleBarProto,
+			viewJustify: vjCenterV + vjParentRightH + vjParentFullV,
+			viewBounds: {left: -10, top: 0, right: 0, bottom: 0},
+			icon: @rightBitmap,
+			// a month on
+			buttonPressedScript: func() begin
+				(if self:ReadyToFire() then begin
+						selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], 1)];
+						inherited:buttonPressedScript()
+					end)
+			end
+		},
+		monthYearLabel
+	]
+};
+
+// the month and year between the arrows; tapping it pops up a list of months
+monthYearLabel := {
+	viewClass: clParagraphView,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: 0,
+	viewFont: @fontSystem9Bold,
+	viewTransferMode: modeOr,
+	text: uCardPositionAlertButton,
+	// the popup's Today line, and the popup's items while it is up
+	todayItem: nil,
+	popup: nil,
+	// at setup: the title font if one is given; 12 pixels in from each side,
+	// clear of the arrows
+	viewSetupFormScript: func() begin
+		if (titleFont exists) then begin
+				viewFont := titleFont
+			end;
+		(viewBounds := Clone(viewBounds)).left := 12;
+		(viewBounds.right := -12)
+	end,
+	// hilites by inverting (modeXor) a round rectangle around the text
+	viewHiliteScript: func(on) begin
+		local box, l2, l3, l4;
+		l2 := (box := self:LocalBox()).bottom;
+		l3 := (StrFontWidth(text, viewFont) + 4);
+		self:DrawShape(MakeRoundRect((l4 := ((box.right - l3) div 2)), 0, (l4 + l3), l2, 8), '{transferMode: modeXor, penPattern: 0, fillPattern: 5});
+		true
+	end,
+	// on a tap: pops up twelve months from the one shown - starting three
+	// before it, or at January for a date in the first 90 days (129600
+	// minutes) of the calendar - with a separator before each January, a
+	// check mark on the month shown, and Today at the end (unless
+	// noTodayShow).  A month's year is added on the first line and on
+	// January (kFunction_443495, given the month, its time and the line; its
+	// test for month 0 never holds, as Date's months run 1-12).
+	//   l5 the month of the line (may run outside 1-12; Date normalizes it)
+	//   l6 the next index in list, l7 the line count
+	viewClickScript: compile(
+		constants: {
+			// the text of the month of date a2 (LongDateStr, format 12) for index a1 0 or
+			// 1 or when a3 is 0, else ""
+			kFunction_443495: func(a1, a2, a3) begin
+				(if (((a1 = 0) or (a1 = 1)) or (a3 = 0)) then LongDateStr(a2, 12) else "")
+			end
+		},
+		func(unit) begin
+			local date2, month, list, l4, l5, l6, l7, totalMinutes2, month2, text;
+			self:hilite(true);
+			clicker();
+			(date2 := Date(selectedDates[0])).month := monthView.month;
+			date2.year := monthView.year;
+			date2.Date := 1;
+			month := date2.month;
+			list := Array(15, nil);
+			l4 := (if (selectedDates[0] <= 129600) then month else 3);
+			l5 := (month - l4);
+			l6 := 0;
+			l7 := 0;
+			(while (l7 < 12) do begin
+					date2.month := l5;
+					month2 := Date((totalMinutes2 := TotalMinutes(date2))).month;
+					text := ParamStr("^0^?1 ^1||", [Array: LongDateStr(totalMinutes2, monthSpec), (if (date2.year <> 2920) then call (kFunction_443495) with (month2, totalMinutes2, l7))]);
+					if (if (month2 = 1) then (l6 > 0)) then begin
+							list[l6] := 'pickseparator;
+							l6 := (l6 + 1)
+						end;
+					list[l6] := {item: text, inc: (l5 - month)};
+					if (l5 = month) then begin
+							list[l6].mark := $\uFC0B
+						end;
+					l5 := (l5 + 1);
+					l6 := (l6 + 1);
+					(l7 := (l7 + 1))
+				end);
+			if noTodayShow then begin
+					l6 := (l6 - 1)
+				end else begin
+					list[l6] := 'pickseparator;
+					l6 := (l6 + 1);
+					list[l6] := "Today";
+					todayItem := l6
+				end;
+			SetLength(list, (l6 + 1));
+			DoPopup((popup := list), 4, 0, self);
+			return true
+		end),
+	// a pick from the popup: Today selects today's midnight (1440 minutes in
+	// a day), a month moves the selection by the line's inc months
+	pickActionScript: func(index) begin
+		local l1, l2, now;
+		if (index = todayItem) then begin
+				selectedDates := [Array: ((now := Time()) - (now mod 1440))]
+			end else begin
+				self:?MonthPicked();
+				selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], popup[index].inc)]
+			end;
+		pickerBase:Dirty();
+		self:hilite(nil);
+		self:SetTitle();
+		self:?DateChanged(selectedDates);
+		(popup := nil)
+	end,
+	// the popup closed without a pick
+	pickCancelledScript: func() begin
+		popup := nil;
+		self:hilite(nil)
+	end,
+	preallocatedContext: 'monthYearLabel
+};
+
+monthView := {
+	viewClass: clMonthView,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: nil,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 14, right: 0, bottom: 0},
+	// at setup: starts just below the title bar
+	viewSetupFormScript: func() begin
+		((viewBounds := Clone(viewBounds)).top := titleBar.viewBounds.bottom)
+	end,
+	preallocatedContext: 'monthView
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+pickCancelledScript_code_2 := same("monthYearLabel.pickCancelledScript.instructions");

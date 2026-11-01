@@ -1,6 +1,0 @@
-@@ 0x1018045
-func(a1) begin
-	self:?DoErrorCallback("Endpoint Accept", a1);
-	self:DoEvent('UnBind, nil)
-end
-@@end

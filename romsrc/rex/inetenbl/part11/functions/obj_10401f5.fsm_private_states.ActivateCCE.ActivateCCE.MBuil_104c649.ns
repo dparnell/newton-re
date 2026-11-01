@@ -1,5 +1,0 @@
-@@ 0x104c649
-func() begin
-	{_proto: fCompletionSpec_Option, _parent: self}
-end
-@@end

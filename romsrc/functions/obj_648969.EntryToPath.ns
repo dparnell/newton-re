@@ -1,5 +1,0 @@
-@@ 0x4ba7dd
-func(a1) begin
-	(target.(path) := a1.address)
-end
-@@end

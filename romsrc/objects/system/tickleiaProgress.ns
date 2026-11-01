@@ -1,0 +1,16 @@
+// tickleiaProgress, and what only it reaches
+//
+// Keeps the Intelligent Assistant's "Interpreting" progress slip (opened
+// by startiaProgress) alive: called with the slip's context view while the
+// Assistant works, it turns the barber pole on again.
+
+tickleiaProgress := func(a1) begin
+	(try begin
+			// a1 is the progress context view DoProgress handed to the work function.
+			// SetStatus throws evt.ex.cancel when the user has cancelled the slip; it
+			// is rethrown so that the Assistant's work stops.
+			a1:SetStatus('vBarber, '{barber: true})
+		end onexception |evt.ex.cancel| do begin
+			Rethrow()
+		end)
+end;

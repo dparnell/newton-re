@@ -1,5 +1,0 @@
-@@ 0x569eed
-func(a1) begin
-	XmitSoupChangeNow(a1, '_newt, 'whatThe, nil)
-end
-@@end

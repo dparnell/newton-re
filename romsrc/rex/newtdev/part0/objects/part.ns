@@ -1,0 +1,38 @@
+// part: the Newton Devices package's first part, its entry in the Extras drawer: tapping
+// "Newton Devices" shows its version. The file holds the part and what only it reaches.
+
+part := array(nil, {
+	text: newtonDevices,
+	// TapAction(): the Extras drawer's tap on the icon - calls the function the install script
+	// defined (a deferred call), which shows the version.
+	TapAction: func() begin
+		AddDeferredCall(GetGlobalVar('|Newton Devices:NIE_TapActionFunc|), nil);
+		nil
+	end,
+	// installScript(partFrame): runs devInstallScript; returns the remove frame whose
+	// removeScript (devRemoveScript) undoes it when the package goes.
+	installScript: func(partFrame) begin
+		local ensureInternal2;
+		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
+		partFrame:devInstallScript(partFrame, ensureInternal2);
+		ensureInternal2
+	end,
+	// devInstallScript(partFrame, removeFrame): defines the global the tap action calls (the body below).
+	devInstallScript: compile(
+		constants: {
+			// shows "Newton Devices Version 1.0" in an alert (Notify level 4)
+			kFunction_1000939: func() begin
+				GetRoot():Notify(4, "Newton Devices", ParamStr("Version ^0^1", [Array: "1.0    ", ""]))
+			end
+		},
+		// devInstallScript(partFrame, removeFrame): defines the global the tap action calls.
+		func(partFrame, removeFrame) begin
+			DefGlobalVar('|Newton Devices:NIE_TapActionFunc|, kFunction_1000939)
+		end),
+	// devRemoveScript(partFrame): removes that global.
+	devRemoveScript: func(partFrame) begin
+		UnDefGlobalVar('|Newton Devices:NIE_TapActionFunc|)
+	end
+});
+
+newtonDevices := "Newton Devices";

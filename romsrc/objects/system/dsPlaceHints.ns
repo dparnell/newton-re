@@ -1,0 +1,4 @@
+// dsPlaceHints: magic pointer @545, the words that introduce a place in an
+// Assistant request ("at", "in"; src/assist/Heuristics.cpp kPlaceWords).
+
+dsPlaceHints := [|Array|: at, in_2];

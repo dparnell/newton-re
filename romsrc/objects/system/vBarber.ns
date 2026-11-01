@@ -1,0 +1,17 @@
+// vBarber, and what only it reaches
+//
+// A layout of protoStatusTemplate's status slips: status text, a barber
+// pole (an indeterminate progress indicator), a title and the default
+// button. startiaProgress and other long operations open it by the name
+// 'vBarber; height is the slip's in pixels.
+
+vBarber := {
+	height: 105,
+	name: 'vBarber,
+	kids: [|Array|:
+		@protoStatusText,
+		@protoStatusBarber,
+		{_proto: @protoTitleText, viewBounds: {left: 10, top: 8, right: 180, bottom: 33}},
+		@protoDefaultStatusButton
+	]
+};

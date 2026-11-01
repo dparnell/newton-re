@@ -1,6 +1,0 @@
-@@ 0x100f5bd
-func() begin
-	self:hilite(nil);
-	base:CloseAction()
-end
-@@end

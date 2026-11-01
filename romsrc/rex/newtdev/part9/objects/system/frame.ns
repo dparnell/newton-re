@@ -1,0 +1,9 @@
+// frame: the alphabetic keyboard of the device setup slip (part.ns).
+// The file holds it and what only it reaches.
+
+frame := {
+	viewBounds: {left: 0, top: -135, right: 283, bottom: -24},
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	_proto: @alphaKeys,
+	preAllocatedContext: 'alphaKeys
+};

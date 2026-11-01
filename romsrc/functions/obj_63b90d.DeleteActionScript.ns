@@ -1,5 +1,0 @@
-@@ 0x516251
-func(a1, a2) begin
-	RemoveOldMeetingsForm:Open()
-end
-@@end

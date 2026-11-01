@@ -1,9 +1,0 @@
-@@ 0x5250e5
-func(a1) begin
-	if a1 then begin
-			SetValue(assistLine.entryLine, 'text, a1)
-		end;
-	SetValue(assistMsg, 'text, "The Assistant cannot interpret this.");
-	RefreshViews()
-end
-@@end

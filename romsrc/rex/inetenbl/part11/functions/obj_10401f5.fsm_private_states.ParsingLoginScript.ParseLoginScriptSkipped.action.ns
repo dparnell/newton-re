@@ -1,9 +1,0 @@
-@@ 0x104b905
-func() begin
-	self:MCleanUp();
-	if fAbort then begin
-			return self:DoEvent('Abort, nil)
-		end;
-	self:DoEvent('EngageLinkProtocol, nil)
-end
-@@end

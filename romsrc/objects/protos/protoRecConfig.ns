@@ -1,0 +1,5 @@
+// protoRecConfig: the proto of a recognition configuration frame, which a
+// view's recConfig slot may name (Newton Programmer's Reference 8-36). In the
+// ROM's object it is only this empty frame.
+
+protoRecConfig := {_proto: nil, _parent: nil};

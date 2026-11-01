@@ -1,0 +1,469 @@
+// recorderEngine: the sound recording and playback engine behind the
+// built-in recorder views (protoRecorderView, the Notes and Dates voice
+// annotations). It drives a protoSoundChannel: records into a growing array
+// of input-block sound frames on the default (or fStore's) store, plays them
+// back, pauses, and trims the end of a recording. recorderchassIs is the
+// view-side subclass. A user makes one with recorderEngine:New({...}).
+//
+// fSoundState is a bit set tested by TestState: 1 idle (stopped),
+// 2 recording, 4 playing, 8 playback paused, 16 recording paused,
+// 32 stopping (set briefly while a stop completes).
+// fEngineError: 0 none, 2 recording failed or the sound buffers ran out,
+// otherwise TestStore's answer (1 store nearly full, 3 store read-only).
+
+recorderEngine := {
+	fSoundChannel: nil,
+	fSoundArray: nil,
+	fCallBack: nil,
+	fCompletionCount: 0,
+	fSoundState: 1,
+	fEngineError: 0,
+	fPauseResult: nil,
+	fSetLengthInProgress: nil,
+	// the frame of sound-frame slots copied into each recorded block; built by
+	// SetRecordingQuality from fQualitySettings
+	fSoundFrameSlots: nil,
+	fRecordQuality: nil,
+	fInputGain: nil,
+	fInputDevice: nil,
+	fOutputDevice: nil,
+	// seconds cut off the end of a recording when it is stopped (the pen tap
+	// that stopped it)
+	fTrimAmount: nil,
+	fDirection: 'record,
+	fStore: nil,
+	// recording formats by the symbol of the user's 'recordingQuality setting;
+	// 'defaults is merged first, then the chosen entry over it
+	fQualitySettings: {
+		defaults: {sndFrameType: 'simpleSound, samplingRate: 10800, compressionType: 1, dataType: 8},
+		GSM8K16Codec: {
+			sndFrameType: 'codec,
+			codecName: "TGSMCodec",
+			bufferSize: 6400,
+			bufferCount: 4,
+			samplingRate: 8000,
+			compressionType: 6,
+			compressionRatio: real('|Real|, 4.848484848484849),
+			dataType: 16
+		},
+		IMA8K16Codec: {
+			sndFrameType: 'codec,
+			codecName: tIMACodec,
+			bufferSize: 10240,
+			bufferCount: 4,
+			samplingRate: 8000,
+			compressionType: 6,
+			compressionRatio: compressionRatio,
+			dataType: 16
+		},
+		IMA10K16Codec: {
+			sndFrameType: 'codec,
+			codecName: tIMACodec,
+			bufferSize: 10240,
+			bufferCount: 4,
+			samplingRate: 10800,
+			compressionType: 6,
+			compressionRatio: compressionRatio,
+			dataType: 16
+		}
+	},
+	// FastForward and Rewind do nothing here: recorderchassIs overrides them to
+	// move its progress slider.
+	FastForward: func() begin
+		nil
+	end,
+	// Pauses recording or playback, or resumes a paused one (the channel's
+	// pause toggles); records the new state. Returns what the channel's pause
+	// returned, which stop uses as the recorded sound when stopped while paused.
+	pause: func() begin
+		local l1;
+		fPauseResult := nil;
+		try begin
+				if (not self:TestState(1)) then begin
+						if self:TestState(2) then begin
+								// recording -> recording paused
+								l1 := 16
+							end else begin
+								if self:TestState(4) then begin
+										// playing -> playback paused
+										l1 := 8
+									end else begin
+										if self:TestState(16) then begin
+												// recording paused -> recording
+												l1 := 2
+											end else begin
+												if self:TestState(8) then begin
+														// playback paused -> playing
+														l1 := 4
+													end
+											end
+									end
+							end;
+						if l1 then begin
+								fPauseResult := fSoundChannel:pause();
+								self:SetState(l1)
+							end
+					end
+			end onexception |evt.ex| do begin
+				self:CleanUpAfterError()
+			end;
+		return fPauseResult
+	end,
+	// Makes fSoundFrameSlots: the default sound-frame slots, overlaid with the
+	// format chosen by fRecordQuality, else the user's 'recordingQuality
+	// config, else GSM on a StrongARM machine and IMA ADPCM otherwise.
+	SetRecordingQuality: func() begin
+		fSoundFrameSlots := Clone(fQualitySettings.defaults);
+		if (not (fRecordQuality2 := fRecordQuality)) then begin
+				fRecordQuality2 := GetUserConfig('recordingQuality)
+			end;
+		if (not fRecordQuality2) then begin
+				fRecordQuality2 := (if (Gestalt(kGestalt_SystemInfo).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
+			end;
+		local fRecordQuality2;
+		local l2;
+		(if (l2 := fQualitySettings.(fRecordQuality2)) then (foreach key, value in l2 do begin
+					fSoundFrameSlots.(key) := value
+				end))
+	end,
+	// Starts recording, or resumes a paused recording. A fresh recording reopens
+	// the channel for recording and schedules its first input block and, when
+	// the store has room, a second one. Returns true when recording started;
+	// otherwise the engine goes back to idle.
+	DoRecord: func() begin
+		local l1;
+		fEngineError := 0;
+		fCompletionCount := 0;
+		self:SetState(2);
+		try begin
+				if fSoundChannel:isPaused() then begin
+						fSoundChannel:pause();
+						l1 := true
+					end else begin
+						self:SetRecordingQuality();
+						fCompletionCount := 0;
+						fSoundArray := [Array: ];
+						fSoundChannel:Close();
+						(fSoundChannel := @protoSoundChannel:newRecording()).inputDevice := fInputDevice;
+						fSoundChannel.outputDevice := fOutputDevice;
+						fSoundChannel.inputGain := fInputGain;
+						fSoundChannel:Open();
+						// TestStore 0: the store has room for another block
+						if (if (self:TestStore() = 0) then self:ScheduleInputBlock()) then begin
+								fSoundChannel:start(true);
+								if (self:TestStore() = 0) then begin
+										AddDeferredSend(self, 'ScheduleInputBlock, nil)
+									end;
+								l1 := true
+							end
+					end
+			end onexception |evt.ex| do begin
+				self:CleanUpAfterError()
+			end;
+		if (not l1) then begin
+				self:SetState(32);
+				self:SetState(1)
+			end;
+		l1
+	end,
+	// Whether the recording store can take another input block: 0 yes, 1 less
+	// than 2.5 blocks' room is left, 3 the store is read-only.
+	TestStore: func() begin
+		local store, l2, l3;
+		if (if (store := self:GetStore()) then store:IsReadOnly()) then begin
+				return 3
+			end;
+		l2 := (store:TotalSize() - store:UsedSize());
+		(if ((l3 := (fSoundChannel.inputBlockSize * 2.5)) < l2) then 0 else 1)
+	end,
+	// The completion callback of each recorded input block (from
+	// ScheduleInputBlock). A failed block (any error but a cancel) sets engine
+	// error 2; once every scheduled block has completed while still recording,
+	// recording stops (out of room); otherwise another block is scheduled.
+	RecordCompletion: func(sounds, a2) begin
+		if (if (a2 <> 0) then (a2 <> kSndErrCancelled)) then begin
+				fEngineError := 2; // engine error 2: a block failed
+				return nil
+			end;
+		(if self:TestState(2) then (if ((fCompletionCount := (fCompletionCount + 1)) >= Length(fSoundArray)) then begin
+					if (fEngineError = 0) then begin
+							fEngineError := 2
+						end;
+					if fSoundChannel:isActive() then begin
+							fSoundChannel:stop()
+						end;
+					self:SetState(32);
+					self:SetState(1)
+				end else (if (self:TestStore() = 0) then self:ScheduleInputBlock() else (fEngineError := self:TestStore()))))
+	end,
+	// record, play: start recording or playing, or, while a stop is still
+	// setting the recording's length, remember to do so when it is done
+	// (SetLengthDone).
+	record: func() begin
+		(if (if fSetLengthInProgress then (fSetLengthInProgress <> 'doItNow)) then (fSetLengthInProgress := 'record) else self:DoRecord())
+	end,
+	// Stops at once, setting the recording's length synchronously; used by Done
+	// and at power-off.
+	StopNow: func() begin
+		fSetLengthInProgress := 'doItNow;
+		self:stop();
+		(fSetLengthInProgress := nil)
+	end,
+	// Sets the engine up (called by New): makes a recording channel, or a play
+	// channel when the machine has no input device or fDirection is 'play,
+	// then whose fSoundArray (a sound frame or an array of them) is copied into
+	// protoSoundFrame-based frames. Registers for power-off.
+	Init: func() begin
+		if (if (fDirection = 'record) then (GetUserConfig('inputDevice) = nil)) then begin
+				fDirection := 'play;
+				fSoundArray := [Array: ]
+			end;
+		if (fDirection = 'record) then begin
+				fSoundChannel := @protoSoundChannel:newRecording();
+				fSoundArray := [Array: ]
+			end else begin
+				if (not IsArray(fSoundArray)) then begin
+						fSoundArray := [Array: fSoundArray]
+					end;
+				fSoundArray := (foreach item in fSoundArray collect begin
+					copy := Clone(@protoSoundFrame);
+					local copy;
+					(foreach key, value in item do begin
+							copy.(key) := value
+						end);
+					copy
+				end);
+				fSoundChannel := {_proto: @protoSoundChannel, direction: 'play}
+			end;
+		self:SetRecordingQuality();
+		fEngineError := 0;
+		fSoundChannel.inputDevice := fInputDevice;
+		fSoundChannel.outputDevice := fOutputDevice;
+		fSoundChannel.inputGain := fInputGain;
+		fSoundChannel:Open();
+		self:SetState(1);
+		AddPowerOffHandler(self)
+	end,
+	// Plays every frame of fSoundArray in turn (or resumes a paused playback),
+	// each at its own volume or the user's 'soundVolumeDb. Returns true if
+	// playing started.
+	DoPlay: func() begin
+		local engine;
+		fEngineError := 0;
+		fCompletionCount := 0;
+		if self:HasSoundFrames() then begin
+				self:SetState(4);
+				try begin
+						if fSoundChannel:isPaused() then begin
+								fSoundChannel:pause()
+							end else begin
+								fCompletionCount := 0;
+								fSoundChannel:Close();
+								fSoundChannel.direction := 'play;
+								fSoundChannel.inputDevice := fInputDevice;
+								fSoundChannel.outputDevice := fOutputDevice;
+								fSoundChannel.inputGain := fInputGain;
+								fSoundChannel:Open();
+								engine := self;
+								// the channel's completion callback: PlayCompletion
+								fn := func(a1, a2) begin
+									engine:PlayCompletion(a1, a2)
+								end;
+								local l1;
+								local fn;
+								(foreach item in fSoundArray do begin
+										local l5, frame2;
+										l5 := (if (if HasPath(item, 'volume) then item.volume) then item.volume else GetUserConfig('soundVolumeDb));
+										fSoundChannel:schedule((frame2 := {_proto: item, callback: fn, volume: l5}))
+									end);
+								fSoundChannel:start(true)
+							end;
+						l1 := true
+					end onexception |evt.ex| do begin
+						self:CleanUpAfterError()
+					end
+			end;
+		l1
+	end,
+	// Nothing to do: playing starts at the start.
+	Rewind: func() begin
+		nil
+	end,
+	// Stops recording or playback. For a recording, trims fTrimAmount seconds
+	// off the end of the last sound, sets its length (asynchronously, ending in
+	// SetLengthDone, unless StopNow asked for it now) and drops any blocks after
+	// it. Returns what the channel's stop returned.
+	stop: func() begin
+		local engine;
+		local stop, testState, testState2, sound, index, floor2, fn, l8;
+		if (not self:TestState(1)) then begin
+				// testState: recording or recording paused; testState2: paused
+				testState := self:TestState(18);
+				testState2 := self:TestState(24);
+				self:SetState(32);
+				stop := fSoundChannel:stop();
+				if testState2 then begin
+						stop := fPauseResult
+					end;
+				if (if testState then stop) then begin
+						sound := stop.sound;
+						index := stop.index;
+						if (if fTrimAmount then (fTrimAmount > 0)) then begin
+								floor2 := floor((fTrimAmount * fSoundFrameSlots.samplingRate));
+								if ((index := (index - floor2)) < 0) then begin
+										index := 0
+									end
+							end;
+						if (fSetLengthInProgress = 'doItNow) then begin
+								sound:SetRecordingLengthNow(index);
+								fSetLengthInProgress := nil
+							end else begin
+								fSetLengthInProgress := true;
+								engine := self;
+								// called when the sound's length is set: SetLengthDone
+								fn := func() begin
+									engine:SetLengthDone()
+								end;
+								sound:SetRecordingLength(index, fn)
+							end;
+						l8 := (Length(fSoundArray) - 1);
+						(while (if (l8 > 0) then (fSoundArray[l8] <> sound)) do begin
+								RemoveSlot(fSoundArray, l8);
+								(l8 := (l8 - 1))
+							end)
+					end;
+				self:SetState(1)
+			end;
+		return stop
+	end,
+	// The total playing time of all the recorded or loaded sounds.
+	GetPlayingTime: func() begin
+		l1 := 0;
+		local l1;
+		(foreach item in fSoundArray do begin
+				l1 := (l1 + item:GetPlayingTime())
+			end);
+		return l1
+	end,
+	// True when there are sounds and none of them is empty.
+	HasSoundFrames: func() begin
+		(if (if fSoundArray then (Length(fSoundArray) > 0)) then (not (foreach item in fSoundArray do begin
+					if (item:GetSampleCount() = 0) then begin
+							break true
+						end
+				end)))
+	end,
+	// The completion callback of each sound played by DoPlay: back to idle
+	// after the last one.
+	PlayCompletion: func(a1, a2) begin
+		(if ((fCompletionCount := (fCompletionCount + 1)) >= Length(fSoundArray)) then self:SetState(1))
+	end,
+	// After an exception from the sound channel: reopen it and go idle.
+	CleanUpAfterError: func() begin
+		try begin
+				fSoundChannel:Close()
+			end onexception |evt.ex| do begin end;
+		try begin
+				fSoundChannel:Open()
+			end onexception |evt.ex| do begin end;
+		self:SetState(1)
+	end,
+	// The power-off handler (AddPowerOffHandler): never refuses, and stops at
+	// once when the machine is about to go off.
+	PowerOffScript: func(a1) begin
+		(if (a1 = 'okToPowerOff) then true else (if (a1 = 'PowerOff) then self:StopNow()))
+	end,
+	// Schedules one more input block on the recording channel, on the store
+	// GetStore names, with fSoundFrameSlots' format; its completion goes to
+	// RecordCompletion. Returns the block, or nil if the channel refused it.
+	ScheduleInputBlock: func() begin
+		local engine;
+		try begin
+				engine := self;
+				// the channel's completion callback: RecordCompletion
+				fn := func(a1, a2) begin
+					engine:RecordCompletion(a1, a2)
+				end;
+				fSoundChannel.recordingStore := self:GetStore();
+				newInputBlock := fSoundChannel:newInputBlock(fn);
+				local fn;
+				local newInputBlock;
+				(foreach key, value in fSoundFrameSlots do begin
+						newInputBlock.(key) := value
+					end);
+				AddArraySlot(fSoundArray, newInputBlock);
+				fSoundChannel:schedule(newInputBlock)
+			end onexception |evt.ex| do begin
+				newInputBlock := nil
+			end;
+		newInputBlock
+	end,
+	// Plays; while the sound's length is being set, plays once it is set
+	// (unless asked to at once).
+	play: func() begin
+		(if (if fSetLengthInProgress then (fSetLengthInProgress <> 'doItNow)) then (fSetLengthInProgress := 'play) else self:DoPlay())
+	end,
+	// Makes a new engine: a clone of this one with the slots of a1 (a frame of
+	// options such as fDirection, fSoundArray, fStore, fCallBack) set in it, and
+	// initialised.
+	New: func(a1) begin
+		copy := Clone(self);
+		if a1 then begin
+				local copy;
+				(foreach key, value in a1 do begin
+						copy.(key) := value
+					end)
+			end;
+		copy:Init();
+		return copy
+	end,
+	// Called when an asynchronous SetRecordingLength finishes: starts the play
+	// or record that was asked for meanwhile.
+	SetLengthDone: func() begin
+		if (fSetLengthInProgress = 'play) then begin
+				self:DoPlay()
+			end;
+		if (fSetLengthInProgress = 'record) then begin
+				self:DoRecord()
+			end;
+		(fSetLengthInProgress := nil)
+	end,
+	// Tears the engine down: stops, closes the channel and hands the sounds to
+	// fCallBack (with their callbacks cleared). Returns true.
+	Done: func() begin
+		self:StopNow();
+		if (if fSoundChannel then fSoundChannel:IsOpen()) then begin
+				fSoundChannel:Close()
+			end;
+		fSoundState := 1;
+		fSoundChannel := nil;
+		fPauseResult := nil;
+		if fCallBack then begin
+				(foreach item in fSoundArray do begin
+						item.callback := nil
+					end);
+				call fCallBack with (fSoundArray)
+			end;
+		fCallBack := nil;
+		RemovePowerOffHandler(self);
+		return true
+	end,
+	// Whether any of the state bits a1 is set (see fSoundState above).
+	TestState: func(a1) begin
+		return (BAnd(fSoundState, a1) <> 0)
+	end,
+	// The store new recordings go to: fStore, or the default store.
+	GetStore: func() begin
+		(if fStore then fStore else GetDefaultStore())
+	end,
+	// Records the new state; recorderchassIs overrides it to update its buttons.
+	SetState: func(fSoundState2) begin
+		(fSoundState := fSoundState2)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+DoPlay_code := same("recorderEngine.DoPlay.literals[19].instructions");
+
+record_code := same("recorderEngine.record.instructions");

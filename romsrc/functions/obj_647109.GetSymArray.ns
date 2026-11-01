@@ -1,5 +1,0 @@
-@@ 0x48d031
-func() begin
-	(foreach l1 in GetRoot().mailcategory.mailNetworks collect l1.id)
-end
-@@end

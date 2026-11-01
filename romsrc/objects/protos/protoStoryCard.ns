@@ -1,0 +1,41 @@
+// protoStoryCard: the story card of a book (a rounded, framed text card
+// with a close box) shown over the page; opening it closes the book's page
+// and page-number dialogs.
+
+protoStoryCard := {
+	viewFlags: vVisible + vReadOnly + vClickable + vGesturesAllowed,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfInset(3) + vfRound(6),
+	viewJustify: 0,
+	// the card zooms open when shown
+	viewEffect: fxZoomOpenEffect,
+	declareSelf: 'base,
+	// viewClickScript(unit): taps on the card do nothing (it keeps them from
+	// reaching the page below)
+	viewClickScript: func(unit) begin
+		nil
+	end,
+	// viewShowScript(): closes the book's page and page-number dialogs if
+	// they are open
+	viewShowScript: func() begin
+		if Visible(pageDialog) then begin
+				pageDialog:Close()
+			end;
+		(if Visible(pageNumberDialog) then pageNumberDialog:Close())
+	end,
+	debug: 724748,
+	viewChildren: [viewChildren: theClose],
+	theClose: nil,
+	allocateContext: [|Array|: 'theClose, theClose],
+	_proto: @protoStaticText
+};
+
+// the card's close box
+theClose := {
+	// ButtonClickScript(): hides the card (HideStoryCard, found by
+	// inheritance in the book)
+	buttonClickScript: func() begin
+		self:HideStoryCard()
+	end,
+	preallocatedContext: 'theClose,
+	_proto: @protoClosebox
+};

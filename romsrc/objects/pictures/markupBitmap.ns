@@ -1,0 +1,8 @@
+// The "markup" (annotate) toggle's icon, on. A 1-bit bitmap frame (bits, bounds) with a
+// mask, 17 x 17 pixels. Magic pointer @342. Used by copperfield.
+
+markupBitmap := {
+	mask: onWithMask,
+	bits: bitmap('bits, "resources/bits/3d6599.png", "0000000000040156015600a8016700b9", 1),
+	bounds: {left: 0, top: 0, right: 17, bottom: 17}
+};

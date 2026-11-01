@@ -1,5 +1,0 @@
-@@ 0x427af9
-func() begin
-	self:DrawShape(self.outsideFrame, self.outsideStyle)
-end
-@@end

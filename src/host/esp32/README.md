@@ -131,15 +131,15 @@ MessagePad shows): an application that wants more than 320 high is no
 longer asked to turn the screen when it is upright already - turning it
 to upright changed nothing, and the OK rebuilt the display (and put up
 the button bar's "couldn't hold all the icons") for nothing
-(`romsrc/functions/obj_642059.Open.ns`).  Internet Setup's edit slip
+(`viewRoot.Open`, `romsrc/objects/system/viewRoot.ns`).  Internet Setup's edit slip
 takes the bounds its walk-through layout has, which fit the screen, and
 its keyboard is the slip's width (`romsrc/rex/inetstup/README.md`); the
 Typewriter keyboard is the screen's width where its small size will not
-fit (`obj_630d25.viewSetupFormScript.ns`) - a keyboard view makes its
+fit (`alphaKeyboard.viewSetupFormScript`) - a keyboard view makes its
 keys to fit its bounds.  The slip that asks for what a worksite or the
 owner's card is missing (`ValidateConfig`: Time Zones' "This worksite is
 incomplete.  Please choose the closest city", 284 wide) is the screen's
-width, its keyboard too (`obj_646cf1.viewSetupFormScript.ns`,
+width, its keyboard too (`protoValidateSlip.viewSetupFormScript`,
 `viewSetupChildrenScript.ns`).
 
 **The keyboard is built in**, as an eMate 300's is: the board answers the
@@ -223,8 +223,9 @@ them): `trace` (each refresh's kind, time and rectangle on the console),
 it), and the controller's set-up ones kept for comparing.  The ones a user
 would change - a new page drawn in full, the two clean-ups, Clear ghosts,
 and the 4G module switched off to save the battery (tdeck_modem.cpp) -
-are on the Newton's own Prefs, Host page too (host/HostSettings.cpp,
-docs/host-settings.md; kept in the System soup).  Touch arrives in
+are on the Newton's own Prefs too - the panel's on the Screen page, the
+4G module on the Host page (host/HostSettings.cpp, docs/host-settings.md;
+kept in the System soup).  Touch arrives in
 the panel's pixels; the Newton's own pen calibration takes out a finger's
 offset.
 

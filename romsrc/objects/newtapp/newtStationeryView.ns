@@ -1,0 +1,105 @@
+// newtStationeryView: the NewtApp view that holds the viewDef showing the current
+// entry (NPR 2.0): it has no look of its own, its one child is a copy of the
+// viewDef that stationery registered for the entry's dataDef, with realData the
+// entry (or its slot at path).  It passes Retarget, jamFromEntry and changes on to
+// that view and its children, and redoes itself when the stationery of the entry's
+// class changes.
+//
+// This file holds newtStationeryView and what only it reaches.
+
+newtStationeryView := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewChildren: nil,
+	viewBounds: nil,
+	viewJustify: nil,
+	// when set, the viewDef shows this slot of the entry instead of the whole entry
+	path: nil,
+	// find the entry's dataDef and viewDef and make a copy of the viewDef the child
+	viewSetupFormScript: func() begin
+		local l1, copy;
+		viewChildren := nil;
+		(if target then begin
+				targetDataDef := (currentDataDef := GetEntryDataDef((l1 := (if (if path then target.path) then target.(path) else target))));
+				if (viewDef <> nil) then begin
+						targetViewDef := (currentViewDef := GetEntryDataView(l1, viewDef))
+					end;
+				(if (copy := Clone(targetViewDef)) then begin
+						copy.realData := (if path then target.(path) else target);
+						(viewChildren := [Array: copy])
+					end)
+			end)
+	end,
+	// tell the viewDef (or, when it does not take Retarget, its children) of a new entry
+	Retarget: func() begin
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'Retarget) then begin
+						item:Retarget()
+					end else begin
+						(foreach item2 in item:ChildViewFrames() do begin
+								if HasPath(item2, 'Retarget) then begin
+										item2:Retarget()
+									end
+							end)
+					end
+			end)
+	end,
+	// pass another entry on the same way, for its slot views to take their part
+	jamFromEntry: func(resolveEntryAlias) begin
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'jamFromEntry) then begin
+						item:jamFromEntry(resolveEntryAlias)
+					end else begin
+						(foreach item2 in item:ChildViewFrames() do begin
+								if HasPath(item2, 'jamFromEntry) then begin
+										item2:jamFromEntry(resolveEntryAlias)
+									end
+							end)
+					end
+			end)
+	end,
+	// the text of the viewDef's slot views, a line each, for routing
+	TextScript: func() begin
+		if (Length((childViewFrames := self:ChildViewFrames())) > 0) then begin
+				local text;
+				local childViewFrames;
+				(foreach item in childViewFrames[0]:ChildViewFrames() do begin
+						local textScript;
+						if (textScript := item:?TextScript()) then begin
+								text := Stringer([Array: text, $\n, textScript])
+							end
+					end)
+			end;
+		text
+	end,
+	// the viewDef is the current stationery view; be told when stationery is
+	// registered or removed (the key is unique to this view and application)
+	viewSetupDoneScript: func() begin
+		currentStatView := (if (if target then viewChildren) then self:ChildViewFrames()[0]);
+		RegStationeryChange(Intern(Stringer([Array: viewCObject, ":StationeryView:", GetVariable(self, 'appSymbol)])), func(a1, a2, a3, a4) begin
+			self:HandleStationeryChange(a1, a2, a3, a4)
+		end)
+	end,
+	// pass a change on to the children
+	viewChangedScript: func(slot, view) begin
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'viewChangedScript) then begin
+						item:viewChangedScript(slot, view)
+					end
+			end)
+	end,
+	// the stationery change callback: retarget when its a3 is the entry's class
+	HandleStationeryChange: func(a1, a2, a3, a4) begin
+		local l1;
+		(if self.viewCObject then (if (l1 := (if (if target then target.class) then (target.class = a3))) then self:DoRetarget()))
+	end,
+	// no more stationery change calls
+	viewQuitScript: func() begin
+		UnRegStationeryChange(Intern(Stringer([Array: viewCObject, ":StationeryView:", GetVariable(self, 'appSymbol)])));
+		inherited:?viewQuitScript()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_literal5 := same("newtStationeryView.viewSetupDoneScript.literals[5]");

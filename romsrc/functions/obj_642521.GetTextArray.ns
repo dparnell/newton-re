@@ -1,5 +1,0 @@
-@@ 0x4bc0c1
-func() begin
-	GetGlobals().PhoneTypes.phoneText
-end
-@@end

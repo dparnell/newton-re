@@ -1,0 +1,31 @@
+// newtCountrySymbolFilter: a NewtApp filter for a country kept in the slot as its symbol
+// (the countries soup's symbol slot, e.g. for a Names card's country) but shown and
+// written as the country's name.  Not in the NPR.
+//
+// This file holds newtCountrySymbolFilter and what only it reaches.
+
+newtCountrySymbolFilter := {
+	_proto: @newtTextFilter,
+	// recFlags: the entry line's view flags: no recognition, the value is picked
+	recFlags: vVisible + vClickable,
+	// the locationPopup over the countries soup, giving back the country's symbol
+	picker: func() begin
+		@locationPopup:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @countrySoupName, result: 'symbol}, self:GlobalLabelBounds(), self)
+	end,
+	// the name of the country whose symbol the slot holds
+	PathToText: func() begin
+		local countryEntry;
+		(countryEntry := GetCountryEntry(target.(path)))[0].name
+	end,
+	// the symbol of the country named a1 (empty text is kept as it is)
+	TextToPath: func(a1) begin
+		local countryEntry;
+		(if (not StrFilled(a1)) then a1 else (countryEntry := GetCountryEntry(a1))[0].symbol)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+picker_code := same("newtCountrySymbolFilter.picker.instructions");
+
+picker_literal4 := same("newtCountrySymbolFilter.picker.literals[4]");

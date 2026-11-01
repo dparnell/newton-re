@@ -1,0 +1,13 @@
+// protoContainerView: the base of application and slip views - a protoView
+// that takes keys, so that Return or Enter pressed in it presses its default
+// button (the view a _defaultButton slot names, see protoDefaultStatusButton).
+
+protoContainerView := {
+	_proto: @protoView,
+	// key-input text flags (0xC400): undocumented bits the keyboard code reads
+	textFlags: 50176,
+	// sent by viewKeyDownScript: presses the _defaultButton found by inheritance
+	_DoDefaultButton: _DoDefaultButton,
+	// Return or Enter with no modifier key sends _DoDefaultButton
+	viewKeyDownScript: viewKeyDownScript
+};

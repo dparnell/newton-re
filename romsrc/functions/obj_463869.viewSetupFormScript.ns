@@ -1,5 +1,0 @@
-@@ 0x463839
-func() begin
-	(text := msgText)
-end
-@@end

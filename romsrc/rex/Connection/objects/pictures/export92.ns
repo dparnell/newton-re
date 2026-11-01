@@ -1,0 +1,6 @@
+// A picture of the Dock slips (@8284): a 50 x 50 bitmap.
+
+export92 := {
+	bits: bitmap('bits, "resources/bits/761e15.png", "00000000000800000000000000320032", 1),
+	bounds: {left: 0, top: 0, right: 50, bottom: 50}
+};

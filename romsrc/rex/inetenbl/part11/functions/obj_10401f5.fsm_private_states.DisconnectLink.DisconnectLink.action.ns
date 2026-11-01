@@ -1,7 +1,0 @@
-@@ 0x104ba0d
-func() begin
-	fLinkStatus := 'disconnecting;
-	self:MUpdateProgressSlip('Update, "Disconnecting your internet link...", 80);
-	fPhysicalLayerServiceFSM:DoEvent('Disconnect, [Array: self, 'MDisconnectLinkCallback])
-end
-@@end

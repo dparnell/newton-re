@@ -1,0 +1,5 @@
+// romFontList (@533): the ROM's four screen font families in font-family-number
+// order - 0 System (espy), 1 Fancy (New York), 2 Simple (Geneva), 3 Handwriting;
+// a packed font spec's low ten bits index it (viewRoot's BAnd(font, 1023)).
+
+romFontList := [|Array|: @espyFont, @newYorkFont, @genevaFont, @handwritingFont];

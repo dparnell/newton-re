@@ -1,5 +1,0 @@
-@@ 0x498365
-func() begin
-	self.(fState)
-end
-@@end

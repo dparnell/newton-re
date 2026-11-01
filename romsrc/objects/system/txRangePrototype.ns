@@ -1,0 +1,6 @@
+// txRangePrototype, and what only it reaches
+//
+// The template of a text range as the text view hands one to scripts:
+// the offsets of its first and last characters.
+
+txRangePrototype := {first: nil, last: nil};

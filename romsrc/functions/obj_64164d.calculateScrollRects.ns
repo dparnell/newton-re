@@ -1,5 +1,0 @@
-@@ 0x4fcd9d
-func() begin
-	DayTable:calculateScrollRects()
-end
-@@end

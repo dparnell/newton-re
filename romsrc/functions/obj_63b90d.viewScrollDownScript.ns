@@ -1,5 +1,0 @@
-@@ 0x4f7d69
-func() begin
-	self:realScrollScript(nil)
-end
-@@end

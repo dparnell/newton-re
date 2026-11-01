@@ -1,5 +1,0 @@
-@@ 0x4c9b3d
-func() begin
-	(viewValue := fields.manualDialing)
-end
-@@end

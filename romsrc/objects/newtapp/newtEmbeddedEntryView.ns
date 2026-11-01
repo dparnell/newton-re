@@ -1,0 +1,97 @@
+// newtEmbeddedEntryView: an entry view inside another one, showing a frame held in a
+// slot of the outer view's entry (path; the whole entry when path is nil) with
+// that frame's own stationery (viewDef).  Flushing and changes go to the outer entry
+// view (parentView), which owns the soup entry.  Not in the NPR.
+//
+// This file holds newtEmbeddedEntryView and what only it reaches.
+
+newtEmbeddedEntryView := {
+	// the outer entry view writes the entry back
+	FlushEntry: func(a1) begin
+		parentView:FlushEntry(a1)
+	end,
+	path: nil,
+	// the stationery view is its one child
+	viewSetupDoneScript: func() begin
+		(currentStatView := (if (if target then viewChildren) then self:ChildViewFrames()[0]))
+	end,
+	// nothing: the outer view owns the entry
+	viewQuitScript: func() begin
+		nil
+	end,
+	target: nil,
+	viewChildren: nil,
+	parentTarget: nil,
+	// no flush timer of its own
+	viewIdleScript: func() begin
+		nil
+	end,
+	// the methods below hand the entry view's work to the outer entry view
+	jamFromEntry: func(resolveEntryAlias) begin
+		parentView:jamFromEntry(resolveEntryAlias)
+	end,
+	_proto: @newtEntryView,
+	// to the outer entry view, as are the others below
+	EndFlush: func() begin
+		parentView:EndFlush()
+	end,
+	// the frame this view shows: the entry's slot at path, or the entry
+	GetTargetFromEntry: func(a1) begin
+		(if (if path then a1.(path)) then a1.(path) else a1)
+	end,
+	// can the entry be changed: the outer view knows
+	EntryCool: func(a1) begin
+		parentView:EntryCool(a1)
+	end,
+	// the outer view moved to another entry: take its frame and tell the children
+	Retarget: func() begin
+		target := self:GetTargetFromEntry(parentTarget);
+		targetViewDef := (currentViewDef := nil);
+		targetDataDef := (currentDataDef := nil);
+		currentStatView := nil;
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'Retarget) then begin
+						item:Retarget()
+					end
+			end)
+	end,
+	// to the outer entry view
+	StartFlush: func() begin
+		parentView:StartFlush()
+	end,
+	viewDef: 'default,
+	// nothing: viewSetupChildrenScript finds the entry
+	viewSetupFormScript: func() begin
+		nil
+	end,
+	parentView: nil,
+	// to the outer entry view
+	FilingChangedX: func() begin
+		parentView:FilingChangedX()
+	end,
+	// to the outer entry view
+	StartFlushWithChild: func(a1) begin
+		parentView:StartFlushWithChild(a1)
+	end,
+	targetView: nil,
+	// the child: a copy of the viewDef for the frame (the outer view's viewDef when
+	// viewDef is nil), set up for it
+	viewSetupChildrenScript: func() begin
+		local copy;
+		viewChildren := (target := nil);
+		if (parentTarget := GetVariable((parentView := self:Parent()), 'target)) then begin
+				targetDataDef := (currentDataDef := GetEntryDataDef((target := self:GetTargetFromEntry(parentTarget))));
+				if (viewDef <> nil) then begin
+						targetViewDef := (currentViewDef := GetEntryDataView(target, viewDef))
+					end else begin
+						targetViewDef := parentView.targetViewDef
+					end;
+				if (copy := Clone(targetViewDef)) then begin
+						copy.realData := target;
+						copy:?SetupForm(target, self);
+						viewChildren := [Array: copy]
+					end
+			end;
+		(targetView := self)
+	end
+};

@@ -1,0 +1,232 @@
+// protoRoutingFormat: the base of the routing formats that send an item as
+// data (a frame, routingType 'frame) rather than as a view: it puts the
+// target in the item's body - or, for a large soup entry, an alias to it
+// that is resolved when the item is sent - and splits a cursor (several
+// selected items) into one Out Box item each. protoFrameFormat and the
+// other formats are built on it.
+
+protoRoutingFormat := {
+	type: 'printFormat,
+	// true: a transport that takes cursors (allowBodyCursors) gets the
+	// cursor itself; ParseCursor does not split it
+	storeCursors: true,
+	noClone: nil,
+	// true: a body over the size limit is stored as an alias (ProcessAlias)
+	storeAlias: nil,
+	// the routing system sends it to fill in a new item's fields from frame2
+	// ({target:, targetView:, ...}): the body is the target (or its alias);
+	// noDefaults leaves the fields alone. Returns the fields
+	SetupItem: func(fields, frame2) begin
+		if noDefaults then begin
+				return fields
+			end;
+		if storeAlias then begin
+				fields.body := self:ProcessAlias(fields, frame2)
+			end else begin
+				fields.body := frame2.target
+			end;
+		fields
+	end,
+	// an alias frame for the target: {class:, _ioAlias: an entry alias} (with
+	// path 'body when the target is the body of frame2's targetEntry); a
+	// target that is no soup entry is returned as it is
+	MakeBodyAlias: func(frame2) begin
+		local targetEntry, target;
+		targetEntry := frame2.targetEntry;
+		target := frame2.target;
+		if targetEntry then begin
+				target := {class: DataClassOf(target), _ioAlias: MakeEntryAlias(targetEntry), path: 'body}
+			end else begin
+				if IsSoupEntry(target) then begin
+						target := {class: DataClassOf(target), _ioAlias: MakeEntryAlias(target)}
+					end
+			end;
+		target
+	end,
+	routingType: 'frame,
+	// the body to store: an alias (marked needsResolve, with a message when
+	// showMessage is set) when the target entry is bigger than sizeLimit, or
+	// than the free space of the transport's store less 1000 bytes (l5: the
+	// free space, l3: too big); else the target itself
+	ProcessAlias: func(fields, frame2) begin
+		local target, targetSize, l3, defaultOwnerStore, l5;
+		target := frame2.target;
+		if (targetSize := self:TargetSize(frame2)) then begin
+				if (not (l3 := (if sizeLimit then (targetSize > sizeLimit)))) then begin
+						l5 := ((defaultOwnerStore := GetItemTransport(fields):GetDefaultOwnerStore()):TotalSize() - defaultOwnerStore:UsedSize());
+						l3 := (targetSize > (l5 - 1000))
+					end;
+				if l3 then begin
+						if (target := self:MakeBodyAlias(frame2)) then begin
+								fields.needsResolve := true;
+								if showMessage then begin
+										GetRoot():Notify(kNotifyAlert, "Routing", "To save storage space, this item will have references to the original.  Make sure the original is available when this item is sent.")
+									end
+							end
+					end
+			end;
+		target
+	end,
+	// the largest body (in bytes) stored whole; nil: as the store's space allows
+	sizeLimit: nil,
+	// the format to route entry target of a cursor with: of its data class's
+	// view definitions, defaultFormat's or this format's own symbol's, else
+	// the first that takes one of this format's data types and does not use
+	// cursors. (The locals declared after their first use are the
+	// decompiler's layout.)
+	FindCursorFormat: func(target) begin
+		item2 := nil;
+		if ((viewDefs := GetViewDefs(DataClassOf(target))) <> nil) then begin
+				if defaultFormat then begin
+						item2 := viewDefs.(defaultFormat)
+					end else begin
+						item2 := viewDefs.(symbol)
+					end;
+				if (item2 = nil) then begin
+						local item2;
+						local viewDefs;
+						(foreach item in viewDefs do begin
+								if (if (if (if item then item.dataTypes) then SetOverlaps(item.dataTypes, dataTypes)) then (not item.usesCursors)) then begin
+										item2 := item;
+										break
+									end
+							end)
+					end
+			end;
+		item2
+	end,
+	// before item a1 is sent: replace an aliased body by the entry it
+	// refers to (the alias kept in _saveBodyAlias); nil when it is gone
+	ResolveItem: func(a1) begin
+		local resolveBody;
+		if a1.needsResolve then begin
+				if ((resolveBody := self:ResolveBody(a1)) = nil) then begin
+						return nil
+					end;
+				a1._saveBodyAlias := a1.body;
+				a1.body := resolveBody
+			end;
+		a1
+	end,
+	symbol: 'protoRoutingFormat,
+	usesCursors: nil,
+	title: default_3,
+	dataTypes: [|Array|: 'frame, 'text],
+	// protoSendButton sends it before submitting: an item whose body is a
+	// cursor becomes one Out Box item per entry (each set up by the entry's
+	// own format, l9 when it cannot be), and the fields returned are an
+	// 'ioCursor of aliases to them; l4 counts the entries skipped, reported
+	// in an alert and fields.skipped. Another item is returned as it is
+	ParseCursor: func(fields, frame3) begin
+		local itemTransport, targetCursor, next, l4, list, copy, frame2, cursorFormat, l9, error, category;
+		if TargetIsCursor(fields.body) then begin
+				itemTransport := GetItemTransport(fields);
+				if (if storeCursors then itemTransport.allowBodyCursors) then begin
+						return fields
+					end;
+				next := (targetCursor := GetTargetCursor(fields.body, nil)):entry();
+				l4 := 0;
+				list := [Array: ];
+				itemTransport := GetItemTransport(fields);
+				(while next do begin
+						(copy := Clone(fields)).title := nil;
+						if (frame2 := {fields: copy, target: next, targetView: frame3.targetView}) then begin
+								cursorFormat := self:FindCursorFormat(frame2.target);
+								l9 := nil;
+								if cursorFormat then begin
+										copy.currentFormat := cursorFormat.symbol;
+										if HasSlot(cursorFormat, 'SetupSlip) then begin
+												cursorFormat:?SetupSlip(frame2, frame2.fields)
+											end else begin
+												if ((copy := cursorFormat:?SetupItem(copy, frame2)) = nil) then begin
+														l9 := true
+													end
+											end
+									end else begin
+										l9 := true
+									end;
+								if l9 then begin
+										l4 := (l4 + 1)
+									end else begin
+										itemTransport:?VerifyRoutingInfo(copy, fields, next, cursorFormat);
+										try begin
+												copy := GetRoot().(itemTransport.owner):addOneItem('outbox, copy)
+											end onexception |evt.ex| do begin
+												error := CurrentException().error;
+												l4 := (l4 + 1);
+												copy := nil;
+												// looks like a ROM bug: := where = was meant -
+												// the test is always true, so every exception
+												// is reported as "The store is full." and
+												// none is passed on (Rethrow is never reached)
+												if (error := kSError_StoreFull) then begin
+														GetRoot():Notify(kNotifyAlert, GetItemTransport(fields).title, "The store is full.")
+													end else begin
+														Rethrow()
+													end
+											end;
+										if copy then begin
+												AddArraySlot(list, MakeEntryAlias(copy))
+											end
+									end
+							end;
+						(next := targetCursor:Next())
+					end);
+				category := fields.category;
+				(fields := CreateTargetCursor('ioCursor, list)).category := category;
+				if (l4 > 0) then begin
+						GetRoot():Notify(kNotifyAlert, GetItemTransport(fields).title, "Some items could not be sent.");
+						fields.skipped := l4
+					end;
+				fields
+			end;
+		return fields
+	end,
+	// the older way in: set up fields for a1's target and view
+	SetupSlip: func(a1, fields) begin
+		self:SetupItem(fields, {target: a1.target, targetView: a1.targetView})
+	end,
+	// the text of the item, for a transport that sends text: the data
+	// definition's TextScript, description or name, else a stock message
+	TextScript: func(entry, target) begin
+		local dataDefs;
+		if (dataDefs := GetDataDefs(DataClassOf(target))) then begin
+				if dataDefs.TextScript then begin
+						return dataDefs:TextScript(entry, target)
+					end else begin
+						if dataDefs.description then begin
+								return dataDefs.description
+							end else begin
+								return dataDefs.name
+							end
+					end
+			end;
+		(if TargetIsCursor(target) then return "This is a list of items. The text for each item can be edited in the outbox." else return "No Text available for this item")
+	end,
+	// true: SetupItem leaves the fields as they are
+	noDefaults: nil,
+	// the body an alias stands for (resolving _ioAlias, then its path);
+	// nil when the entry is gone; a body that is no alias as it is
+	ResolveBody: func(fields) begin
+		local l1, resolveEntryAlias2;
+		if (if IsFrame((l1 := (if fields.body then fields.body else fields))) then l1._ioAlias) then begin
+				if (resolveEntryAlias2 := ResolveEntryAlias(l1._ioAlias)) then begin
+						l1 := (if l1.path then resolveEntryAlias2.(l1.path) else resolveEntryAlias2)
+					end else begin
+						l1 := nil
+					end
+			end;
+		l1
+	end,
+	// the size of the target's soup entry, or nil when it is none
+	TargetSize: func(frame2) begin
+		(if frame2.targetEntry then EntrySize(frame2.targetEntry) else (if IsSoupEntry(frame2.target) then EntrySize(frame2.target)))
+	end,
+	showMessage: true,
+	version: 0,
+	defaultFormat: nil
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+MakeBodyAlias_literal7 := same("protoRoutingFormat.MakeBodyAlias.literals[7]");

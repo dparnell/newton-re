@@ -1,0 +1,14 @@
+// protoPolygon: the stationery of a polygon shape kept in an edit view - a
+// data template (clDataTemplate set in its view class), so the frame the
+// view is made from is the shape's own data and this frame its proto.
+
+protoPolygon := {
+	// a data template of the polygon view class (BuildView: the template is
+	// the data, this frame its stationery)
+	viewClass: clDataTemplate + clPolygonView,
+	viewFlags: vVisible + vCalculateBounds + vNoScripts,
+	viewFormat: vfPen(2),
+	// the shape: a 'polygonshape binary of 14 bytes, filled in when one is made
+	points: shorts('polygonshape, 14, 0),
+	debug: 5572
+};

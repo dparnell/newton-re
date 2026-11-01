@@ -1,0 +1,16 @@
+# each definition's name before the tree was put in its natural form (tools/newton-rom/analysis/naturalize.py), and after
+obj_1035961	part
+obj_1035da9	installScript_literal1
+obj_1036a6d	GetNameFromAddress_literal6
+obj_1037481	action_literal2
+obj_10377dd	action_literal18
+obj_1037949	action_code
+obj_1037ca1	action_literal2_2
+obj_1037ced	action_literal5
+obj_1037d4d	action_literal10
+obj_1037d99	action_literal11
+obj_10380dd	MPurgeExpiredCacheEntries_literal5
+obj_1038615	action_literal9
+obj_1038645	action_literal19
+obj_103973d	UnitsInstalledScript_literal5
+obj_1039975	DNSGetAddressFromName_code

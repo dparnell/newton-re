@@ -1,5 +1,0 @@
-@@ 0x5b9b99
-func() begin
-	return bufferSize
-end
-@@end

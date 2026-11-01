@@ -1,0 +1,104 @@
+// volumeSlider, and what only it reaches
+//
+// The volume slider (magic pointer 860; the Extras drawer and the
+// globals' preference views build on it): a protoSlider over the user configuration's volume in
+// decibels (userConfigSlot: soundVolumeDb, or alarmVolumeDb for the alarm).
+// The slider's steps are the sound hardware's settings, which it asks for
+// by Gestalt; when the hardware has its own volume control (hwSavy and the
+// gestalt says so) the slider only follows it, read-only, polled.
+
+volumeSlider := {
+	userConfigSlot: 'soundVolumeDb,
+	_sound: nil,
+	hwSavy: true, // follow a hardware volume control if there is one
+	hwMode: nil,
+	hwUpdateFreq: 333, // how often to poll it, in milliseconds
+	// Called as the slider is set up: its range from the sound hardware's
+	// settings (the highest and the decibel range), then either a read-only
+	// slider polling the hardware volume, or the user configuration's value.
+	viewSetupFormScript: func() begin
+		local gestalt2;
+		// 33554441 = 0x2000009 is kGestalt_Ext_VolumeInfo (src/ddk/NewtonGestalt.h);
+		// the result: [2] whether the hardware answers its volume, [4] the decibel
+		// range, [5] the highest setting (src/sound/SoundChannel.h)
+		gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+		self.maxValue := (gestalt2[5] + 1);
+		self.dbIncr := (gestalt2[4] / (maxValue - 1));
+		(if (if hwSavy then gestalt2[2]) then begin
+				self.viewFlags := ((viewFlags - vClickable) + vReadOnly);
+				self.viewValue := self:DbToViewValue(GetSystemVolume());
+				self:SetupIdle(hwUpdateFreq)
+			end else (self.viewValue := self:DbToViewValue(GetUserConfig(userConfigSlot))))
+	end,
+	// Called every hwUpdateFreq ms in hardware mode: follows the system volume.
+	viewIdleScript: func() begin
+		local dbToViewValue;
+		if ((dbToViewValue := self:DbToViewValue(GetSystemVolume())) <> self.viewValue) then begin
+				SetValue(self, 'viewValue, dbToViewValue)
+			end;
+		return hwUpdateFreq
+	end,
+	// A volume in decibels (0 the loudest, negative below) as the slider's
+	// value: maxValue at 0 dB, one step down for each dbIncr below.
+	DbToViewValue: func(a1) begin
+		max(0, (maxValue - rinttol((a1 / dbIncr))))
+	end,
+	// The slider's value as decibels; 0 is silence (-32768.0).
+	ViewValueToDb: func(viewValue) begin
+		(if (viewValue = 0) then (-32768.0) else ((maxValue - viewValue) * dbIncr))
+	end,
+	// Called once set up: unless in hardware mode (hwMode, which nothing in
+	// this file sets), registers for user
+	// configuration changes, under a symbol made from this view's C object.
+	viewSetupDoneScript: func() begin
+		(if (not hwMode) then begin
+				self.userConfigChangeSym := Intern(Stringer([Array: "VolumeSlider.", viewCObject]));
+				RegUserConfigChange(userConfigChangeSym, func(a1) begin
+					self:HandleConfigChange(a1)
+				end)
+			end)
+	end,
+	// Called as the slider closes: unregisters what viewSetupDoneScript
+	// registered.
+	viewQuitScript: func() begin
+		(if (not hwMode) then UnRegUserConfigChange(userConfigChangeSym))
+	end,
+	// A user configuration change: a different output device changes the
+	// range; a change of this slider's slot moves the slider.
+	HandleConfigChange: func(a1) begin
+		local gestalt2, dbToViewValue;
+		(if (a1 = 'outputDevice) then begin
+				gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+				SetValue(self, 'maxValue, (gestalt2[5] + 1));
+				(self.dbIncr := (gestalt2[4] / (maxValue - 1)))
+			end else (if (a1 = userConfigSlot) then begin
+					dbToViewValue := self:DbToViewValue(GetUserConfig(userConfigSlot));
+					(if (viewValue <> dbToViewValue) then SetValue(self, 'viewValue, dbToViewValue))
+				end))
+	end,
+	// Called as the user drags: sets the system volume and plays the ratchet
+	// click at it (for the alarm volume, plays the click at that volume).
+	trackSlider: func() begin
+		local viewValueToDb;
+		(if (not hwMode) then begin
+				viewValueToDb := self:ViewValueToDb(viewValue);
+				(if (userConfigSlot = 'soundVolumeDb) then begin
+						SetSystemVolume(viewValueToDb);
+						PlaySoundIrregardless(@ratchetSound)
+					end else PlaySoundIrregardlessAtVolume(@ratchetSound, viewValueToDb))
+			end)
+	end,
+	// Called when the user lets go: saves the volume in the user
+	// configuration and plays the sound it is for.
+	ChangedSlider: func() begin
+		local viewValueToDb;
+		viewValueToDb := self:ViewValueToDb(viewValue);
+		SetUserConfig(userConfigSlot, viewValueToDb);
+		self:VolumeChangeAction(viewValueToDb)
+	end,
+	// Plays the system beep, or the chosen alarm sound at the alarm volume.
+	VolumeChangeAction: func(viewValueToDb) begin
+		(if (userConfigSlot = 'soundVolumeDb) then self:SysBeep() else (if (userConfigSlot = 'alarmVolumeDb) then PlaySoundIrregardlessAtVolume(GetRegisteredSound(GetUserConfig('alarmSound)), viewValueToDb)))
+	end,
+	_proto: @protoSlider
+};

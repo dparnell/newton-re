@@ -1,0 +1,7 @@
+// A wide flap of the flip-number pickers (protoYearPicker). A 1-bit bitmap frame (bits,
+// bounds), 37 x 28 pixels. Magic pointer @687. Used by protoYearPicker.
+
+digitWideflap := {
+	bits: bitmap('bits, "resources/bits/3da755.png", "00000000000801ef01ef0147020b016c", 1),
+	bounds: {left: 0, top: 0, right: 37, bottom: 28}
+};

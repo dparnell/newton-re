@@ -1,5 +1,0 @@
-@@ 0x4ef489
-func() begin
-	@371:New('|nameRef.phone|, nil, self, nil)
-end
-@@end

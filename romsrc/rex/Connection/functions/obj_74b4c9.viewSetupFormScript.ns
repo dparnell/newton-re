@@ -1,5 +1,0 @@
-@@ 0x74b5c1
-func() begin
-	(if packagesCheckboxVisible then (self.viewValue := protoContext:ConnectionPrefsRead('backupPackages)))
-end
-@@end

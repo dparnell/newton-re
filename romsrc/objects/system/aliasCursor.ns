@@ -1,0 +1,41 @@
+// aliasCursor: an arrayErsatzCursor over entry aliases.  GetTargetCursor makes
+// one for a target that is a multiple-item selection when its data definition
+// has no Query of its own: the entries are resolved from their aliases as the
+// cursor reaches them, and targetpath (if given) picks a slot of each entry.
+
+aliasCursor := {
+	targetpath: nil,
+	// New(validTestFrame, target): target is either the array of things or a frame
+	// holding it in _cursor along with the targetpath
+	New: func(a1, a2) begin
+		local l1;
+		if IsFrame(a2) then begin
+				(l1 := inherited:New(a1, a2._cursor)).targetpath := a2.targetpath
+			end else begin
+				l1 := inherited:New(a1, a2)
+			end;
+		l1
+	end,
+	// moves to the thing a1 (an entry) and returns it, or nil when it is not in
+	// the array.
+	// looks like a ROM bug: the fourth argument to ArrayPos is the result of
+	// calling IsSameEntry(e, i) with e and i free variables, not a test function
+	Goto: func(a1) begin
+		if (not (index := ArrayPos(things, a1, 0, IsSameEntry(e, i)))) then begin
+				index := -1
+			end;
+		self:entry()
+	end,
+	// the current thing: an alias resolved to its entry ('deleted when the entry
+	// has gone), then its targetpath slot when it has one
+	entry: func() begin
+		local thing;
+		(if (if (index >= 0) then (index < Length(things))) then begin
+				if (ClassOf((thing := things[index])) = 'alias) then begin
+						thing := ResolveEntryAlias(thing)
+					end;
+				(if thing then (if (if (if targetpath then IsFrame(thing)) then thing.(targetpath)) then thing.(targetpath) else thing) else 'deleted)
+			end)
+	end,
+	_proto: @arrayErsatzCursor
+};

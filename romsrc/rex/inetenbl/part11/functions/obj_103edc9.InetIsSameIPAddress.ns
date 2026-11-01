@@ -1,5 +1,0 @@
-@@ 0x104d269
-func(a1, a2) begin
-	(if (if (if (if (if InetIsValidIPAddress(a1) then InetIsValidIPAddress(a2)) then (a1[0] = a2[0])) then (a1[1] = a2[1])) then (a1[2] = a2[2])) then (a1[3] = a2[3]))
-end
-@@end

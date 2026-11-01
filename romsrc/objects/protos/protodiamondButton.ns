@@ -1,0 +1,33 @@
+// protoDiamondButton: a text button with a small diamond at its left (the
+// look of a pop-up button); its text is padded with two leading spaces to
+// make room for the diamond.
+
+protodiamondButton := {
+	_proto: @protoTextButton,
+	// PadText(text): the text with two leading spaces (adding one or two as
+	// needed)
+	PadText: func(text) begin
+		(if BeginsWith(text, "  ") then text else (if BeginsWith(text, " ") then Stringer([Array: " ", text]) else Stringer([Array: "  ", text])))
+	end,
+	// Pads the text to leave room for the diamond.
+	viewSetupFormScript: func() begin
+		local padText;
+		padText := self:PadText(text);
+		(if (text <> padText) then (text := padText))
+	end,
+	// SetText(text): changes the button's text, padded
+	SetText: func(a1) begin
+		SetValue(self, 'text, self:PadText(a1))
+	end,
+	// viewDrawScript(): draws the diamond bitmap one pixel in from the left,
+	// centred vertically (the button's text is drawn by the view itself)
+	viewDrawScript: compile(
+		constants: {
+			kROM_594: @diamanteBitmap
+		},
+		func() begin
+			local box;
+			box := self:LocalBox();
+			self:DrawShape(OffsetShape(MakeShape(kROM_594), 1, ((box.bottom - 5) >> 1)), '{transferMode: 1})
+		end)
+};

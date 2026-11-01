@@ -83,6 +83,18 @@ tools/newton-rom/
     nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --refs NAME (who calls it), --natives -> src/frames/ROMNatives.cpp,
                           --disasm NAME (bytecode disassembly), --object NAME (a ROM frame's slots),
                           --binary-classes (the object area's binaries counted by class)
+    naturalize.py         romsrc/ rewritten once from the extractor's form into its natural one (functions in
+                          their frames, objects named - renames.tsv - @names, constants.tsv sums, a file per
+                          root object); python tools/newton-rom/analysis/naturalize.py <tree> [-o <out>];
+                          the two forms build the same object file.  romsrc.py rename <tree> OLD NEW renames a
+                          definition afterwards (layout, magic table and @names too); ctest tools.ROMSourceNotation
+    naturalcode.py        then the functions of such a tree, in place: numbers by name where certain (a view's
+                          slot, an error code - constants.tsv with the headers' error codes) and arguments and
+                          locals named (a script's signature, a local's first value, an argument after its calls);
+                          python tools/newton-rom/analysis/naturalcode.py <tree> [--stats]; the build unchanged
+    romsrc_comments.py    the functions in such a tree with no // comment above them (romsrc/README.md
+                          "Comments and constants"): python tools/newton-rom/analysis/romsrc_comments.py
+                          [tree] [--top N] [--list]; an upper bound (a group comment is not seen)
     packages.py           the packages built into the ROM extension: --parts, --extract DIR (.pkg files;
                           --relocatable, --rename OLD=NEW for loadable copies), --doc docs/packages/rex-packages.md
     pkgdisasm.py          the ARM code of a package's protocol parts (capstone): --list, --part N [--start --end],

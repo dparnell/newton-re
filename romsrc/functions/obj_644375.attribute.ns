@@ -1,5 +1,0 @@
-@@ 0x5b983d
-func() begin
-	self:entry().attribute
-end
-@@end

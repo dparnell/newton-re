@@ -1,5 +1,0 @@
-@@ 0x758d21
-func() begin
-	self:MyHide('Restore)
-end
-@@end

@@ -1,0 +1,21 @@
+// bootInitNsGlobals: the first NewtonScript step at boot - fills the global
+// variables frame (vars): each global of globalvarwannabes.ns not yet set, its
+// value or (for a function) what calling it returns; each of
+// globalHeapvarwannabes.ns as a clone (so it can be changed); then runs
+// loadGlobals and sets the printing depth and length for the listener.
+
+bootInitNsGlobals := func() begin
+	(foreach key, value in @globalvarwannabes do begin
+			if (not vars.(key)) then begin
+					vars.(key) := (if IsFunction(value) then call value with () else value)
+				end else nil
+		end);
+	(foreach key, value in @globalHeapvarwannabes do begin
+			if (not vars.(key)) then begin
+					vars.(key) := Clone(value)
+				end else nil
+		end);
+	call @loadGlobals with ();
+	vars.printDepth := 1;
+	(vars.PrintLength := 16)
+end;

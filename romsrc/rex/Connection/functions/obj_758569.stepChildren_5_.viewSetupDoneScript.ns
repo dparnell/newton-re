@@ -1,5 +1,0 @@
-@@ 0x7590a5
-func() begin
-	self:MyHide('Import)
-end
-@@end

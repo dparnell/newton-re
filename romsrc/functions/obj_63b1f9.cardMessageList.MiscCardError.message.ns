@@ -1,5 +1,0 @@
-@@ 0x56c73d
-func(a1) begin
-	ParamStr("There is a problem with this card. (^0)", [Array: GetRoot():TranslateError(a1)])
-end
-@@end

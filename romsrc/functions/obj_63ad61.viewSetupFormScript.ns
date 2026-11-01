@@ -1,5 +1,0 @@
-@@ 0x45ba61
-func() begin
-	(Time := Time())
-end
-@@end

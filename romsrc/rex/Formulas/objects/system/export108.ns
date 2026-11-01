@@ -1,0 +1,77 @@
+// A unit line (@8300): a label picker of units (labelItems, starting at
+// defaultItem) beside a number field.  Picking another unit clears the panel's
+// fields; the Metric Conversion panel's lines are made of it.
+
+export108 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
+	viewFlags: vVisible,
+	viewFormat: vfFrameBlack,
+	stepChildren: [stepChildren: uS, export108Item],
+	indent: 115,
+	rightmargin: 0,
+	// The line's value (its number field's).
+	GetNumericValue: func() begin
+		return value:GetNumericValue()
+	end,
+	// Sets the line's value.
+	SetNumericValue: func(a1) begin
+		value:SetNumericValue(a1)
+	end,
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	pickerItemNumber: 0,
+	// The index of the unit picked.
+	GetPickerItemNumber: func() begin
+		return pickerItemNumber
+	end,
+	// Puts the picker back to its default unit.  U+FC01 (the first character of
+	// the label's text) is the popup diamond.
+	ResetPicker: func() begin
+		SetValue(label, 'labelCommands, labelItems);
+		SetValue(label, 'text, Stringer([Array: $\uFC01, labelItems[defaultItem]]));
+		pickerItemNumber := defaultItem;
+		label:UpdateText(labelItems[defaultItem])
+	end,
+	// Makes the number field whole numbers only (a1 true) or not.
+	SetIntegerField: func(a1) begin
+		SetValue(value, 'integerField, a1)
+	end,
+	decimalPlaces: 2,
+	viewClass: clView,
+	label: nil,
+	stepAllocateContext: [|Array|: 'label, uS, 'value, export108Item],
+	value: nil
+};
+
+// The unit picker (label), "U.S." until it is set up.
+uS := {
+	labelCommands: [|Array|: "item 1", "item 2"],
+	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
+	// Starts on the line's default unit.
+	viewSetupFormScript: func() begin
+		pickerItemNumber := defaultItem;
+		labelCommands := labelItems;
+		self.text := labelCommands[defaultItem];
+		inherited:?viewSetupFormScript()
+	end,
+	indent: 108,
+	viewFont: @fontSystem10Bold,
+	text: "U.S.",
+	// A unit picked: shows it and clears the panel's fields.
+	labelActionScript: func(index) begin
+		pickerItemNumber := index;
+		SetValue(self, 'text, Stringer([Array: $\uFC01, labelCommands[index]]));
+		self:ClearAllFields()
+	end,
+	// The text the picker starts with: the default unit.
+	textSetup: func() begin
+		return labelCommands[defaultItem]
+	end,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'label
+};
+
+export108Item := {integerField: nil, _proto: @8295, preAllocatedContext: 'value};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+textSetup_code := same("uS.textSetup.instructions");

@@ -1,0 +1,7 @@
+// The medium pen tip of the pen-size menu. A 1-bit bitmap frame (bits, bounds), 5 x 5
+// pixels. Magic pointer @709. Used by protoPensizeMenu.
+
+mediumpentip := {
+	bits: bitmap('bits, "resources/bits/3d63bd.png", "00000000000400610061025100660256", 1),
+	bounds: {left: 0, top: 0, right: 5, bottom: 5}
+};

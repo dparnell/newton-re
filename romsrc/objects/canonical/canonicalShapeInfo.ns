@@ -1,0 +1,6 @@
+// canonicalShapeInfo, and what only it reaches
+//
+// The frame GetShapeInfo(shape) answers for any shape but a bitmap
+// (src/views/ShapeVerbs.cpp): its bounds.
+
+canonicalShapeInfo := {bounds: nil};

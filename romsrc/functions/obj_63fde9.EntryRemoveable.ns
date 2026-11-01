@@ -1,5 +1,0 @@
-@@ 0x5b8a59
-func() begin
-	self:IsReadOnly()
-end
-@@end

@@ -1,0 +1,36 @@
+// stdClosing, and what only it reaches
+//
+// The closing of the built-in letter and list print formats: the sender's
+// signature, taken from the owner card (userConfiguration.currentPersona),
+// shown in an edit view below the body.
+
+stdClosing := {
+	viewClass: clEditView,
+	viewBounds: nil,
+	viewFlags: vVisible,
+	viewFormat: 0,
+	viewJustify: vjSiblingBottomV,
+	viewChildren: nil,
+	// Called as the view is set up: its children are the shapes of the owner
+	// card's signature (none if there is no owner card or no signature),
+	// moved so that the signature's top left corner is at the view's.
+	viewSetupFormScript: func() begin
+		self.viewBounds := RelBounds(0, 20, pageWidth, 80);
+		viewChildren := nil;
+		(if (viewChildren := (if (resolveEntryAlias2 := ResolveEntryAlias(userConfiguration.currentPersona)) then resolveEntryAlias2.owner.signature)) then begin
+				least := 9999; // 9999: larger than any coordinate
+				least2 := 9999;
+				local resolveEntryAlias2;
+				local least;
+				local least2;
+				(foreach item in viewChildren do begin
+						least := min(least, item.viewBounds.left);
+						least2 := min(least2, item.viewBounds.top)
+					end);
+				// note: this moves the signature's own shapes, not copies of them
+				(foreach item in viewChildren do begin
+						item.viewBounds := OffsetRect(item.viewBounds, (-least), (-least2))
+					end)
+			end)
+	end
+};

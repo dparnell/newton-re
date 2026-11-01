@@ -1,5 +1,0 @@
-@@ 0x503a81
-func(a1) begin
-	PressButton(filingButton)
-end
-@@end

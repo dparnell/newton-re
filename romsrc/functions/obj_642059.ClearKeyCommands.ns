@@ -1,5 +1,0 @@
-@@ 0x44a351
-func() begin
-	(self._keyCommands := [Array: ])
-end
-@@end

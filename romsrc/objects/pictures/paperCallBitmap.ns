@@ -1,0 +1,7 @@
+// The phone-call stationery's icon. A 1-bit bitmap frame (bits, bounds), 15 x 15 pixels.
+// Magic pointer @718. Used by frames.
+
+paperCallBitmap := {
+	bits: bitmap('bits, "resources/bits/3daca9.png", "0000000000040066006601b8007501c7", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 15}
+};

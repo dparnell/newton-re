@@ -1,0 +1,82 @@
+// The Date Conversion panel (@8311): a date, and the day of the week, the week
+// of the year and the day of the year (as "day/days left") it falls on.
+
+export119 := {
+	stepChildren: [stepChildren:
+		clear,
+		export111Item,
+		{
+			title: dateConversion,
+			viewBounds: {left: 14, top: 0, right: 102, bottom: 16},
+			_proto: @protoTitle
+		},
+		export119Item,
+		export119Item_2,
+		export119Item_3,
+		export119Item_4
+	],
+	// Empties the date and the three results.
+	ClearAllFields: func() begin
+		DateField:SetNumericValue(nil);
+		DayOfWeekField:SetNumericValueString(nil);
+		WeekInYearField:SetNumericValueString(nil);
+		DayInYearField:SetNumericValueString(nil)
+	end,
+	// Fills the three results in from the date (when there is one).  Not the
+	// shared solver: the panel has just the one input line.
+	SolveFormula: func(lineNumber) begin
+		local calcLineValue, longDateStr2, date2, totalMinutes2, totalMinutes3;
+		(if (DateField.calcLineValue <> nil) then begin
+				DayOfWeekField:SetNumericValueString((longDateStr2 := LongDateStr((calcLineValue := DateField.calcLineValue), @datetimeStrSpecs.longDayOfWeekStrSpec)));
+				WeekInYearField:SetNumericValueString(WeekNumber(calcLineValue, nil));
+				(date2 := Date(calcLineValue)).month := 1;
+				date2.Date := 1;
+				totalMinutes2 := TotalMinutes(date2);
+				date2.month := 12;
+				date2.Date := 31;
+				totalMinutes3 := TotalMinutes(date2);
+				DayInYearField:SetNumericValueString(Stringer([Array: NumberStr((1 + ((calcLineValue - totalMinutes2) div 1440))), "/", NumberStr(((totalMinutes3 - calcLineValue) div 1440))]))
+			end)
+	end,
+	viewBounds: {left: 0, top: 0, right: 224, bottom: 189},
+	formulaSymbol: 'DateConversion,
+	// The panel's only input line is the date; the results are shown at once.
+	viewSetupDoneScript: func() begin
+		AddArraySlot((FSViews := [Array: ]), DateField);
+		inherited:?viewSetupDoneScript();
+		self:SolveFormula(nil)
+	end,
+	overview: dateConversion,
+	_proto: @8303,
+	DateField: nil,
+	stepAllocateContext: [|Array|:
+		'DateField,
+		export119Item,
+		'DayOfWeekField,
+		export119Item_2,
+		'WeekInYearField,
+		export119Item_3,
+		'DayInYearField,
+		export119Item_4
+	],
+	DayOfWeekField: nil,
+	WeekInYearField: nil,
+	DayInYearField: nil
+};
+
+dateConversion := "Date Conversion";
+
+// The date (line 0).
+export119Item := {calcLineLabel: "ﰁDate", lineNumber: 0, indent: 93, _proto: @8302, preAllocatedContext: 'DateField};
+
+export119Item_2 := {
+	integerField: true,
+	infoLineLabel: "Day of Week",
+	indent: 93,
+	_proto: @8299,
+	preAllocatedContext: 'DayOfWeekField
+};
+
+export119Item_3 := {infoLineLabel: "Week in Year", indent: 93, _proto: @8299, preAllocatedContext: 'WeekInYearField};
+
+export119Item_4 := {infoLineLabel: "Day in Year", indent: 93, _proto: @8299, preAllocatedContext: 'DayInYearField};

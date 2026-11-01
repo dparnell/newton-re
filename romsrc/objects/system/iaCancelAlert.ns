@@ -1,0 +1,10 @@
+// iaCancelAlert (@811): what Intelligent Assistance does when an Assist
+// request is cancelled - closes the Assistant slip and tells the user.
+
+// Called with no arguments; closes the root's assistant view and shows an
+// alert notification. Returns Notify's result.
+iaCancelAlert := func() begin
+	local root;
+	(root := GetRoot()).assistant:Close();
+	root:Notify(kNotifyAlert, "Assist", "The Assistant request was cancelled")
+end;

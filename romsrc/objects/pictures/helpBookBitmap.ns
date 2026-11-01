@@ -1,0 +1,8 @@
+// The icon of a help book. A 1-bit bitmap frame (bits, bounds) with a mask, 28 x 21 pixels.
+// Magic pointer @593.
+
+helpBookBitmap := {
+	mask: bitmap('mask, "resources/mask/3d6c69.png", "00000000000400a000a0026400b50280", 1),
+	bits: bitmap('bits, "resources/bits/3d6cd9.png", "00000000000400a000a0026400b50280", 1),
+	bounds: {left: 0, top: 0, right: 28, bottom: 21}
+};

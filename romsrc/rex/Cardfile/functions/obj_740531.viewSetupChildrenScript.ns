@@ -1,5 +1,0 @@
-@@ 0x7406a1
-func() begin
-	(self.stepChildren := nil)
-end
-@@end

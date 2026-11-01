@@ -1,0 +1,695 @@
+// calculator: the Calculator (Extras), a four-function adding machine floater:
+// a tape (paperDisplay, the last 30 lines of which maxLines show), the entry
+// display, and a keypad (keys).  The keys' results are the codes the code
+// works with: 1-9 the digits, 117 the digit 0, 100 the decimal point, 101 %,
+// 102 MR, 108 =, 111 C (clear all), 112 CE (clear entry), 113 +, 114 -,
+// 115 x, 116 divide, 152 square root, 153 M+, 154 M-.  value is the number
+// being entered or the result, stack the running total, pendingOp the
+// operation waiting for its second operand.  The keyboard works too (lookup).
+
+calculator := {
+	isUnary: nil,
+	Display: nil,
+	stack: stack,
+	_cacheContext: {
+		isUnary: nil,
+		Display: nil,
+		stack: stack,
+		keyFactor: keyFactor,
+		viewFlags: vApplication + vClickable,
+		keys: nil,
+		memory: nil,
+		lastKey: -1,
+		index: 24,
+		paper: nil,
+		viewclipper: nil,
+		_proto: nil,
+		viewCObject: nil,
+		paperDisplay: nil,
+		value: stack,
+		inputKeys: uCardPositionAlertButton,
+		unary: nil,
+		valueFactor: valueFactor,
+		_parent: nil,
+		pendingOp: 108,
+		Clear: true,
+		base: nil,
+		digitCount: 0
+	},
+	preallocatedContext: 'calculator,
+	rotated: nil,
+	// the rounded frame round the tape and display (a narrower one when rotated)
+	viewDrawScript: func() begin
+		(if rotated then self:DrawShape(MakeRoundRect(1, 1, 138, (((1 + (15 * maxLines)) + 18) + 4), 5), '{pensize: 2, fillPattern: 0}) else self:DrawShape(MakeRoundRect(1, 1, 169, (((1 + (15 * maxLines)) + 18) + 4), 5), '{pensize: 2, fillPattern: 0}))
+	end,
+	viewChildren: [viewChildren: {_proto: @protoClosebox}, paperDisplay, Display, keys],
+	keyFactor: keyFactor,
+	viewFlags: vApplication + vClickable,
+	keys: nil,
+	// a number as the display and tape show it: eight significant digits
+	// (%.8G), the exponent (if any) as %.8g writes it
+	CalcFormattedNumberStr: compile(
+		constants: {
+			kLiteral_4e1865: "%.8G"
+		},
+		func(value) begin
+			local text, pos, formattedNumberStr2;
+			if (value < 0) then begin
+					text := Stringer([Array: "-", FormattedNumberStr((-value), kLiteral_4e1865)])
+				end else begin
+					text := FormattedNumberStr(value, kLiteral_4e1865)
+				end;
+			if (pos := StrPos(text, "e", 0)) then begin
+					text := Substr(text, 0, pos);
+					pos := StrPos((formattedNumberStr2 := FormattedNumberStr(value, "%.8g")), "e", 0);
+					formattedNumberStr2 := Substr(formattedNumberStr2, pos, 9999);
+					text := Stringer([Array: text, formattedNumberStr2])
+				end;
+			text
+		end),
+	ReOrientToScreen: @defRotateFunc,
+	memory: nil,
+	lastKey: -1,
+	viewBounds: {left: 0, top: 0, right: 170, bottom: 257},
+	// a key typed on a keyboard: the key code of the calculator key lookup gives
+	// for the character
+	viewKeyDownScript: func(char2, flags) begin
+		if (if (char2 <> $\00) then (not IsCommandKeystroke(char2, flags))) then begin
+				(foreach item in lookup do begin
+						if (char2 = item[0]) then begin
+								keys:keyPressScript(item[1]);
+								RefreshViews()
+							end
+					end)
+			end;
+		nil
+	end,
+	// shows maxLines of the tape from line index
+	calcPaperDisplay: func() begin
+		smartStart2 := SmartStart(120);
+		l2 := (maxLines - 1);
+		smartConcat2 := 0;
+		local smartStart2;
+		local l2;
+		local smartConcat2;
+		(for i := 0 to l2 do begin
+				smartConcat2 := SmartConcat(smartStart2, smartConcat2, paper[(index + i)]);
+				if (i <> l2) then begin
+						smartConcat2 := SmartConcat(smartStart2, smartConcat2, $\n)
+					end
+			end);
+		SmartStop(smartStart2, smartConcat2);
+		SetValue(paperDisplay, 'text, smartStart2)
+	end,
+	allocateContext: [|Array|: 'paperDisplay, paperDisplay, 'Display, Display, 'keys, keys],
+	index: 24,
+	paper: nil,
+	maxLines: 6,
+	_proto: @protoFloater,
+	paperDisplay: nil,
+	textFlags: 1024,
+	value: stack,
+	// adds a line at the end of the tape (the tape scrolls up one line) and shows
+	// the end
+	printToPaper: func(text) begin
+		(for i := 1 to 29 do begin
+				paper[(i - 1)] := paper[i]
+			end);
+		paper[29] := text;
+		index := (30 - maxLines);
+		self:calcPaperDisplay();
+		paperDisplay:Dirty()
+	end,
+	inputKeys: uCardPositionAlertButton,
+	// viewScrollDownScript, viewScrollUpScript: the tape a line on or back (of
+	// its 30 lines).
+	viewScrollDownScript: func() begin
+		(if (index < (30 - maxLines)) then begin
+				index := (index + 1);
+				self:calcPaperDisplay()
+			end)
+	end,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	unary: nil,
+	// The up arrow: the tape back a line.
+	viewScrollUpScript: func() begin
+		(if (index > 1) then begin
+				index := (index - 1);
+				self:calcPaperDisplay()
+			end)
+	end,
+	declareSelf: 'base,
+	// a short application area (the screen rotated to landscape) gets the wide
+	// layout, with the keypad beside the tape
+	viewSetupFormScript: func() begin
+		if (not paper) then begin
+				paper := Clone(initPaper)
+			end;
+		if (GetAppParams().appAreaHeight < 257) then begin
+				self.rotated := true;
+				viewBounds := SetBounds(0, 0, 304, 144);
+				maxLines := 8;
+				index := (30 - maxLines)
+			end else begin
+				if (if self.rotated then (GetAppParams().appAreaHeight > 257)) then begin
+						self.rotated := nil;
+						viewBounds := SetBounds(0, 0, 170, 257);
+						maxLines := 6;
+						index := 24
+					end
+			end;
+		SetKeyView(self, 0);
+		self:calcPaperDisplay()
+	end,
+	valueFactor: valueFactor,
+	// the empty tape: 30 lines
+	initPaper: [|Array|:
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020,
+		$\u0020
+	],
+	pendingOp: 108,
+	KClassroomAware: true,
+	Clear: true,
+	digitCount: 0,
+	viewHelpTopic: learn,
+	// the keyboard's characters and the calculator key codes they press
+	lookup: [|Array|:
+		[|Array|: $., 100],
+		[|Array|: $0, 117],
+		[|Array|: $1, 1],
+		[|Array|: $2, 2],
+		[|Array|: $3, 3],
+		[|Array|: $4, 4],
+		[|Array|: $5, 5],
+		[|Array|: $6, 6],
+		[|Array|: $7, 7],
+		[|Array|: $8, 8],
+		[|Array|: $9, 9],
+		[|Array|: $C, 111],
+		[|Array|: $c, 111],
+		[|Array|: $e, 112],
+		[|Array|: $E, 112],
+		[|Array|: $\u0008, 112],
+		[|Array|: $/, 116],
+		[|Array|: $\u221a, 152],
+		[|Array|: $*, 115],
+		[|Array|: $x, 115],
+		[|Array|: $X, 115],
+		[|Array|: $%, 101],
+		[|Array|: $-, 114],
+		[|Array|: $=, 108],
+		[|Array|: $\u000d, 108],
+		[|Array|: $\u0003, 108],
+		[|Array|: $+, 113]
+	]
+};
+
+valueFactor := real('|Real|, 10.0);
+
+paperDisplay := {
+	viewBounds: {left: 3, top: 3, right: 167, bottom: 93},
+	viewFlags: vVisible + vReadOnly + vClickable + vGesturesAllowed,
+	viewJustify: vjRightH,
+	viewFont: tsSimple + tsSize(12),
+	viewLineSpacing: 15,
+	pix: nil,
+	// Rotated: the tape on the left, maxLines lines high.
+	viewSetupFormScript: func() begin
+		(if rotated then (viewBounds := RelBounds(3, 3, 133, (15 * maxLines))))
+	end,
+	// Rotated: right aligned.
+	viewSetupDoneScript: func() begin
+		(if rotated then SetValue(self, 'viewJustify, vjRightH))
+	end,
+	// Shows "M" in a box when a number is in memory.
+	viewDrawScript: func() begin
+		(if memory then begin
+				if (not pix) then begin
+						pix := [Array: MakeText("M", 3, -2, 16, 11), MakeRect(1, 1, 15, 13)]
+					end;
+				self:DrawShape(pix, '{font: tsSystem + tsSize(10) + tsBold})
+			end)
+	end,
+	preallocatedContext: 'paperDisplay,
+	_proto: @protoStaticText
+};
+
+Display := {
+	viewFlags: vVisible + vReadOnly + vClickable + vGesturesAllowed,
+	viewBounds: {left: 3, top: 93, right: 167, bottom: 111},
+	viewFont: tsSimple + tsSize(14) + tsBold,
+	viewJustify: vjRightH + oneLineOnly,
+	// Rotated: below the tape.
+	viewSetupFormScript: func() begin
+		(if rotated then (viewBounds := RelBounds(3, (3 + (15 * maxLines)), 133, 18)))
+	end,
+	// Rotated: right aligned, on one line.
+	viewSetupDoneScript: func() begin
+		(if rotated then SetValue(self, 'viewJustify, vjRightH + oneLineOnly))
+	end,
+	preallocatedContext: 'Display,
+	_proto: @protoStaticText
+};
+
+keyFactor := real('|Real|, 1.0);
+
+keys := {
+	viewClass: clKeyboardView,
+	viewBounds: {left: -1, top: 116, right: 171, bottom: 258},
+	viewFlags: vVisible + vClickable,
+	viewFormat: vfNone,
+	viewFont: tsSystem + tsSize(12) + tsBold,
+	keyResultsAreKeycodes: nil,
+	// rows of a legend, the key code and a key descriptor (see alphaKeys.ns); the
+	// codes are the calculator's own, not key codes (keyResultsAreKeycodes nil)
+	keyDefinitions: [|Array|:
+		[|Array|:
+			8,
+			8,
+			$C,
+			111,
+			355469318,
+			"CE",
+			112,
+			355469318,
+			"MR",
+			102,
+			355469318,
+			"M+",
+			153,
+			355469318,
+			"M-",
+			154,
+			355469318
+		],
+		[|Array|:
+			8,
+			8,
+			$7,
+			7,
+			355469320,
+			$8,
+			8,
+			355469320,
+			$9,
+			9,
+			355469320,
+			@keyDivideBitmap,
+			116,
+			355469320,
+			@keyradicalBitmap,
+			152,
+			355469320
+		],
+		[|Array|:
+			8,
+			8,
+			$4,
+			4,
+			355469320,
+			$5,
+			5,
+			355469320,
+			$6,
+			6,
+			355469320,
+			@keyTimesBitmap,
+			115,
+			355469320,
+			$%,
+			101,
+			355469320
+		],
+		[|Array|:
+			8,
+			8,
+			$1,
+			1,
+			355469320,
+			$2,
+			2,
+			355469320,
+			$3,
+			3,
+			355469320,
+			@keyMinusBitmap,
+			114,
+			355469320,
+			@keyEqualsBitmap,
+			108,
+			355469320
+		],
+		[|Array|:
+			8,
+			8,
+			$0,
+			117,
+			355471368,
+			@keyPeriodBitmap,
+			100,
+			355469320,
+			@keyPlusBitmap,
+			113,
+			355469320
+		]
+	],
+	click: @click,
+	grind: @addingMachine,
+	debug: 2161822,
+	preallocatedContext: 'keys,
+	viewSetupFormScript: compile(
+		constants: {
+			kROM_736: @keyCommaBitmap
+		},
+		// a locale whose decimal point is not a period gets its own on the key and
+		// in lookup
+		func() begin
+			if ((decimalpoint := GetLocale().numberformat.decimalpoint)[0] <> $.) then begin
+					self.keyDefinitions := Clone(self.keyDefinitions);
+					self.keyDefinitions[4] := Clone(self.keyDefinitions[4]);
+					self.keyDefinitions[4][5] := (if (decimalpoint[0] = $,) then kROM_736 else decimalpoint[0]);
+					base.lookup := Clone(base.lookup);
+					local decimalpoint;
+					(for i := 0 to (Length(base.lookup) - 1) do begin
+							if (base.lookup[i][0] = $.) then begin
+									base.lookup[i] := Clone(base.lookup[i]);
+									base.lookup[i][0] := decimalpoint[0];
+									break
+								end
+						end)
+				end;
+			(if rotated then (viewBounds := RelBounds(138, 1, 168, 142)))
+		end),
+	// Shows the number being typed, else the value formatted.
+	viewSetupDoneScript: func() begin
+		(if (if (if Clear then (ClassOf(inputKeys) <> 'char)) then (StrLen(inputKeys) = 0)) then self:JamDisplay(self:CalcFormattedNumberStr(value)) else self:JamDisplay(inputKeys))
+	end,
+	// shows inputKeys (a string, or a single character) in the display
+	JamDisplay: func(inputKeys) begin
+		(if (ClassOf(inputKeys) = 'char) then begin
+				(x := Clone(" "))[0] := inputKeys;
+				SetValue(Display, 'text, x)
+			end else SetValue(Display, 'text, inputKeys))
+	end,
+	// starts a new number; with a1, shows the pending operation (and a sign typed
+	// first) in the display
+	ResetValue: func(a1) begin
+		value := 0.0;
+		valueFactor := 10.0;
+		digitCount := 0;
+		keyFactor := 1.0;
+		(if a1 then begin
+				inputKeys := (if (if (pendingOp >= 113) then (pendingOp <= 116)) then "+-x\u00F7\u"[(pendingOp - 113)] else "");
+				if unary then begin
+						inputKeys := Stringer([Array: inputKeys, (if (unary = 114) then " -" else " +")])
+					end;
+				self:JamDisplay(inputKeys);
+				(digitCount := 0)
+			end)
+	end,
+	// CE: drops the number being entered
+	ClearEntry: func() begin
+		if (pendingOp <> 108) then begin
+				pendingOp := 0
+			end;
+		Clear := true;
+		unary := nil;
+		isUnary := nil;
+		value := stack;
+		(if (digitCount > 0) then begin
+				self:JamDisplay((inputKeys := ""));
+				(digitCount := 0)
+			end)
+	end,
+	// C: clears everything, and feeds the tape a blank line
+	ClearKey: func() begin
+		valueFactor := 10.0;
+		digitCount := 0;
+		keyFactor := 1.0;
+		value := 0.0;
+		stack := 0.0;
+		pendingOp := 108;
+		memory := nil;
+		unary := nil;
+		isUnary := nil;
+		playsound(grind);
+		base:printToPaper(" ");
+		self:UpdateDisplay();
+		paperDisplay:Dirty()
+	end,
+	// does the pending operation with the value just entered (and % or square
+	// root first), prints the line on the tape and makes char2 the pending one;
+	// = prints the result as well.  Division by zero and the root of a negative
+	// number beep and give 0.
+	DoOp: func(char2) begin
+		local l1, l2, value2, l4, l5, text;
+		l2 := nil;
+		value2 := value;
+		l5 := true;
+		if (char2 = 101) then begin
+				if isUnary then begin
+						if (value < 0) then begin
+								pendingOp := 114;
+								value := ((stack * (-value)) / 100);
+								value2 := (-value2)
+							end else begin
+								pendingOp := 113;
+								value := ((stack * value) / 100)
+							end;
+						isUnary := nil
+					end else begin
+						if ((pendingOp = 115) or (pendingOp = 116)) then begin
+								value := (value / 100)
+							end else begin
+								value := ((stack * value) / 100)
+							end
+					end;
+				l4 := $%;
+				char2 := 108
+			end;
+		if (char2 = 152) then begin
+				if (value >= 0.0) then begin
+						value := sqrt(value)
+					end else begin
+						l5 := nil;
+						self:SysBeep();
+						value := 0.0
+					end;
+				l2 := $\u221A;
+				char2 := 108
+			end;
+		if (pendingOp = 113) then begin
+				value := (stack + value);
+				l1 := $+
+			end else begin
+				if (pendingOp = 114) then begin
+						value := (stack - value);
+						l1 := $-
+					end else begin
+						if (pendingOp = 115) then begin
+								value := (stack * value);
+								l1 := $*
+							end else begin
+								if (pendingOp = 116) then begin
+										if (value <> 0.0) then begin
+												value := (stack / value)
+											end else begin
+												l5 := nil;
+												GetRoot():SysBeep();
+												value := 0.0
+											end;
+										l1 := $\F7
+									end else begin
+										if isUnary then begin
+												l1 := (if (value < 0) then $- else $+);
+												value := (stack + value);
+												if (l1 = $-) then begin
+														value2 := (-value2)
+													end
+											end
+									end
+							end
+					end
+			end;
+		if (pendingOp <> 0) then begin
+				if l5 then begin
+						playsound(grind)
+					end;
+				if l2 then begin
+						text := Stringer([Array: l1, " ", l2, " ", self:CalcFormattedNumberStr(value2), l4])
+					end else begin
+						text := Stringer([Array: l1, " ", self:CalcFormattedNumberStr(value2), l4])
+					end;
+				base:printToPaper(text)
+			end;
+		if (char2 = 108) then begin
+				base:printToPaper(Stringer([Array: $=, " ", self:CalcFormattedNumberStr(value)]));
+				self:JamDisplay(self:CalcFormattedNumberStr(value));
+				inputKeys := ""
+			end else begin
+				if (if (char2 >= 113) then (char2 <= 116)) then begin
+						self:JamDisplay((inputKeys := "+-x\u00F7\u"[(char2 - 113)]))
+					end
+			end;
+		stack := value;
+		pendingOp := char2;
+		Clear := true;
+		unary := nil;
+		(isUnary := nil)
+	end,
+	// a key of the keypad, char2 its code (see the header)
+	keyPressScript: func(char2) begin
+		local l1, formattedNumberStr;
+		playsound(click);
+		if (char2 = 117) then begin
+				char2 := 0
+			end;
+		// - or + typed before a number is its sign
+		if (if (if (char2 = 114) then Clear) then (lastKey <> 112)) then begin
+				unary := 114;
+				self:ResetValue(true)
+			end else begin
+				if (if (if (char2 = 113) then Clear) then (lastKey <> 112)) then begin
+						unary := 113;
+						self:ResetValue(true)
+					end else begin
+						if (char2 = 111) then begin
+								self:ClearKey()
+							end else begin
+								if (char2 = 112) then begin
+										self:ClearEntry()
+									end else begin
+										if ((char2 = 153) or (char2 = 154)) then begin
+												l1 := (if (char2 = 153) then value else (-value));
+												if memory then begin
+														if ((memory := (memory + l1)) = 0) then begin
+																memory := nil;
+																paperDisplay:Dirty()
+															end
+													end else begin
+														memory := l1;
+														paperDisplay:Dirty()
+													end;
+												self:ResetValue(true)
+											end else begin
+												if (char2 = 102) then begin
+														value := (if memory then memory else 0.0);
+														if (unary = 114) then begin
+																value := (-value);
+																unary := nil;
+																isUnary := true
+															end else begin
+																if unary then begin
+																		unary := nil;
+																		isUnary := true
+																	end
+															end;
+														digitCount := StrLen((formattedNumberStr := self:CalcFormattedNumberStr(value)));
+														if (formattedNumberStr[0] = $-) then begin
+																digitCount := (digitCount - 1)
+															end;
+														if (if (if HasSlot(base, 'pendingOp) then (pendingOp >= 113)) then (pendingOp <= 116)) then begin
+																inputKeys := Stringer([Array: "+-x\u00F7\u"[(pendingOp - 113)], formattedNumberStr])
+															end else begin
+																inputKeys := formattedNumberStr
+															end;
+														self:JamDisplay(inputKeys);
+														Clear := nil
+													end else begin
+														// the operation keys are all above 100
+														if (char2 > 100) then begin
+																if ((not Clear) or (((pendingOp = 108) or (pendingOp = 0)) or (pendingOp = 115))) then begin
+																		self:DoOp(char2)
+																	end else begin
+																		self:SysBeep();
+																		char2 := lastKey
+																	end
+															end else begin
+																if (Clear or (lastKey = 102)) then begin
+																		self:ResetValue((lastKey = 102));
+																		Clear := nil
+																	end;
+																if (char2 = 100) then begin
+																		if valueFactor then begin
+																				valueFactor := nil;
+																				self:JamDisplay((inputKeys := Stringer([Array: inputKeys, GetLocale().numberformat.decimalpoint])))
+																			end
+																	end else begin
+																		// at most 10 digits
+																		if (digitCount >= 10) then begin
+																				self:SysBeep()
+																			end else begin
+																				inputKeys := Stringer([Array: inputKeys, char2]);
+																				digitCount := (digitCount + 1);
+																				if valueFactor then begin
+																						value := (value * valueFactor)
+																					end else begin
+																						keyFactor := (keyFactor / 10.0)
+																					end;
+																				if (if unary then (char2 <> 0)) then begin
+																						if (unary = 114) then begin
+																								char2 := (-char2)
+																							end;
+																						unary := nil;
+																						isUnary := true
+																					end;
+																				if (value < 0) then begin
+																						value := (value - (char2 * keyFactor))
+																					end else begin
+																						value := (value + (char2 * keyFactor))
+																					end;
+																				self:JamDisplay(inputKeys)
+																			end
+																	end
+															end
+													end
+											end
+									end
+							end
+					end
+			end;
+		lastKey := char2;
+		true
+	end,
+	// shows value and starts a new entry
+	UpdateDisplay: func() begin
+		self:JamDisplay(self:CalcFormattedNumberStr(value));
+		(inputKeys := "")
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+CalcFormattedNumberStr_literal5 := same("calculator.CalcFormattedNumberStr.literals[5]");
+
+ResetValue_literal12 := same("keys.ResetValue.literals[12]");
+
+ResetValue_literal8 := same("keys.ResetValue.literals[8]");

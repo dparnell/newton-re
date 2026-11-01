@@ -1,0 +1,13 @@
+// The Out Box soup. A soup definition (the soupDef frame RegUnionSoup and RegSoupDef take:
+// name, userName, ownerApp, userDescr, indexes). Magic pointer @539. Used by
+// bootSoupwannabes, globalvarwannabes.
+
+outboxSoupDef := {
+	name: outBox_2,
+	userName: outBox,
+	ownerApp: 'iobox,
+	ownerAppName: inOutBox,
+	userDescr: "Outbox data",
+	indexes: @ioIndices,
+	initHook: nil
+};

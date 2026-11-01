@@ -1,0 +1,14 @@
+// The copier sound. A 'codec sound frame whose samples the tIMACodec codec decompresses
+// (IMA ADPCM) when it is played. Magic pointer @380. Used by newtApplication.
+
+copier := {
+	sndFrameType: 'codec,
+	samplingRate: samplingRate_2,
+	codecName: tIMACodec,
+	dataType: 16,
+	bufferSize: 10240,
+	bufferCount: 4,
+	compressionType: 6,
+	compressionRatio: compressionRatio,
+	samples: imasound('samples, "resources/samples/3d29c1.wav")
+};

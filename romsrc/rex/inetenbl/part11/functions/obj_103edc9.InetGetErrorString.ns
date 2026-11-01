@@ -1,5 +1,0 @@
-@@ 0x103fc61
-func(a1) begin
-	InetStartUp():MGetErrorString(a1)
-end
-@@end

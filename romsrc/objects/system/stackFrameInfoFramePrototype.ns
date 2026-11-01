@@ -1,0 +1,8 @@
+// stackFrameInfoFramePrototype, and what only it reaches
+//
+// The prototype of the frame the debugging natives answer for one
+// interpreter stack frame (src/frames/DebugAPI.cpp clones it): the code
+// block running, the program counter in it, the receiver and the context
+// frame.
+
+stackFrameInfoFramePrototype := {class: 'StackFrameInfoFrame, CodeBlock: nil, programCounter: nil, receiver: nil, contextFrame: nil};

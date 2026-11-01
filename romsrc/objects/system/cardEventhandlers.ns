@@ -1,0 +1,240 @@
+// cardEventhandlers: magic pointer @541, the NewtonScript side of storage and
+// other PC card events.  The card event handler (src/newt/StorageCards.cpp,
+// HandleCardEvent) sends the event's symbol here with its arguments - usually
+// the card slot, or the store - and most handlers put up the matching
+// cardAlertTemplate message (CardAlert, or ModalCardAlert when the answer is
+// needed; 'cardYanked when the card was pulled out meanwhile).
+
+cardEventhandlers := {
+	// a store on a card was mounted: offers to convert soups made for another
+	// language, asks whether to make it the default store (where new data goes),
+	// activates its packages, opens the card's storage slip and tells the
+	// StoreChangeRegistry and the docking code that it has come
+	StoreMounted: compile(
+		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			// two DES password keys of secret card names: a card named so opens a game of
+			// draw poker (drawpokerTemplate) or solo poker in place of the storage slip -
+			// an Easter egg
+			kLiteral_56a7e9: call kBinaryFromHex with ("6e5db133590fab4f", 'deskey),
+			kLiteral_56a7fd: call kBinaryFromHex with ("a975975bb33737cb", 'deskey)
+		},
+		func(a1) begin
+			name := a1:GetName();
+			cardSlot := a1:CardSlot();
+			isReadOnly := a1:IsReadOnly();
+			if (checkUnion := a1:CheckUnion()) then begin
+					if isReadOnly then begin
+							ModalCardAlert('incompatibleSoups, cardSlot, name)
+						end else begin
+							if ((modalCardAlert2 := ModalCardAlert('|ConvertIncompatibleSoups?|, cardSlot, name)) = 'cardYanked) then begin
+									return nil
+								end else begin
+									if modalCardAlert2 then begin
+											local name;
+											local cardSlot;
+											local isReadOnly;
+											local checkUnion;
+											local modalCardAlert2;
+											(foreach item in checkUnion do begin
+													local l8, modalCardAlert3, dESCreatePasswordKey2;
+													a1:ConvertSoupSortTables(item)
+												end)
+										end
+								end
+						end
+				end;
+			// l8: the store is the one the user made the default store
+			l8 := (a1:GetSignature() = GetUserConfig('defaultStoreSig));
+			if (not isReadOnly) then begin
+					if a1:GetInfo('defaultStore) then begin
+							if (not l8) then begin
+									if ((modalCardAlert3 := ModalCardAlert('|MakeDefaultStore?|, cardSlot, name)) = 'cardYanked) then begin
+											return nil
+										end else begin
+											if modalCardAlert3 then begin
+													SetDefaultStore(a1);
+													l8 := true
+												end else begin
+													a1:SetInfo('defaultStore, nil)
+												end
+										end
+								end
+						end else begin
+							if l8 then begin
+									a1:SetInfo('defaultStore, true)
+								end
+						end
+				end;
+			if (ActivateStorePackages(a1) = 'cardYanked) then begin
+					return nil
+				end;
+			if (not GetRoot().SleepScreen.viewCObject) then begin
+					dESCreatePasswordKey2 := DESCreatePasswordKey(Downcase(Clone(name)));
+					if BinEqual(kLiteral_56a7e9, dESCreatePasswordKey2) then begin
+							BuildContext(@drawpokerTemplate):Open()
+						end else begin
+							if BinEqual(kLiteral_56a7fd, dESCreatePasswordKey2) then begin
+									BuildContext(@solopokerTemplate):Open()
+								end else begin
+									OpenStoreSlip(a1)
+								end
+						end
+				end;
+			if (if isReadOnly then l8) then begin
+					CardAlert('LockedDefaultStore, cardSlot, name)
+				end;
+			CheckCardBattery();
+			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: a1, 'StoreEnters, nil]);
+			XmitStoreSoupsEntering(a1);
+			true
+		end),
+	// a card store was unmounted: drops a key view that was on it, closes its slip,
+	// deactivates its packages and tells the registries it has gone
+	StoreUnMounted: func(a1) begin
+		local keyView;
+		if (if (keyView := GetKeyView()) then (not IsValid(keyView._proto))) then begin
+				SetKeyView(nil, 0)
+			end;
+		CloseStoreSlip(a1);
+		DeActivateStorePackages(a1);
+		AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: StoreChangeRegistry, [Array: a1, 'storeLeaves, a1:GetName()]]);
+		XmitStoreSoupsLeaving(a1);
+		true
+	end,
+	// a password-protected store: asks for the password if a package provides
+	// StorePasswordPrompt, else says the card cannot be read
+	CheckPassword: func(a1) begin
+		(if GlobalFnExists('StorePasswordPrompt) then StorePasswordPrompt(a1) else begin
+				CardAlert('ProtectedStore, a1, nil);
+				nil
+			end)
+	end,
+	// the password given for store a1 was wrong
+	BadPassword: func(a1) begin
+		CardAlert('BadStorePassword, a1, nil)
+	end,
+	// the card was pulled out: tells the WeirdCardEventRegistry and closes the
+	// card's alerts with the answer 'cardYanked
+	CardRemoved: func(a1) begin
+		AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: a1, 'CardRemoved]]);
+		AbortCardAlerts(a1, 'cardYanked)
+	end,
+	// the card in slot a1 was put back while its alerts were up (the answer
+	// needed)
+	CardReInserted: func(a1) begin
+		ModalCardAlert('CardReInserted, a1, nil)
+	end,
+	// a card that is not (only) storage: a2 is its types; a comms card offers Auto
+	// Dock (or says it was inserted), an unknown type says so; an application
+	// registered under the card type is opened
+	WeirdCardInserted: func(a1, a2) begin
+		l1 := nil;
+		l2 := nil;
+		local l1;
+		local l2;
+		(foreach item in a2 do begin
+				local l5;
+				if @storageCardTypes.(item) then begin
+						l2 := true
+					end else begin
+						if (item = 'comm) then begin
+								l1 := true
+							end else begin
+								// looks like a ROM bug: GetRoot().(cardType) reads a variable cardType this
+								// function does not have, where item (the type) was presumably meant
+								if (l5 := GetRoot().(cardType)) then begin
+										l5:Open();
+										l2 := true
+									end
+							end
+					end
+			end);
+		if (not l2) then begin
+				if l1 then begin
+						if (not AutoDock('Connect, true)) then begin
+								CardAlert('CommCardInserted, a1, nil)
+							end
+					end else begin
+						CardAlert('UnrecognizedCardInserted, a1, nil)
+					end
+			end;
+		AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: a1, 'cardInserted]])
+	end,
+	// an old (1.x) card: convert it (asked twice) or mount it read-only
+	|Convert1.XCard?|: func(a1) begin
+		local modalCardAlert2;
+		(if ((modalCardAlert2 := ModalCardAlert('|Convert1.XCard?|, a1, nil)) = true) then ModalCardAlert('|Convert1.XCardReally?|, a1, nil) else modalCardAlert2)
+	end,
+	// erase a card without reading it: offered only while Prefs is open
+	|FormatWithExtremePrejudice?|: func(a1) begin
+		local modalCardAlert2;
+		(if GetRoot().preferenceRoll.viewCObject then begin
+				modalCardAlert2 := ModalCardAlert('|FormatWithExtremePrejudice?|, a1, nil);
+				HandleCardEvent('|FormatReally?|, [Array: a1, modalCardAlert2])
+			end)
+	end,
+	// an unformatted card: format it? (asked, then asked again with no Cancel)
+	|Format?|: func(a1) begin
+		local modalCardAlert2;
+		modalCardAlert2 := ModalCardAlert('|Format?|, a1, nil);
+		HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, modalCardAlert2])
+	end,
+	// a locked card cannot be formatted
+	FormatLockedCard: func(a1) begin
+		ModalCardAlert('FormatLockedCard, a1, nil)
+	end,
+	// a card whose programming voltage is wrong cannot be formatted
+	FormatBadVppCard: func(a1) begin
+		ModalCardAlert('FormatBadVppCard, a1, nil)
+	end,
+	// a card that could not be mounted (error a2): format it? (asked twice)
+	|FormatAfterMountError?|: func(a1, a2) begin
+		local modalCardAlert2;
+		modalCardAlert2 := ModalCardAlert('|FormatAfterMountError?|, a1, a2);
+		HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, modalCardAlert2])
+	end,
+	// the second question, when the first was answered yes (else that answer)
+	|FormatReallyNoCancel?|: func(a1, a2) begin
+		(if (a2 = true) then ModalCardAlert('|FormatReallyNoCancel?|, a1, nil) else a2)
+	end,
+	// the second question, when the first was answered yes (else that answer)
+	|FormatReally?|: func(a1, a2) begin
+		(if (a2 = true) then ModalCardAlert('|FormatReally?|, a1, nil) else a2)
+	end,
+	// a locked card that could not be mounted: a card that needs repair says to
+	// unlock it, any other error a2 is shown
+	LockedCardMountError: func(a1, a2) begin
+		(if (a2 = kSError_WPButNeedsRepair) then CardAlert('RepairLockedCardError, a1, nil) else CardAlert('SmileAfterMountError, a1, a2))
+	end,
+	// any other card error a2
+	MiscCardError: func(a1, a2) begin
+		CardAlert('MiscCardError, a1, a2)
+	end,
+	// an SRAM card's battery is low
+	SRAMCardLowBattery: func(a1) begin
+		CardAlert('SRAMCardLowBattery, a1, nil)
+	end,
+	// an SRAM card's battery must be replaced
+	SRAMCardReplaceBattery: func(a1) begin
+		CardAlert('SRAMCardReplaceBattery, a1, nil)
+	end,
+	// a flash card's programming voltage is wrong (the answer needed)
+	FlashCardBadVpp: func(a1) begin
+		ModalCardAlert('FlashCardBadVpp, a1, nil)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+FormatReallyNoCancel__code := same("cardEventhandlers.|FormatReallyNoCancel?|.instructions");

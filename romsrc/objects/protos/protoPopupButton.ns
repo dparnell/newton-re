@@ -1,0 +1,35 @@
+// protoPopupButton: a diamond button that pops up a menu (its popup array)
+// when tapped, and stays highlighted until a choice is made or the menu is
+// cancelled. An instance gives the items and a pickActionScript of its own.
+
+protoPopupButton := {
+	_proto: @protodiamondButton,
+	viewBounds: nil,
+	// text centred, wrapping as needed, placed to the right of its sibling
+	viewJustify: oneLineOnly + vjSiblingRightH + vjCenterH + vjCenterV,
+	text: nil,
+	// the menu's items (a pick list for PopupMenu)
+	popup: [|Array|: uCardPositionAlertButton],
+	// the button's action: pop up the menu
+	buttonClickScript: func() begin
+		self:PopupMenu(popup, nil)
+	end,
+	// a tap: open the menu if the pen is lifted inside, else unhighlight;
+	// the button stays highlighted while the menu is up
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
+				self:buttonClickScript()
+			end else begin
+				self:hilite(nil)
+			end;
+		true
+	end,
+	// the menu's item index was chosen: unhighlight (an instance acts on it)
+	pickActionScript: func(index) begin
+		self:hilite(nil)
+	end,
+	// the menu was dismissed without a choice
+	pickCancelledScript: func() begin
+		self:hilite(nil)
+	end
+};

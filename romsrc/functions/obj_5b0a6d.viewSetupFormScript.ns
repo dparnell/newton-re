@@ -1,5 +1,0 @@
-@@ 0x5b0a2d
-func() begin
-	(viewValue := userConfiguration.guestAccessOption)
-end
-@@end

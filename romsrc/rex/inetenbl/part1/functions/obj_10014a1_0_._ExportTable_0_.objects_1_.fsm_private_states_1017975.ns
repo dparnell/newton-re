@@ -1,8 +1,0 @@
-@@ 0x1017975
-func() begin
-	if self:GetAbort() then begin
-			return self:DoEvent('Abort, nil)
-		end;
-	self:DoEvent('connect, nil)
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x55e14d
-func() begin
-	self:hilite(nil)
-end
-@@end

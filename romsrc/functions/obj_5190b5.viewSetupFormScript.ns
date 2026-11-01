@@ -1,5 +1,0 @@
-@@ 0x519071
-func() begin
-	(self.text := ParamStr("^0 ^1", [Array: "Page", pageNumber]))
-end
-@@end

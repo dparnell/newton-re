@@ -1,5 +1,0 @@
-@@ 0x104c78d
-func() begin
-	self:DoEvent('DisconnectLink, nil)
-end
-@@end

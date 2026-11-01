@@ -1,0 +1,31 @@
+// The "Dock Info" view of a worksite card (@8215): the modem phone number and
+// the network the Newton docks over at that worksite.
+
+Connection := {
+	name: "Dock Info",
+	symbol: 'Connection,
+	stepChildren: [stepChildren:
+		ConnectionItem,
+		{
+			viewBounds: {left: 0, top: 16, right: 0, bottom: 40},
+			path: 'connectionNetwork,
+			_proto: @newtNetChooser
+		}
+	],
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|: 'connectionPhone, 'connectionNetwork],
+		// "network\nModem Phone: number", each line only when there is data.
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			ParamStr("^?1^1\n||^?0Modem Phone: ^0||", [Array: MakeDisplayPhone(v20_wwwwwwwwwwvvvvvv[0]), GetNames(v20_wwwwwwwwwwvvvvvv[1])])
+		end
+	},
+	_recogSettings: nil,
+	nukeRecToggle: true,
+	path: 'connectionPhone,
+	_proto: @8244,
+	phoneNum: nil,
+	stepAllocateContext: [|Array|: 'phoneNum, ConnectionItem]
+};
+
+ConnectionItem := {label: phone_2, _proto: @newtPhonePopupEdit, preAllocatedContext: 'phoneNum};

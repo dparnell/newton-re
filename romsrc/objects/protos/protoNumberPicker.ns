@@ -1,0 +1,129 @@
+// protoNumberPicker: a picker for a whole number between minValue and
+// maxValue, shown as a row of flip digits (protoDigit views made from
+// fDigitsProto, one per decimal place of maxValue) that the user taps up and
+// down. Leading zeros are hidden unless showLeadingZeros; hiOrd is the place
+// of the highest non-zero digit.
+
+protoNumberPicker := {
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 20, top: 51, right: 180, bottom: 75},
+	viewClass: clPictureView,
+	declareSelf: 'digitBase,
+	icon: nil,
+	showLeadingZeros: nil,
+	// the template of one digit. A digit's slot ArrayPos (a slot, not the global
+	// function) is its decimal place, 0 for the units; increment is 10^ArrayPos;
+	// nextDigit is the digit of the next place up.
+	fDigitsProto: {
+		_proto: @protoDigit,
+		viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentCenterV + vjSiblingLeftH + vjSiblingCenterV,
+		viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+		increment: 1,
+		position: 0,
+		// The digit (0-9) this place shows for value.
+		GetIndex: func(value) begin
+			((value div increment) mod 10)
+		end,
+		// Draws the digit, unless it is a leading zero to hide (a place above hiOrd).
+		viewDrawScript: func() begin
+			(if ((ArrayPos <= hiOrd) or showLeadingZeros) then DrawXBitmap(digitFrame, digits, currentIndex, copyMode))
+		end,
+		// Called by protoDigit when this digit is tapped up or down: adds a1 to the
+		// value (nothing, and nil, if that leaves minValue..maxValue), sets the
+		// digits that change from this place up (carrying on through nextDigit),
+		// finds the new hiOrd when the number of places shown may change, then
+		// rolls the changed area up or down (RevealEffect, with a click).
+		// Returns the new value.
+		Advance: func(a1) begin
+			local l1, l2, bounds, index, hiOrd2, scanForHiOrd, nextDigit, box;
+			// l1: the new value; l2: the digit being changed; bounds: the area to redraw
+			if (((l1 := (value + a1)) > maxValue) or (l1 < minValue)) then begin
+					return nil
+				end;
+			bounds := (l2 := self):GlobalBox();
+			index := l2:GetIndex(l1);
+			// hiOrd2, scanForHiOrd: the highest place before and after the change
+			hiOrd2 := nil;
+			scanForHiOrd := nil;
+			(loop begin
+					if (if (if ((if (l2.ArrayPos > hiOrd) then (index <> 0)) or (if (l2.ArrayPos = hiOrd) then (index = 0))) then (not showLeadingZeros)) then (not hiOrd2)) then begin
+							hiOrd2 := digitBase.hiOrd;
+							scanForHiOrd := digitBase:ScanForHiOrd(l1)
+						end;
+					if (index <> l2:GetIndex(value)) then begin
+							l2.currentIndex := index;
+							bounds.left := min(bounds.left, l2:GlobalBox().left)
+						end else begin
+							break
+						end;
+					if (nextDigit := l2.nextDigit) then begin
+							l2 := (if (ClassOf(nextDigit) = 'symbol) then digitBase.(nextDigit) else nextDigit)
+						end else begin
+							break
+						end;
+					(index := l2:GetIndex(l1))
+				end);
+			value := l1;
+			// a digit appeared or disappeared: the area takes in both places
+			if (scanForHiOrd <> hiOrd2) then begin
+					hiOrd2 := GetView(viewChildren[hiOrd2]):GlobalBox();
+					scanForHiOrd := GetView(viewChildren[scanForHiOrd]):GlobalBox();
+					bounds.left := min(min(hiOrd2.left, scanForHiOrd.left), bounds.left);
+					bounds.right := max(max(scanForHiOrd.left, hiOrd2.left), bounds.right)
+				end;
+			box := digitBase:GlobalBox();
+			// the area made local to the picker; it rolls by its height, upwards when counting up
+			digitBase:RevealEffect(((bounds := RelBounds((bounds.left - box.left), (bounds.top - box.top), (bounds.right - bounds.left), (bounds.bottom - bounds.top))).bottom * (if (a1 > 0) then -1 else 1)), bounds, @click, nil, nil);
+			l1
+		end
+	},
+	// the decimal place of the highest digit shown (set by ScanForHiOrd)
+	hiOrd: 0,
+	// A change to the picker's value slot (SetValue) redraws the digits.
+	viewChangedScript: func(slot, view) begin
+		(if (if (view = self) then (slot = 'value)) then view:RedoChildren())
+	end,
+	// After opening: adds the digit views, right to left - the units digit (with
+	// the bitmap for the lowest digit), then one per further decimal place of
+	// maxValue, each linked from the one below by nextDigit - then finds hiOrd.
+	viewSetupDoneScript: compile(
+		constants: {
+			kROM_685: @digitflaploWord,
+			kROM_686: @digitflap
+		},
+		func() begin
+			local addView2, l2, l3, l4, l5, frame2;
+			// addView2: the last digit added; l2: value's remaining places (unused
+			// beyond being divided down); l3: maxValue's; l4: the next increment; l5: its place
+			addView2 := AddView(self, {_proto: fDigitsProto, viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentCenterV, viewBounds: SetBounds(-23, 0, 0, 28), icon: kROM_685, nextDigit: nil, ArrayPos: 0});
+			l2 := (value div 10);
+			l3 := (maxValue div 10);
+			l4 := 10;
+			l5 := 1;
+			(while (l3 <> 0) do begin
+					frame2 := {_proto: fDigitsProto, increment: l4, nextDigit: nil, ArrayPos: l5, icon: kROM_686};
+					frame2 := AddView(self, frame2);
+					addView2.nextDigit := frame2;
+					addView2 := frame2;
+					l2 := (l2 div 10);
+					l3 := (l3 div 10);
+					l4 := (l4 * 10);
+					(l5 := (l5 + 1))
+				end);
+			self:ScanForHiOrd(value)
+		end),
+	// Sets and returns hiOrd: the decimal place of value's highest digit (0 for
+	// a one-digit number).
+	ScanForHiOrd: func(value) begin
+		local l1, l2;
+		l1 := (value div 10);
+		l2 := 0;
+		(while (l1 <> 0) do begin
+				l1 := (l1 div 10);
+				(l2 := (l2 + 1))
+			end);
+		(hiOrd := l2)
+	end,
+	debug: 5802140
+};

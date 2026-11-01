@@ -1,5 +1,0 @@
-@@ 0x10491dd
-func(a1) begin
-	[Array: {label: "sid ", type: 'service, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: "ictl", 0], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong]}}]
-end
-@@end

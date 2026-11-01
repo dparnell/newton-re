@@ -1,0 +1,3 @@
+// protoEditView: the plain clEditView, a view the user writes and draws into.
+
+protoEditView := {viewClass: clEditView, _proto: @protoView};

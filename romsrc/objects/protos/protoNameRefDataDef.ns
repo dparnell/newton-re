@@ -1,0 +1,311 @@
+// protoNameRefDataDef: the base of a data definition for protoListpicker
+// (its pickerDef) - it says how to make name references (frames standing
+// for soup entries or other data, with an alias to the entry) from entries,
+// how to get a column's value (Get), and how taps in the picker are handled
+// (HitItem, New): a column's popup, or an editor - by default a slip made by
+// ValidateConfigGuts from validationFrame - whose closing comes back to
+// defaultEditDone or defaultNewDone. protoPeopleDataDef builds on it.
+
+protoNameRefDataDef := {
+	// the picker's title
+	name: "List",
+	// the class of the name references made
+	class: 'nameRef,
+	// non-nil: only one item can be selected at a time
+	singleSelect: nil,
+	// the class given to new soup entries
+	entryType: nil,
+	// the picker's columns: by default one, the name
+	columns: [|Array|: {fieldPath: 'name, tapWidth: 0, noPopup: true}],
+	dontPurge: nil,
+	// for ValidityCheck and the default editor (nil: no checking, no editor)
+	validationFrame: nil,
+	preferredRouting: nil,
+	// the state of a tap being handled: the context view, the tap's info, the
+	// paths being edited and their values before editing, whether anything was
+	// to be edited, and whether the item is only to be selected (not toggled)
+	_subclass: nil,
+	_context: nil,
+	_tapinfo: nil,
+	_dirtyPaths: nil,
+	_dirtyValues: nil,
+	_edited: nil,
+	_selectOnly: nil,
+	// the default editor's title
+	editTitle: "New Item",
+	// The value a popup item stands for.
+	PopVal: func(popupItem) begin
+		popupItem.value
+	end,
+	// dataDef:NewEntry(nameRef, context) - adds a soup entry made from nameRef
+	// (PrepareToAdd) to the context's soup (on the default store for a union
+	// soup), then points nameRef at it (FixupPostAdd).
+	NewEntry: func(a1, _context) begin
+		local storeSoup, prepareToAdd;
+		(if (storeSoup := _context:GetStoreSoup()) then begin
+				prepareToAdd := self:PrepareToAdd(a1);
+				if IsInstance(storeSoup, 'UnionSoup) then begin
+						storeSoup:AddToDefaultStoreXmit(prepareToAdd, 'entryAdded)
+					end else begin
+						storeSoup:AddXmit(prepareToAdd, 'entryAdded)
+					end;
+				(if IsSoupEntry(prepareToAdd) then self:FixupPostAdd(a1, prepareToAdd))
+			end)
+	end,
+	// The slot of the object's primary value; none here (protoPeopleDataDef has one).
+	GetPrimaryPath: func(a1) begin
+		nil
+	end,
+	// dataDef:Validate(nameRef, paths) - the paths that are not valid: by
+	// ValidityCheck against validationFrame, or without one, those empty.
+	Validate: func(nameRef, a2) begin
+		(if validationFrame then ValidityCheck(nameRef, validationFrame, a2, nil, nil) else begin
+				list := [Array: ];
+				local list;
+				(foreach item in a2 do begin
+						if (not nameRef.(item)) then begin
+								AddArraySlot(list, item)
+							end
+					end);
+				list
+			end)
+	end,
+	// dataDef:ModifyEntry(nameRef, paths) - copies those slots of nameRef into
+	// its soup entry and saves it. Returns the entry (nil if there is none).
+	ModifyEntry: func(nameRef, equivalent) begin
+		if (entryFromObj2 := EntryFromObj(nameRef)) then begin
+				local entryFromObj2;
+				(foreach item in equivalent do begin
+						entryFromObj2.(item) := nameRef.(item)
+					end);
+				EntryChangeXmit(entryFromObj2, 'entryChanged)
+			end;
+		entryFromObj2
+	end,
+	// No suffix here, for a subclass to supply.
+	GetSuffix: func(a1) begin
+		return nil
+	end,
+	// The paths among _dirtyPaths whose values in nameRef differ from the saved
+	// ones (_dirtyValues): the ones to write back.
+	Equivalent: func(nameRef, _dirtyValues, _dirtyPaths) begin
+		list := [Array: ];
+		local list;
+		(foreach item in _dirtyPaths do begin
+				// looks like a ROM bug: the left side is true for anything but two equal
+				// strings, and for those the right side is true (= compares objects, and
+				// the saved values are DeepClones), so every path counts as changed;
+				// `and` was probably meant. It only costs an unneeded save.
+				if ((not (if (if IsInstance(nameRef.(item), 'string) then IsInstance(_dirtyValues.(item), 'string)) then StrEqual(nameRef.(item), _dirtyValues.(item)))) or (nameRef.(item) <> _dirtyValues.(item))) then begin
+						AddArraySlot(list, item)
+					end
+			end);
+		list
+	end,
+	// dataDef:Get(object, fieldPath, format) - the field's value (format nil) or
+	// its text ('text, 'sortText: a string as it is, anything else printed, a
+	// missing value "--" of class 'string.noData; "" for no object).
+	Get: compile(
+		constants: {
+			kLiteral_450465: SetClass(Clone("--"), '|string.noData|)
+		},
+		func(a1, a2, a3) begin
+			local objSlot;
+			if (if (not a1) then ((a3 = 'text) or (a3 = 'sortText))) then begin
+					return ""
+				end else begin
+					if (not a1) then begin
+							return nil
+						end
+				end;
+			objSlot := self:GetObjSlot(a1, a2);
+			(if ((a3 = 'text) or (a3 = 'sortText)) then (if objSlot then (if IsInstance(objSlot, 'string) then return objSlot else return SPrintObject(objSlot)) else return kLiteral_450465) else objSlot)
+		end),
+	// dataDef:MakeCanonicalNameRef(object, class) - a name reference to object
+	// (an entry, alias, name reference, frame or nil) with only the system's
+	// slots: its class (default the data def's), an alias to the entry, the
+	// entry's class (default entryType), and the object's _Unselected, _fakeID
+	// and labels.
+	MakeCanonicalNameRef: func(frame3, cls) begin
+		local l1, entryFromObj2, l3, frame2;
+		l1 := (if cls then cls else ClassOf(self));
+		entryFromObj2 := EntryFromObj(frame3);
+		l3 := (if IsFrame(frame3) then frame3 else '{});
+		if (not (frame2 := {class: l1, _alias: AliasFromObj(frame3), _entryClass: ObjEntryClass(frame3), _Unselected: l3._Unselected, _fakeID: l3._fakeID, labels: l3.labels})._entryClass) then begin
+				frame2._entryClass := entryType
+			end;
+		frame2
+	end,
+	// dataDef:MakePopup(object, fieldPath) - the popup for a tap on that column,
+	// or nil (none here: the tap edits or toggles).
+	MakePopup: func(a1, fieldPath) begin
+		nil
+	end,
+	// After NewEntry added entry addcard: the name reference now refers to it.
+	FixupPostAdd: func(a1, addcard) begin
+		a1._alias := MakeEntryAlias(addcard);
+		(a1._entryClass := ClassOf(addcard))
+	end,
+	// dataDef:New(tapInfo, context) - the picker's New button: opens the editor
+	// (the data def's own OpenEditor if it has one) for a new item.
+	New: func(a1, a2) begin
+		_tapinfo := a1;
+		_context := a2;
+		(if self.OpenEditor then self:OpenEditor(a1, a2, 'New) else self:DefaultOpenEditor(a1, a2, 'New))
+	end,
+	// A column's popup closed with no choice: the tap did nothing.
+	pickCancelledScript: func(fTapinfo, a2) begin
+		a2:Tapped(nil)
+	end,
+	// dataDef:PrepareToAdd(nameRef) - the frame to add to the soup: a copy of the
+	// name reference with the entry's class and without the name reference's
+	// own slots.
+	PrepareToAdd: func(a1) begin
+		local objEntryClass2, copy;
+		objEntryClass2 := ObjEntryClass(a1);
+		(copy := Clone(a1)).class := (if objEntryClass2 then objEntryClass2 else entryType);
+		RemoveSlot(copy, '_alias);
+		RemoveSlot(copy, '_entryClass);
+		RemoveSlot(copy, '_Unselected);
+		RemoveSlot(copy, '_fakeID);
+		copy
+	end,
+	// dataDef:HitItem(tapInfo, context) - a tap on an item's column: the
+	// column's popup (MakePopup) under the cell if it has one; else the editor
+	// (OpenEditor, or the default one for an unselected item when there is a
+	// validationFrame); else the item's selection is toggled.
+	HitItem: func(a1, trackScrollingItem) begin
+		local popup, box, bounds;
+		self._context := trackScrollingItem;
+		self._tapinfo := a1;
+		self._selectOnly := nil;
+		(if (popup := self:MakePopup(a1.nameRef, a1.fieldPath)) then begin
+				a1.popup := popup;
+				box := trackScrollingItem:GlobalBox();
+				bounds := SetBounds((a1.bbox.left + 13), (a1.bbox.bottom - box.top), (a1.bbox.left + 13), (a1.bbox.bottom - box.top));
+				trackScrollingItem:PopupMenu(popup, {bounds: bounds})
+			end else (if self.OpenEditor then self:OpenEditor(a1, trackScrollingItem, 'edit) else (if (if validationFrame then a1.nameRef._Unselected) then self:DefaultOpenEditor(a1, trackScrollingItem, 'edit) else trackScrollingItem:Tapped('Toggle))))
+	end,
+	// The value of slot a2 of the object: from the name reference's entry if it
+	// has that slot, else from the object itself (an alias resolved).
+	GetObjSlot: func(a1, a2) begin
+		local entryFromObj2;
+		if (not a1) then begin
+				return nil
+			end;
+		if IsNameRef(a1) then begin
+				entryFromObj2 := EntryFromObj(a1)
+			end;
+		if ((not entryFromObj2) or (not HasSlot(entryFromObj2, a2))) then begin
+				entryFromObj2 := a1;
+				if IsEntryAlias(a1) then begin
+						entryFromObj2 := ResolveEntryAlias(a1)
+					end;
+				if (not entryFromObj2) then begin
+						entryFromObj2 := a1
+					end
+			end;
+		entryFromObj2.(a2)
+	end,
+	// A choice from a column's popup (a2 the tap's info, a3 the context): the
+	// choice 'OpenEditor opens the editor on that column (its old value kept in
+	// cryoNameRefData, to be put back if the edit leaves it empty); any other
+	// value is stored in the column's slot and the item selected.
+	pickActionScript: func(index, a2, a3) begin
+		local popup, nameRef, fieldPath, popVal;
+		popup := a2.popup;
+		nameRef := a2.nameRef;
+		fieldPath := a2.fieldPath;
+		(if (if ((popVal := self:PopVal(popup[index])) = 'OpenEditor) then (self.OpenEditor or validationFrame)) then begin
+				a2.cryoNameRefData := DeepClone(nameRef.(fieldPath));
+				nameRef.(fieldPath) := nil;
+				a2.editPaths := [Array: fieldPath];
+				_selectOnly := true;
+				(if self.OpenEditor then self:OpenEditor(a2, a3, 'edit) else self:DefaultOpenEditor(a2, a3, 'edit))
+			end else begin
+				nameRef.(fieldPath) := popVal;
+				a3:Tapped('select);
+				_tapinfo := nil;
+				_dirtyPaths := nil;
+				(_dirtyValues := nil)
+			end)
+	end,
+	// The default editor closed after New: unless every edited path is still
+	// invalid (empty), the new item becomes a soup entry and is inserted in the
+	// picker, selected; otherwise the tap did nothing.
+	defaultNewDone: func(a1) begin
+		local nameRef, l2;
+		if (l2 := (Length(self:Validate((nameRef := _tapinfo.nameRef), _tapinfo.editPaths)) <> Length(_tapinfo.editPaths))) then begin
+				self:NewEntry(nameRef, _context);
+				_context:insert(nameRef, (if l2 then 'select))
+			end else begin
+				_context:Tapped(nil)
+			end;
+		_tapinfo := nil;
+		_dirtyPaths := nil;
+		(_dirtyValues := nil)
+	end,
+	// dataDef:DefaultOpenEditor(tapInfo, context, why) - opens a slip
+	// (ValidateConfigGuts) editing the tap's paths of the name reference,
+	// which reports to defaultEditDone ('edit) or defaultNewDone ('New). The
+	// paths that are invalid now are remembered with copies of their values.
+	// Returns the slip.
+	DefaultOpenEditor: func(a1, trackScrollingItem, a3) begin
+		frame2 := {titleText: editTitle, context: self, receiver: self, message: '{edit: defaultEditDone, New: defaultNewDone}.(a3)};
+		nameRef := a1.nameRef;
+		self._subclass := (if preferredRouting then preferredRouting[0]);
+		self._dirtyPaths := self:Validate(nameRef, a1.editPaths);
+		_edited := (Length(_dirtyPaths) > 0);
+		validateConfigGuts2 := ValidateConfigGuts(nameRef, validationFrame, a1.editPaths, frame2);
+		if _edited then begin
+				self._dirtyValues := {};
+				local frame2;
+				local nameRef;
+				local validateConfigGuts2;
+				(foreach item in _dirtyPaths do begin
+						self._dirtyValues.(item) := DeepClone(nameRef.(item))
+					end)
+			end;
+		validateConfigGuts2.slip
+	end,
+	// The default editor closed after editing an item: a column emptied by the
+	// edit gets its old value back; otherwise the changed paths are saved to
+	// the entry (ModifyEntry). The item is then selected (or toggled), unless
+	// nothing changed (l3).
+	defaultEditDone: func(a1) begin
+		local nameRef, fieldPath, l3, equivalent;
+		nameRef := _tapinfo.nameRef;
+		fieldPath := _tapinfo.fieldPath;
+		l3 := nil;
+		if _edited then begin
+				if (if _tapinfo.cryoNameRefData then (not nameRef.(fieldPath))) then begin
+						nameRef.(fieldPath) := _tapinfo.cryoNameRefData;
+						l3 := true
+					end else begin
+						if (Length((equivalent := self:Equivalent(nameRef, _dirtyValues, _dirtyPaths))) > 0) then begin
+								self:ModifyEntry(nameRef, equivalent)
+							end else begin
+								l3 := true
+							end
+					end
+			end;
+		_context:Tapped((if (not l3) then (if _selectOnly then 'select else 'Toggle)));
+		_tapinfo := nil;
+		_dirtyPaths := nil;
+		(_dirtyValues := nil)
+	end,
+	// dataDef:MakeNameRef(object, class) - a canonical name reference with each
+	// column's slot copied from the object.
+	MakeNameRef: func(frame2, cls) begin
+		canonicalNameRef := self:MakeCanonicalNameRef(frame2, cls);
+		if IsFrame(frame2) then begin
+				local canonicalNameRef;
+				(foreach item in columns do begin
+						local fieldPath;
+						fieldPath := item.fieldPath;
+						canonicalNameRef.(fieldPath) := frame2.(fieldPath)
+					end)
+			end;
+		canonicalNameRef
+	end
+};

@@ -1,5 +1,0 @@
-@@ 0x4db11d
-func(a1) begin
-	self:CommonKeyScript(_showKeyButton)
-end
-@@end

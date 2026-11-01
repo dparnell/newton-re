@@ -1,6 +1,0 @@
-@@ 0x5489c5
-func(a1, a2) begin
-	clicker();
-	a1.icons[0]:Launch()
-end
-@@end

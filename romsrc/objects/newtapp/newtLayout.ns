@@ -1,0 +1,390 @@
+// newtLayout, and what only it reaches: the NewtApp framework's basic layout
+// (NPR "newtLayout"), the proto of the other layouts (newtRollLayout,
+// newtPageLayout, newtOverLayout).  A layout is the newtApplication's child
+// that shows the entries of its master soup (masterSoupSlot, a key of allSoups)
+// through dataCursor, in newtEntryView children; it handles scrolling, the
+// retargeting of its children and of the views chained with ChainIn, and the
+// adding, deleting and duplicating of entries with their undo.
+
+newtLayout := {
+	viewClass: clView,
+	viewFlags: vVisible + vClipping + vClickable,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	textFlags: 5120,
+	viewChildren: nil,
+	// the newtSoup of allSoups named by mastersoupSlot, and its union soup
+	masterSoup: nil,
+	mastersoupSlot: nil,
+	dataSoup: nil,
+	// NPR: the main cursor to the data soup; it points to the topmost visible entry
+	dataCursor: nil,
+	// the entries the children show, with their viewDefs; nextEntry is the index
+	// the next entry view to be set up takes (newtEntryView viewSetupFormScript)
+	entries: nil,
+	entryViewDefs: nil,
+	nextEntry: 0,
+	// NPR: true makes a blank entry when the folder shown is empty; nil shows
+	// "There are no Items in this folder." instead
+	forceNewEntry: true,
+	name: "View",
+	viewDef: 'default,
+	filedChild: nil,
+	// 'pixel or 'item while a scroll is under way, else nil
+	duringScroll: nil,
+	// set by the overview's Command-A, cleared by a check of a single line
+	checkAllPrimed: nil,
+	// type-to-scroll: goes to the first entry from the typed key (GotoKey) and, if
+	// that is another entry, redisplays with an upward slide
+	TypeScrollScript: func(keyString) begin
+		local entry;
+		(if ((entry := layout.dataCursor:entry()) <> layout.dataCursor:GotoKey(keyString)) then layout:Effect(133120, nil, @flip, 'Retarget, [Array: true])) // 133120: fxUp (the same value as fxDrawerEffect)
+	end,
+	// adds the entry a1 to the master soup on the store with undo (KillEntry);
+	// _context true moves to it and redisplays, else the layout is just redone
+	NewEntry: func(a1, _context, store) begin
+		masterSoup:AddEntry(a1, store);
+		if _context then begin
+				dataCursor:Goto(a1)
+			end;
+		AddUndoSend(layout, 'KillEntry, [Array: a1]);
+		(if _context then layout:NewTarget() else layout:Retarget(true))
+	end,
+	// shows the entries once the layout is open
+	viewSetupDoneScript: func() begin
+		self:Retarget(nil)
+	end,
+	keyDownTime: 0,
+	// newtEntryView tells its layout of a 'flush or 'quit; a closed entry view's
+	// change is broadcast (XmitSoupChangeNow) to the soup's watchers
+	BroadcastChange: func(a1, target) begin
+		(if (a1 = 'quit) then XmitSoupChangeNow(masterSoup.soupName, appSymbol, 'whatThe, target))
+	end,
+	// type-to-scroll's characters so far (the shared empty string at first)
+	keyString: uCardPositionAlertButton,
+	// takes the layout's own status bar buttons back off the status bar
+	viewQuitScript: func() begin
+		checkAllPrimed := nil;
+		(if newtAppBase.statusBarSlot then begin
+				if self.menuLeftButtons then begin
+						RemoveSlot(newtAppBase.(statusBarSlot), 'menuLeftButtons)
+					end;
+				(if self.menuRightButtons then RemoveSlot(newtAppBase.(statusBarSlot), 'menuRightButtons))
+			end)
+	end,
+	// adds a blank entry to the master soup, on the internal store if the
+	// "internalStore" preference is set, else on the default store
+	AddBlankEntry: func() begin
+		local adoptEntry, store, internalStore;
+		adoptEntry := masterSoup:AdoptEntry(nil, nil);
+		try begin
+				if (internalStore := self:GetAppPreferences().internalStore) then begin
+						store := GetStores()[0]
+					end else begin
+						store := GetDefaultStore()
+					end
+			end onexception |evt.ex| do begin
+				store := nil
+			end;
+		masterSoup:AddEntry(adoptEntry, store);
+		adoptEntry
+	end,
+	// an empty folder with forceNewEntry nil shows the application's "no items" text
+	viewDrawScript: func() begin
+		(if (if (not forceNewEntry) then (not dataCursor:entry())) then self:DrawShape(self:AppEmpty(), '{}))
+	end,
+	// NPR SetUpCursor: gets the master soup's cursor; an empty folder gets a blank
+	// entry if forceNewEntry; returns the cursor
+	SetupCursor: func() begin
+		local entry;
+		dataCursor := masterSoup:GetCursor();
+		try begin
+				entry := dataCursor:entry()
+			end onexception |evt.ex| do begin
+				entry := nil
+			end;
+		if entry then begin end else begin
+				if forceNewEntry then begin
+						self:AddBlankEntry();
+						dataCursor:Reset()
+					end
+			end;
+		dataCursor
+	end,
+	// duplicates the target (an entry, or a target cursor of the overview's
+	// selection) on the store and shows the copy; a single copy can be undone
+	DuplicateEntryGuts: func(a1, store) begin
+		local targetCursor, next, duplicateEntry;
+		(if TargetIsCursor(a1) then begin
+				next := (targetCursor := GetTargetCursor(a1, nil)):entry();
+				(while next do begin
+						masterSoup:DuplicateEntry(next, store);
+						(next := targetCursor:Next())
+					end);
+				selected := nil;
+				layout:NewTarget()
+			end else begin
+				dataCursor:Goto((duplicateEntry := masterSoup:DuplicateEntry(a1, store)));
+				AddUndoSend(layout, 'KillEntry, [Array: duplicateEntry]);
+				layout:NewTarget()
+			end)
+	end,
+	// type-to-scroll (if useTypeScrolling): characters typed without the command
+	// key, and not the private-use $\uF721-$\uF72F keys, add to keyString (started
+	// afresh after 100 ticks, 1.7 s) and go to the entry they begin
+	viewKeyDownScript: func(char2, flags) begin
+		local l1, ticks2;
+		if useTypeScrolling then begin
+				if (if (if (BAnd(flags, kCommandModifier) = 0) then (char2 >= $ )) then (not (if (char2 >= $\uF721) then (char2 <= $\uF72F)))) then begin
+						ticks2 := Ticks();
+						if ((not self.keyDownTime) or ((ticks2 - keyDownTime) > 100)) then begin
+								self.keyString := nil
+							end;
+						self.keyString := Stringer([Array: self.keyString, char2]);
+						self:TypeScrollScript(keyString);
+						self.keyDownTime := ticks2;
+						l1 := true
+					end
+			end;
+		l1
+	end,
+	// NPR DoRetarget: a Retarget that redoes the children
+	DoRetarget: func() begin
+		layout:Retarget(true)
+	end,
+	// the folder or store changed: a new cursor, shown from the top
+	FilterChanged: func() begin
+		self:SetupCursor();
+		self:NewTarget()
+	end,
+	// scrolls the layout's contents to the origin (a1, a2), for layouts with
+	// viewOriginX/Y (Jogged is the layout's hook after the move)
+	PixelScrollTo: func(a1, a2) begin
+		duringScroll := 'pixel;
+		try begin
+				layout:DropHilites();
+				layout:SetOrigin(a1, a2);
+				layout:?Jogged()
+			end onexception |evt.ex| do begin
+				duringScroll := nil;
+				Rethrow()
+			end;
+		(duringScroll := nil)
+	end,
+	// NPR Scroller(numAndDirection): moves the cursor by that many entries (up
+	// for negative) and redisplays; first posts command 48 to the view that owns
+	// the highlight, if any
+	Scroller: func(maxLines) begin
+		if HiliteOwner() then begin
+				PostCommand(HiliteOwner(), 48)
+			end;
+		layout:ScrollCursor(maxLines);
+		layout:NewTarget()
+	end,
+	// scrolls by (a1, a2) pixels from the present origin
+	PixelScrollBy: func(a1, a2) begin
+		duringScroll := 'pixel;
+		try begin
+				layout:DropHilites();
+				layout:SetOrigin(((if HasPath(layout, 'viewOriginX) then layout.viewOriginX else 0) + a1), ((if HasPath(layout, 'viewOriginY) then layout.viewOriginY else 0) + a2));
+				layout:?Jogged()
+			end onexception |evt.ex| do begin
+				duringScroll := nil;
+				Rethrow()
+			end;
+		(duringScroll := nil)
+	end,
+	// NPR ShowFoundItem(entry, finder): goes to the entry and lets the child view
+	// showing it show the found text
+	ShowFoundItem: func(a1, a2) begin
+		dataCursor:Goto(a1);
+		layout:NewTarget();
+		(foreach item in layout:ChildViewFrames() do begin
+				if (item.target = a1) then begin
+						item:?ShowFoundItem(a1, a2);
+						break
+					end
+			end)
+	end,
+	// NPR: the scroll arrows, one entry with an effect and the flip sound
+	viewScrollDownScript: func() begin
+		self:Effect(44171264, true, @flip, 'Scroller, [Array: 1]) // 44171264: fxDown + fxSteps(6) + fxStepTime(1)
+	end,
+	// NPR Retarget(setViews): moves dataCursor off a deleted entry (to the next, else
+	// the previous, else a new cursor), redoes the children if a1, then sends
+	// RetargetNotify to the views in retargetChain
+	Retarget: func(a1) begin
+		if (((entry := dataCursor:entry()) = 'deleted) or (entry = nil)) then begin
+				dataCursor:Next();
+				if (dataCursor:entry() = nil) then begin
+						dataCursor:prev()
+					end;
+				if (dataCursor:entry() = nil) then begin
+						self:SetupCursor()
+					end
+			end;
+		if a1 then begin
+				self:RedoChildren()
+			end;
+		local entry;
+		(if retargetChain then (foreach item in retargetChain do begin
+					item:RetargetNotify()
+				end))
+	end,
+	// NPR ScrollCursor(delta): moves dataCursor delta entries; at an end, does
+	// what scrollingEndBehavior says (beep twice, stay or wrap); returns nil there
+	ScrollCursor: func(maxLines) begin
+		local l1, dataCursor2;
+		l1 := true;
+		dataCursor2 := dataCursor;
+		if (if (maxLines <> 0) then dataCursor2) then begin
+				if (not dataCursor2:move(maxLines)) then begin
+						l1 := nil;
+						if ((scrollingEndBehavior = 'beepAndWrap) or (scrollingEndBehavior = 'beepAndStop)) then begin
+								// the "beep": the flip sound twice, 15 ticks apart
+								playsound(@flip);
+								Sleep(15);
+								playsound(@flip)
+							end;
+						if ((scrollingEndBehavior = 'stop) or (scrollingEndBehavior = 'beepAndStop)) then begin
+								if (maxLines > 0) then begin
+										dataCursor2:prev()
+									end else begin
+										dataCursor2:Next()
+									end
+							end else begin
+								if ((scrollingEndBehavior = 'wrap) or (scrollingEndBehavior = 'beepAndWrap)) then begin
+										if (maxLines > 0) then begin
+												dataCursor2:Reset()
+											end else begin
+												dataCursor2:ResetToEnd()
+											end
+									end
+							end
+					end
+			end;
+		l1
+	end,
+	// the same effect as scrolling down: the second argument (offScreen) differs
+	viewScrollUpScript: func() begin
+		self:Effect(44171264, nil, @flip, 'Scroller, [Array: -1])
+	end,
+	// duplicates the target onto the internal store if the "internalStore"
+	// preference is set, else onto the default store
+	DuplicateEntry: func(a1) begin
+		local store, appPreferences;
+		if (if (appPreferences := self:GetAppPreferences()) then appPreferences.internalStore) then begin
+				store := GetStores()[0]
+			end;
+		self:DuplicateEntryGuts(a1, store)
+	end,
+	// the layout becomes the application's `layout`, takes the preferred viewDef,
+	// opens its cursor and puts its status bar buttons on the status bar
+	viewSetupFormScript: func() begin
+		layout := self;
+		SetKeyView(self, 0);
+		viewDef := newtAppBase.preferredViewDef;
+		dataSoup := (masterSoup := allSoups.(mastersoupSlot)).theSoup;
+		self:SetupCursor();
+		(if newtAppBase.statusBarSlot then begin
+				if self.menuLeftButtons then begin
+						newtAppBase.(statusBarSlot).menuLeftButtons := menuLeftButtons
+					end;
+				(if self.menuRightButtons then (newtAppBase.(statusBarSlot).menuRightButtons := menuRightButtons))
+			end)
+	end,
+	// filing changed the target: tells the children, then sets the cursor up again
+	// at the same entry (or the old cursor key, or the end)
+	FilingChangedX: func() begin
+		cursorKey := masterSoup:GetCursorKey();
+		if filedChild then begin
+				if filedChild.FilingChangedX then begin
+						filedChild:FilingChangedX()
+					end
+			end else begin
+				local cursorKey;
+				(foreach item in self:ChildViewFrames() do begin
+						local entry;
+						if item.FilingChangedX then begin
+								item:FilingChangedX()
+							end
+					end)
+			end;
+		entry := dataCursor:entry();
+		masterSoup:SetupCursor();
+		layout:SetupCursor();
+		if IsSoupEntry(entry) then begin
+				dataCursor:Goto(entry)
+			end else begin
+				if cursorKey then begin
+						masterSoup:GotoCursorKey(cursorKey);
+						layout:SetupCursor()
+					end else begin
+						layout:SetupCursor();
+						dataCursor:ResetToEnd()
+					end
+			end;
+		layout:NewTarget()
+	end,
+	// NPR NewTarget: resets the origin and redoes the screen
+	NewTarget: func() begin
+		if HasPath(self, 'viewOriginX) then begin
+				viewOriginX := 0
+			end;
+		if HasPath(self, 'viewOriginY) then begin
+				viewOriginY := 0
+			end;
+		layout:Retarget(true)
+	end,
+	// true: typing on a keyboard scrolls to the entries the letters begin
+	useTypeScrolling: nil,
+	// NPR FlushData: has every child entry view flush its entry to the soup
+	FlushData: func() begin
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'FlushEntry) then begin
+						item:FlushEntry(GetVariable(item, 'target))
+					end
+			end)
+	end,
+	// deletes the target (an entry, with undo, or a target cursor of the
+	// overview's selection), giving each entry's dataDef AboutToDeleteEntry first
+	KillEntry: func(target) begin
+		local targetCursor, next, entryDataDef, store;
+		if TargetIsCursor(target) then begin
+				next := (targetCursor := GetTargetCursor(target, nil)):entry();
+				(while next do begin
+						if (entryDataDef := GetEntryDataDef(next)) then begin
+								entryDataDef:?AboutToDeleteEntry(next)
+							end;
+						masterSoup:DeleteEntry(next);
+						(next := targetCursor:Next())
+					end);
+				selected := nil
+			end else begin
+				if target then begin
+						store := EntryStore(target);
+						if (entryDataDef := GetEntryDataDef(target)) then begin
+								entryDataDef:?AboutToDeleteEntry(target)
+							end;
+						masterSoup:DeleteEntry(target);
+						AddUndoSend(layout, 'NewEntry, [Array: target, true, store])
+					end
+			end;
+		layout:Retarget(true)
+	end,
+	// the application's GetActiveView: the target view
+	GetActiveViewX: func() begin
+		targetView
+	end,
+	// one child, for the current entry with its viewDef (other layouts show more)
+	viewSetupChildrenScript: func() begin
+		local entry, l2;
+		entries := [Array: (entry := dataCursor:entry())];
+		entryViewDefs := [Array: GetEntryDataView(entry, viewDef)];
+		(nextEntry := 0)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TypeScrollScript_code := same("newtLayout.TypeScrollScript.instructions");

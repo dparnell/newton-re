@@ -1,0 +1,69 @@
+// datePicker: Setup's "Set Today's Date" page - a month calendar with a year picker
+// (protoDateNYearPicker); the date picked replaces today's, keeping the time of day.
+// The file holds the page and what only it reaches.
+
+datePicker := {
+	stepChildren: [stepChildren:
+		nameItem,
+		{
+			viewBounds: {left: 0, top: 100, right: 240, bottom: 200},
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewJustify: vjRightH + vjParentCenterH,
+			viewTransferMode: 0,
+			viewClass: clPictureView,
+			icon: picture('picture, "resources/picture/7ae0c5")
+		},
+		{
+			viewBounds: {left: 0, top: 110, right: 141, bottom: 250},
+			viewJustify: vjCenterH + vjParentCenterH,
+			viewTransferMode: 0,
+			selectedDates: nil,
+			noTodayShow: 'removesToday,
+			// NewTime(dates): the picker's choice; remembers the first date picked.
+			NewTime: func(a1) begin
+				(dateValue := a1[0])
+			end,
+			_proto: @protoDateNYearPicker
+		},
+		{
+			viewFlags: vVisible + vReadOnly,
+			viewFormat: vfFillWhite + vfPen(1),
+			viewLineSpacing: 14,
+			viewFont: @fontSystem10Bold,
+			viewBounds: {left: 0, top: -55, right: 236, bottom: -25},
+			text: "To change the month, tap the arrows.  Then tap today’s date.",
+			viewJustify: vjParentCenterH + vjParentBottomV,
+			viewClass: clParagraphView
+		}
+	],
+	titleTExt: "Set Today’s Date\u000d\u000d",
+	description: "To set the year, tap the upper half of a number to increase it and the bottom half to decrease it.",
+	// TearDown: when the page is left, sets the clock to the picked date at the current time
+	// of day (times are in minutes; 1440 minutes a day).
+	TearDown: func() begin
+		local dateValue2;
+		(if dateValue then SetTime((dateValue2 := (((dateValue2 := dateValue) - (dateValue2 mod 1440)) + (Time() mod 1440)))))
+	end,
+	fullDateSpec: 45833,
+	// viewSetupFormScript: the year picker and the calendar start at today.
+	viewSetupFormScript: func() begin
+		inherited:?viewSetupFormScript();
+		self.value := Date(Time()).year;
+		(selectedDates := [Array: Time()])
+	end,
+	// viewSetupDoneScript: takes the keyboard focus.
+	viewSetupDoneScript: func() begin
+		SetKeyView(self, 0);
+		self:Refresh()
+	end,
+	// Refresh: nothing to update on this page.
+	Refresh: func() begin
+		nil
+	end,
+	declareSelf: 'cover,
+	dateValue: nil,
+	debug: "datePicker",
+	_proto: @8353,
+	preAllocatedContext: 'datePicker
+};

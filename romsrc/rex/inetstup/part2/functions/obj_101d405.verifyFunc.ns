@@ -1,5 +1,0 @@
-@@ 0x101dfb5
-func() begin
-	(if (if target.cardData.device then (not StrFilled(target.cardData.device))) then "You have not selected a card to use. Please select one from the picker before continuing.")
-end
-@@end

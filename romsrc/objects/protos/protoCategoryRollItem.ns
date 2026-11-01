@@ -1,0 +1,19 @@
+// protoCategoryRollItem: one 14-pixel line of a protoCategoryRoll - a roll
+// item the user can tap to act on it.
+
+protoCategoryRollItem := {
+	_proto: @protoRollItem,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+	viewFormat: 0,
+	viewFlags: vVisible + vClickable,
+	height: 14,
+	// on a tap: hilites while the pen stays on the item; if the pen is lifted
+	// on it, sends click, unhilites and answers true (tap handled)
+	viewClickScript: func(unit) begin
+		(if self:TrackHilite(unit) then begin
+				self:click();
+				self:hilite(nil);
+				true
+			end)
+	end
+};

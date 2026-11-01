@@ -1,6 +1,0 @@
-@@ 0x1016ee1
-func(a1, a2, a3) begin
-	fConfigOptionsAfter_Listen := a2;
-	(if a3 then self:DoEvent('ListenFailure, [Array: a3]) else self:DoEvent('ListenSuccess, nil))
-end
-@@end

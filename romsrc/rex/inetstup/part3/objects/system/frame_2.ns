@@ -1,0 +1,102 @@
+// frame_2: the LocalTalk module's Zone picker - the AppleTalk zone of the MacIP gateway:
+// the zones known from the printer, the current zone and the worksites, or another one
+// through the network chooser ("*" is the current zone). The file holds it and what only it reaches.
+
+frame_2 := {
+	text: zone,
+	viewBounds: {left: 3, top: 10, right: -3, bottom: 36},
+	alwaysCallPickActionScript: true,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	// MakePopup(): the zones - the setup's, the current printer's, the current zone, the
+	// worksites' networks and printers - and "Other AppleTalk Zone".
+	MakePopup: func() begin
+		if StrFilled(target.(path)) then begin
+				BInsert(labelCommands, self:ConvertToDefaultText(target.(path)), '|str<|, nil, true)
+			end;
+		if (printerName := GetUserConfig('currentPrinter).printerName) then begin
+				BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(printerName)), '|str<|, nil, true)
+			end;
+		BInsert(labelCommands, self:ConvertToDefaultText(GetUserConfig('currentZone)), '|str<|, nil, true);
+		local printerName;
+		local l2;
+		local resolveEntryAlias2;
+		(foreach item in UserConfiguration.emporia do begin
+				local count;
+				if (l2 := (resolveEntryAlias2 := ResolveEntryAlias(item)).connectionNetwork) then begin
+						BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l2)), '|str<|, nil, true)
+					end;
+				if (if resolveEntryAlias2.printer then resolveEntryAlias2.printer.printerName) then begin
+						BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(resolveEntryAlias2.printer.printerName)), '|str<|, nil, true)
+					end
+			end);
+		count := Length(labelCommands);
+		ArrayInsert(labelCommands, 'pickSeparator, count);
+		ArrayInsert(labelCommands, "Other AppleTalk Zone", (count + 1))
+	end,
+	// viewSetupFormScript: the choices.
+	viewSetupFormScript: func() begin
+		labelCommands := [Array: ];
+		self:MakePopup();
+		inherited:?viewSetupFormScript()
+	end,
+	// labelActionScript(index): the last item opens the chooser; a zone is stored ("*" for the current one).
+	labelActionScript: func(index) begin
+		(if (index = (Length(labelCommands) - 1)) then self:DoChooser() else begin
+				target.(path) := Clone(self:ConvertDefaultToStar(labelCommands[index]));
+				newtAppbase.targetView:?StartFlush()
+			end)
+	end,
+	// textSetup(): the stored zone's item.
+	textSetup: compile(
+		constants: {
+			// "*" shown as "<Current AppleTalk Zone>"
+			kFunction_102108d: func(a1) begin
+				(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
+			end
+		},
+		func() begin
+			labelCommands[FindStringInArray(labelCommands, call (kFunction_102108d) with (target.(path)))]
+		end),
+	// DoChooser(): opens the network chooser to pick a MacIP gateway (=:IPGATEWAY@) in a zone.
+	DoChooser: func() begin
+		self:updateText(self:ConvertToDefaultText(target.(path)));
+		chooserIsOpen := true;
+		GetRoot().NetChooser:OpenNetChooser((if HaveZones() then target.(path) else "*"), "=:IPGATEWAY@", nil, self, "Use IP Gateway", "MacIP Gateway", "Gateway")
+	end,
+	// NetworkChooserDone(selection, zone): the chooser's zone stored in the setup.
+	NetworkChooserDone: compile(
+		constants: {
+			// "*" shown as "<Current AppleTalk Zone>"
+			kFunction_102108d: func(a1) begin
+				(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
+			end
+		},
+		func(currentSelection, currentZone) begin
+			chooserIsOpen := nil;
+			target.(path) := currentZone;
+			if Visible(self) then begin
+					self:updateText(call (kFunction_102108d) with (target.(path)))
+				end;
+			newtAppbase.targetView:?StartFlush()
+		end),
+	ConvertToDefaultText: ConvertToDefaultText,
+	// ConvertDefaultToStar(text): "<Current AppleTalk Zone>" back to "*".
+	ConvertDefaultToStar: func(labelCommand) begin
+		(if StrEqual(labelCommand, "<Current AppleTalk Zone>") then "*" else labelCommand)
+	end,
+	labelCommands: [|Array|: ],
+	_proto: @protoLabelPicker
+};
+
+// ConvertToDefaultText(zone): "*" shown as "<Current AppleTalk Zone>".
+ConvertToDefaultText := func(a1) begin
+	(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
+end;
+
+zone := "Zone";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ConvertToDefaultText_code := same("ConvertToDefaultText.instructions");
+
+ConvertToDefaultText_literal2 := same("ConvertToDefaultText.literals[2]");

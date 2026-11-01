@@ -1,5 +1,0 @@
-@@ 0x4d1911
-func() begin
-	(if viewValue then transport:SetConfig('dontAutoPutAway, nil) else transport:SetConfig('dontAutoPutAway, 'never))
-end
-@@end

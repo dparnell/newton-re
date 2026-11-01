@@ -1,5 +1,0 @@
-@@ 0x59be15
-func() begin
-	(self.viewBounds := self:Parent():LocalBox())
-end
-@@end

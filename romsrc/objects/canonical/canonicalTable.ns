@@ -1,0 +1,6 @@
+// canonicalTable, and what only it reaches
+//
+// A frame of a _proto and viewBounds, a template for a table's cell;
+// nothing in the reconstruction uses it yet.
+
+canonicalTable := {_proto: nil, viewBounds: nil};

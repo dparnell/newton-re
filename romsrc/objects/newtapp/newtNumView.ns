@@ -1,0 +1,29 @@
+// newtNumView: the editable NewtApp slot view for a number (NPR 2.0), based on
+// newtroNumView.
+//
+// This file holds newtNumView and what only it reaches.
+
+newtNumView := {
+	_proto: @newtroNumView,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
+	// the user changed the text: store the number written (0 if none can be read; rounded when integerOnly) in target.(path) and start the flush timer
+	// (not while Retarget sets the text: then the view's hack slot is true)
+	viewChangedScript: func(slot, view) begin
+		local number;
+		(if (if (not GetVariable(view, 'hack)) then (slot = 'text)) then begin
+				if (not (number := StringToNumber(view.(slot)))) then begin
+						if (not (number := StringToNumber(StringFilter(view.(slot), "0123456789.,-", 'passAll)))) then begin
+								number := 0
+							end
+					end;
+				GetVariable(view, 'target).(path) := (if integerOnly then floor((number + 0.5)) else number);
+				self:StartFlush()
+			end)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewChangedScript_literal4 := same("newtNumView.viewChangedScript.literals[4]");
+
+viewChangedScript_literal10 := same("newtNumView.viewChangedScript.literals[10]");

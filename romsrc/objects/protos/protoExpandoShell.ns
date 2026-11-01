@@ -1,0 +1,156 @@
+// protoExpandoShell: the "expando" view - a list of lines (`lines`, one
+// template each, e.g. protoTextExpando or protoEmailExpando) drawn collapsed
+// by a native draw script, of which the one tapped opens in place as an edit
+// view (`insert`, the only child) while the lines below move down by its
+// height. split is the expanded line's index, 99999 meaning none.
+
+protoExpandoShell := {
+	// the expanded line's width; indent (given to the expanded line) is where a
+	// line's text starts after its label
+	editWidth: 220,
+	lineIndent: 12,
+	indent: 100,
+	// viewQuitScript: closes the expanded line and the keyboard opened for it
+	viewQuitScript: func() begin
+		if insert then begin
+				self:CloseEdit(insert)
+			end;
+		(if keys then begin
+				keys:Close();
+				(keys := nil)
+			end)
+	end,
+	// ExpandKeys(view): puts the caret at the end of view's text (99999 is past
+	// any end) and opens the keyboard kept in `keys`, if any
+	ExpandKeys: func(a1) begin
+		SetKeyView(a1, 99999);
+		(if keys then keys:Open())
+	end,
+	// viewDrawScript: native - draws the collapsed lines' labels and texts
+	viewDrawScript: {class: #132, funcPtr: 7035584, numArgs: 0},
+	target: nil,
+	// the line to expand at setup (nil: none, unless a keyboard is open)
+	firstLine: 0,
+	lines: nil,
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	// viewHandleAddScript(dropped): something dragged in sets the first line's
+	// text; returns nil
+	viewhandleaddscript: func(a1) begin
+		self:SetLine(0);
+		RefreshViews();
+		SetValue(self:ChildViewFrames()[0].entryLine, 'text, a1.text);
+		nil
+	end,
+	keys: nil,
+	viewBounds: nil,
+	// viewKeyDownScript(char, flags): Tab expands the next line, shift-Tab the
+	// one before (wrapping round), deferred; returns the line, or nil for a key
+	// that is not a tab (not handled)
+	viewKeyDownScript: func(char2, flags) begin
+		local l1;
+		if (char2 = $\t) then begin
+				if (BAnd(flags, kShiftModifier) <> 0) then begin
+						if ((l1 := (split - 1)) < 0) then begin
+								l1 := (numLines - 1)
+							end
+					end else begin
+						if ((l1 := (split + 1)) >= numLines) then begin
+								l1 := 0
+							end
+					end
+			end;
+		if l1 then begin
+				AddDeferredAction(SetLine, [Array: l1])
+			end;
+		l1
+	end,
+	labelStyle: @fontSystem9Bold,
+	lineHeight: 16,
+	// what a line with no text shows ("--")
+	empty: empty,
+	// when set, no line can be expanded (the entry cannot be changed)
+	writeProtected: nil,
+	// set when the expanded line's text changed and must be written back
+	// (FlushEdits) before the children are made again
+	dirtyLine: nil,
+	// the font of the lines' text
+	textStyle: tsHWFont + tsSize(12),
+	declareSelf: 'expando,
+	// viewSetupFormScript: expands firstLine, or the first line when a keyboard
+	// is open
+	viewSetupFormScript: func() begin
+		(if firstLine then self:ExpandLine(firstLine) else (if currentKeyboard then self:ExpandLine(0)))
+	end,
+	// the expanded line, 99999 for none
+	split: 99999,
+	// ExpandNone(): collapses the expanded line
+	ExpandNone: func() begin
+		self:CloseEdit(insert);
+		insert := nil;
+		split := 99999;
+		expando:RedoChildren()
+	end,
+	// SetLine(index): expands that line and rebuilds the children
+	SetLine: func(a1) begin
+		expando:ExpandLine(a1);
+		expando:RedoChildren()
+	end,
+	// viewClickScript: the line under the pen - counting the expanded line's
+	// height (insertHeight) for the lines below it - is expanded; returns true
+	// when a line was hit
+	viewClickScript: func(unit) begin
+		local l1, l2;
+		(if ((l1 := ((l2 := (GetPoint(firstY, unit) - expando:GlobalBox().top)) div lineHeight)) >= split) then begin
+				l1 := ((l2 := (l2 - insertHeight)) div lineHeight);
+				(if (if (l2 >= 0) then (l1 >= split)) then begin
+						self:ExpandLine((l1 + 1));
+						expando:RedoChildren();
+						true
+					end)
+			end else begin
+				self:ExpandLine(l1);
+				expando:RedoChildren();
+				true
+			end)
+	end,
+	// ExpandLine(index): unless write protected or past the last line, closes the
+	// edit of the expanded line and the keyboard and makes `insert`, the edit view
+	// for that line (its template the line's, at its place); the caller rebuilds
+	// the children (RedoChildren)
+	ExpandLine: func(firstLine) begin
+		(if (not writeProtected) then (if (firstLine < numLines) then begin
+					if insert then begin
+							self:CloseEdit(insert)
+						end;
+					split := firstLine;
+					if keys then begin
+							keys:Close();
+							keys := nil
+						end;
+					self.insertHeight := (editHeight + 6);
+					(self.insert := {_proto: lines[split], viewBounds: RelBounds(0, (3 + (firstLine * lineHeight)), editWidth, editHeight), indent: indent, viewLineSpacing: viewLineSpacing})
+				end))
+	end,
+	viewClass: clView,
+	// CloseEdit(insert): a hook called before the expanded line is closed; does
+	// nothing here
+	CloseEdit: func(insert) begin
+		nil
+	end,
+	insert: nil,
+	// viewSetupChildrenScript: writes back a changed line (FlushEdits) and makes
+	// the expanded line's edit view the only child (none when write protected)
+	viewSetupChildrenScript: func() begin
+		if dirtyLine then begin
+				self:FlushEdits()
+			end;
+		dirtyLine := nil;
+		if writeProtected then begin
+				insert := nil;
+				split := 99999
+			end;
+		(if insert then (self.viewChildren := [Array: insert]) else (self.viewChildren := nil))
+	end
+};
+
+empty := "--";

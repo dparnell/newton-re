@@ -1,5 +1,0 @@
-@@ 0x47bf85
-func() begin
-	GetRoot().(appSymbol):SetConfig(silentPrefs.configuration, viewValue)
-end
-@@end

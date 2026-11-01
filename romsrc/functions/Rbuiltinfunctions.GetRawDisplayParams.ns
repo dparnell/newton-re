@@ -1,5 +1,0 @@
-@@ 0x418711
-func(a1) begin
-	GetAllRawDisplayParams()[a1]
-end
-@@end

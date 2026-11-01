@@ -1,0 +1,28 @@
+// datetimeStrSpecs: magic pointer @66, the values of the documented date and
+// time format constants (longDateStrSpec, shortTimeStrSpec, ...; NPG "Date and
+// Time String Specifications") for LongDateStr, ShortDateStr and TimeStr.  Each
+// packs format elements (the year, month, day, weekday, hour, minute, second)
+// and their formats into an integer, a few bits per element.
+
+datetimeStrSpecs := {
+	longDateStrSpec: 11582026,
+	abbrDateStrSpec: 11614802,
+	yearMonthDayStrSpec: 180969,
+	yearMonthStrSpec: 2827,
+	dayStrSpec: 80466,
+	monthDayStrSpec: 745,
+	numericDateStrSpec: 183017,
+	numericMDStrSpec: 2793,
+	numericYearStrSpec: 44,
+	longMonthStrSpec: 11,
+	abbrMonthStrSpec: 19,
+	numericDayStrSpec: 41,
+	longDayOfWeekStrSpec: 10,
+	abbrDayOfWeekStrSpec: 18,
+	longTimeStrSpec: 10922700,
+	shortTimeStrSpec: 170636,
+	shortestTimeStrSpec: 2666,
+	hourStrSpec: 41,
+	minuteStrSpec: 42,
+	secondStrSpec: 43
+};

@@ -14,7 +14,7 @@ The ROM carries a whole telephony framework (established by reading
 
 - **The Calls application** (Extras) is only the call log: the data
   definition `'calllog` under `'callapp` (`romsrc/objects/misc-004.ns`).
-- **The Phone transport**, `|PhoneHome:Newton|` (`obj_6471d9`), titled
+- **The Phone transport**, `|PhoneHome:Newton|` (`basicCallTransport`), titled
   "Phone", owner `'callapp`, does the work.  The Names card's Call action
   (`kDoCallSlip`, Cardfile) opens its routing slip.
   - *Outgoing*: `SendRequest` → `InstallEndpoint` → `FinishDialing`, which
@@ -26,7 +26,7 @@ The ROM carries a whole telephony framework (established by reading
     `receiveRequestComplete` → `AnswerIncoming`.  `StartAutoReceive`
     ("Ready for call…") listens when the preference `phoneAutoReceive`
     is set; `EventOffHook`/`EventOnHook` follow the handset.
-- **The call endpoint** is `@662` (`obj_6489bd`, `'tapiEndpoint`, a
+- **The call endpoint** is `@662` (`protoTapiEndpoint`, `'tapiEndpoint`, a
   protoBasicEndpoint @383 with the service option `"taps"`):
   `MakeOutgoing` (option `"outg"`), `AnswerIncoming` (`"answ"`),
   `hangup`, `SendDigit`, `Hold`/`UnHold`, `Transfer`, `Forward`,
@@ -40,7 +40,7 @@ The ROM carries a whole telephony framework (established by reading
   `supportsMakeOutgoing`, `supportsSendDigit`, `supportsEventIncoming`,
   `supportsCallerId`, `supportsAnswerIncoming`, `outgoingNeededDelay`,
   `supportsLineCurrentSense`.  The Phone preferences' "Using" picker
-  (`obj_647a51`) lists the registered ones.
+  (`protoTapiPicker`) lists the registered ones.
 - **The ROM registers none.**  A MessagePad alone has only "Telephone":
   the number dialled as tones from the speaker held to a handset
   (`RawDial`).  The modem tool (`comms/ModemTool.h`) has the TAPI service
@@ -182,8 +182,8 @@ for one ROM bug fixed.
   `HostCellularWillRun`, which a board calls before its task has started
   the module, so that the Newton's side, booting meanwhile, counts it as
   there.
-- **ROM BUG (fixed)**: `ItemCompleted` (`romsrc/functions/obj_6471d9.
-  ItemCompleted.ns`) hangs the endpoint up only for a call's status, read
+- **ROM BUG (fixed)**: `ItemCompleted` (`basicCallTransport.ItemCompleted`
+  in `romsrc/objects/apps/basicCallTransport.ns`) hangs the endpoint up only for a call's status, read
   after `SetStatusDialog` has made it `'HangingUp` - so the keypad's Hang
   Up never told the endpoint.  Unseen with "Speaker", which has none.
   Fixed behind `RomBugFixed()`; `docs/curiosities.md`, "A telephone
@@ -216,7 +216,7 @@ one, and every call became an international call to the US (`0011 1
 0412 345 678`).  A mobile network takes a number as written, national or
 `+`-international, as every mobile phone sends it - so the provider says
 `dialsAsWritten`, and the transport's `SendRequest` (DEVIATION in
-`romsrc/functions/obj_6471d9.SendRequest.ns`) then dials the card's
+`basicCallTransport.SendRequest` in `romsrc/objects/apps/basicCallTransport.ns`) then dials the card's
 number as it is (`GetRoutingInfo`'s `rawNumber`); other providers dial
 as the ROM does.  The engine prints each dial on the console
 (`[cell] dialling: ATD...`).

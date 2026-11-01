@@ -1,0 +1,38 @@
+// protoDurationTextPicker: a label picker (protoTextPicker) showing a time
+// range, "2:33 pm - 5:54 am"; tapping it opens a protoTimeIntervalPopup to
+// change the range, and closing that calls the client's PickActionScript with
+// the new start and stop times.
+
+protoDurationTextPicker := {
+	viewBounds: nil,
+	// the label: an empty string by default (shared with other objects)
+	label: uCardPositionAlertButton,
+	// the range shown, in minutes as Time() returns them
+	startTime: nil,
+	stopTime: nil,
+	// the name of a @datetimeStrSpecs format to show the times in
+	format: 'shortTimeStrSpec,
+	// minutes per tap in the pop-up
+	increment: 1,
+	// Popit(x), from protoTextPicker on a tap: opens the time interval pop-up
+	// over the picker's box cut to x pixels wide
+	Popit: func(x) begin
+		local box;
+		(box := self:GlobalBox()).right := (box.left + x);
+		@timeIntervalPopup:New([Array: startTime, stopTime], increment, box, self)
+	end,
+	// TextSetup(), from protoTextPicker: returns the text to show, the two times
+	// in `format` joined by " - "
+	TextSetup: func() begin
+		ParamStr("^0 - ^1", [Array: TimeStr(startTime, @datetimeStrSpecs.(format)), TimeStr(stopTime, @datetimeStrSpecs.(format))])
+	end,
+	// pickActionScript(start, stop), sent by the pop-up when it is closed: keeps
+	// the new range (the argument names are the decompiler's) and passes on to
+	// protoTextPicker's, which updates the text
+	pickActionScript: func(index, a2) begin
+		startTime := index;
+		stopTime := a2;
+		inherited:pickActionScript(nil)
+	end,
+	_proto: @protoTextPicker
+};

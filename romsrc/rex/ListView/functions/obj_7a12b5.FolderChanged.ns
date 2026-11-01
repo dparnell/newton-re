@@ -1,5 +1,0 @@
-@@ 0x79ef0d names
-func() begin
-	call GetRoot().paperroll.FolderChanged with (soupName, oldFolder, newFolder)
-end
-@@end

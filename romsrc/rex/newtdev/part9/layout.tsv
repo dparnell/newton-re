@@ -1,68 +1,68 @@
 # the objects' area: 0x101095c, 0x47d0 bytes; the byte between objects; the objects' alignment
 area	101095c	47d0	bf	4
-101095c	obj_101095d	41	gc=1
-101096c	obj_101095d[0]	43	map=map_1010989
+101095c	part	41	gc=1
+101096c	part[0]	43	map=map_1010989
 1010988	map_1010989	41
 10109a8	'_ImportTable	40
 10109c8	'installScript	40
 10109e8	'devInstallScript	40
 1010a0c	'devRemoveScript	40
-1010a2c	obj_101095d[0]._ImportTable	41
+1010a2c	part[0]._ImportTable	41
 1010a3c	'|Array|	40
-1010a54	obj_101095d[0]._ImportTable[0]	43	map=map_1010a6d
+1010a54	part[0]._ImportTable[0]	43	map=map_1010a6d
 1010a6c	map_1010a6d	41
 1010a88	'name	40
 1010aa0	'major	40
 1010ab8	'minor	40
 1010ad0	'|NameServerInterface:NSG|	40
-1010af8	obj_101095d[0].installScript	43	map=map_1010b19
+1010af8	part[0].installScript	43	map=map_1010b19
 1010b18	map_1010b19	41
 1010b3c	'class	40
 1010b54	'instructions	40
 1010b74	'literals	40
 1010b90	'argFrame	40
 1010bac	'numArgs	40
-1010bc4	obj_101095d[0].installScript.instructions	40
-1010be0	obj_101095d[0].installScript.literals	41
-1010bfc	obj_101095d[0].installScript.literals[1]	41
+1010bc4	part[0].installScript.instructions	40
+1010be0	part[0].installScript.literals	41
+1010bfc	part[0].installScript.literals[1]	41
 1010c10	'removeScript	40
 1010c30	'EnsureInternal	40
-1010c50	obj_101095d[0].devInstallScript	43	map=map_1010b19
-1010c70	obj_101095d[0].devInstallScript.instructions	40
-1010d10	obj_101095d[0].devInstallScript.literals	41
+1010c50	part[0].devInstallScript	43	map=map_1010b19
+1010c70	part[0].devInstallScript.instructions	40
+1010d10	part[0].devInstallScript.literals	41
 1010d90	'vars	40
 1010da8	'DeviceRegistry	40
-1010dc8	obj_101095d[0].devInstallScript.literals[2]	41
+1010dc8	part[0].devInstallScript.literals[2]	41
 1010dd8	'DefGlobalVar	40
 1010df8	'RegisterDevice	40
-1010e18	obj_101095d[0].devInstallScript.literals[6]	43	map=map_1010b19
-1010e38	obj_101095d[0].devInstallScript.literals[6].instructions	40
-1010f20	obj_101095d[0].devInstallScript.literals[6].literals	41
+1010e18	part[0].devInstallScript.literals[6]	43	map=map_1010b19
+1010e38	part[0].devInstallScript.literals[6].instructions	40
+1010f20	part[0].devInstallScript.literals[6].literals	41
 1010f88	map_1010f89	41
 1010f9c	'_proto	40
 1010fb4	'DeviceType	40
 1010fd0	'StrFilled	40
-1010fec	obj_101095d[0].devInstallScript.literals[6].literals[5]	43	map=map_101100d
+1010fec	part[0].devInstallScript.literals[6].literals[5]	43	map=map_101100d
 101100c	map_101100d	41
 1011030	'viewBounds	40
 101104c	'viewFlags	40
 1011068	'viewFormat	40
 1011084	'viewSetupDoneScript	40
 10110a8	'viewClass	40
-10110c4	obj_101095d[0].devInstallScript.literals[6].literals[5].viewBounds	43	map=map_10110e1
+10110c4	part[0].devInstallScript.literals[6].literals[5].viewBounds	43	map=map_10110e1
 10110e0	map_10110e1	41
 1011100	'left	40
 1011118	'top	40
 101112c	'right	40
 1011144	'bottom	40
-101115c	obj_101095d[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript	43	map=map_1010b19
-101117c	obj_101095d[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.instructions	40
-1011190	obj_101095d[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals	41
-10111a8	obj_101095d[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals[0]	43	map=map_1010b19
-10111c8	obj_101095d[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals[0].instructions	40
-10111d8	obj_101095d[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals[0].literals	41
+101115c	part[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript	43	map=map_1010b19
+101117c	part[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.instructions	40
+1011190	part[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals	41
+10111a8	part[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals[0]	43	map=map_1010b19
+10111c8	part[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals[0].instructions	40
+10111d8	part[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals[0].literals	41
 10111e8	'Close	40
-1011200	obj_101095d[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals[0].argFrame	43	map=map_1011219
+1011200	part[0].devInstallScript.literals[6].literals[5].viewSetupDoneScript.literals[0].argFrame	43	map=map_1011219
 1011218	map_1011219	41
 1011234	'_nextArgFrame	40
 1011254	'_parent	40
@@ -76,78 +76,78 @@ area	101095c	47d0	bf	4
 1011334	'RegDataView	40
 1011350	'DeviceCISProductName	40
 1011378	'IsArray	40
-1011390	obj_1011391	40
+1011390	devInstallScript_literal15	40
 10113ac	'|string|	40
 10113c4	'DeviceProtocolClassName	40
 10113ec	'void	40
 1011404	'ObjectPkgRef	40
-1011424	obj_101095d[0].devInstallScript.literals[6].literals[20]	40
-1011450	obj_101095d[0].devInstallScript.literals[6].literals[21]	40
+1011424	part[0].devInstallScript.literals[6].literals[20]	40
+1011450	part[0].devInstallScript.literals[6].literals[21]	40
 1011504	'MarkPackageBusy	40
 1011524	'DefGlobalFn	40
 1011540	'UnRegisterDevice	40
-1011564	obj_1011565	43	map=map_1010b19
-1011584	obj_1011565.instructions	40
-10116b8	obj_1011565.literals	41
+1011564	devInstallScript_literal9	43	map=map_1010b19
+1011584	devInstallScript_literal9.instructions	40
+10116b8	devInstallScript_literal9.literals	41
 1011720	'AppleTalkChoice	40
 1011740	'GetUserConfig	40
 1011760	'StrEqual	40
 101177c	'appletalkLink	40
-101179c	obj_101179d	40
+101179c	devInstallScript_literal9_literal9	40
 10117b4	'SetUserConfig	40
 10117d4	'LoadHardwareEntry	40
-10117f8	obj_10117f9	40
-1011810	obj_1011811	40
+10117f8	devInstallScript_literal9_literal12	40
+1011810	devInstallScript_literal9_literal13	40
 1011828	'RemoveSlot	40
 1011844	'UnRegDataView	40
 1011864	'MarkPackageNotBusy	40
 1011888	'GetCurDevicePrefs	40
-10118ac	obj_101095d[0].devInstallScript.literals[11]	43	map=map_1010b19
-10118cc	obj_101095d[0].devInstallScript.literals[11].instructions	40
-10118f4	obj_101095d[0].devInstallScript.literals[11].literals	41
+10118ac	part[0].devInstallScript.literals[11]	43	map=map_1010b19
+10118cc	part[0].devInstallScript.literals[11].instructions	40
+10118f4	part[0].devInstallScript.literals[11].literals	41
 101190c	'currentEmporium	40
 101192c	'ResolveEntryAlias	40
 1011950	'GetDeviceInfo	40
-1011970	obj_101095d[0].devInstallScript.literals[13]	43	map=map_1010b19
-1011990	obj_101095d[0].devInstallScript.literals[13].instructions	40
-1011a08	obj_101095d[0].devInstallScript.literals[13].literals	41
+1011970	part[0].devInstallScript.literals[13]	43	map=map_1010b19
+1011990	part[0].devInstallScript.literals[13].instructions	40
+1011a08	part[0].devInstallScript.literals[13].literals	41
 1011a24	'GetDeviceList	40
-1011a44	obj_101095d[0].devInstallScript.literals[15]	43	map=map_1010b19
-1011a64	obj_101095d[0].devInstallScript.literals[15].instructions	40
-1011b14	obj_101095d[0].devInstallScript.literals[15].literals	41
+1011a44	part[0].devInstallScript.literals[15]	43	map=map_1010b19
+1011a64	part[0].devInstallScript.literals[15].instructions	40
+1011b14	part[0].devInstallScript.literals[15].literals	41
 1011b54	'DeviceClass	40
 1011b70	'DeviceDisplayName	40
-1011b94	obj_1011b95	41
+1011b94	devInstallScript_literal7	41
 1011bac	'item	40
 1011bc4	'cisName	40
 1011bdc	'|str<|	40
-1011bf4	obj_101095d[0].devInstallScript.literals[15].literals[9]	41
+1011bf4	part[0].devInstallScript.literals[15].literals[9]	41
 1011c04	'pathExpr	40
 1011c20	'BInsert	40
-1011c38	obj_101095d[0].devInstallScript.literals[15].literals[12]	41
+1011c38	part[0].devInstallScript.literals[15].literals[12]	41
 1011c48	'OriginalOpenForCardIcon	40
 1011c70	'functions	40
 1011c8c	'OpenForCardIcon	40
-1011cac	obj_101095d[0].devInstallScript.literals[19]	43	map=map_1010b19
-1011ccc	obj_101095d[0].devInstallScript.literals[19].instructions	40
-1011d10	obj_101095d[0].devInstallScript.literals[19].literals	41
+1011cac	part[0].devInstallScript.literals[19]	43	map=map_1010b19
+1011ccc	part[0].devInstallScript.literals[19].instructions	40
+1011d10	part[0].devInstallScript.literals[19].literals	41
 1011d3c	'GetCardTypes	40
 1011d5c	'CallFrameBasedRegistryFns	40
 1011d88	'WeirdCardEventRegistry	40
 1011db0	'SlipOpenRequest	40
-1011dd0	obj_101095d[0].devInstallScript.literals[19].literals[7]	43	map=map_1010b19
-1011df0	obj_101095d[0].devInstallScript.literals[19].literals[7].instructions	40
-1011e00	obj_101095d[0].devInstallScript.literals[19].literals[7].literals	41
+1011dd0	part[0].devInstallScript.literals[19].literals[7]	43	map=map_1010b19
+1011df0	part[0].devInstallScript.literals[19].literals[7].instructions	40
+1011e00	part[0].devInstallScript.literals[19].literals[7].literals	41
 1011e10	'WeirdCardSlipsOpen	40
 1011e34	'OpenWeirdCardSlip	40
-1011e58	obj_101095d[0].devInstallScript.literals[23]	43	map=map_1010b19
-1011e78	obj_101095d[0].devInstallScript.literals[23].instructions	40
-1011ea0	obj_101095d[0].devInstallScript.literals[23].literals	41
-1011ec4	obj_1011ec5	43	map=map_1010b19
-1011ee4	obj_1011ec5.instructions	40
-1011f1c	obj_1011ec5.literals	41
+1011e58	part[0].devInstallScript.literals[23]	43	map=map_1010b19
+1011e78	part[0].devInstallScript.literals[23].instructions	40
+1011ea0	part[0].devInstallScript.literals[23].literals	41
+1011ec4	devInstallScript_literal0	43	map=map_1010b19
+1011ee4	devInstallScript_literal0.instructions	40
+1011f1c	devInstallScript_literal0.literals	41
 1011f30	'cardSlot	40
-1011f4c	obj_101095d[0].devInstallScript.literals[23].literals[2]	43	map=map_1011fcd
+1011f4c	part[0].devInstallScript.literals[23].literals[2]	43	map=map_1011fcd
 1011fcc	map_1011fcd	41
 1012050	'viewQuitScript	40
 1012070	'confirmedValue	40
@@ -172,102 +172,102 @@ area	101095c	47d0	bf	4
 10122ac	'deviceSym	40
 10122c8	'whoAmI	40
 10122e0	'device	40
-10122f8	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript	43	map=map_1010b19
-1012318	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.instructions	40
-1012334	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals	41
-101235c	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[0]	40
+10122f8	part[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript	43	map=map_1010b19
+1012318	part[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.instructions	40
+1012334	part[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals	41
+101235c	part[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[0]	40
 1012374	'viewCObject	40
-1012390	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[5]	43	map=map_1010b19
-10123b0	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[5].instructions	40
-101240c	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[5].literals	41
+1012390	part[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[5]	43	map=map_1010b19
+10123b0	part[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[5].instructions	40
+101240c	part[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[5].literals	41
 1012438	'viewValue	40
 1012454	'toggleCheck	40
-1012470	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[5].argFrame	43	map=map_1011219
+1012470	part[0].devInstallScript.literals[23].literals[2].viewSetupDoneScript.literals[5].argFrame	43	map=map_1011219
 1012488	'RegUserConfigChange	40
-10124ac	obj_101095d[0].devInstallScript.literals[23].literals[2].viewQuitScript	43	map=map_1010b19
-10124cc	obj_101095d[0].devInstallScript.literals[23].literals[2].viewQuitScript.instructions	40
-1012504	obj_101095d[0].devInstallScript.literals[23].literals[2].viewQuitScript.literals	41
+10124ac	part[0].devInstallScript.literals[23].literals[2].viewQuitScript	43	map=map_1010b19
+10124cc	part[0].devInstallScript.literals[23].literals[2].viewQuitScript.instructions	40
+1012504	part[0].devInstallScript.literals[23].literals[2].viewQuitScript.literals	41
 1012534	'SetRemove	40
 1012550	'OpenCardViews	40
 1012570	'UnRegUserConfigChange	40
-1012598	obj_101095d[0].devInstallScript.literals[23].literals[2].viewBounds	43	map=map_10110e1
-10125b4	obj_10125b5	40
-10125c4	obj_101095d[0].devInstallScript.literals[23].literals[2].GetCISData	43	map=map_1010b19
-10125e4	obj_101095d[0].devInstallScript.literals[23].literals[2].GetCISData.instructions	40
-1012620	obj_101095d[0].devInstallScript.literals[23].literals[2].GetCISData.literals	41
+1012598	part[0].devInstallScript.literals[23].literals[2].viewBounds	43	map=map_10110e1
+10125b4	value	40
+10125c4	part[0].devInstallScript.literals[23].literals[2].GetCISData	43	map=map_1010b19
+10125e4	part[0].devInstallScript.literals[23].literals[2].GetCISData.instructions	40
+1012620	part[0].devInstallScript.literals[23].literals[2].GetCISData.literals	41
 101263c	'GetCardInfo	40
 1012658	'socketInfos	40
 1012674	'socketNumber	40
-1012694	obj_101095d[0].devInstallScript.literals[23].literals[2].UpdateDisplayText	43	map=map_1010b19
-10126b4	obj_101095d[0].devInstallScript.literals[23].literals[2].UpdateDisplayText.instructions	40
-10126dc	obj_101095d[0].devInstallScript.literals[23].literals[2].UpdateDisplayText.literals	41
+1012694	part[0].devInstallScript.literals[23].literals[2].UpdateDisplayText	43	map=map_1010b19
+10126b4	part[0].devInstallScript.literals[23].literals[2].UpdateDisplayText.instructions	40
+10126dc	part[0].devInstallScript.literals[23].literals[2].UpdateDisplayText.literals	41
 1012700	'MakeMessageText	40
 1012720	'text	40
 1012738	'SetValue	40
-1012754	obj_101095d[0].devInstallScript.literals[23].literals[2].stepAllocateContext	41
-1012790	obj_1012791	43	map=map_10127bd
+1012754	part[0].devInstallScript.literals[23].literals[2].stepAllocateContext	41
+1012790	stepAllocateContext_value	43	map=map_10127bd
 10127bc	map_10127bd	41
 10127ec	'buttonClickScript	40
 1012810	'viewJustify	40
 101282c	'preAllocatedContext	40
-1012850	obj_1012791.buttonClickScript	43	map=map_1010b19
-1012870	obj_1012791.buttonClickScript.instructions	40
-1012910	obj_1012791.buttonClickScript.literals	41
+1012850	stepAllocateContext_value.buttonClickScript	43	map=map_1010b19
+1012870	stepAllocateContext_value.buttonClickScript.instructions	40
+1012910	stepAllocateContext_value.buttonClickScript.literals	41
 1012978	'emporia	40
-1012990	obj_1012991	40
-10129b0	obj_1012791.buttonClickScript.literals[6]	41
+1012990	buttonClickScript_literal5	40
+10129b0	stepAllocateContext_value.buttonClickScript.literals[6]	41
 10129c4	'place	40
 10129dc	'cardFile	40
 10129f8	'AddCard	40
 1012a10	'MakeEntryAlias	40
-1012a30	obj_1012791.buttonClickScript.literals[12]	43	map=map_1012a5d
+1012a30	stepAllocateContext_value.buttonClickScript.literals[12]	43	map=map_1012a5d
 1012a5c	map_1012a5d	41
 1012a8c	'newEmporium	40
 1012aa8	'message	40
-1012ac0	obj_1012791.buttonClickScript.literals[12].viewBounds	43	map=map_10110e1
-1012adc	obj_1012791.buttonClickScript.literals[12].stepChildren	41
-1012af8	obj_1012791.buttonClickScript.literals[12].stepChildren[0]	43	map=map_1012b0d
+1012ac0	stepAllocateContext_value.buttonClickScript.literals[12].viewBounds	43	map=map_10110e1
+1012adc	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren	41
+1012af8	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[0]	43	map=map_1012b0d
 1012b0c	map_1012b0d	41
-1012b24	obj_1012791.buttonClickScript.literals[12].stepChildren[0].viewSetupFormScript	43	map=map_1010b19
-1012b44	obj_1012791.buttonClickScript.literals[12].stepChildren[0].viewSetupFormScript.instructions	40
-1012b58	obj_1012791.buttonClickScript.literals[12].stepChildren[0].viewSetupFormScript.literals	41
+1012b24	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[0].viewSetupFormScript	43	map=map_1010b19
+1012b44	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[0].viewSetupFormScript.instructions	40
+1012b58	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[0].viewSetupFormScript.literals	41
 1012b70	'title	40
-1012b88	obj_1012b89	43	map=map_1012ba9
+1012b88	stepChildren_value	43	map=map_1012ba9
 1012ba8	map_1012ba9	41
-1012bcc	obj_1012b89.text	40
-1012c94	obj_1012b89.viewBounds	43	map=map_1012cb1
+1012bcc	stepChildren_value.text	40
+1012c94	stepChildren_value.viewBounds	43	map=map_1012cb1
 1012cb0	map_1012cb1	41
-1012cd0	obj_1012791.buttonClickScript.literals[12].stepChildren[2]	43	map=map_1012cfd
+1012cd0	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2]	43	map=map_1012cfd
 1012cfc	map_1012cfd	41
 1012d2c	'BuildLabelCommands	40
 1012d50	'textSetup	40
 1012d6c	'labelActionScript	40
-1012d90	obj_1012791.buttonClickScript.literals[12].stepChildren[2].viewBounds	43	map=map_10110e1
-1012dac	obj_1012791.buttonClickScript.literals[12].stepChildren[2].BuildLabelCommands	43	map=map_1010b19
-1012dcc	obj_1012791.buttonClickScript.literals[12].stepChildren[2].BuildLabelCommands.instructions	40
-1012e1c	obj_1012791.buttonClickScript.literals[12].stepChildren[2].BuildLabelCommands.literals	41
-1012e44	obj_1012791.buttonClickScript.literals[12].stepChildren[2].BuildLabelCommands.literals[6]	41
+1012d90	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].viewBounds	43	map=map_10110e1
+1012dac	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].BuildLabelCommands	43	map=map_1010b19
+1012dcc	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].BuildLabelCommands.instructions	40
+1012e1c	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].BuildLabelCommands.literals	41
+1012e44	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].BuildLabelCommands.literals[6]	41
 1012e5c	'value	40
-1012e74	obj_1012791.buttonClickScript.literals[12].stepChildren[2].viewSetupFormScript	43	map=map_1010b19
-1012e94	obj_1012791.buttonClickScript.literals[12].stepChildren[2].viewSetupFormScript.instructions	40
-1012ea8	obj_1012791.buttonClickScript.literals[12].stepChildren[2].viewSetupFormScript.literals	41
+1012e74	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].viewSetupFormScript	43	map=map_1010b19
+1012e94	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].viewSetupFormScript.instructions	40
+1012ea8	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].viewSetupFormScript.literals	41
 1012ec0	'labelCommands	40
-1012ee0	obj_1012791.buttonClickScript.literals[12].stepChildren[2].textSetup	43	map=map_1010b19
-1012f00	obj_1012791.buttonClickScript.literals[12].stepChildren[2].textSetup.instructions	40
-1012f10	obj_1012791.buttonClickScript.literals[12].stepChildren[2].textSetup.literals	41
-1012f20	obj_1012791.buttonClickScript.literals[12].stepChildren[2].textSetup.literals[0]	40
-1012f38	obj_1012791.buttonClickScript.literals[12].stepChildren[2].labelActionScript	43	map=map_1010b19
-1012f58	obj_1012791.buttonClickScript.literals[12].stepChildren[2].labelActionScript.instructions	40
-1012f6c	obj_1012791.buttonClickScript.literals[12].stepChildren[2].labelActionScript.literals	41
-1012f84	obj_1012791.buttonClickScript.literals[12].stepChildren[3]	43	map=map_1012f95
+1012ee0	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].textSetup	43	map=map_1010b19
+1012f00	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].textSetup.instructions	40
+1012f10	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].textSetup.literals	41
+1012f20	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].textSetup.literals[0]	40
+1012f38	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].labelActionScript	43	map=map_1010b19
+1012f58	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].labelActionScript.instructions	40
+1012f6c	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].labelActionScript.literals	41
+1012f84	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[3]	43	map=map_1012f95
 1012f94	map_1012f95	41
-1012fa8	obj_1012791.buttonClickScript.literals[12].viewQuitScript	43	map=map_1010b19
-1012fc8	obj_1012791.buttonClickScript.literals[12].viewQuitScript.instructions	40
-1012fe0	obj_1012791.buttonClickScript.literals[12].viewQuitScript.literals	41
-1012ffc	obj_1012791.buttonClickScript.literals[12].stepAllocateContext	41
-1013010	obj_1012791.buttonClickScript.literals[14]	41
+1012fa8	stepAllocateContext_value.buttonClickScript.literals[12].viewQuitScript	43	map=map_1010b19
+1012fc8	stepAllocateContext_value.buttonClickScript.literals[12].viewQuitScript.instructions	40
+1012fe0	stepAllocateContext_value.buttonClickScript.literals[12].viewQuitScript.literals	41
+1012ffc	stepAllocateContext_value.buttonClickScript.literals[12].stepAllocateContext	41
+1013010	stepAllocateContext_value.buttonClickScript.literals[14]	41
 1013028	'ModalDialog	40
-1013044	obj_1012791.buttonClickScript.literals[18]	43	map=map_1013091
+1013044	stepAllocateContext_value.buttonClickScript.literals[18]	43	map=map_1013091
 1013090	map_1013091	41
 10130e0	'target	40
 10130f8	'appSymbol	40
@@ -277,51 +277,51 @@ area	101095c	47d0	bf	4
 101316c	'header	40
 1013184	'keyButton	40
 10131a0	'editViewStat	40
-10131c0	obj_1012791.buttonClickScript.literals[18].viewBounds	43	map=map_1012cb1
-10131dc	obj_1012791.buttonClickScript.literals[18].stepChildren	41
-10131f0	obj_10131f1	43	map=map_101320d
+10131c0	stepAllocateContext_value.buttonClickScript.literals[18].viewBounds	43	map=map_1012cb1
+10131dc	stepAllocateContext_value.buttonClickScript.literals[18].stepChildren	41
+10131f0	stepChildren_value_2	43	map=map_101320d
 101320c	map_101320d	41
 101322c	'Retarget	40
-1013248	obj_10131f1.Retarget	43	map=map_1010b19
-1013268	obj_10131f1.Retarget.instructions	40
-1013284	obj_10131f1.Retarget.literals	41
+1013248	stepChildren_value_2.Retarget	43	map=map_1010b19
+1013268	stepChildren_value_2.Retarget.instructions	40
+1013284	stepChildren_value_2.Retarget.literals	41
 1013298	'SyncView	40
-10132b4	obj_10131f1.viewSetupFormScript	43	map=map_1010b19
-10132d4	obj_10131f1.viewSetupFormScript.instructions	40
-1013314	obj_10131f1.viewSetupFormScript.literals	41
+10132b4	stepChildren_value_2.viewSetupFormScript	43	map=map_1010b19
+10132d4	stepChildren_value_2.viewSetupFormScript.instructions	40
+1013314	stepChildren_value_2.viewSetupFormScript.literals	41
 1013348	'setupName	40
-1013364	obj_10131f1.viewSetupFormScript.literals[3]	40
+1013364	stepChildren_value_2.viewSetupFormScript.literals[3]	40
 101338c	'ParamStr	40
-10133a8	obj_10131f1.viewSetupFormScript.literals[8]	40
-10133c8	obj_10133c9	43	map=map_1013411
+10133a8	stepChildren_value_2.viewSetupFormScript.literals[8]	40
+10133c8	stepChildren_value_3	43	map=map_1013411
 1013410	map_1013411	41
 101345c	'extraChildrenHeight	40
 1013480	'keypadFont	40
 101349c	'viewSetupChildrenScript	40
 10134c4	'alphaKeys	40
-10134e0	obj_10133c9.viewBounds	43	map=map_10110e1
-10134fc	obj_10133c9.stepChildren	41
-1013510	obj_1013511	43	map=map_101352d
+10134e0	stepChildren_value_3.viewBounds	43	map=map_10110e1
+10134fc	stepChildren_value_3.stepChildren	41
+1013510	frame	43	map=map_101352d
 101352c	map_101352d	41
-101354c	obj_1013511.viewBounds	43	map=map_1012cb1
-1013568	obj_10133c9.stepChildren[1]	43	map=map_1010f89
-1013578	obj_10133c9.viewSetupChildrenScript	43	map=map_1010b19
-1013598	obj_10133c9.viewSetupChildrenScript.instructions	40
-1013670	obj_10133c9.viewSetupChildrenScript.literals	41
+101354c	frame.viewBounds	43	map=map_1012cb1
+1013568	stepChildren_value_3.stepChildren[1]	43	map=map_1010f89
+1013578	stepChildren_value_3.viewSetupChildrenScript	43	map=map_1010b19
+1013598	stepChildren_value_3.viewSetupChildrenScript.instructions	40
+1013670	stepChildren_value_3.viewSetupChildrenScript.literals	41
 10136c8	'viewChildren	40
 10136e8	'KeyboardConnected	40
 101370c	'usePhoneKeys	40
 101372c	'negate	40
 1013744	'SetBounds	40
-1013760	obj_10133c9.viewSetupChildrenScript.literals[7]	41
+1013760	stepChildren_value_3.viewSetupChildrenScript.literals[7]	41
 101377c	'useNumericKeys	40
-101379c	obj_10133c9.viewSetupChildrenScript.literals[10]	41
+101379c	stepChildren_value_3.viewSetupChildrenScript.literals[10]	41
 10137bc	'viewFont	40
 10137d8	'noKeyboard	40
 10137f4	'ArrayMunger	40
-1013810	obj_10133c9.viewSetupDoneScript	43	map=map_1010b19
-1013830	obj_10133c9.viewSetupDoneScript.instructions	40
-10138d0	obj_10133c9.viewSetupDoneScript.literals	41
+1013810	stepChildren_value_3.viewSetupDoneScript	43	map=map_1010b19
+1013830	stepChildren_value_3.viewSetupDoneScript.instructions	40
+10138d0	stepChildren_value_3.viewSetupDoneScript.literals	41
 1013924	'GetAppParams	40
 1013944	'appAreaHeight	40
 1013964	'LocalBox	40
@@ -331,201 +331,201 @@ area	101095c	47d0	bf	4
 10139d4	'RemoveStepView	40
 10139f4	'kEditSlipBtnHt	40
 1013a14	'max	40
-1013a28	obj_10133c9.viewSetupFormScript	43	map=map_1010b19
-1013a48	obj_10133c9.viewSetupFormScript.instructions	40
-1013a6c	obj_10133c9.viewSetupFormScript.literals	41
-1013a98	obj_1013a99	43	map=map_1013ab9
+1013a28	stepChildren_value_3.viewSetupFormScript	43	map=map_1010b19
+1013a48	stepChildren_value_3.viewSetupFormScript.instructions	40
+1013a6c	stepChildren_value_3.viewSetupFormScript.literals	41
+1013a98	frame_2	43	map=map_1013ab9
 1013ab8	map_1013ab9	41
-1013adc	obj_1013a99.viewBounds	43	map=map_1012cb1
-1013af8	obj_10133c9.stepAllocateContext	41
-1013b0c	obj_1012791.buttonClickScript.literals[18].StartFlush	43	map=map_1010b19
-1013b2c	obj_1012791.buttonClickScript.literals[18].StartFlush.instructions	40
-1013b3c	obj_1012791.buttonClickScript.literals[18].StartFlush.literals	41
+1013adc	frame_2.viewBounds	43	map=map_1012cb1
+1013af8	stepChildren_value_3.stepAllocateContext	41
+1013b0c	stepAllocateContext_value.buttonClickScript.literals[18].StartFlush	43	map=map_1010b19
+1013b2c	stepAllocateContext_value.buttonClickScript.literals[18].StartFlush.instructions	40
+1013b3c	stepAllocateContext_value.buttonClickScript.literals[18].StartFlush.literals	41
 1013b50	'EntryChange	40
-1013b6c	obj_1012791.buttonClickScript.literals[18].viewQuitScript	43	map=map_1010b19
-1013b8c	obj_1012791.buttonClickScript.literals[18].viewQuitScript.instructions	40
-1013ba4	obj_1012791.buttonClickScript.literals[18].viewQuitScript.literals	41
-1013bbc	obj_1012791.buttonClickScript.literals[18].stepAllocateContext	41
-1013be0	obj_1012791.buttonClickScript.literals[20]	41
+1013b6c	stepAllocateContext_value.buttonClickScript.literals[18].viewQuitScript	43	map=map_1010b19
+1013b8c	stepAllocateContext_value.buttonClickScript.literals[18].viewQuitScript.instructions	40
+1013ba4	stepAllocateContext_value.buttonClickScript.literals[18].viewQuitScript.literals	41
+1013bbc	stepAllocateContext_value.buttonClickScript.literals[18].stepAllocateContext	41
+1013be0	stepAllocateContext_value.buttonClickScript.literals[20]	41
 1013c04	'Open	40
 1013c1c	'dirty	40
-1013c34	obj_1012791.text	40
-1013c4c	obj_1012791.viewBounds	43	map=map_1013c69
+1013c34	stepAllocateContext_value.text	40
+1013c4c	stepAllocateContext_value.viewBounds	43	map=map_1013c69
 1013c68	map_1013c69	41
-1013c88	obj_1012791.viewSetupFormScript	43	map=map_1010b19
-1013ca8	obj_1012791.viewSetupFormScript.instructions	40
-1013cc4	obj_1012791.viewSetupFormScript.literals	41
-1013cdc	obj_1012791.viewQuitScript	43	map=map_1010b19
-1013cfc	obj_1012791.viewQuitScript.instructions	40
-1013d10	obj_1012791.viewQuitScript.literals	41
-1013d28	obj_1013d29	43	map=map_10127bd
-1013d54	obj_1013d29.buttonClickScript	43	map=map_1010b19
-1013d74	obj_1013d29.buttonClickScript.instructions	40
-1013d8c	obj_1013d29.buttonClickScript.literals	41
+1013c88	stepAllocateContext_value.viewSetupFormScript	43	map=map_1010b19
+1013ca8	stepAllocateContext_value.viewSetupFormScript.instructions	40
+1013cc4	stepAllocateContext_value.viewSetupFormScript.literals	41
+1013cdc	stepAllocateContext_value.viewQuitScript	43	map=map_1010b19
+1013cfc	stepAllocateContext_value.viewQuitScript.instructions	40
+1013d10	stepAllocateContext_value.viewQuitScript.literals	41
+1013d28	stepAllocateContext_value_2	43	map=map_10127bd
+1013d54	stepAllocateContext_value_2.buttonClickScript	43	map=map_1010b19
+1013d74	stepAllocateContext_value_2.buttonClickScript.instructions	40
+1013d8c	stepAllocateContext_value_2.buttonClickScript.literals	41
 1013dac	'StatusView	40
-1013dc8	obj_1013d29.text	40
-1013dec	obj_1013d29.viewBounds	43	map=map_1013c69
-1013e08	obj_1013d29.viewSetupFormScript	43	map=map_1010b19
-1013e28	obj_1013d29.viewSetupFormScript.instructions	40
-1013e7c	obj_1013d29.viewSetupFormScript.literals	41
-1013eb8	obj_1013d29.viewSetupFormScript.literals[6]	41
+1013dc8	stepAllocateContext_value_2.text	40
+1013dec	stepAllocateContext_value_2.viewBounds	43	map=map_1013c69
+1013e08	stepAllocateContext_value_2.viewSetupFormScript	43	map=map_1010b19
+1013e28	stepAllocateContext_value_2.viewSetupFormScript.instructions	40
+1013e7c	stepAllocateContext_value_2.viewSetupFormScript.literals	41
+1013eb8	stepAllocateContext_value_2.viewSetupFormScript.literals[6]	41
 1013ecc	'ButtonText	40
-1013ee8	obj_1013d29.viewSetupFormScript.literals[7]	41
+1013ee8	stepAllocateContext_value_2.viewSetupFormScript.literals[7]	41
 1013efc	'StdButtonWidth	40
-1013f1c	obj_1013d29.viewQuitScript	43	map=map_1010b19
-1013f3c	obj_1013d29.viewQuitScript.instructions	40
-1013f58	obj_1013d29.viewQuitScript.literals	41
-1013f74	obj_1013f75	43	map=map_1013f99
+1013f1c	stepAllocateContext_value_2.viewQuitScript	43	map=map_1010b19
+1013f3c	stepAllocateContext_value_2.viewQuitScript.instructions	40
+1013f58	stepAllocateContext_value_2.viewQuitScript.literals	41
+1013f74	stepAllocateContext_value_3	43	map=map_1013f99
 1013f98	map_1013f99	41
 1013fc0	'viewDrawScript	40
-1013fe0	obj_1013f75.viewBounds	43	map=map_10110e1
-1013ffc	obj_1013f75.viewDrawScript	43	map=map_1010b19
-101401c	obj_1013f75.viewDrawScript.instructions	40
-1014040	obj_1013f75.viewDrawScript.literals	41
+1013fe0	stepAllocateContext_value_3.viewBounds	43	map=map_10110e1
+1013ffc	stepAllocateContext_value_3.viewDrawScript	43	map=map_1010b19
+101401c	stepAllocateContext_value_3.viewDrawScript.instructions	40
+1014040	stepAllocateContext_value_3.viewDrawScript.literals	41
 1014058	'RelBounds	40
 1014074	'DrawCardSlotIcon	40
-1014098	obj_1014099	43	map=map_10140b9
+1014098	stepAllocateContext_value_4	43	map=map_10140b9
 10140b8	map_10140b9	41
-10140dc	obj_1014099.viewSetupFormScript	43	map=map_1010b19
-10140fc	obj_1014099.viewSetupFormScript.instructions	40
-1014138	obj_1014099.viewSetupFormScript.literals	41
-1014170	obj_1014099.viewSetupFormScript.literals[2]	41
+10140dc	stepAllocateContext_value_4.viewSetupFormScript	43	map=map_1010b19
+10140fc	stepAllocateContext_value_4.viewSetupFormScript.instructions	40
+1014138	stepAllocateContext_value_4.viewSetupFormScript.literals	41
+1014170	stepAllocateContext_value_4.viewSetupFormScript.literals[2]	41
 1014184	'StyledStrTruncate	40
-10141a8	obj_1014099.viewFont	43	map=map_10141c1
+10141a8	stepAllocateContext_value_4.viewFont	43	map=map_10141c1
 10141c0	map_10141c1	41
 10141dc	'family	40
 10141f4	'face	40
 101420c	'size	40
 1014224	'tsHWFont	40
-1014240	obj_1014241	43	map=map_1014261
+1014240	stepAllocateContext_value_5	43	map=map_1014261
 1014260	map_1014261	41
-1014284	obj_1014241.viewBounds	43	map=map_10110e1
-10142a0	obj_1014241.viewSetupFormScript	43	map=map_1010b19
-10142c0	obj_1014241.viewSetupFormScript.instructions	40
-1014300	obj_1014241.viewSetupFormScript.literals	41
+1014284	stepAllocateContext_value_5.viewBounds	43	map=map_10110e1
+10142a0	stepAllocateContext_value_5.viewSetupFormScript	43	map=map_1010b19
+10142c0	stepAllocateContext_value_5.viewSetupFormScript.instructions	40
+1014300	stepAllocateContext_value_5.viewSetupFormScript.literals	41
 1014334	'TextBounds	40
-1014350	obj_1014351	43	map=map_101438d
+1014350	stepAllocateContext_value_6	43	map=map_101438d
 101438c	map_101438d	41
 10143cc	'valueChanged	40
 10143ec	'UpdateAppleTalk	40
 101440c	'originalATDevice	40
 1014430	'originalATLink	40
 1014450	'viewClickScript	40
-1014470	obj_1014351.text	40
-10144ac	obj_1014351.viewBounds	43	map=map_1012cb1
-10144c8	obj_1014351.viewSetupFormScript	43	map=map_1010b19
-10144e8	obj_1014351.viewSetupFormScript.instructions	40
-101455c	obj_1014351.viewSetupFormScript.literals	41
+1014470	stepAllocateContext_value_6.text	40
+10144ac	stepAllocateContext_value_6.viewBounds	43	map=map_1012cb1
+10144c8	stepAllocateContext_value_6.viewSetupFormScript	43	map=map_1010b19
+10144e8	stepAllocateContext_value_6.viewSetupFormScript.instructions	40
+101455c	stepAllocateContext_value_6.viewSetupFormScript.literals	41
 10145b0	'AppleTalkAvailable	40
 10145d4	'PrefsRegistry	40
 10145f4	'AppleTalk	40
-1014610	obj_1014611	40
-1014628	obj_1014351.viewQuitScript	43	map=map_1010b19
-1014648	obj_1014351.viewQuitScript.instructions	40
-1014660	obj_1014351.viewQuitScript.literals	41
-1014680	obj_1014351.valueChanged	43	map=map_1010b19
-10146a0	obj_1014351.valueChanged.instructions	40
-10146cc	obj_1014351.valueChanged.literals	41
-10146f4	obj_1014351.UpdateAppleTalk	43	map=map_1010b19
-1014714	obj_1014351.UpdateAppleTalk.instructions	40
-10147a0	obj_1014351.UpdateAppleTalk.literals	41
-10147e0	obj_1014351.viewClickScript	43	map=map_1010b19
-1014800	obj_1014351.viewClickScript.instructions	40
-1014854	obj_1014351.viewClickScript.literals	41
+1014610	viewSetupFormScript_literal13	40
+1014628	stepAllocateContext_value_6.viewQuitScript	43	map=map_1010b19
+1014648	stepAllocateContext_value_6.viewQuitScript.instructions	40
+1014660	stepAllocateContext_value_6.viewQuitScript.literals	41
+1014680	stepAllocateContext_value_6.valueChanged	43	map=map_1010b19
+10146a0	stepAllocateContext_value_6.valueChanged.instructions	40
+10146cc	stepAllocateContext_value_6.valueChanged.literals	41
+10146f4	stepAllocateContext_value_6.UpdateAppleTalk	43	map=map_1010b19
+1014714	stepAllocateContext_value_6.UpdateAppleTalk.instructions	40
+10147a0	stepAllocateContext_value_6.UpdateAppleTalk.literals	41
+10147e0	stepAllocateContext_value_6.viewClickScript	43	map=map_1010b19
+1014800	stepAllocateContext_value_6.viewClickScript.instructions	40
+1014854	stepAllocateContext_value_6.viewClickScript.literals	41
 1014880	'AppleTalkOpenCount	40
-10148a4	obj_1014351.viewClickScript.literals[2]	40
-10148c4	obj_1014351.viewClickScript.literals[3]	40
+10148a4	stepAllocateContext_value_6.viewClickScript.literals[2]	40
+10148c4	stepAllocateContext_value_6.viewClickScript.literals[3]	40
 10149c0	'Notify	40
-10149d8	obj_1014351.viewClickScript.literals[6]	40
-1014ae0	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript	43	map=map_1010b19
-1014b00	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.instructions	40
-1014bb8	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals	41
+10149d8	stepAllocateContext_value_6.viewClickScript.literals[6]	40
+1014ae0	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript	43	map=map_1010b19
+1014b00	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.instructions	40
+1014bb8	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals	41
 1014c24	'cisProductName	40
-1014c44	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[6]	43	map=map_1010b19
-1014c64	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[6].instructions	40
-1014cc0	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[6].literals	41
-1014ce0	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[16]	40
-1014d08	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[17]	40
+1014c44	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[6]	43	map=map_1010b19
+1014c64	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[6].instructions	40
+1014cc0	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[6].literals	41
+1014ce0	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[16]	40
+1014d08	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[17]	40
 1014d18	'cisManufacturerName	40
-1014d3c	obj_1014d3d	40
+1014d3c	viewSetupFormScript_literal19	40
 1014d4c	'cisProductInfo0	40
-1014d6c	obj_101095d[0].devInstallScript.literals[23].literals[2].stepChildren	41
-1014d94	obj_101095d[0].devInstallScript.literals[23].literals[2].stepChildren[0]	43	map=map_1010f89
-1014da4	obj_101095d[0].devInstallScript.literals[23].literals[3]	41
+1014d6c	part[0].devInstallScript.literals[23].literals[2].stepChildren	41
+1014d94	part[0].devInstallScript.literals[23].literals[2].stepChildren[0]	43	map=map_1010f89
+1014da4	part[0].devInstallScript.literals[23].literals[3]	41
 1014dc0	'CloseWeirdCardSlip	40
-1014de4	obj_101095d[0].devInstallScript.literals[25]	43	map=map_1010b19
-1014e04	obj_101095d[0].devInstallScript.literals[25].instructions	40
-1014e24	obj_101095d[0].devInstallScript.literals[25].literals	41
+1014de4	part[0].devInstallScript.literals[25]	43	map=map_1010b19
+1014e04	part[0].devInstallScript.literals[25].instructions	40
+1014e24	part[0].devInstallScript.literals[25].literals	41
 1014e3c	'cardSlips	40
-1014e58	obj_101095d[0].devInstallScript.literals[27]	43	map=map_1010b19
-1014e78	obj_101095d[0].devInstallScript.literals[27].instructions	40
-1014ef4	obj_101095d[0].devInstallScript.literals[27].literals	41
+1014e58	part[0].devInstallScript.literals[27]	43	map=map_1010b19
+1014e78	part[0].devInstallScript.literals[27].instructions	40
+1014ef4	part[0].devInstallScript.literals[27].literals	41
 1014f2c	'HasSlot	40
 1014f44	'ConfigChanged	40
-1014f64	obj_101095d[0].devInstallScript.literals[27].literals[8]	43	map=map_1010b19
-1014f84	obj_101095d[0].devInstallScript.literals[27].literals[8].instructions	40
-1014fb4	obj_101095d[0].devInstallScript.literals[27].literals[8].literals	41
+1014f64	part[0].devInstallScript.literals[27].literals[8]	43	map=map_1010b19
+1014f84	part[0].devInstallScript.literals[27].literals[8].instructions	40
+1014fb4	part[0].devInstallScript.literals[27].literals[8].literals	41
 1014fc4	'AddDeferredSend	40
-1014fe4	obj_101095d[0].devRemoveScript	43	map=map_1010b19
-1015004	obj_101095d[0].devRemoveScript.instructions	40
-1015048	obj_101095d[0].devRemoveScript.literals	41
-1015088	obj_101095d[0].devRemoveScript.literals[0]	43	map=map_1010b19
-10150a8	obj_101095d[0].devRemoveScript.literals[0].instructions	40
-10150d8	obj_101095d[0].devRemoveScript.literals[0].literals	41
+1014fe4	part[0].devRemoveScript	43	map=map_1010b19
+1015004	part[0].devRemoveScript.instructions	40
+1015048	part[0].devRemoveScript.literals	41
+1015088	part[0].devRemoveScript.literals[0]	43	map=map_1010b19
+10150a8	part[0].devRemoveScript.literals[0].instructions	40
+10150d8	part[0].devRemoveScript.literals[0].literals	41
 10150f0	'needReboot	40
 101510c	'UnDefGlobalFn	40
-alias	obj_101095d[0].devInstallScript.literals[6].literals[2]	map_1010f89
-alias	obj_101095d[0].devInstallScript.literals[6].literals[6]	map_1010f89
-alias	obj_101095d[0].devInstallScript.literals[6].literals[15]	obj_1011391
-alias	obj_101095d[0].devInstallScript.literals[9]	obj_1011565
-alias	obj_101095d[0].devInstallScript.literals[15].literals[7]	obj_1011b95
-alias	obj_101095d[0].devInstallScript.literals[15].literals[11]	obj_1011b95
-alias	obj_101095d[0].devInstallScript.literals[23].literals[0]	obj_1011ec5
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].messageText	obj_10125b5
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].name	obj_10125b5
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepAllocateContext[1]	obj_1012791
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepAllocateContext[3]	obj_1013d29
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepAllocateContext[5]	obj_1013f75
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepAllocateContext[7]	obj_1014099
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepAllocateContext[9]	obj_1014241
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepAllocateContext[11]	obj_1014351
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[6].literals[4]	obj_10125b5
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[9]	obj_10125b5
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[19]	obj_1014d3d
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[21]	obj_1014d3d
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepChildren[1]	obj_1012791
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepChildren[2]	obj_1013d29
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepChildren[3]	obj_1013f75
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepChildren[4]	obj_1014099
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepChildren[5]	obj_1014241
-alias	obj_101095d[0].devInstallScript.literals[23].literals[2].stepChildren[6]	obj_1014351
-alias	obj_101095d[0].devInstallScript.literals[25].literals[0]	obj_1011ec5
-alias	obj_101095d[0].devRemoveScript.literals[0].literals[2]	obj_1011565
-alias	obj_1011565.literals[3]	obj_1011391
-alias	obj_1011565.literals[9]	obj_101179d
-alias	obj_1011565.literals[12]	obj_10117f9
-alias	obj_1011565.literals[13]	obj_1011811
-alias	obj_1012791.buttonClickScript.literals[5]	obj_1012991
-alias	obj_1012791.buttonClickScript.literals[12].stepChildren[1]	obj_1012b89
-alias	obj_1012791.buttonClickScript.literals[12].stepChildren[2].text	obj_1012991
-alias	obj_1012791.buttonClickScript.literals[12].stepAllocateContext[1]	obj_1012b89
-alias	obj_1012791.buttonClickScript.literals[18].stepChildren[0]	obj_10131f1
-alias	obj_1012791.buttonClickScript.literals[18].stepChildren[1]	obj_10133c9
-alias	obj_1012791.buttonClickScript.literals[18].stepAllocateContext[1]	obj_10131f1
-alias	obj_1012791.buttonClickScript.literals[18].stepAllocateContext[3]	obj_1013a99
-alias	obj_1012791.buttonClickScript.literals[18].stepAllocateContext[5]	obj_10133c9
-alias	obj_1014351.viewSetupFormScript.literals[10]	obj_10125b5
-alias	obj_1014351.viewSetupFormScript.literals[12]	obj_10125b5
-alias	obj_1014351.viewSetupFormScript.literals[13]	obj_1014611
-alias	obj_1014351.valueChanged.literals[2]	obj_1014611
-alias	obj_1014351.valueChanged.literals[5]	obj_101179d
-alias	obj_1014351.valueChanged.literals[6]	obj_10125b5
-alias	obj_1014351.UpdateAppleTalk.literals[5]	obj_101179d
-alias	obj_1014351.UpdateAppleTalk.literals[8]	obj_101179d
-alias	obj_1014351.UpdateAppleTalk.literals[9]	obj_10117f9
-alias	obj_1014351.UpdateAppleTalk.literals[10]	obj_1011811
-alias	obj_10133c9.stepChildren[0]	obj_1013511
-alias	obj_10133c9.keyButton	obj_1013a99
-alias	obj_10133c9.stepAllocateContext[1]	obj_1013511
-alias	obj_1014351.originalATDevice	obj_10125b5
-alias	obj_1014351.originalATLink	obj_10125b5
+alias	part[0].devInstallScript.literals[6].literals[2]	map_1010f89
+alias	part[0].devInstallScript.literals[6].literals[6]	map_1010f89
+alias	part[0].devInstallScript.literals[6].literals[15]	devInstallScript_literal15
+alias	part[0].devInstallScript.literals[9]	devInstallScript_literal9
+alias	part[0].devInstallScript.literals[15].literals[7]	devInstallScript_literal7
+alias	part[0].devInstallScript.literals[15].literals[11]	devInstallScript_literal7
+alias	part[0].devInstallScript.literals[23].literals[0]	devInstallScript_literal0
+alias	part[0].devInstallScript.literals[23].literals[2].messageText	value
+alias	part[0].devInstallScript.literals[23].literals[2].name	value
+alias	part[0].devInstallScript.literals[23].literals[2].stepAllocateContext[1]	stepAllocateContext_value
+alias	part[0].devInstallScript.literals[23].literals[2].stepAllocateContext[3]	stepAllocateContext_value_2
+alias	part[0].devInstallScript.literals[23].literals[2].stepAllocateContext[5]	stepAllocateContext_value_3
+alias	part[0].devInstallScript.literals[23].literals[2].stepAllocateContext[7]	stepAllocateContext_value_4
+alias	part[0].devInstallScript.literals[23].literals[2].stepAllocateContext[9]	stepAllocateContext_value_5
+alias	part[0].devInstallScript.literals[23].literals[2].stepAllocateContext[11]	stepAllocateContext_value_6
+alias	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[6].literals[4]	value
+alias	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[9]	value
+alias	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[19]	viewSetupFormScript_literal19
+alias	part[0].devInstallScript.literals[23].literals[2].viewSetupFormScript.literals[21]	viewSetupFormScript_literal19
+alias	part[0].devInstallScript.literals[23].literals[2].stepChildren[1]	stepAllocateContext_value
+alias	part[0].devInstallScript.literals[23].literals[2].stepChildren[2]	stepAllocateContext_value_2
+alias	part[0].devInstallScript.literals[23].literals[2].stepChildren[3]	stepAllocateContext_value_3
+alias	part[0].devInstallScript.literals[23].literals[2].stepChildren[4]	stepAllocateContext_value_4
+alias	part[0].devInstallScript.literals[23].literals[2].stepChildren[5]	stepAllocateContext_value_5
+alias	part[0].devInstallScript.literals[23].literals[2].stepChildren[6]	stepAllocateContext_value_6
+alias	part[0].devInstallScript.literals[25].literals[0]	devInstallScript_literal0
+alias	part[0].devRemoveScript.literals[0].literals[2]	devInstallScript_literal9
+alias	devInstallScript_literal9.literals[3]	devInstallScript_literal15
+alias	devInstallScript_literal9.literals[9]	devInstallScript_literal9_literal9
+alias	devInstallScript_literal9.literals[12]	devInstallScript_literal9_literal12
+alias	devInstallScript_literal9.literals[13]	devInstallScript_literal9_literal13
+alias	stepAllocateContext_value.buttonClickScript.literals[5]	buttonClickScript_literal5
+alias	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[1]	stepChildren_value
+alias	stepAllocateContext_value.buttonClickScript.literals[12].stepChildren[2].text	buttonClickScript_literal5
+alias	stepAllocateContext_value.buttonClickScript.literals[12].stepAllocateContext[1]	stepChildren_value
+alias	stepAllocateContext_value.buttonClickScript.literals[18].stepChildren[0]	stepChildren_value_2
+alias	stepAllocateContext_value.buttonClickScript.literals[18].stepChildren[1]	stepChildren_value_3
+alias	stepAllocateContext_value.buttonClickScript.literals[18].stepAllocateContext[1]	stepChildren_value_2
+alias	stepAllocateContext_value.buttonClickScript.literals[18].stepAllocateContext[3]	frame_2
+alias	stepAllocateContext_value.buttonClickScript.literals[18].stepAllocateContext[5]	stepChildren_value_3
+alias	stepAllocateContext_value_6.viewSetupFormScript.literals[10]	value
+alias	stepAllocateContext_value_6.viewSetupFormScript.literals[12]	value
+alias	stepAllocateContext_value_6.viewSetupFormScript.literals[13]	viewSetupFormScript_literal13
+alias	stepAllocateContext_value_6.valueChanged.literals[2]	viewSetupFormScript_literal13
+alias	stepAllocateContext_value_6.valueChanged.literals[5]	devInstallScript_literal9_literal9
+alias	stepAllocateContext_value_6.valueChanged.literals[6]	value
+alias	stepAllocateContext_value_6.UpdateAppleTalk.literals[5]	devInstallScript_literal9_literal9
+alias	stepAllocateContext_value_6.UpdateAppleTalk.literals[8]	devInstallScript_literal9_literal9
+alias	stepAllocateContext_value_6.UpdateAppleTalk.literals[9]	devInstallScript_literal9_literal12
+alias	stepAllocateContext_value_6.UpdateAppleTalk.literals[10]	devInstallScript_literal9_literal13
+alias	stepChildren_value_3.stepChildren[0]	frame
+alias	stepChildren_value_3.keyButton	frame_2
+alias	stepChildren_value_3.stepAllocateContext[1]	frame
+alias	stepAllocateContext_value_6.originalATDevice	value
+alias	stepAllocateContext_value_6.originalATLink	value

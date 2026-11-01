@@ -1,5 +1,0 @@
-@@ 0x54cd21
-func() begin
-	self:Scroller(nil)
-end
-@@end

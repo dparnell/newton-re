@@ -1,0 +1,262 @@
+// newTrollLayout, and what only it reaches: NewtApp's roll layout (NPR
+// "newtRollLayout", made for the Notes application): the entries are shown one
+// after another down a continuous roll, each in a newtRollEntryView (protoChild)
+// as tall as its entry's height slot, and the roll scrolls by pixels.
+// dataCursor is the entry at the top; viewOriginY how far into it the view is
+// scrolled.
+
+newTrollLayout := {
+	_proto: @newtLayout,
+	// the entry view each shown entry gets (a newtRollEntryView)
+	protoChild: nil,
+	hasOnePage: nil,
+	// the last entry of the soup, when it is shown (it stretches to the bottom)
+	lastItem: nil,
+	// the height the last entry's view takes: the space below the ones before it
+	lastHeight: 0,
+	viewOriginY: 0,
+	// 4 lines' height (set by viewSetupChildrenScript)
+	overlapscrollamount: nil,
+	// collects the entries (and viewDefs) that fit in the view from the top entry
+	// on, growing the arrays 10 at a time, and makes one protoChild view for each
+	viewSetupChildrenScript: func() begin
+		local list, box, l3, copy, l5, entry2, entry, l8, height, entryDataDef, entryDataView;
+		inherited:viewSetupChildrenScript();
+		self.viewChildren := nil;
+		list := [Array: ];
+		box := self:LocalBox();
+		overlapscrollamount := (4 * viewLineSpacing);
+		l3 := (-viewOriginY);
+		copy := dataCursor:clone();
+		l5 := 0;
+		entry2 := nil;
+		entry := copy:entry();
+		entries := Array(10, nil);
+		entryViewDefs := Array(10, nil);
+		l8 := 10;
+		lastItem := nil;
+		lastHeight := self:LocalBox().bottom;
+		height := 0;
+		(loop begin
+				if (not entry) then begin
+						lastItem := entry2;
+						break
+					end;
+				if (entryDataDef := GetEntryDataDef(entry)) then begin
+						entryDataView := GetEntryDataView(entry, viewDef)
+					end;
+				if (l3 > box.bottom) then begin
+						break
+					end else begin
+						lastHeight := (lastHeight - height);
+						height := entry.height;
+						l3 := (l3 + height);
+						if (l5 >= l8) then begin
+								SetLength(entries, (l8 := (l8 + 10)));
+								SetLength(entryViewDefs, l8)
+							end;
+						entries[l5] := entry;
+						entryViewDefs[l5] := entryDataView;
+						l5 := (l5 + 1)
+					end;
+				entry2 := entry;
+				(entry := copy:Next())
+			end);
+		self.viewChildren := Array(l5, protoChild);
+		SetLength(entries, l5);
+		SetLength(entryViewDefs, l5);
+		layout:Retarget(nil)
+	end,
+	// scrolls by a2 pixels (a1 unused here) with a reveal effect over all but the
+	// bottom 20 pixels, then redraws those
+	PixelScrollBy: func(a1, a2) begin
+		local box, l2;
+		duringScroll := 'item;
+		try begin
+				self:DropHilites();
+				RefreshViews();
+				l2 := (box := self:LocalBox()).bottom;
+				box.bottom := (box.bottom - 20);
+				// PixelScroller moves the views while RevealEffect animates the distance
+				self:RevealEffect((-a2), box, @flip, 'PixelScroller, [Array: a1, a2]);
+				(box := self:GlobalBox()).top := (box.bottom - 20);
+				self:DirtyBox(box)
+			end onexception |evt.ex| do begin
+				duringScroll := nil;
+				Rethrow()
+			end;
+		(duringScroll := nil)
+	end,
+	// the scroll itself: a2 > 0 scrolls down, dropping the entries scrolled off the
+	// top (and their views) and adding entries and views at the bottom; a2 < 0
+	// scrolls up, adding entries above (from dataCursor:prev) and dropping those
+	// fallen off the bottom.  The views kept are moved by OffsetView, the last one
+	// resynced to take up lastHeight.
+	PixelScroller: func(a1, a2) begin
+		local v5_xxxxxxxxxxxxxxxwwwwww, v6_zzzzzzyyyyyyyyyyyyyyyyyyyy, v11_uuuuuuuuttttt, v13_zyyyyyyyyyyy, v14_ppppppp, v16_yxxxxx, v18_ssssss, v19_yyyyyyyyxxx, v20_vvvvvvvvvvuuuuu, v21_kjjj, v23_tttttttttts, v24_xxxxxxxxxwwwwwww, v25_zzzzzzzzzzyyyyyyyyyyy, v26_vvvvvvvvvvuuuuuu, v27_xxxxxxxxxxxxxxxxxxxxx, v28_zzzzyyyyyyyyyyy, v29_wwwwwwwwwwwvvvvvvvvvv;
+		v27_xxxxxxxxxxxxxxxxxxxxx := self:LocalBox();
+		v25_zzzzzzzzzzyyyyyyyyyyy := Length(entries);
+		v14_ppppppp := (if viewOriginY then viewOriginY else 0);
+		v16_yxxxxx := 0;
+		v11_uuuuuuuuttttt := 0;
+		// v25: the number of entries shown, v14: the old origin, v27: the view's box
+		(if (a2 > 0) then begin
+				if (v25_zzzzzzzzzzyyyyyyyyyyy > 1) then begin
+						v20_vvvvvvvvvvuuuuu := (-v14_ppppppp);
+						v19_yyyyyyyyxxx := (foreach v7_hgg, v10_yyyyyyyyyyyyyyyyyyyxxxxxx in entries do begin
+								if ((v20_vvvvvvvvvvuuuuu + v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height) > a2) then begin
+										break v7_hgg
+									end;
+								if (not dataCursor:Next()) then begin
+										dataCursor:prev();
+										break v7_hgg
+									end;
+								RemoveView(self, viewChildren[0]);
+								viewOriginY := (viewOriginY - v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height);
+								v20_vvvvvvvvvvuuuuu := (v20_vvvvvvvvvvuuuuu + v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height)
+							end);
+						if (if v19_yyyyyyyyxxx then (v19_yyyyyyyyxxx > 0)) then begin
+								ArrayMunger(entries, 0, v19_yyyyyyyyxxx, nil, 0, 0);
+								ArrayMunger(entryViewDefs, 0, v19_yyyyyyyyxxx, nil, 0, 0)
+							end
+					end;
+				// v11 sums the entries' heights from the new origin: add entries while short
+				v11_uuuuuuuuttttt := (-(viewOriginY := (viewOriginY + a2)));
+				v16_yxxxxx := 0;
+				(foreach v10_yyyyyyyyyyyyyyyyyyyxxxxxx in entries do begin
+						v11_uuuuuuuuttttt := (v11_uuuuuuuuttttt + (v16_yxxxxx := v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height))
+					end);
+				v21_kjjj := Length(entries);
+				(while (v11_uuuuuuuuttttt <= v27_xxxxxxxxxxxxxxxxxxxxx.bottom) do begin
+						if (not v23_tttttttttts) then begin
+								v23_tttttttttts := dataCursor:clone();
+								v23_tttttttttts:move(v21_kjjj);
+								v10_yyyyyyyyyyyyyyyyyyyxxxxxx := v23_tttttttttts:entry()
+							end;
+						if (not v10_yyyyyyyyyyyyyyyyyyyxxxxxx) then begin
+								break
+							end;
+						v11_uuuuuuuuttttt := (v11_uuuuuuuuttttt + (v16_yxxxxx := v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height));
+						AddArraySlot(entries, v10_yyyyyyyyyyyyyyyyyyyxxxxxx);
+						AddArraySlot(entryViewDefs, GetEntryDataView(v10_yyyyyyyyyyyyyyyyyyyxxxxxx, 'default));
+						(v10_yyyyyyyyyyyyyyyyyyyxxxxxx := v23_tttttttttts:Next())
+					end);
+				v5_xxxxxxxxxxxxxxxwwwwww := (v28_zzzzyyyyyyyyyyy := self:ChildViewFrames())[(nextEntry := (Length(v28_zzzzyyyyyyyyyyy) - 1))];
+				if (a2 <> 0) then begin
+						(foreach v7_hgg, v17_ttttttttttts in v28_zzzzyyyyyyyyyyy do begin
+								if (v17_ttttttttttts <> v5_xxxxxxxxxxxxxxxwwwwww) then begin
+										v17_ttttttttttts:OffsetView(0, (-a2))
+									end
+							end)
+					end;
+				lastHeight := ((v27_xxxxxxxxxxxxxxxxxxxxx.bottom - viewOriginY) - (v11_uuuuuuuuttttt - v16_yxxxxx));
+				v5_xxxxxxxxxxxxxxxwwwwww:SyncView();
+				v6_zzzzzzyyyyyyyyyyyyyyyyyyyy := Length(entries);
+				// views for the entries added (nextEntry tells each new view its entry)
+				(if (v21_kjjj <> v6_zzzzzzyyyyyyyyyyyyyyyyyyyy) then begin
+						nextEntry := v21_kjjj;
+						(for v7_hgg := v21_kjjj to (v6_zzzzzzyyyyyyyyyyyyyyyyyyyy - 1) do begin
+								AddView(self, protoChild)
+							end)
+					end)
+			// scrolling up past the top entry: bring the previous entries in, v18 of them
+			end else (if (a2 < 0) then begin
+					v18_ssssss := 0;
+					if ((-a2) > v14_ppppppp) then begin
+							viewOriginY := 0;
+							v20_vvvvvvvvvvuuuuu := v14_ppppppp;
+							(loop begin
+									if (not (v10_yyyyyyyyyyyyyyyyyyyxxxxxx := dataCursor:prev())) then begin
+											dataCursor:Next();
+											a2 := (-v20_vvvvvvvvvvuuuuu);
+											break
+										end;
+									v18_ssssss := (v18_ssssss + 1);
+									ArrayInsert(entries, v10_yyyyyyyyyyyyyyyyyyyxxxxxx, 0);
+									ArrayInsert(entryViewDefs, GetEntryDataView(v10_yyyyyyyyyyyyyyyyyyyxxxxxx, 'default), 0);
+									(if ((v20_vvvvvvvvvvuuuuu := (v20_vvvvvvvvvvuuuuu + v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height)) >= (-a2)) then begin
+											viewOriginY := (v20_vvvvvvvvvvuuuuu + a2);
+											break
+										end)
+								end);
+							v29_wwwwwwwwwwwvvvvvvvvvv := self:ChildViewFrames()[0];
+							v26_vvvvvvvvvvuuuuuu := (self:GlobalBox().top - viewOriginY);
+							nextEntry := 0;
+							(for v7_hgg := 0 to (v18_ssssss - 1) do begin
+									v24_xxxxxxxxxwwwwwww := AddView(self, protoChild);
+									v24_xxxxxxxxxwwwwwww:MoveBehind(v29_wwwwwwwwwwwvvvvvvvvvv);
+									v24_xxxxxxxxxwwwwwww:OffsetView(0, (v26_vvvvvvvvvvuuuuuu - v24_xxxxxxxxxwwwwwww:GlobalBox().top));
+									v26_vvvvvvvvvvuuuuuu := v24_xxxxxxxxxwwwwwww:GlobalBox().bottom
+								end);
+							v29_wwwwwwwwwwwvvvvvvvvvv:SyncView()
+						end else begin
+							viewOriginY := (v14_ppppppp + a2);
+							if (v25_zzzzzzzzzzyyyyyyyyyyy > 1) then begin
+									nextEntry := 0;
+									self:ChildViewFrames()[0]:SyncView()
+								end
+						end;
+					// drop the entries now below the view's bottom
+					v11_uuuuuuuuttttt := (-viewOriginY);
+					v16_yxxxxx := 0;
+					v13_zyyyyyyyyyyy := 0;
+					v6_zzzzzzyyyyyyyyyyyyyyyyyyyy := Length(entries);
+					(while (if (v11_uuuuuuuuttttt <= v27_xxxxxxxxxxxxxxxxxxxxx.bottom) then (v13_zyyyyyyyyyyy < v6_zzzzzzyyyyyyyyyyyyyyyyyyyy)) do begin
+							v10_yyyyyyyyyyyyyyyyyyyxxxxxx := entries[v13_zyyyyyyyyyyy];
+							v11_uuuuuuuuttttt := (v11_uuuuuuuuttttt + (v16_yxxxxx := v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height));
+							(v13_zyyyyyyyyyyy := (v13_zyyyyyyyyyyy + 1))
+						end);
+					if (v13_zyyyyyyyyyyy < v6_zzzzzzyyyyyyyyyyyyyyyyyyyy) then begin
+							SetLength(entries, v13_zyyyyyyyyyyy);
+							SetLength(entryViewDefs, v13_zyyyyyyyyyyy);
+							v28_zzzzyyyyyyyyyyy := self:ChildViewFrames();
+							(for v7_hgg := (v6_zzzzzzyyyyyyyyyyyyyyyyyyyy - 1) to v13_zyyyyyyyyyyy by -1 do begin
+									RemoveView(self, v28_zzzzyyyyyyyyyyy[v7_hgg])
+								end)
+						end;
+					v5_xxxxxxxxxxxxxxxwwwwww := (v28_zzzzyyyyyyyyyyy := self:ChildViewFrames())[(nextEntry := (Length(v28_zzzzyyyyyyyyyyy) - 1))];
+					if (a2 <> 0) then begin
+							(foreach v7_hgg, v17_ttttttttttts in v28_zzzzyyyyyyyyyyy do begin
+									if (if (v7_hgg > v18_ssssss) then (v17_ttttttttttts <> v5_xxxxxxxxxxxxxxxwwwwww)) then begin
+											v17_ttttttttttts:OffsetView(0, (-a2))
+										end
+								end)
+						end;
+					lastHeight := ((v27_xxxxxxxxxxxxxxxxxxxxx.bottom - viewOriginY) - (v11_uuuuuuuuttttt - v16_yxxxxx));
+					v5_xxxxxxxxxxxxxxxwwwwww:SyncView()
+				end))
+	end,
+	// the up arrow: back to the start of the top entry, or a view's height less 4
+	// lines (24 pixels with no line spacing) within a tall one; at the top of an
+	// entry, back by the previous entry's height (or part of it, if it is taller
+	// than the view)
+	viewScrollUpScript: func() begin
+		local box, l2, count, viewOriginY2, prev, l6;
+		l2 := ((box := self:LocalBox()).bottom - (if viewLineSpacing then (4 * viewLineSpacing) else 24));
+		count := Length(entries);
+		if (viewOriginY <> 0) then begin
+				if (viewOriginY >= box.bottom) then begin
+						viewOriginY2 := (if ((viewOriginY mod l2) = 0) then l2 else (viewOriginY mod l2))
+					end else begin
+						viewOriginY2 := viewOriginY
+					end
+			end else begin
+				if (not (prev := dataCursor:clone():prev())) then begin
+						return nil
+					end;
+				viewOriginY2 := (if (prev.height > box.bottom) then (if ((l6 := (prev.height mod l2)) < (box.bottom - l2)) then (l6 + l2) else l6) else prev.height)
+			end;
+		self:PixelScrollBy(0, (-viewOriginY2))
+	end,
+	// the down arrow: to the next entry (by the rest of the top entry's height),
+	// or by a view's height less 4 lines when only one entry is shown
+	viewScrollDownScript: func() begin
+		local box, l2, count, l4;
+		l2 := ((box := self:LocalBox()).bottom - (if viewLineSpacing then (4 * viewLineSpacing) else 24));
+		l4 := (if ((count := Length(entries)) > 1) then (entries[0].height - viewOriginY) else l2);
+		self:PixelScrollBy(0, l4)
+	end,
+	// shared with the other roll layouts
+	Jogged: Jogged,
+	GetActiveViewX: GetActiveViewX
+};

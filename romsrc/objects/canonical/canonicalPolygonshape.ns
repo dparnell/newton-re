@@ -1,0 +1,6 @@
+// canonicalPolygonshape, and what only it reaches
+//
+// The 'polygon shape MakePolygon clones (src/views/DrawShape.cpp): its
+// points as data.
+
+canonicalPolygonshape := {class: 'polygon, data: nil};

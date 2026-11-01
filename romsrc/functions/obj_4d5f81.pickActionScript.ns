@@ -1,6 +1,0 @@
-@@ 0x4d5f61
-func(a1) begin
-	inherited:pickActionScript(a1);
-	(selectedLocations := selected)
-end
-@@end

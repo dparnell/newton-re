@@ -1,5 +1,0 @@
-@@ 0x77095d
-func() begin
-	(self.labelItems := MetricLabels[curMeasurement])
-end
-@@end

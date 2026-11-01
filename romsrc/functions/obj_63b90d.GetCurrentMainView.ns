@@ -1,5 +1,0 @@
-@@ 0x4faf7d
-func() begin
-	(if HasPath(mainDisplay, 'whoAmI) then mainDisplay.whoAmI else 'scheduleView)
-end
-@@end

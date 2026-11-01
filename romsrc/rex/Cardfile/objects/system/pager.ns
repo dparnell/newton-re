@@ -1,0 +1,85 @@
+// The Pager edit view (@8228): a pager number (with its pager type) and PIN,
+// elements of the card's pagers array.
+
+pager := {
+	name: "Pager",
+	symbol: 'pager,
+	type: 'editor,
+	stepChildren: [stepChildren: pagerItem, pagerPIN],
+	infoFrame: {
+		_proto: infoFrameProto,
+		checkPrefix: [|Array|: nil, [pathExpr: 'pagers]],
+		checkPaths: [|Array|: 'pagerNum, 'pagerPin],
+		// "number PIN type": the PIN is shown after the number, as an extension.
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			local parsePhone2, displayPhone, l3, cls;
+			cls := ClassOf((displayPhone := v20_wwwwwwwwwwvvvvvv[0]));
+			if StrFilled(v20_wwwwwwwwwwvvvvvv[1]) then begin
+					if StrFilled(displayPhone) then begin
+							parsePhone2 := ParsePhone(displayPhone)
+						end else begin
+							parsePhone2 := {}
+						end;
+					parsePhone2.extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: parsePhone2.extension, v20_wwwwwwwwwwvvvvvv[1]]);
+					displayPhone := parsePhone2
+				end;
+			displayPhone := MakeDisplayPhone(displayPhone);
+			(displayPhone := ParamStr("^0 ^1", [Array: displayPhone, GetGlobals().pagerTypes.pagerText.(cls)]))
+		end,
+		// Draws the formatted pager as the phone info frame draws a number.
+		shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
+			local formatFunc;
+			inherited:shapeFunc([Array: (formatFunc := self:formatFunc(v20_wwwwwwwwwwvvvvvv))], v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4)
+		end,
+		// A tap dials the pager with its PIN as the extension.
+		actionFunc: func(a1, a2, a3, box, target, path, misc) begin
+			local parsePhone2, phone, l3;
+			phone := target.(path).pagerNum;
+			if StrFilled((l3 := target.(path).pagerPin)) then begin
+					if StrFilled(phone) then begin
+							parsePhone2 := ParsePhone(phone)
+						end else begin
+							parsePhone2 := {}
+						end;
+					parsePhone2.extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: parsePhone2.extension, l3]);
+					phone := MakePhone(parsePhone2)
+				end;
+			misc.phoneNum := phone;
+			inherited:actionFunc(a1, a2, a3, box, target, path, misc)
+		end
+	},
+	usePhoneKeys: true,
+	protection: 'private,
+	fieldOrder: nil,
+	_proto: @8240,
+	pagerNum: nil,
+	stepAllocateContext: [|Array|: 'pagerNum, pagerItem, 'pagerPin, pagerPIN],
+	pagerPin: nil
+};
+
+pagerItem := {
+	path: nil,
+	addPath: 'pagerNum,
+	// The pager types the popup offers.
+	GetSymArray: func() begin
+		GetGlobals().pagerTypes.pagerClasses
+	end,
+	// Their names.
+	GetTextArray: func() begin
+		GetGlobals().pagerTypes.pagerText
+	end,
+	_proto: defaultProto,
+	preAllocatedContext: 'pagerNum
+};
+
+pagerPIN := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	flavor: @newtCustomFilter,
+	label: "Pager PIN",
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
+	addPath: 'pagerPin,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'pagerPin
+};

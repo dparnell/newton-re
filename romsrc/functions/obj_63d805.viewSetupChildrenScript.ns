@@ -1,5 +1,0 @@
-@@ 0x596ebd
-func() begin
-	(if (path = 'title) then (mailTitle.title := "Letter Subject"))
-end
-@@end

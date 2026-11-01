@@ -1,0 +1,141 @@
+// arrayErsatzCursor: an "ersatz" cursor - an object answering the soup cursor
+// messages (Entry, Next, Prev, Move, Goto, GotoKey, Reset, ResetToEnd, Clone,
+// CountEntries) over a plain array.  GetTargetCursor uses it for a target that
+// is a single item or an array, protoListPicker and the Assistant for their item
+// arrays; aliasCursor builds on it.  things is the array, index the position
+// (-1 before the start, Length(things) past the end), validTest an optional
+// function that entries must pass.
+
+arrayErsatzCursor := {
+	things: nil,
+	index: nil,
+	validTest: nil,
+	// New(validTestFrame, things): a new cursor (a frame whose _parent is this
+	// prototype) over the array, at its first valid entry; the valid test is taken
+	// from validTestFrame.validTest
+	New: func(a1, a2) begin
+		local frame2;
+		frame2 := {_parent: self, things: a2, index: 0, validTest: nil};
+		if a1 then begin
+				frame2.validTest := a1.validTest
+			end;
+		frame2:GotoKey(0);
+		frame2
+	end,
+	// Move(n): moves n entries (negative is back) and then on in the same direction
+	// past deleted and invalid entries; returns the entry reached or nil at an end
+	move: func(maxLines) begin
+		local entry, l2;
+		if ((index := (index + maxLines)) < -1) then begin
+				index := -1
+			end else begin
+				if (index > Length(things)) then begin
+						index := Length(things)
+					end
+			end;
+		entry := self:entry();
+		l2 := (if (maxLines < 0) then -1 else 1);
+		(loop begin
+				if (not (entry = 'deleted)) then begin
+						if ((not entry) or (not validTest)) then begin
+								break entry
+							end;
+						if call validTest with (entry) then begin
+								break entry
+							end
+					end;
+				(entry := self:move(l2))
+			end)
+	end,
+	// Goto(item): moves to item (compared by ArrayPos) and returns it, or nil
+	Goto: func(a1) begin
+		if (not (index := ArrayPos(things, a1, 0, nil))) then begin
+				index := -1
+			end;
+		self:entry()
+	end,
+	// GotoKey(n): an integer key is an index; moves there, then on to a valid entry
+	GotoKey: func(a1) begin
+		local entry;
+		if (ClassOf(a1) = 'int) then begin
+				index := a1
+			end else begin
+				index := -1
+			end;
+		entry := self:entry();
+		(loop begin
+				if (not (entry = 'deleted)) then begin
+						if ((not entry) or (not validTest)) then begin
+								break entry
+							end;
+						if call validTest with (entry) then begin
+								break entry
+							end
+					end;
+				(entry := self:move(1))
+			end)
+	end,
+	// Next, Prev: on or back to the next element that passes the valid test
+	// (deleted ones skipped).
+	Next: func() begin
+		local move;
+		(loop (if (not ((move := self:move(1)) = 'deleted)) then begin
+					if ((not move) or (not validTest)) then begin
+							break move
+						end;
+					(if call validTest with (move) then break move)
+				end))
+	end,
+	prev: func() begin
+		local move;
+		(loop (if (not ((move := self:move(-1)) = 'deleted)) then begin
+					if ((not move) or (not validTest)) then begin
+							break move
+						end;
+					(if call validTest with (move) then break move)
+				end))
+	end,
+	// Back to the first element.
+	Reset: func() begin
+		self:GotoKey(0)
+	end,
+	// looks like a ROM bug: with an empty array this reads things[-1], an index out
+	// of bounds
+	ResetToEnd: func() begin
+		local thing;
+		index := (Length(things) - 1);
+		thing := things[index];
+		(loop begin
+				if (not (thing = 'deleted)) then begin
+						if ((not thing) or (not validTest)) then begin
+								break thing
+							end;
+						if call validTest with (thing) then begin
+								break thing
+							end
+					end;
+				(thing := self:move(-1))
+			end)
+	end,
+	// the current entry, or nil when the cursor is off either end
+	entry: func() begin
+		(if (if (index >= 0) then (index < Length(things))) then things[index])
+	end,
+	// A copy of the cursor.
+	clone: func() begin
+		Clone(self)
+	end,
+	// the number of entries, the valid ones only when there is a valid test
+	CountEntries: func() begin
+		(if (not validTest) then Length(things) else begin
+				l1 := 0;
+				local l1;
+				(foreach item in things do begin
+						if call validTest with (item) then begin
+								l1 := (l1 + 1)
+							end
+					end);
+				l1
+			end)
+	end
+};

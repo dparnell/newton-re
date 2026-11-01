@@ -1,0 +1,7 @@
+// _clicksong: the ROM's default "click song" - the sequence the Clicker()
+// native plays when the pen sound effects preference is on.  Each entry is an
+// index into the ROM's `clicks` array of sounds (clicks.ns); vars._curClick says
+// how far through it the machine is, and a vars._clicksong of the user's own
+// replaces it (src/sound/SoundSettings.cpp FClicker).
+
+_clicksong := [|Array|: 1, 4, 2, 2, 5, 0, 5, 5, 3, 2, 4, 0, 4, 2, 3, 2, 5];

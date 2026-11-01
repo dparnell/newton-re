@@ -1,0 +1,88 @@
+// protoConfigPicker: a label picker for a communications configuration
+// setting (which serial port, modem or the like a service uses).  The choice
+// is kept in the user configuration under configSlot and handed to a
+// protoConfigServer for configService; on closing, every function in
+// CommConfigChangeRegistry is told of the change.
+//   items   frames with an id (the value stored) and a title (a string, or
+//           an array of them by screen orientation; no title: a separator)
+
+protoConfigPicker := {
+	_proto: @protoLabelPicker,
+	labelCommands: nil,
+	items: nil,
+	server: nil,
+	configService: mods,
+	configType: defHWLoc,
+	// at setup: makes the picker's list from items, each title picked for the
+	// current screen orientation ('pickseparator for an item without one)
+	viewSetupFormScript: func() begin
+		screenOrientation := GetUserConfig('screenOrientation);
+		local screenOrientation;
+		labelCommands := (foreach item in items collect (if item.title then (if IsArray(item.title) then item.title[screenOrientation] else item.title) else 'pickseparator));
+		inherited:?viewSetupFormScript()
+	end,
+	// makes the configuration server the first time it is needed
+	ensureServerSetup: func() begin
+		(if (server = nil) then begin
+				server := {_proto: @protoConfigServer};
+				server:Instantiate(configService, configType)
+			end)
+	end,
+	// on closing: gives the chosen configuration to the server as its
+	// default, disposes of the server, and calls each function registered in
+	// CommConfigChangeRegistry with (configService, configuration), ignoring
+	// any exception it throws
+	viewQuitScript: func() begin
+		userConfig := GetUserConfig(configSlot);
+		self:ensureServerSetup();
+		server:setdefaultConfig(userConfig);
+		if server then begin
+				server:Dispose();
+				server := nil
+			end;
+		local userConfig;
+		(foreach key, value deeply in CommConfigChangeRegistry do begin
+				// only the registry's own slots, not what it inherits
+				if (value = CommConfigChangeRegistry.(key)) then begin
+						try begin
+								call value with (configService, userConfig)
+							end onexception |evt.ex| do begin end
+					end
+			end)
+	end,
+	// answers the text shown: the title of the user's configuration, or of
+	// the server's default when the user has none
+	TextSetup: func() begin
+		(if (not vars.(configSlot)) then begin
+				self:ensureServerSetup();
+				labelCommands[self:LabelIndex(server:getdefaultConfig())]
+			end else labelCommands[self:LabelIndex(GetUserConfig(configSlot))])
+	end,
+	// sent when the user picks item index: stores its id (undoably) and
+	// tells the optional PickItem method
+	LabelActionScript: func(index) begin
+		AddUndoAction('setLabelScript, [Array: GetUserConfig(configSlot)]);
+		SetUserConfig(configSlot, items[index].id);
+		self:?PickItem(items[index].id)
+	end,
+	// answers the index of the item whose id is a1 (0 if none matches)
+	LabelIndex: func(a1) begin
+		i2 := 0;
+		local i2;
+		(for i := 0 to (Length(items) - 1) do begin
+				if (if (if a1 then items[i].id) then StrEqual(a1, items[i].id)) then begin
+						i2 := i;
+						break
+					end
+			end);
+		i2
+	end,
+	// the undo action: sets the configuration back to the id a1
+	setLabelScript: func(a1) begin
+		self:LabelActionScript(self:LabelIndex(a1))
+	end,
+	debug: 5802460
+};
+
+// the default configuration type given to the server
+defHWLoc := "DefHWLoc";

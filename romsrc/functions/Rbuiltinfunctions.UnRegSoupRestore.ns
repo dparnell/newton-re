@@ -1,6 +1,0 @@
-@@ 0x3c61f5
-func(a1) begin
-	RemoveSlot(SoupRestoreRegistry, a1);
-	nil
-end
-@@end

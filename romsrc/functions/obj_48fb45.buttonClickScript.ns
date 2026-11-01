@@ -1,5 +1,0 @@
-@@ 0x48fb25
-func() begin
-	self:ConfirmCallback(true)
-end
-@@end

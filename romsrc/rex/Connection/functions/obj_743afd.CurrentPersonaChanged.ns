@@ -1,5 +1,0 @@
-@@ 0x7441c9
-func() begin
-	deviceSpecificStuff:CurrentPersonaChanged()
-end
-@@end

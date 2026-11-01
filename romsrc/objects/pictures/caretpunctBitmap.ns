@@ -1,0 +1,4 @@
+// The image of the caret's punctuation picker (the bits and bounds caretpunctBits shares).
+// A 1-bit bitmap frame (bits, bounds). Magic pointer @595. Used by data.
+
+caretpunctBitmap := {bits: caretpunctBitmapBits, bounds: caretpunctBitmapBounds};

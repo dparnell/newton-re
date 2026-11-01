@@ -1,0 +1,5 @@
+// coverPageFormat: magic pointer @60, the base of the print formats of a fax
+// cover page and other single-page formats (globalHeapvarwannabes.ns and
+// protoLetterFormat build on it): just a protoPrintFormat.
+
+coverPageFormat := {_proto: @protoPrintFormat};

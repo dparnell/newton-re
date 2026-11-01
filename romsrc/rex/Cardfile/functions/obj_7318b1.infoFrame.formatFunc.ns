@@ -1,5 +1,0 @@
-@@ 0x731d05
-func(a1) begin
-	ParamStr("^0", a1)
-end
-@@end

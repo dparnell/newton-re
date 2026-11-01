@@ -1,5 +1,0 @@
-@@ 0x47fe1d
-func() begin
-	GetRoot().(owner):StartSend(self, 'silent, nil, nil)
-end
-@@end

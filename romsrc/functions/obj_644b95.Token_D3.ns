@@ -1,5 +1,0 @@
-@@ 0x59538d
-func(a1, a2, a3) begin
-	self:LoginDone()
-end
-@@end

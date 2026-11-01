@@ -1,0 +1,7 @@
+// canonicalFontSpec, and what only it reaches
+//
+// A font spec as a frame {family, face, size}, what a packed integer font
+// opens out into (src/qd/Fonts.cpp IntFontToFontParms; the style slip and
+// the text views).
+
+canonicalFontSpec := {size: nil, face: nil, family: nil};

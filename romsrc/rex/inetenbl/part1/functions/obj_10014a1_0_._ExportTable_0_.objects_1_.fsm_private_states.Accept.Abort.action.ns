@@ -1,6 +1,0 @@
-@@ 0x1017f1d
-func() begin
-	self:?DoErrorCallback("Abort", -16005);
-	self:DoEvent('Disconnect, [Array: nil, nil])
-end
-@@end

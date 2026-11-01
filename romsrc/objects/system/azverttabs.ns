@@ -1,0 +1,40 @@
+// azverttabs: the vertical A-Z tabs (magic pointer @339): azTabs turned on its
+// side, 9 tabs of three letters each down the side of a view (protoListPicker
+// and the location picker use it).
+
+azverttabs := {
+	_proto: @azTabs,
+	viewBounds: {left: 0, top: 0, right: 25, bottom: 0},
+	viewJustify: vjCenterV + vjParentFullV,
+	icon: {
+		bits: bitmap('bits, "resources/bits/43dc15.png", "00000000000400c500c50241014e025a", 1),
+		bounds: {left: 0, top: 0, right: 25, bottom: 137}
+	},
+	iconBBox: {left: 0, top: 0, right: 25, bottom: 137},
+	numIndices: 9,
+	lettersPerTab: 3,
+	_vertical: true,
+	// the letters by tab and phase as in azTabs; the last tab's third letter is a
+	// second Z, as there are only 26 letters for 27 places
+	letters: " DGJMPSVYBEHKNQTWZCFILORUXZ",
+	debug: 2356,
+	hiliter: compile(
+		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_43ded9: {bits: call kBinaryFromHex with ("0000000000040127012701fd01350213fffff000fffff000fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff80000000c00", 'bits), bounds: '{left: 0, top: 0, right: 22, bottom: 14}}
+		},
+		// draws the highlight over tab hiliteShape, down the side
+		func(hiliteShape) begin
+			(if (if viewCObject then (hiliteShape >= 0)) then self:DoDrawing('CopyBits, [Array: kLiteral_43ded9, 2, ((2 + startLeft) + ((hiliteShape * (iconBBox.bottom - 2)) div numIndices)), 2]))
+		end)
+};

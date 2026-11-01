@@ -1,7 +1,0 @@
-@@ 0x472555
-func() begin
-	printerSerialPicker.notifyOnClose := self;
-	printerSerialPicker.currentSelection := self:TextSetup();
-	printerSerialPicker:Open()
-end
-@@end

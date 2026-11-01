@@ -1,0 +1,15 @@
+// WorksiteToCountry (@8283): the name of worksite a1's country, "USA" when it
+// has none.
+
+export91 := func(a1) begin
+	local name, countryEntry;
+	if (if a1 then a1.country) then begin
+			if (if (countryEntry := GetCountryEntry(a1.country)) then (Length(countryEntry) > 0)) then begin
+					name := countryEntry[0].name
+				end
+		end;
+	if (not name) then begin
+			name := "USA"
+		end;
+	return name
+end;

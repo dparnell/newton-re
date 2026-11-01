@@ -1,5 +1,0 @@
-@@ 0x101bf51
-func() begin
-	(if (not masterlock) then nil)
-end
-@@end

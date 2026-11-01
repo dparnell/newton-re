@@ -1,0 +1,4 @@
+// The picture the root view shows while the system starts (the boot logo). A QuickDraw
+// picture (PICT). Magic pointer @320. Used by viewRoot.
+
+bootlogoBitmap := picture('picture, "resources/picture/642ae5");

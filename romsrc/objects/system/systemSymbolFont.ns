@@ -1,0 +1,22 @@
+// systemSymbolFont, and what only it reaches
+//
+// The Symbol font family as the system knows it, for printing: the
+// Macintosh font number and PostScript name, with no outline data of its
+// own on the Newton (the printer has it).
+
+systemSymbolFont := {
+	name: symbol,
+	encoding: 0,
+	macFontID: 23, // Symbol's font number on the Macintosh
+	psSym: 'symbolFont,
+	normal: symbol,
+	bold: symbol,
+	italic: symbol,
+	bolditalic: symbol,
+	plainData: nil,
+	boldData: nil,
+	italicData: nil,
+	boldItalicData: nil
+};
+
+symbol := "Symbol";

@@ -1,8 +1,0 @@
-@@ 0x5a5481
-func() begin
-	pages[index]:Hide();
-	index := (index - 1);
-	pages[index]:Show();
-	(if (index = 0) then backBtn:Hide())
-end
-@@end

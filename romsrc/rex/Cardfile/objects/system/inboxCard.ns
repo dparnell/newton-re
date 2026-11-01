@@ -1,0 +1,54 @@
+// The 'inboxCard view (@8208): a card as the In Box and Out Box show it - its
+// business card layout in a frame.
+
+inboxCard := {
+	viewBounds: {left: 0, top: 0, right: 236, bottom: 160},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	// Shows the card's business card layout; outside the Names application, a
+	// transparent view over it takes the taps.
+	viewSetupFormScript: compile(
+		constants: {
+			// a test every child passes
+			kFunction_72b339: func(a1) begin
+				true
+			end
+		},
+		func() begin
+			if target then begin
+					self.viewDef := GetRoot().cardfile:GetBCLayout(target).slot
+				end;
+			inherited:viewSetupFormScript();
+			(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then AddArraySlot(viewChildren, {viewClass: clView, viewBounds: viewChildren[0].viewBounds, viewFormat: 0, viewFlags: vVisible + vClickable, viewClickScript: kFunction_72b339}))
+		end),
+	viewDef: 'default,
+	// The bottom of the card layout's last child (to see whether a group's members
+	// run off the card).
+	GetMaxBottom: func() begin
+		local childViewFrames, childViewFrames2, count, bottom;
+		bottom := 0;
+		if (Length((childViewFrames := self:ChildViewFrames())) > 0) then begin
+				count := Length((childViewFrames2 := childViewFrames[0]:ChildViewFrames()));
+				bottom := childViewFrames2[(count - 1)]:GlobalBox().bottom
+			end;
+		bottom
+	end,
+	// Shortens the card layout by a1 pixels (room for "(more)").
+	SetNewBottom: func(a1) begin
+		local childViewFrames, l2, l3, copy;
+		(if (Length((childViewFrames := self:ChildViewFrames())) > 0) then begin
+				(copy := Clone(childViewFrames[0].viewBounds)).bottom := (copy.bottom - a1);
+				childViewFrames[0].viewJustify := 0;
+				SetValue(childViewFrames[0], 'viewBounds, copy)
+			end)
+	end,
+	name: card,
+	protection: 'public,
+	symbol: 'inboxCard,
+	type: 'viewer,
+	viewFormat: vfFrameBlack + vfPen(2),
+	_proto: @newtStationeryView
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_6 := same("inboxCard.viewSetupFormScript.literals[11].instructions");

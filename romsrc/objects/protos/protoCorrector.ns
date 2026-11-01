@@ -1,0 +1,225 @@
+// protoCorrector: the correction pop-up a double tap on a recognized word
+// opens: a picker listing the recognizer's other guesses for the word (and
+// spelling suggestions), the word's original ink, "Try letters" when
+// re-recognizing the ink letter by letter could help, and the two buttons
+// (keyboard and full corrector).  Choosing an entry replaces the word.
+//   refCon     a protoCorrectContext: the form, word offset and length
+//   wordInfo   the word's protoWordInfo (its guesses and strokes)
+
+protoCorrector := {
+	// at setup: builds pickItems.  For a word with a single guess, up to
+	// five spelling suggestions not already listed are added as guesses
+	// (index -2); every guess has its ambiguous characters mapped for
+	// display; then the ink, Try letters, the buttons and the frontmost
+	// view's own CorrectorItems.
+	//   v4 refCon; v19 wordInfo; v15 the items; v14 the suggestions
+	// (the locals' odd names are the ones the ROM's function carries)
+	viewSetupFormScript: func() begin
+		local v4_mmlll, v6_sssssssssssr, v7_zzzzzzzyy, v13_uuuttttttttt, v14_ssssrrrrrr, v15_vvvvvvvvvuuuuuuuuuu, v18_zzzyyyyyyyyyyyyyyyyyyyy, v19_yyx, v20_zzzzzzzyyyyy, v21_yyyyyyyyxx, v22_yyyyyyyyyyyyyyyyxxx, v23_yyyyyxxxxxxxxxxxx;
+		v4_mmlll := refCon;
+		v19_yyx := self.wordInfo;
+		v15_vvvvvvvvvuuuuuuuuuu := self.pickItems;
+		if v19_yyx then begin
+				v19_yyx:RemoveAddedEntries(1);
+				v23_yyyyyxxxxxxxxxxxx := Length(v19_yyx.words);
+				v19_yyx:AddCapitalized();
+				v15_vvvvvvvvvuuuuuuuuuu := v19_yyx:GetWords();
+				if (v23_yyyyyxxxxxxxxxxxx = 1) then begin
+						if (v14_ssssrrrrrr := SpellCorrect((v20_zzzzzzzyyyyy := SpellDocBegin()), Clone(v15_vvvvvvvvvuuuuuuuuuu[0]))) then begin
+								(foreach v11_ssssssssss, v16_zzzzzzzzzzzzzyyy in v14_ssssrrrrrr do begin
+										v23_yyyyyxxxxxxxxxxxx := Length(v15_vvvvvvvvvuuuuuuuuuu);
+										v13_uuuttttttttt := (for v9_yyyyyyyyyyyyyxxx := 0 to (v23_yyyyyxxxxxxxxxxxx - 1) do begin
+												if (StrExactCompare(v16_zzzzzzzzzzzzzyyy, v15_vvvvvvvvvuuuuuuuuuu[v9_yyyyyyyyyyyyyxxx]) = 0) then begin
+														break v9_yyyyyyyyyyyyyxxx
+													end
+											end);
+										if (not v13_uuuttttttttt) then begin
+												(v21_yyyyyyyyxx := Clone(@protoWordInterp)).word := v16_zzzzzzzzzzzzzyyy;
+												v21_yyyyyyyyxx.index := -2;
+												AddArraySlot(v19_yyx.words, v21_yyyyyyyyxx)
+											end;
+										if (v11_ssssssssss = 4) then begin
+												break
+											end
+									end)
+							end;
+						SpellDocEnd(v20_zzzzzzzyyyyy);
+						v15_vvvvvvvvvuuuuuuuuuu := v19_yyx:GetWords()
+					end;
+				(foreach v5_aaa, v8_zzzzzzyyyyyyyyyyyy in v15_vvvvvvvvvuuuuuuuuuu do begin
+						MapAmbiguousCharacters((v22_yyyyyyyyyyyyyyyyxxx := Clone(v8_zzzzzzyyyyyyyyyyyy)));
+						v15_vvvvvvvvvuuuuuuuuuu[v5_aaa] := v22_yyyyyyyyyyyyyyyyxxx
+					end);
+				if v19_yyx.strokes then begin
+						(v7_zzzzzzzyy := Clone(@protoStrokesItem)).bounds := v19_yyx.strokes.bounds;
+						v7_zzzzzzzyy.strokelist := v19_yyx.strokes;
+						v7_zzzzzzzyy.pickable := true;
+						AddArraySlot(v15_vvvvvvvvvuuuuuuuuuu, v7_zzzzzzzyy)
+					end;
+				if TryLettersNeeded(v4_mmlll.form, v19_yyx) then begin
+						AddArraySlot(v15_vvvvvvvvvuuuuuuuuuu, @tryLettersBitmap)
+					end
+			end;
+		AddArraySlot(v15_vvvvvvvvvuuuuuuuuuu, @correctorTwoButtons);
+		if (v6_sssssssssssr := (if (v18_zzzyyyyyyyyyyyyyyyyyyyy := GetView('viewfrontmost)) then v18_zzzyyyyyyyyyyyyyyyyyyyy:?CorrectorItems())) then begin
+				ArrayMunger(v15_vvvvvvvvvuuuuuuuuuu, Length(pickItems), 0, v6_sssssssssssr, 0, nil)
+			end;
+		(self.pickItems := v15_vvvvvvvvvuuuuuuuuuu)
+	end,
+	// a pick: index is a frame for the two buttons (x 0: open the keyboard
+	// on the form with the word selected; otherwise the full corrector,
+	// root's correct view, unless the form's ViewCorrectorScript handles
+	// it), else the number of the entry.  An entry with a context is passed
+	// to its CorrectorActionScript; a string replaces the word (and is
+	// learned), Try letters re-recognizes the ink, the ink entry puts the
+	// ink back as an ink word.  l1: a button was handled.
+	pickActionScript: func(index) begin
+		local l1, correct, l3, refCon2, pickItem, words;
+		l1 := nil;
+		correct := GetRoot().correct;
+		l3 := nil;
+		refCon2 := refCon;
+		if IsFrame(index) then begin
+				if (index.x = 0) then begin
+						if refCon2.form.text then begin
+								refCon2.form:SetHilite(refCon2.wordOffset, (refCon2.wordOffset + refCon2.wordLength), true)
+							end;
+						OpenKeypadFor(refCon2.form)
+					end else begin
+						if (not refCon2.form:?ViewCorrectorScript(refCon2)) then begin
+								correct.refCon := refCon2;
+								words := wordInfo:GetWords();
+								correct.pickItems := (if (Length(words) > 0) then words);
+								correct.wordInfo := wordInfo;
+								if correct.viewCObject then begin
+										correct.cText:SetupAll(Clone(pickItems[0]), 'external, nil, nil)
+									end;
+								correct:Open()
+							end
+					end;
+				l1 := true
+			end else begin
+				if (ClassOf((pickItem := pickItems[index])) = 'string) then begin
+						UnmapAmbiguousCharacters(pickItem)
+					end
+			end;
+		(if (if IsFrame(pickItem) then pickItem.context) then pickItem.context:?CorrectorActionScript(pickItem) else (if (not l1) then begin
+					self:LockScreen(true);
+					if (ClassOf(pickItem) = 'string) then begin
+							self:ReplaceWord(index, true)
+						end;
+					if IsFrame(pickItem) then begin
+							if (pickItem = @tryLettersBitmap) then begin
+									self:LockScreen(nil);
+									self:HandleTryLetters();
+									self:LockScreen(true)
+								end else begin
+									self:CorrectInk(pickItem)
+								end
+						end;
+					if correct.viewCObject then begin
+							refCon2.form:SetHilite(refCon2.wordOffset, (refCon2.wordOffset + refCon2.wordLength), true)
+						end;
+					self:LockScreen(nil)
+				end))
+	end,
+	// FindNewGuess(newInfo): moves to the front of newInfo the first of its
+	// guesses that the old wordInfo did not offer.  The decompiler places
+	// the locals after their uses.
+	FindNewGuess: func(a1) begin
+		words := wordInfo:GetWords();
+		l3 := (Length((words2 := a1:GetWords())) - 1);
+		local words;
+		local words2;
+		local l3;
+		(for i := 0 to l3 do begin
+				if (not FindStringInArray(words, words2[i])) then begin
+						break self:MoveToFirst(a1, i)
+					end
+			end)
+	end,
+	// Try letters: re-recognizes the word's strokes with the letter-by-letter
+	// configuration under the busy dialog (placed above the picker, or below
+	// it near the top of the screen - copy2 is the dialog's bounds, l4 its
+	// height), and with a single result puts its best new guess in place of
+	// the word.  Answers the new word info, or nil.
+	HandleTryLetters: func() begin
+		local copy, busyDialog, copy2, l4, recognize2, infoItem;
+		copy := Clone(self.bounds);
+		l4 := ((copy2 := Clone((busyDialog := GetRoot().busyDialog).viewBounds)).bottom - copy2.top);
+		copy2.top := ((copy.top + 4) - l4);
+		if (copy2.top < 32) then begin
+				copy2.top := (copy.bottom - 4)
+			end;
+		copy2.bottom := (copy2.top + l4);
+		busyDialog:Open();
+		recognize2 := Recognize([Array: wordInfo.strokes], @rcTryLettersConfig, nil);
+		busyDialog:Close();
+		if (Length(recognize2.info) = 1) then begin
+				self:FindNewGuess((infoItem := recognize2.info[0]));
+				self.wordInfo := infoItem;
+				infoItem := self:ReplaceWord(0, nil)
+			end else nil;
+		if infoItem then begin
+				infoItem:ClearFlags(2)
+			end;
+		infoItem
+	end,
+	// MoveToFirst(wordInfo, i): makes guess i the first of wordInfo's words
+	MoveToFirst: func(copy, i) begin
+		local words, l2;
+		(if (i > 0) then begin
+				l2 := (words := copy.words)[i];
+				ArrayRemoveCount(words, i, 1);
+				ArrayInsert(words, l2, 0)
+			end)
+	end,
+	// ReplaceWord(index, learn): replaces the word in the form with a copy of
+	// wordInfo whose guess index is first (the recognizer told to learn the
+	// choice if learn), in the style at the word; with the full corrector
+	// open, the caret moves too and refCon follows the corrector's.
+	// Answers the copy.
+	ReplaceWord: func(index, a2) begin
+		local correctInfo2, refCon2, wordInfo, copy, form, wordOffset, wordLength, correct, l9, styleAtOffset, frame2;
+		correctInfo2 := correctInfo;
+		refCon2 := refCon;
+		(wordInfo := self.wordInfo):AutoRemove();
+		if a2 then begin
+				wordInfo:Learn(index)
+			end;
+		copy := DeepClone(wordInfo);
+		if (index > 0) then begin
+				self:MoveToFirst(copy, index)
+			end;
+		form := refCon2.form;
+		wordOffset := refCon2.wordOffset;
+		wordLength := refCon2.wordLength;
+		if (correct := GetRoot().correct).viewCObject then begin
+				l9 := true;
+				correct:SetCaret(refCon2.wordOffset)
+			end;
+		styleAtOffset := form:GetStyleAtOffset(wordOffset);
+		form:HandleInsertItems((frame2 := {insertItems: copy, insertOffset: wordOffset, replaceChars: wordLength, defaultFontSpec: styleAtOffset, addspace: nil, moveCaret: l9}));
+		if l9 then begin
+				refCon2.wordOffset := correct.refCon.wordOffset;
+				refCon2.wordLength := correct.refCon.wordLength
+			end;
+		return copy
+	end,
+	// CorrectInk(strokesItem): replaces the word with its ink as an ink word,
+	// when the form takes ink words; the word is then one character long
+	CorrectInk: func(pickItem) begin
+		local refCon2, frame2;
+		(if ViewAllowsInkWords((refCon2 := refCon).form) then begin
+				refCon2.form:HandleInsertItems((frame2 := {insertItems: StrokeBundleToInkWord(pickItem.strokelist), insertOffset: refCon2.wordOffset, replaceChars: refCon2.wordLength, addspace: nil, moveCaret: nil}));
+				(refCon2.wordLength := 1)
+			end)
+	end,
+	debug: 726132,
+	ReOrientToScreen: @defRotateFunc,
+	_proto: @protoPicker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ReplaceWord_literal15 := same("protoCorrector.ReplaceWord.literals[15]");

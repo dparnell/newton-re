@@ -1,5 +1,0 @@
-@@ 0x101309d argframe=nil,0
-func() begin
-	(if (Length(queue) > 0) then queue[0])
-end
-@@end

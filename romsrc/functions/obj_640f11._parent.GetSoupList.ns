@@ -1,5 +1,0 @@
-@@ 0x634889
-func() begin
-	Clone(self.soupList)
-end
-@@end

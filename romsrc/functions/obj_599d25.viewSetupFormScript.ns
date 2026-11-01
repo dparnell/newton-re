@@ -1,5 +1,0 @@
-@@ 0x599cc5
-func() begin
-	(self.viewValue := (not fields.attachment))
-end
-@@end

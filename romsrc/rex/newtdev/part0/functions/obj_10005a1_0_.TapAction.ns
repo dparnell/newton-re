@@ -1,6 +1,0 @@
-@@ 0x10006d1
-func() begin
-	AddDeferredCall(GetGlobalVar('|Newton Devices:NIE_TapActionFunc|), nil);
-	nil
-end
-@@end

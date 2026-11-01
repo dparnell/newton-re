@@ -1,5 +1,0 @@
-@@ 0x4e6115
-func() begin
-	self:NewWordRequested(nil)
-end
-@@end

@@ -1,6 +1,0 @@
-@@ 0x104a22d
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
-	(if a1.infoError then self:DoEvent('LoadLinkLayerDriverProtocolFailure, nil) else (if (a1.infoStatus = 'Loaded) then self:DoEvent('LoadLinkLayerDriverProtocolSuccess, nil)))
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x425381
-func(a1) begin
-	(fSoundState := a1)
-end
-@@end

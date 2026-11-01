@@ -1,0 +1,10 @@
+// fontStyleItems: magic pointer @855, the font style picker's items: each item
+// text with the face it sets in a font frame.
+
+fontStyleItems := [|Array|:
+	{item: plain, face: kFaceNormal},
+	{item: "Bold", face: kFaceBold},
+	{item: "Italic", face: kFaceItalic},
+	{item: "Underline", face: kFaceUnderline},
+	{item: "Outline", face: kFaceOutline}
+];

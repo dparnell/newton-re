@@ -1,0 +1,99 @@
+// objects several roots reach, none alone (naturalize.py)
+//
+// Binary objects (bitmaps, sounds, numbers, tables) that more than one
+// root of the ROM's object world holds, defined once here.  Each is named
+// after the slot it was first found in, which need not say what it is
+// (`stack` is a real 0.0).
+
+// The mask shared by checkOnBitmap and checkOffBitmap.
+checkOnBitmapMask := bitmap('mask, "resources/mask/3c88f5.png", "0000000000040106010601a1011101ad", 1);
+
+// The mask of the CheckOn and CheckOff shapes in shared/frames.ns (the
+// overview's checkboxes).
+CheckOnMask := bitmap('mask, "resources/mask/3c8a1d.png", "00000000000400190019003600260043", 1);
+
+// A 'fixed sampling rate (10800 samples a second) shared by several of the
+// system sounds (addingMachine, copier, drawerClose, ...).
+samplingRate_2 := fixed('fixed, 10800.0);
+
+// The click sound's samples (sounds/click and the clicks in system/clicks).
+samples := sound('samples, "resources/samples/3d4681.wav");
+
+// The Macintosh's 22254.5454... samples a second, as a 'fixed: the click's
+// and ratchetSound's rate.
+samplingRate_3 := fixed('fixed, 22254.545455932617);
+
+// A mask shared by the markup bitmap and two of copperfield's icons.
+onWithMask := bitmap('mask, "resources/mask/3d6615.png", "00000000000401860186004601970057", 1);
+
+// The mask of filledStarBitmap and hollowstarBitmap.
+filledStarBitmapMask := bitmap('mask, "resources/mask/3d8a55.png", "00000000000400d600d601be00e401cd", 1);
+
+// The bits of four punctuation icons - caret, leading, middle and trailing
+// punctuation - each held by a ...Bitmap and a ...Bits picture (magic
+// pointers such as @caretpunctBitmap and @caretpunctBits).
+caretpunctBitmapBits := bitmap('bits, "resources/bits/3d9471.png", "0000000000080042004200f900e50124", 1);
+
+leadingpunctBitmapBits := bitmap('bits, "resources/bits/3d99c1.png", "000000000008019a019a01dc01b3021b", 1);
+
+midpunctBitmapBits := bitmap('bits, "resources/bits/3d9ac1.png", "000000000008009f009f011c00ce0147", 1);
+
+trailingpunctBitmapBits := bitmap('bits, "resources/bits/3d9c71.png", "0000000000080067006701c300ac0202", 1);
+
+// A sound's compressionRatio (1.88...): protoRouteSlip's, which
+// protoSoundFrame multiplies a sound's sample count by.
+compressionRatio := real('|Real|, 1.8823529411764706);
+
+// The To Do icon's bits (the Calendar's, and smallIcon_3 in shared/frames.ns).
+todoBits := bitmap('bits, "resources/bits/4d6535.png", "000000000004016201620129016d0137", 1);
+
+// The real 0.0: the calculator's starting `stack` value and
+// canonicalGestaltSoundInfo's samplingRate.
+stack := real('|Real|, 0.0);
+
+// The 1-bit colour data (cbits) of the built-in icons: each held by a
+// pictures/ bitmap's colordata and by its Extras Drawer icon (extrasRomIcons).
+colordataCbits_14 := bitmap('bits, "resources/bits/53ea11.png", "00000000000400000000000000190020", 1);
+
+colordataCbits_15 := bitmap('bits, "resources/bits/53f0ad.png", "000000000004000000000000001b0016", 1);
+
+colordataCbits_16 := bitmap('bits, "resources/bits/53f7b1.png", "000000000004000000000000001d001b", 1);
+
+colordataCbits_17 := bitmap('bits, "resources/bits/53ff51.png", "000000000004000000000000001d001c", 1);
+
+colordataCbits_18 := bitmap('bits, "resources/bits/540635.png", "000000000004000000000000001a0013", 1);
+
+colordataCbits_19 := bitmap('bits, "resources/bits/540c81.png", "000000000004000000000000001b0015", 1);
+
+colordataCbits_20 := bitmap('bits, "resources/bits/541331.png", "000000000004000000000000001a0020", 1);
+
+colordataCbits_21 := bitmap('bits, "resources/bits/54199d.png", "00000000000400000000000000180015", 1);
+
+colordataCbits_22 := bitmap('bits, "resources/bits/541efd.png", "0000000000040000000000000014001e", 1);
+
+colordataCbits_23 := bitmap('bits, "resources/bits/5426e5.png", "00000000000800000000000000190022", 1);
+
+colordataCbits_24 := bitmap('bits, "resources/bits/542ec5.png", "0000000000040000000000000018001d", 1);
+
+colordataCbits_25 := bitmap('bits, "resources/bits/543545.png", "00000000000400000000000000160020", 1);
+
+colordataCbits_26 := bitmap('bits, "resources/bits/543b51.png", "00000000000400000000000000180015", 1);
+
+colordataCbits_27 := bitmap('bits, "resources/bits/5440c5.png", "00000000000400000000000000190017", 1);
+
+colordataCbits_28 := bitmap('bits, "resources/bits/544769.png", "000000000004000000000000001b0019", 1);
+
+// The cursive recogniser's tables, held by charsetInfoResources and
+// paragraphData (docs/recognition/README.md): the Letter Shapes slip's
+// pictures of each letter's variants (letterimages) and the four binaries
+// of the letter table (DTEHeader, DTEMain, PPDMain, and DTETrigrams, the
+// 40-symbol trigrams).  Their layouts: tools/tables/README.md.
+letterimages := texttable('letterimages, "resources/letterimages/5c2e69.txt");
+
+DTEHeader := texttable('DTEH, "resources/DTEH/5c72b1.txt");
+
+DTEMain := texttable('DTEM, "resources/DTEM/5c73ad.txt");
+
+PPDMain := texttable('PPDB, "resources/PPDB/60a475.txt");
+
+DTETrigrams := texttable('Trigram, "resources/Trigram/623fc9.txt");

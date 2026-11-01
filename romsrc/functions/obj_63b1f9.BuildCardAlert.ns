@@ -1,5 +1,0 @@
-@@ 0x56e541
-func(a1, a2, a3) begin
-	self:BuildCardAlertFromCardMessage(cardMessageList.(a1), a2, a3)
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x499349
-func(a1) begin
-	(self.fCallBack := a1)
-end
-@@end

@@ -1,0 +1,8 @@
+// The icon of the auto-dock (connect to a desktop) item. A 1-bit bitmap frame (bits,
+// bounds), 19 x 11 pixels. Magic pointer @834. Used by autodockTemplate,
+// globalHeapvarwannabes.
+
+autodockIcon := {
+	bits: bitmap('bits, "resources/bits/5708c9.png", "000000000004010701070091011200a4", 1),
+	bounds: {left: 0, top: 0, right: 19, bottom: 11}
+};

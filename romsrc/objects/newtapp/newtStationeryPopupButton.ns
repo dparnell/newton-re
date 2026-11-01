@@ -1,0 +1,95 @@
+// newtStationeryPopupButton: the base of the NewtApp stationery buttons (NPR 2.0):
+// a protoPopupButton whose picker lists stationery - dataDefs or viewDefs (form),
+// those of symbols (all when nil) and of types - got by GetDefs; choosing one calls
+// StatScript.  With shortCircuit and a single stationery there is no picker: the
+// button loses its diamond and a tap acts on that one at once.
+//
+// This file holds newtStationeryPopupButton and what only it reaches.
+
+newtStationeryPopupButton := {
+	viewBounds: {left: 7, top: 0, right: 45, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV,
+	keyButton: nil,
+	// how the picker's items are sorted (a sort test; nil: not sorted)
+	sorter: '|str<|,
+	types: nil,
+	symbols: nil,
+	form: nil,
+	shortCircuit: true,
+	// the stationery the open picker lists, item for item
+	statArray: nil,
+	// a single stationery: drop the text's two leading spaces (where the diamond is
+	// drawn), narrow the button and draw no diamond
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		(if (if shortCircuit then (Length(self:SetUpStatArray()) = 1)) then begin
+				viewBounds.right := (viewBounds.right - StrFontWidth("  ", viewFont));
+				text := Substr(text, 2, nil);
+				(viewDrawScript := nil)
+			end)
+	end,
+	// register as one of the application's key buttons: newtAppBase.(keyButton) is this view
+	// (the buttons the keyboard's and other commands can find)
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		(if keyButton then (newtAppBase.(keyButton) := self))
+	end,
+	// a stationery was chosen: call StatScript with it
+	pickActionScript: func(index) begin
+		local statArrayItem;
+		statArrayItem := statArray[index];
+		inherited:pickActionScript(index);
+		self:statScript(statArrayItem);
+		popup := nil;
+		(statArray := nil)
+	end,
+	// no choice: forget the picker's lists
+	pickCancelledScript: func() begin
+		inherited:pickCancelledScript();
+		popup := nil;
+		(statArray := nil)
+	end,
+	// open the picker, or with a single stationery act on it at once
+	buttonClickScript: func() begin
+		self:BuildPopup();
+		(if (if shortCircuit then (Length(popup) = 1)) then self:pickActionScript(0) else inherited:buttonClickScript())
+	end,
+	// what to do with the stationery chosen (NPR 2.0 StatScript): defined by the
+	// buttons built on this one
+	statScript: func(statArrayItem) begin
+		nil
+	end,
+	// the stationery to list (NPR 2.0 SetUpStatArray)
+	SetUpStatArray: func() begin
+		GetDefs(form, symbols, types)
+	end,
+	// popup: the picker's items, one for each stationery (name, or title; icon when it
+	// has one); indented (24) to leave room for the icons when any has one
+	BuildPopup: func() begin
+		popup := [Array: ];
+		statArray := self:SetUpStatArray();
+		if sorter then begin
+				Sort(statArray, sorter, 'name)
+			end;
+		l1 := nil;
+		local l1;
+		(foreach item in statArray do begin
+				local l4, l5;
+				l4 := (if item.name then item.name else item.title);
+				l5 := (if item.icon then begin
+						l1 := true;
+						{item: l4, icon: item.icon}
+					end else {item: l4});
+				AddArraySlot(popup, l5)
+			end);
+		(if l1 then (popup[0].indent := 24))
+	end,
+	// no longer a key button
+	viewQuitScript: func() begin
+		if keyButton then begin
+				RemoveSlot(newtAppBase, keyButton)
+			end;
+		inherited:?viewQuitScript()
+	end,
+	_proto: @protoPopupButton
+};

@@ -1,0 +1,7 @@
+// The Command key symbol (as menus and keyboard command lists show it). A 1-bit bitmap
+// frame (bits, bounds), 9 x 7 pixels.
+
+commandKeyIcon := {
+	bits: bitmap('bits, "resources/bits/3c8b75.png", "00000000000400000000000000070009", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 7}
+};

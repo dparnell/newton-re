@@ -1,0 +1,70 @@
+// protoPopInPlace: a pop-up button whose text is the current choice: tapping
+// it pops up the menu with that choice check-marked, and choosing an item
+// makes the item's text the button's. Its width is fitted to the text.
+
+protoPopInPlace := {
+	viewJustify: vjCenterH + vjCenterV,
+	viewBounds: nil,
+	// the current choice's text, and the menu (strings or {item:, ...} frames)
+	text: currentZone,
+	popup: nil,
+	// a tap: mark the menu item equal to the text (leading spaces of the text
+	// dropped) with the check mark character ($\uFC0B), unmarking any other,
+	// then pop up the menu. The popup and a read-only item are cloned before
+	// they are changed. l2 (the marked item's offset, so as to open the menu
+	// over it) is computed but not used. (The locals declared after their
+	// first use are the decompiler's layout.)
+	buttonClickScript: func() begin
+		rejectBeginning := StringFilter(text, " ", 'rejectBeginning);
+		l2 := 0;
+		local rejectBeginning;
+		local l2;
+		(foreach key, value in popup do begin
+				local l6;
+				// a symbol in the menu is a separator line ('pickSeparator...)
+				if (ClassOf(value) <> 'symbol) then begin
+						if StrEqual((l6 := (if IsFrame(value) then value.item else value)), rejectBeginning) then begin
+								if IsReadOnly(popup) then begin
+										popup := Clone(popup)
+									end;
+								if IsFrame(value) then begin
+										(popup[key] := Clone(value)).mark := $\uFC0B
+									end else begin
+										popup[key] := {item: value, mark: $\uFC0B}
+									end;
+								l2 := ((-key) * FontHeight(viewFont))
+							end else begin
+								if (if IsFrame(value) then (not IsReadOnly(value))) then begin
+										RemoveSlot(value, 'mark)
+									end
+							end
+					end
+			end);
+		inherited:buttonClickScript()
+	end,
+	// Sized to fit its text.
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		self:SetBounds()
+	end,
+	// fits the button's width to its text (StdButtonWidth); l2, the global
+	// box's width, is computed but not used
+	SetBounds: func() begin
+		local box, l2, l3;
+		l2 := ((box := self:GlobalBox()).right - box.left);
+		((l3 := (viewBounds := Clone(viewBounds))).right := (l3.left + StdButtonWidth(text)))
+	end,
+	// the item at index was chosen: it becomes the button's text, and the
+	// view is redrawn to its new size
+	pickActionScript: func(index) begin
+		local popupItem, l2;
+		inherited:pickActionScript(index);
+		self:SetText((l2 := (if IsFrame((popupItem := popup[index])) then popupItem.item else popupItem)));
+		self:SyncView()
+	end,
+	_proto: @protoPopupButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_21 := same("protoPopInPlace.viewSetupFormScript.instructions");

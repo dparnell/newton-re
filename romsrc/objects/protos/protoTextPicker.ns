@@ -1,0 +1,71 @@
+// protoTextPicker: a line with a label and a value; tapping the label pops
+// up a picker (the Popit method, which a specialization supplies, as
+// protoTimeTextPicker does), after which the value's text is redone from
+// TextSetup.
+
+protoTextPicker := {
+	viewClass: clView,
+	viewBounds: nil,
+	viewFlags: vVisible + vClickable,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	labelFont: tsSystem + tsSize(9) + tsBold,
+	entryFont: tsHWFont + tsSize(10),
+	// the value's left edge (nil: the label's width plus 6)
+	indent: nil,
+	label: uCardPositionAlertButton,
+	// the shapes drawn: the label and the value
+	pix: nil,
+	// MakePickLine(box, label, text): makes the shapes of the label and the
+	// value, each on the line's baseline centred vertically in the view
+	MakePickLine: func(box, label2, textSetup) begin
+		local fontHeight2, l2, l3;
+		box := self:LocalBox();
+		if (not indent) then begin
+				indent := (StrFontWidth(label, labelFont) + 6)
+			end;
+		fontHeight2 := FontHeight(labelFont);
+		// l2, l3: the bottoms of the label's and the value's text
+		l2 := (((box.bottom - fontHeight2) >> 1) + FontAscent(labelFont));
+		l3 := (((box.bottom - FontHeight(entryFont)) >> 1) + FontAscent(entryFont));
+		(pix := [Array: {font: labelFont}, MakeText(label2, box.left, box.top, (box.left + indent), (box.top + l2)), {font: entryFont}, MakeText(textSetup, (box.left + indent), box.top, box.right, (box.top + l3))])
+	end,
+	// viewSetupChildrenScript(): makes the shapes, the value from TextSetup()
+	// (which a specialization supplies)
+	viewSetupChildrenScript: func() begin
+		self:MakePickLine(self:LocalBox(), label, self:TextSetup())
+	end,
+	// Draws the line made in viewSetupChildrenScript.
+	viewDrawScript: func() begin
+		self:DrawShape(pix, nil)
+	end,
+	// viewHiliteScript(on): inverts a rounded rectangle around the label
+	// (modeXor, black) and returns true so the view is not hilited otherwise
+	viewHiliteScript: func(on) begin
+		local box, fontHeight2, l3, l4;
+		box := self:LocalBox();
+		fontHeight2 := FontHeight(labelFont);
+		l4 := (((l3 := (((box.bottom - fontHeight2) >> 1) - 1)) + fontHeight2) + 2);
+		self:DrawShape(MakeRoundRect(-2, l3, indent, l4, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		true
+	end,
+	// viewClickScript(unit): a tap hilites the label while the pen is in it
+	// and, if lifted there, pops up the picker under the value
+	viewClickScript: func(unit) begin
+		(if self:TrackHilite(unit) then self:Popit((indent - 2)))
+	end,
+	// Popit(x): opens the picker at x; a specialization supplies it
+	Popit: func(x) begin
+		nil
+	end,
+	// pickActionScript(index): the picker chose; redoes the text, unhilites
+	// the label and redraws (a specialization stores the value first)
+	pickActionScript: func(index) begin
+		self:viewSetupChildrenScript();
+		self:hilite(nil);
+		self:Dirty()
+	end,
+	// pickCancelledScript(): the picker was closed without a choice
+	pickCancelledScript: func() begin
+		self:hilite(nil)
+	end
+};

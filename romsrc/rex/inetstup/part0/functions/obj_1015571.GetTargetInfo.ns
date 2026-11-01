@@ -1,5 +1,0 @@
-@@ 0x101592d
-func(a1) begin
-	(if self.hilitItem then {target: hilitItem, targetView: self} else inherited:GetTargetInfo(a1))
-end
-@@end

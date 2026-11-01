@@ -1,0 +1,169 @@
+// notification (@135): the notification slip - a roll of the notices sent by
+// Notify and alarms (the global Notifications array, the newest first, at
+// most maxNotifications), each item proto'd on messageNotification; shown
+// when a notice comes.
+
+notification := {
+	maxNotifications: 8,
+	// ShowItem(item, seen): adds a notice (AddItem) and shows the slip: modal for
+	// nfType 5 and 6, otherwise as a filtered dialog when a modal dialog is up,
+	// else opened. Answers the item shown.
+	ShowItem: func(a1, a2) begin
+		local addItem;
+		addItem := self:AddItem(a1, a2);
+		if ((a1.nfType = 5) or (a1.nfType = 6)) then begin
+				self:ModalDialog()
+			end else begin
+				if modalstate() then begin
+						self:FilterDialog()
+					end else begin
+						self:Open()
+					end
+			end;
+		addItem
+	end,
+	// AddItem(item, seen): plays the item's sound (simpleBeep by default; '_stfu
+	// for silence) and adds it at the front of Notifications unless an unseen
+	// notice like it is there already; answers the item now in the list. When
+	// seen, the item is marked seen at once.
+	AddItem: func(a1, message) begin
+		local sound, lFetch2;
+		if (not IsValid((sound := a1.sound))) then begin
+				sound := 'simpleBeep
+			end;
+		if (if sound then (sound <> '_stfu)) then begin
+				if (ClassOf(sound) = 'symbol) then begin
+						sound := GetRegisteredSound(sound)
+					end;
+				PlaySoundIrregardlessAtVolume(sound, a1.volume)
+			end;
+		if (not (lFetch2 := LFetch(Notifications, a1, 0, func(a1, a2) begin
+			(if (not a2.seenByUser) then self:IsSimilarItem(a1, a2))
+		end, nil))) then begin
+				ArrayInsert(Notifications, a1, 0);
+				if message then begin
+						self:MarkItemSeen(0, nil)
+					end;
+				if (Length(Notifications) > maxNotifications) then begin
+						SetLength(Notifications, maxNotifications)
+					end;
+				lFetch2 := a1
+			end;
+		if viewCObject then begin
+				self:SyncView();
+				roll.index := 0;
+				roll:RedoChildren();
+				self:MoveBehind('skip);
+				if gyreOn then begin
+						self:GyreStart()
+					end
+			end;
+		lFetch2
+	end,
+	// IsSimilarItem(a, b): the same item, or one of the same type, overview and
+	// text.
+	IsSimilarItem: func(a1, a2) begin
+		((a1 = a2) or (if (if (a1.nfType = a2.nfType) then StrEqual(a1.overview, a2.overview)) then StrEqual(a1.nfText, a2.nfText)))
+	end,
+	// MarkItemSeen(index, close): marks notice index seen; with close, closes the
+	// slip when it shows that notice expanded.
+	MarkItemSeen: func(index, a2) begin
+		local notification;
+		if (not (notification := Notifications[index]).seenByUser) then begin
+				notification.seenByUser := true
+			end;
+		(if (if (if (if a2 then viewCObject) then (roll.index = index)) then (not roll.allCollapsed)) then AddDeferredSend(self, 'Close, nil))
+	end,
+	// viewQuitScript: marks the notice shown seen; the first unseen notice left
+	// is taken out and shown again (deferred) so it is not lost.
+	viewQuitScript: func() begin
+		self:MarkItemSeen(roll.index, nil);
+		(foreach item in Notifications do begin
+				if (not item.seenByUser) then begin
+						SetRemove(Notifications, item);
+						AddDeferredSend(self, 'ShowItem, [Array: item, nil]);
+						break
+					end
+			end);
+		inherited:?viewQuitScript()
+	end,
+	// the snooze times offered, in minutes
+	snoozeARoos: [|Array|: 5, 9, 15, 30, 60, 1440],
+	// YouSnoozeYouLose(minutes): sets an alarm for the notice shown that many
+	// minutes from now (Time() counts minutes) and closes the slip.
+	YouSnoozeYouLose: func(snoozeARoo) begin
+		local now, index, notification;
+		now := Time();
+		index := roll.index;
+		notification := Notifications[index];
+		self:MarkItemSeen(index, nil);
+		AddAlarm(Stringer([Array: now, ":snooze"]), (now + snoozeARoo), [Array: notification.overview, notification.nfText], nil, nil);
+		AddDeferredSend(self, 'Close, nil)
+	end,
+	debug: 78008,
+	preallocatedContext: 'notification,
+	viewChildren: [viewChildren:
+		roll,
+		{
+			viewFormat: vfFillWhite,
+			viewBounds: {left: -25, top: -25, right: -12, bottom: -12},
+			_proto: @protoClosebox
+		}
+	],
+	roll: nil,
+	allocateContext: [|Array|: 'roll, roll],
+	_proto: @protoNotifyForm,
+	// the slots the view caches
+	_cacheContext: {
+		_parent: nil,
+		_proto: nil,
+		viewCObject: nil,
+		roll: nil,
+		viewclipper: nil,
+		base: nil,
+		gyreCount: nil,
+		viewFlags: vApplication + vFloating
+	}
+};
+
+// the roll of notices: its items are the Notifications array; scrolling or
+// an overview marks the notice shown seen.
+roll := {
+	viewFlags: vVisible + vApplication + vClipping,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewFormat: 0,
+	viewBounds: {left: 15, top: 15, right: -15, bottom: -25},
+	// viewSetupFormScript: the roll's items are the notices.
+	viewSetupFormScript: func() begin
+		(self.items := Notifications)
+	end,
+	// viewScrollUpScript / viewScrollDownScript / viewOverviewScript: mark the
+	// notice that was shown seen before leaving it.
+	viewScrollUpScript: func() begin
+		if (not allCollapsed) then begin
+				self:MarkItemSeen(index, nil)
+			end;
+		inherited:?viewScrollUpScript()
+	end,
+	// viewScrollDownScript: likewise
+	viewScrollDownScript: func() begin
+		if (not allCollapsed) then begin
+				self:MarkItemSeen(index, nil)
+			end;
+		inherited:?viewScrollDownScript()
+	end,
+	// viewOverviewScript: likewise
+	viewOverviewScript: func() begin
+		if (not allCollapsed) then begin
+				self:MarkItemSeen(index, nil)
+			end;
+		inherited:?viewOverviewScript()
+	end,
+	debug: 2542296,
+	preallocatedContext: 'roll,
+	_proto: @protoRoll
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewScrollUpScript_code_2 := same("roll.viewScrollUpScript.instructions");

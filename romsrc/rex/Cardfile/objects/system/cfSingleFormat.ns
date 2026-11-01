@@ -1,0 +1,23 @@
+// The "Single Card" print and fax format (@8250): the card's business card
+// layout.
+
+cfSingleFormat := {
+	routingType: 'Print,
+	type: 'printFormat,
+	name: singleCard,
+	title: singleCard,
+	symbol: 'cfSingleFormat,
+	// Prints the card in its business card layout.
+	viewSetupChildrenScript: func() begin
+		self.stepChildren := [Array: GetRoot().cardfile:GetBCLayout(target).layout];
+		inherited:viewSetupChildrenScript()
+	end,
+	// No title line.
+	SetupItem: func(fields, frame2) begin
+		fields.title := nil;
+		inherited:SetupItem(fields, frame2)
+	end,
+	_proto: @protoPrintFormat
+};
+
+singleCard := "Single Card";

@@ -1,3 +1,6 @@
+// the Newton Internet Enabler's part1: the frame maps - the slot names of its frames, shared by frames with the same
+// slots (map(flags, supermap, slots...); romsrc/README.md)
+
 map_10014d1 := map(0, map_10014e5, '_ExportTable);
 map_10014e5 := map(2, nil, 'installScript, 'removeScript, 'UnitsInstalledScript, 'UnitsRemovedScript);
 map_10015d1 := map(0, nil, 'class, 'instructions, 'literals, 'argFrame, 'numArgs);

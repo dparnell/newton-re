@@ -1,7 +1,0 @@
-@@ 0x1016af1
-func(a1, a2) begin
-	self:?DoClientCallback('error, a2);
-	fClientCallbackFrame := nil;
-	(fClientCallbackSymbol := nil)
-end
-@@end

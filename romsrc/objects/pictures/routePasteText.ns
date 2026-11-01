@@ -1,0 +1,7 @@
+// The Action menu icon of "paste text". A 1-bit bitmap frame (bits, bounds), 17 x 14
+// pixels. Magic pointer @773.
+
+routePasteText := {
+	bits: bitmap('bits, "resources/bits/463b29.png", "0000000000040098009801ba00a601cb", 1),
+	bounds: {left: 0, top: 0, right: 17, bottom: 14}
+};

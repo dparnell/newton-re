@@ -1,0 +1,7 @@
+// The small keyboard button image of protoSmallKeyboardButton. A 1-bit bitmap frame (bits,
+// bounds), 14 x 9 pixels. Magic pointer @715. Used by protoSmallKeyboardButton.
+
+keySmallButtonBitmap := {
+	bits: bitmap('bits, "resources/bits/3dab75.png", "000000000004010501050014010e0022", 1),
+	bounds: {left: 0, top: 0, right: 14, bottom: 9}
+};

@@ -1,0 +1,4 @@
+// A query of the repeating meetings by stop date. A soup query specification (a querySpec
+// frame for Query). Magic pointer @243.
+
+repeatQuerySpec := {type: 'index, indexPath: 'mtgStopDate, beginKey: 0};

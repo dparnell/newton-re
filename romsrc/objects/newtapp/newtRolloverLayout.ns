@@ -1,0 +1,49 @@
+// newtRolloverLayout: the overview of a NewtApp roll (the NPR's newtRollOverLayout),
+// a newtOverLayout whose lines show each entry's date and time, its folder (when
+// all folders are shown) and store (when there is more than one), and the
+// stationery's icon and one-line description of it.
+//
+// This file holds newtRolloverLayout and what only it reaches.
+
+newtRolloverLayout := {
+	_proto: @newtOverLayout,
+	// the shape for one line of the overview (NPR 2.0: the overview has no children,
+	// it draws these shapes): items2Item the entry, copy the line's box; it also counts the
+	// lines to find the hilited one
+	Abstract: compile(
+		constants: {
+			kLiteral_49cdf1: '{font: tsSystem + tsSize(9), justification: right}
+		},
+		func(items2Item, copy) begin
+			local list, l2, name, entryDataDef, icon, stringExtract, l7;
+			if (items2Item = hiliteEntry) then begin
+					hilitedIndex := hiliteCount
+				end;
+			hiliteCount := (hiliteCount + 1);
+			list := [Array: '{font: tsSystem + tsSize(9)}, MakeText(Stringer([Array: ShortDate(items2Item.timestamp), " ", HourMinute(items2Item.timestamp)]), ((copy.left + 16) + 12), copy.top, copy.right, (copy.top + 25))];
+			if (if (labelsFilter = '_all) then items2Item.labels) then begin
+					if (l2 := userConfiguration.userFolders.(items2Item.labels)) then begin
+							AddArraySlot(list, kLiteral_49cdf1);
+							AddArraySlot(list, MakeText(l2, ((copy.left + 16) + 12), copy.top, (copy.right - 2), (copy.top + 25)))
+						end
+				end;
+			if (if showStoreName then (Length(GetStores()) > 1)) then begin
+					name := EntryStore(items2Item):GetName();
+					AddArraySlot(list, kLiteral_49cdf1);
+					AddArraySlot(list, MakeText(name, copy.left, copy.top, (copy.right - 2), (copy.top + 11)))
+				end;
+			(if (entryDataDef := GetEntryDataDef(items2Item)) then begin
+					icon := entryDataDef.icon;
+					stringExtract := entryDataDef:StringExtract(items2Item, 1);
+					l7 := (copy.right - ((copy.left + 16) + 2));
+					if (if showStoreName then (Length(GetStores()) > 1)) then begin
+							l7 := (l7 - StrFontWidth(name, tsSystem + tsSize(9)))
+						end;
+					[Array: OffsetShape(MakeShape(icon), copy.left, (copy.top + 2)), MakeText(StrTruncate(stringExtract, l7), ((copy.left + 16) + 2), copy.top, copy.right, (copy.top + 11)), list]
+				end else [Array: OffsetShape(MakeShape(@infoBitmap), copy.left, (copy.top + 2)), list])
+		end)
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Abstract_literal18 := same("newtRolloverLayout.Abstract.literals[18]");

@@ -1,0 +1,135 @@
+// putawayPicker: the In Box's "Put Away" slip: it says which application the
+// item (or the selected items, when theItem is a cursor) will be put away to,
+// lets the user choose another of theApps when there are several, and offers
+// to delete it from the In Box. The Put Away button calls the In Box's
+// DoPutAway.
+
+putawayPicker := {
+	viewBounds: {left: 0, top: 0, right: 200, bottom: 85},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	theApps: nil,
+	theItem: nil,
+	theAppToRun: nil,
+	labels: nil,
+	// Takes the keys (for the default button).
+	viewSetupFormScript: func() begin
+		SetKeyView(self, 0);
+		inherited:?viewSetupFormScript()
+	end,
+	viewChildren: [viewChildren:
+		// close box: closed through the In Box when it is open (RememberedClose)
+		{
+			// Close (the In/Out Box's RememberedClose when it is open).
+			buttonClickScript: func() begin
+				(if GetRoot().iobox.viewCObject then AddDeferredSend(GetRoot().iobox, 'RememberedClose, [Array: base]) else base:Close())
+			end,
+			_proto: @protoCancelButton
+		},
+		_defaultButton_11,
+		// the label, as wide as its text
+		{
+			viewBounds: {left: 10, top: 22, right: 10, bottom: 38},
+			viewJustify: oneLineOnly,
+			text: nil,
+			// "Put away all selected items" for several, else "Put Away item to:";
+			// sized to its text.
+			viewSetupFormScript: func() begin
+				if TargetIsCursor(theItem) then begin
+						text := "Put away all selected items"
+					end else begin
+						text := "Put Away item to:"
+					end;
+				((viewBounds := Clone(viewBounds)).right := (viewBounds.left + StrFontWidth(text, viewFont)))
+			end,
+			_proto: @protoStaticText
+		},
+		// the application to put away to; a popup of theApps when there are several
+		{
+			viewBounds: {left: 0, top: 21, right: 0, bottom: 37},
+			viewFormat: 0,
+			viewJustify: vjCenterH + vjParentFullH + vjSiblingRightH,
+			text: nil,
+			showit: nil,
+			// The application to put the item away to, and the others that could take
+			// it (a popup only when there are several).
+			viewSetupFormScript: func() begin
+				showit := nil;
+				if TargetIsCursor(theItem) then begin
+						text := ""
+					end else begin
+						text := (if IsFrame(theAppToRun) then theAppToRun.appName else GetAppName(theAppToRun))
+					end;
+				popup := Array((l1 := (if theApps then Length(theApps) else 0)), nil);
+				if theApps then begin
+						local l1;
+						(foreach key, value in theApps do begin
+								local fontHeight2;
+								popup[key] := (if IsFrame(value) then value.appName else GetAppName(value))
+							end)
+					end;
+				if (showit := (l1 > 1)) then begin
+						text := Stringer([Array: $\uFC01, text])
+					end;
+				fontHeight2 := FontHeight(viewFont);
+				viewBounds := RelBounds(viewBounds.left, viewBounds.top, viewBounds.right, fontHeight2);
+				inherited:?viewSetupFormScript()
+			end,
+			// The text as it is.
+			PadText: func(text) begin
+				text
+			end,
+			// Draws nothing of its own.
+			viewDrawScript: func() begin
+				nil
+			end,
+			// Pops up the applications only when there are several.
+			viewClickScript: func(unit) begin
+				(if showit then inherited:viewClickScript(unit))
+			end,
+			// An application picked.
+			pickActionScript: func(index) begin
+				theAppToRun := theApps[index];
+				inherited:pickActionScript(index)
+			end,
+			_proto: @protoPopInPlace
+		},
+		// "Delete from inbox", kept in the In Box's deleteAfterPutaway
+		{
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 10, top: 6, right: 10, bottom: 22},
+			text: "Delete from inbox",
+			// Checked as the In/Out Box's deleteAfterPutaway.
+			viewSetupFormScript: func() begin
+				(viewValue := GetRoot().iobox.deleteAfterPutaway)
+			end,
+			// Stored there.
+			valueChanged: func() begin
+				(GetRoot().iobox.deleteAfterPutaway := viewValue)
+			end,
+			_proto: @protoCheckbox
+		},
+		{title: putAway, _proto: @protoTitle}
+	],
+	_defaultButton: nil,
+	allocateContext: [|Array|: '_defaultButton, _defaultButton_11],
+	ReOrientToScreen: @defRotateFunc,
+	_proto: @protoFloater
+};
+
+// the Put Away button: puts the item away to the chosen application and closes
+// the slip
+_defaultButton_11 := {
+	viewBounds: {left: -63, top: 0, right: -7, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
+	text: putAway,
+	// Puts the item away to the application chosen, and closes (deferred).
+	buttonClickScript: func() begin
+		local putAway;
+		putAway := GetRoot().iobox:DoPutAway((if IsFrame(theAppToRun) then theAppToRun.appSymbol else theAppToRun), theItem, targetView);
+		AddDeferredSend(GetRoot().iobox.pap, 'Close, nil)
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};
+
+putAway := "Put Away";

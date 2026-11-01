@@ -1,0 +1,963 @@
+// part: Internet Setup's protos part - exports |SetupProtos:NIE|, what the NIE's link
+// modules (Modem, Ethernet, ...) build their setup kinds from: the base data def of a setup
+// (a newtStationery: name, overview line, conversion of old setups, walk-through checks),
+// editor view defs shared by every kind (DNS servers, user ID and password, setup name,
+// domain name), the IP address entry (four cells), the password button, the hang-up delay
+// choices and a few helpers. The file holds the part and what only it reaches.
+
+part := array(nil, {
+	_ExportTable: [|Array|:
+		{
+			name: '|SetupProtos:NIE|,
+			major: 1,
+			minor: 0,
+			// the unit's objects, in the order the modules import them by index
+			objects: [|Array|:
+				partItem_2Proto,
+				// the base data def of an Internet setup ('INET)
+				{
+					symbol: nil,
+					name: name,
+					description: name,
+					superSymbol: 'INET,
+					helpText: name,
+					OverviewIcon: {
+						bounds: {left: 0, top: 0, right: 30, bottom: 30},
+						bits: OverviewIconBits,
+						colorData: {cbits: OverviewIconBits, bitDepth: 1}
+					},
+					version: 2,
+					// StringExtract(entry, nLines): the overview text - the setup's name ("<No Name>"), and
+					// with two lines MakeNextLine's.
+					StringExtract: func(entry, nLines) begin
+						local setupName, text;
+						if (not StrFilled((setupName := entry.setupName))) then begin
+								setupName := "<No Name>"
+							end;
+						if (nLines > 1) then begin
+								text := "";
+								text := self:?MakeNextLine(entry);
+								setupName := Stringer([Array: setupName, "\n", text])
+							end;
+						setupName
+					end,
+					// MakeNextLine(entry): the second overview line (none here).
+					MakeNextLine: func(entry) begin
+						""
+					end,
+					viewsToDisplay: [|Array|: ],
+					newEntryViews: [|Array|: ],
+					// DataConversion(entry): a setup of an older NIE made version 2 (see below), its slots then
+					// checked (CheckSlots) and validated.
+					DataConversion: compile(
+						constants: {
+							// the version-2 conversion: the old link-layer symbols mapped to the NIE's services, the old
+							// placeholder user name and password ("<EnterNameHere>", "bogusPassword") emptied, fixed
+							// addresses classed 'static (else 'dynamic), the DNS servers made one array, the login info
+							// made a login script for the Script Manager.
+							kFunction_1019491: func(a1) begin
+								text := "bogusPassword";
+								text2 := "<EnterNameHere>";
+								a1.version := 2;
+								if (l3 := '{ppp: |PPP:NIE|, slip: |SLIP:NIE|, macIP: |MacIP:NIE|}.(a1.linkLayer)) then begin
+										a1.linkLayer := l3
+									end;
+								if (if HasSlot(a1, 'userName) then StrEqual(a1.userName, text2)) then begin
+										a1.userName := ""
+									end;
+								if (if HasSlot(a1, 'password) then StrEqual(a1.password, text)) then begin
+										a1.password := ""
+									end;
+								if a1.gatewayAddressFixed then begin
+										SetClass(a1.gatewayAddress, 'static)
+									end else begin
+										SetClass(a1.gatewayAddress, 'dynamic)
+									end;
+								RemoveSlot(a1, 'gatewayAddressFixed);
+								if a1.localAddressFixed then begin
+										SetClass(a1.localAddress, 'static)
+									end else begin
+										SetClass(a1.localAddress, 'dynamic)
+									end;
+								RemoveSlot(a1, 'localAddressFixed);
+								a1.configuration := (if (if (ClassOf(a1.localAddress) = 'dynamic) then (ClassOf(a1.gatewayAddress) = 'dynamic)) then 'usingServer else 'Manual);
+								a1.DNSServers := [Array: DeepClone(a1.dnsServerAddress)];
+								if HasSlot(a1, 'dnsServerAddressAlternates) then begin
+										local text;
+										local text2;
+										local l3;
+										(foreach item in a1.dnsServerAddressAlternates do begin
+												AddArraySlot(a1.DNSServers, DeepClone(item))
+											end);
+										RemoveSlot(a1, 'dnsServerAddressAlternates)
+									end;
+								RemoveSlot(a1, 'dnsServerAddress);
+								if HasSlot(a1, 'loginInfo) then begin
+										a1.LoginScript := {instructions: DeepClone(a1.loginInfo.loginInstructions), interpreterSymbol: '|Script Manager:NIE|, timeout: DeepClone(a1.loginInfo.loginScriptTimeout)}
+									end;
+								a1
+							end
+						},
+						func(adoptEntry) begin
+							(adoptEntry := self:?ValidateTarget((adoptEntry := self:?CheckSlots((adoptEntry := call (kFunction_1019491) with (adoptEntry))))))
+						end),
+					// TextScript(?, entry): the setup as text (each layout's items, one a line) for routing.
+					TextScript: func(a1, a2) begin
+						l1 := "";
+						l3 := Clone(viewsToDisplay);
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						local l5;
+						local l6;
+						local l7;
+						local l8;
+						local l9;
+						local l10;
+						(foreach l11, l12 in (l2 := GetViewDefs(a2.class)) do begin
+								if (if (l12.type = 'editor) then (l11 <> 'default)) then begin
+										SetAdd(l3, l11, true)
+									end
+							end);
+						if (if a2 then l3) then begin
+								(foreach l14 in l3 do begin
+										if (l6 := self:MakeDataPaths((l5 := l2.(l14).infoFrame).checkPrefix[0], l5.checkPaths, l5.stringData)) then begin
+												if (l7 := self:GetText(a2, l6, l5)) then begin
+														l1 := Stringer([Array: l1, "\n", l7])
+													end
+											end;
+										if (if (if IsArray(l5.checkPrefix[1]) then (l8 := l5.checkPrefix[1])) then (l9 := a2.(l8))) then begin
+												l10 := Length(l9);
+												(for l16 := 0 to (l10 - 1) do begin
+														AddArraySlot((origPath := Clone(l5.checkPrefix[1])), l16);
+														if (l6 := self:MakeDataPaths(origPath, l5.checkPaths, l5.stringData)) then begin
+																if (l7 := self:GetText(a2, origPath, l5)) then begin
+																		l1 := Stringer([Array: l1, "\n", l7])
+																	end
+															end
+													end)
+											end
+									end)
+							end;
+						TrimString(l1)
+					end,
+					// CheckSlots(entry): removes unusedSlots and adds the missing NeededSlots.
+					CheckSlots: func(a1) begin
+						(foreach key, value in unusedSlots do begin
+								RemoveSlot(a1, key)
+							end);
+						(foreach key, value in NeededSlots do begin
+								if (not HasSlot(a1, key)) then begin
+										a1.(key) := DeepClone(value)
+									end
+							end);
+						a1
+					end,
+					// FillNewEntry(entry): a new setup - "Untitled <kind> Setup", its physical layer this kind.
+					FillNewEntry: func(a1) begin
+						a1.setupName := ParamStr("Untitled ^0 Setup", [Array: Clone(name)]);
+						a1.physicalLayer := Clone(symbol);
+						a1
+					end,
+					// ValidateTarget(setup): drops the 0.0.0.0 DNS servers (keeping one).
+					ValidateTarget: func(target) begin
+						if (Length(target.DNSServers) > 1) then begin
+								(foreach key, value in target.DNSServers do begin
+										if (Length(SetDifference(value, [Array: 0, 0, 0, 0])) = 0) then begin
+												ArrayRemoveCount(target.DNSServers, key, 1)
+											end
+									end);
+								if (Length(target.DNSServers) = 0) then begin
+										AddArraySlot(target.DNSServers, Clone([Array: 0, 0, 0, 0]))
+									end
+							end;
+						target
+					end,
+					unusedSlots: {},
+					NeededSlots: {},
+					// confirmWalkThru(setup): the names of the DontCloseSlots items still missing (checkData,
+					// checkFunc, or equal to their empty value), joined by ", " - CloseAction's warning.
+					confirmWalkThru: func(target) begin
+						text := "";
+						list := [Array: ];
+						local text;
+						local list;
+						local checkData;
+						(foreach key, value in DontCloseSlots do begin
+								if HasSlot(value, 'checkData) then begin
+										checkData := value:checkData(target, target.(key))
+									end else begin
+										if HasSlot(value, 'checkFunc) then begin
+												checkData := value:checkFunc(target.(key))
+											end else begin
+												checkData := StrEqual(value.value, target.(key))
+											end
+									end;
+								if checkData then begin
+										AddArraySlot(list, value.name)
+									end
+							end);
+						(foreach item in list do begin
+								text := Stringer([Array: text, item, ", "])
+							end);
+						(text := Substr(text, 0, (StrLen(text) - 2)))
+					end,
+					DontCloseSlots: {},
+					// DependenciesLoaded(): whether a logical service (link layer) this kind can use is registered.
+					DependenciesLoaded: compile(
+						constants: {
+							// the logical services (InetGetServiceList 'LogicalService) not excluding this kind, or nil.
+							kFunction_101a311: func(a1) begin
+								if functions.InetGetServiceList then begin
+										logicalService := InetGetServiceList('LogicalService)
+									end else begin
+										return nil
+									end;
+								if (Length(logicalService) = 0) then begin
+										return nil
+									end;
+								list := [Array: ];
+								local logicalService;
+								local list;
+								local l3;
+								(foreach item in logicalService do begin
+										l3 := nil;
+										(foreach item2 in item.excludeFrom do begin
+												if (item2 = a1) then begin
+														l3 := true;
+														break
+													end
+											end);
+										if (not l3) then begin
+												AddArraySlot(list, item)
+											end
+									end);
+								(if (Length(list) > 0) then list)
+							end
+						},
+						func() begin
+							call (kFunction_101a311) with (symbol)
+						end),
+					// MakeDataPaths(prefix, checkPaths, stringData): the paths an item's data is at.
+					MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
+						local item;
+						local list;
+						(if (not checkPrefixItem) then nil else (if (if IsArray(checkPaths) then (Length(checkPaths) < 1)) then (if stringData then (list := [Array: Clone(checkPrefixItem)]) else checkPrefixItem) else (if (checkPrefixItem = true) then (if IsArray(checkPaths) then (foreach item in checkPaths collect [pathExpr: item]) else checkPrefixItem) else (foreach item in checkPaths collect begin
+										list := Clone(checkPrefixItem);
+										if item then begin
+												AddArraySlot(list, item)
+											end;
+										list
+									end))))
+					end,
+					// GetText(entry, path, infoFrame): one item's text (its printFunc, formatFunc or format),
+					// or nil when it has no data (and showEmptyData is not set) or HideIfTrue hides it.
+					GetText: func(a1, origPath, a3) begin
+						if a3.showEmptyData then begin
+								l2 := true
+							end;
+						if (ClassOf(origPath) = 'pathExpr) then begin
+								l2 := true;
+								(a3 := Clone(a3)).whichOne := origPath[1];
+								list := [Array: a1.(origPath)]
+							end else begin
+								if IsArray(origPath) then begin
+										local printFunc;
+										local l2;
+										local l3;
+										local list;
+										list := (foreach item in origPath collect begin
+											l3 := a1.(item);
+											if (not l2) then begin
+													if IsInstance(l3, 'string) then begin
+															l2 := l3
+														end else begin
+															l2 := l3
+														end
+												end;
+											l3
+										end)
+									end else begin
+										list := [Array: a1.(origPath)];
+										l2 := a1.(origPath)
+									end
+							end;
+						if a3.HideIfTrue then begin
+								if (a1.(a3.HideIfTrue[0]) = a3.HideIfTrue[1]) then begin
+										l2 := nil
+									end
+							end;
+						if (not l2) then begin
+								return nil
+							end;
+						if a3.printFunc then begin
+								printFunc := a3:printFunc(list)
+							end else begin
+								if a3.formatFunc then begin
+										printFunc := a3:formatFunc(list)
+									end else begin
+										printFunc := ParamStr(a3.format, list)
+									end
+							end;
+						TrimString(printFunc);
+						printFunc
+					end,
+					_proto: @newtStationery
+				},
+				// the DNS servers editor view def (one per address in DNSServers)
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					stepChildren: [stepChildren: partItem_2],
+					useNumericKeys: true,
+					infoFrame: {
+						checkPrefix: [|Array|: nil, [pathExpr: 'DNSServers]],
+						checkPaths: [|Array|: ],
+						whichOne: nil,
+						arrayData: [|Array|: 0, 0, 0, 0],
+						// formatFunc(values): "Primary DNS/Name Server Address: a.b.c.d" for the first, "Alternate"
+						// for the others.
+						formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+							(if (Length(v20_wwwwwwwwwwvvvvvv[0]) = 4) then (if (whichOne = 0) then ParamStr("Primary DNS/Name Server Address: ^0.^1.^2.^3", [Array: v20_wwwwwwwwwwvvvvvv[0][0], v20_wwwwwwwwwwvvvvvv[0][1], v20_wwwwwwwwwwvvvvvv[0][2], v20_wwwwwwwwwwvvvvvv[0][3]]) else ParamStr("Alternate DNS/Name Server Address: ^0.^1.^2.^3", [Array: v20_wwwwwwwwwwvvvvvv[0][0], v20_wwwwwwwwwwvvvvvv[0][1], v20_wwwwwwwwwwvvvvvv[0][2], v20_wwwwwwwwwwvvvvvv[0][3]])) else "")
+						end
+					},
+					protection: 'private,
+					symbol: 'DNSServers,
+					type: 'editor,
+					helpTopic: "dns",
+					viewClass: clView,
+					line: nil,
+					stepAllocateContext: [|Array|: 'line, partItem_2]
+				},
+				// the User ID/Password editor view def
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					stepChildren: [stepChildren:
+						{
+							path: 'userName,
+							label: "User ID",
+							viewBounds: {left: 0, top: 0, right: -4, bottom: 32},
+							// viewChangedScript: an emptied line stores "" rather than nil.
+							viewChangedScript: func(slot, view) begin
+								inherited:?viewChangedScript(slot, view);
+								(if (not target.(path)) then (target.(path) := ""))
+							end,
+							_proto: @newtLabelInputLine
+						},
+						partItem_3
+					],
+					infoFrame: {
+						checkPrefix: [|Array|: true, nil],
+						checkPaths: [|Array|: 'userName],
+						showEmptyData: true,
+						// formatFunc(values): "User ID: <id>" (or <None>).
+						formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+							(if StrFilled(v20_wwwwwwwwwwvvvvvv[0]) then ParamStr("User ID: ^0", [Array: v20_wwwwwwwwwwvvvvvv[0]]) else "User ID: <None>")
+						end
+					},
+					path: 'userName,
+					protection: 'private,
+					symbol: 'userName,
+					type: 'editor,
+					passwordSlip: nil,
+					// viewQuitScript: closes the password slip.
+					viewQuitScript: func() begin
+						if passwordSlip then begin
+								passwordSlip:Close()
+							end;
+						passwordSlip := nil;
+						inherited:?viewQuitScript()
+					end,
+					EditPassword: EditPassword,
+					name: "User ID/Password",
+					helpTopic: "idpassword",
+					viewClass: clView,
+					pwBtn: nil,
+					stepAllocateContext: [|Array|: 'pwBtn, partItem_3]
+				},
+				// the setup name item (overview and All Info title)
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					infoFrame: {
+						checkPrefix: [|Array|: true, nil],
+						checkPaths: [|Array|: 'setupName],
+						showEmptyData: true,
+						// formatFunc(values): the name, or "<No Name>".
+						formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+							(if StrFilled(v20_wwwwwwwwwwvvvvvv[0]) then v20_wwwwwwwwwwvvvvvv[0] else "<No Name>")
+						end,
+						// printFunc(values): "Setup Name: <name>" for routing.
+						printFunc: func(list) begin
+							(if StrFilled(list[0]) then ParamStr("Setup Name: ^0", [Array: list[0]]) else "Setup Name: <None>")
+						end
+					},
+					protection: 'private,
+					symbol: 'setupName,
+					type: 'editor,
+					viewClass: clView
+				},
+				// an editor view def made of the picker proto below (objectsProto)
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					protection: 'private,
+					type: 'editor,
+					stepChildren: [stepChildren: {_proto: objectsProto}],
+					viewClass: clView
+				},
+				// an editor view def: an IP address with a picker of how it is set (its class)
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					stepChildren: [stepChildren:
+						{
+							_proto: {
+								viewBounds: {left: 4, top: 10, right: -4, bottom: 60},
+								viewFlags: vVisible,
+								viewFormat: 0,
+								viewJustify: vjParentFullH + vjSiblingBottomV,
+								stepChildren: [stepChildren: partItem_4, partItem_5],
+								masterlock: nil,
+								// LockDown(): nothing.
+								LockDown: func() begin
+									(if (not masterlock) then nil)
+								end,
+								// GetOption(class): the index of the picker item for that class.
+								GetOption: func(cls) begin
+									(foreach key, value in labelCommands do begin
+											if (value.symbol = cls) then begin
+													return key
+												end
+										end);
+									0
+								end,
+								viewClass: clView,
+								picker: nil,
+								stepAllocateContext: [|Array|: 'picker, partItem_4, 'IPLine, partItem_5],
+								IPLine: nil
+							}
+						}
+					],
+					protection: 'private,
+					type: 'editor,
+					useNumericKeys: true,
+					viewClass: clView
+				},
+				// the Domain Name editor view def
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					stepChildren: [stepChildren:
+						{
+							path: 'defaultDomain,
+							label: domainName,
+							viewBounds: {left: 0, top: 0, right: -4, bottom: 32},
+							_proto: @newtLabelInputLine
+						}
+					],
+					protection: 'private,
+					type: 'editor,
+					infoFrame: {
+						checkPrefix: [|Array|: true, nil],
+						checkPaths: [|Array|: 'defaultDomain],
+						showEmptyData: true,
+						// formatFunc(values): "Domain Name: <name>" (or <None>).
+						formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+							(if StrFilled(v20_wwwwwwwwwwvvvvvv[0]) then ParamStr("Domain Name: ^0", [Array: v20_wwwwwwwwwwvvvvvv[0]]) else "Domain Name: <None>")
+						end
+					},
+					path: 'defaultDomain,
+					symbol: 'defaultDomain,
+					name: domainName,
+					helpTopic: "domain",
+					viewClass: clView
+				},
+				objectsProto,
+				partItem_3Proto,
+				EditPassword,
+				GetString,
+				// an IP address item's info: "IP : a.b.c.d"
+				{
+					labelText: "IP : ^0.^1.^2.^3",
+					GetString: GetString,
+					checkPrefix: [|Array|: true, nil],
+					// formatFunc(values): the address formatted by labelText.
+					formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+						(if (Length(v20_wwwwwwwwwwvvvvvv[0]) = 4) then ParamStr(labelText, [Array: v20_wwwwwwwwwwvvvvvv[0][0], v20_wwwwwwwwwwvvvvvv[0][1], v20_wwwwwwwwwwvvvvvv[0][2], v20_wwwwwwwwwwvvvvvv[0][3]]) else "")
+					end
+				},
+				// the setup name line of the walk-through
+				{
+					path: 'setupName,
+					label: "Setup Name",
+					// viewChangedScript: an emptied line stores ""; the slip's title follows the name.
+					viewChangedScript: func(slot, view) begin
+						inherited:?viewChangedScript(slot, view);
+						if (not target.(path)) then begin
+								target.(path) := ""
+							end;
+						header:Retarget()
+					end,
+					viewBounds: {left: 0, top: 0, right: -4, bottom: 32},
+					_proto: @newtLabelInputLine
+				},
+				// the hang-up delay choices (milliseconds; 'never keeps the link up)
+				[|Array|:
+					{item: "immediately", symbol: nil},
+					{item: "after 1 minute", symbol: 60000},
+					{item: "after 2 minutes", symbol: 120000},
+					{item: "after 5 minutes", symbol: 300000},
+					{item: "after 10 minutes", symbol: 600000},
+					{item: "never", symbol: 'never}
+				],
+				partItem,
+				// the link-layer choices for a kind: the logical services given, by name, or PPP and SLIP
+				compile(
+					constants: {
+						kLiteral_101c7b9: '[Array: {item: "PPP", symbol: |PPP:NIE|}, {item: "SLIP", symbol: |SLIP:NIE|}]
+					},
+					func(a1) begin
+						list := [Array: ];
+						if ((not a1) or (Length(a1) = 0)) then begin
+								return kLiteral_101c7b9
+							end else begin
+								local list;
+								(foreach item2 in a1 do begin
+										BInsert(list, {item: Clone(item2.name), symbol: Clone(item2.symbol)}, '|str<|, '[pathExpr: item], nil)
+									end)
+							end;
+						(if (Length(list) > 0) then return list else return kLiteral_101c7b9)
+					end),
+				// the modem location's title for the screen orientation (ModemLocations, by id; the first if none matches)
+				func(a1) begin
+					modemLocations2 := ModemLocations;
+					screenOrientation := GetUserConfig('screenOrientation);
+					i2 := 0;
+					local modemLocations2;
+					local screenOrientation;
+					local l3;
+					local i2;
+					(for i := 0 to (Length(modemLocations2) - 1) do begin
+							if (if (if a1 then modemLocations2[i].id) then StrEqual(a1, modemLocations2[i].id)) then begin
+									i2 := i
+								end
+						end);
+					if IsArray(modemLocations2[i2].title) then begin
+							return modemLocations2[i2].title[screenOrientation]
+						end else begin
+							return modemLocations2[i2].title
+						end;
+					""
+				end
+			]
+		}
+	],
+	// installScript(partFrame): runs devInstallScript; returns the remove frame whose
+	// removeScript (devRemoveScript) undoes it when the package goes.
+	installScript: func(partFrame) begin
+		local ensureInternal2;
+		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
+		partFrame:devInstallScript(partFrame, ensureInternal2);
+		ensureInternal2
+	end,
+	// devInstallScript: nothing to set up.
+	devInstallScript: func(partFrame, removeFrame) begin
+		nil
+	end,
+	// devRemoveScript: nothing to undo.
+	devRemoveScript: func(partFrame) begin
+		nil
+	end
+});
+
+// the IP address line proto: a label and the four-cell address entry (IPLine)
+partItem_2Proto := {
+	viewBounds: {left: 4, top: 10, right: -4, bottom: 60},
+	viewFlags: vVisible,
+	viewFormat: 0,
+	stepChildren: [stepChildren: partItem_2ProtoItem, partItem_2ProtoItem_2],
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewClass: clView,
+	labelText: nil,
+	stepAllocateContext: [|Array|: 'labelText, partItem_2ProtoItem, 'IPLine, partItem_2ProtoItem_2],
+	IPLine: nil
+};
+
+partItem_2ProtoItem := {
+	viewBounds: {left: 3, top: 0, right: -3, bottom: 16},
+	viewJustify: vjCenterV + vjParentFullH + oneLineOnly,
+	// viewSetupFormScript: the label - "Primary"/"Alternate DNS/Name Server Address" for a DNS
+	// server's path, else its name.
+	viewSetupFormScript: func() begin
+		self.viewBounds := Clone(self.viewBounds);
+		self.viewBounds.right := (StrWidth(name) + 8);
+		(if (ClassOf(path) = 'pathExpr) then (self.text := (if (path[1] = 0) then "Primary DNS/Name Server Address" else "Alternate DNS/Name Server Address")) else (self.text := name))
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'labelText
+};
+
+partItem_2ProtoItem_2 := {
+	// viewSetupFormScript: the entry beside the label (LabelOnSide) or below it.
+	viewSetupFormScript: func() begin
+		self.viewBounds := Clone(self.viewBounds);
+		if (if HasSlot(self, 'LabelOnSide) then LabelOnSide) then begin
+				self.viewBounds := SetBounds((labelText.viewBounds.right + 3), labelText.viewBounds.top, viewBounds.right, 24)
+			end else begin
+				self.viewBounds := RelBounds(0, (labelText.viewBounds.bottom + 3), 0, 24)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: partItem_2ProtoItem_2Proto,
+	preAllocatedContext: 'IPLine
+};
+
+// the IP address entry: numSegs (4) number cells separated by periods, each one byte of
+// target.(path)
+partItem_2ProtoItem_2Proto := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 24},
+	viewFlags: vVisible,
+	viewFormat: 0,
+	numSegs: 4,
+	numPeriods: 3,
+	// viewSetupChildrenScript: makes the cells (its body below; the cells' scripts are its constants).
+	viewSetupChildrenScript: compile(
+		constants: {
+			// kBinaryFromHex(hex, class): a binary of that class made from a string of hex digits (this project's helper for binaries in compiled constants).
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			// viewChangedScript: keeps only the digits of the cell; stores the byte if it is 0..255,
+			// else beeps and selects the cell (hack stops the change from echoing back).
+			kFunction_1017cbd: func(a1, a2) begin
+				local passAll, copy;
+				if hack then begin
+						return nil
+					end;
+				copy := Clone(self.text);
+				if CharPos(self.text, $ , 0) then begin
+						StrReplace(self.text, NumberStr(target.(path)[IPsegment]), "", 1)
+					end;
+				if (StrLen((passAll := StringFilter(self.text, "0123456789", 'passAll))) = 0) then begin
+						passAll := copy
+					end;
+				if (not (passAll := NumberStr(StringToNumber(passAll)))) then begin
+						passAll := "0"
+					end;
+				hack := true;
+				SetValue(self, 'text, passAll);
+				hack := nil;
+				self:?textChanged();
+				(if (passAll := self:IPOutofRange()) then (target.(path)[IPsegment] := passAll) else begin
+						GetRoot():SysBeep();
+						SetCaretInfo(self, SetClass({offset: 0, length: 999}, 'paraCaret))
+					end)
+			end,
+			// viewSetupFormScript: the cell's width and its byte; locked or not.
+			kFunction_1017ff5: func() begin
+				inherited:?viewSetupFormScript();
+				self.viewBounds := Clone(self.viewBounds);
+				self.viewBounds.right := self:CalculateBounds();
+				self.text := NumberStr(target.(path)[IPsegment]);
+				(if (not hack) then self:LockCell())
+			end,
+			// CalculateBounds(): the cell width - the entry's width less the periods, shared by the cells.
+			kFunction_10180a1: func() begin
+				local box, l2, l3, l4;
+				box := self:parent():GlobalBox();
+				l3 := (l2 := '{text: ".", viewBounds: {left: 0, top: 0, right: 4, bottom: -3}, viewJustify: vjCenterH + vjBottomV + vjParentFullV + vjSiblingRightH + oneLineOnly, viewFont: @fontSystem12Bold, _proto: @protoStaticText}).viewBounds.right;
+				return (l4 := (((box.right - box.left) - (l3 * numPeriods)) div numSegs))
+			end,
+			// IPOutofRange(): the cell's number when it is 0..255, else nil (despite the name).
+			kFunction_10181f1: func() begin
+				local number;
+				(if StrFilled(self.text) then begin
+						if (number := StringToNumber(self.text)) then begin
+								number := rinttol(number)
+							end;
+						(if (if (if number then (number >= 0)) then (number <= 255)) then number)
+					end)
+			end,
+			// LockCell(): a locked cell is read-only and unframed.
+			kFunction_10182ad: func() begin
+				(if Locked then begin
+						hack := true;
+						SetValue(self, 'viewFormat, 0);
+						SetValue(self, 'viewFlags, vVisible + vReadOnly);
+						(hack := nil)
+					end else (if HasSlot(self, 'viewFormat) then begin
+							hack := true;
+							SetValue(self, 'viewFormat, self._proto.viewFormat);
+							SetValue(self, 'viewFlags, self._proto.viewFlags);
+							(hack := nil)
+						end))
+			end,
+			// AdjustLocks(locks): the cell's lock from the locks array.
+			kFunction_1018371: func(a1) begin
+				(Locked := a1[IPsegment])
+			end,
+			// pickActionScript(item): the caret popup's choice typed at the caret.
+			kFunction_10189e9: func(a1) begin
+				local popupItem, text, viewfrontkey;
+				text := (popupItem := popup[a1.index]).words[((a1.y * popupItem.width) + a1.x)];
+				viewfrontkey := GetView('viewfrontkey);
+				if (text[0] = $\u2022) then begin
+						if (if (if (if viewfrontkey then viewfrontkey.text) then GetCaretInfo().info) then (GetCaretInfo().info.offset > 0)) then begin
+								text := Stringer([Array: $\n, text])
+							end
+					end;
+				PostKeyString(viewfrontkey, text)
+			end,
+			// ViewKeyDownScript(char, flags): "." moves to the next cell.
+			kFunction_1018bb1: func(a1, a2) begin
+				if (a1 = $.) then begin
+						self:?textChanged();
+						PostKeyString(self, "\t");
+						return true
+					end;
+				nil
+			end,
+			kLiteral_1017ae5: {viewBounds: '{left: 0, top: 0, right: 48, bottom: 0}, viewJustify: vjCenterH + vjParentFullV + vjSiblingRightH + oneLineOnly, viewFlags: vVisible + vSingleUnit + vClickable + vGesturesAllowed + vNumbersAllowed, viewChangedScript: kFunction_1017cbd, IPsegment: nil, viewSetupFormScript: kFunction_1017ff5, CalculateBounds: kFunction_10180a1, IPOutofRange: kFunction_10181f1, Locked: nil, hack: nil, LockCell: kFunction_10182ad, AdjustLocks: kFunction_1018371, _caretPopup: {popup: [Array: {bits: call kBinaryFromHex with ("00000000000800f400f40119016f0144aaaaaaaaaaa000005555555555400000800000000020000040000400004000008000000000200000400004000040000080000000002000004000040000400000860180180c200000460184180c4000008f39e079cc200000460db4db6c400000863db0dbec200000466db4db0c400000833de079ec2000004000040000400000800000000020000040000400004000008000000000200000400004000040000080000000002000005555555555400000aaaaaaaaaaa000004000040000400000800000000020000040180407c04000008038000ce0200000407804187040000080380018702000004038040070400000803800007020000040380400e040000080380000c02000004038040180400000803800030020000040380406004000008038000c302000004038041ff0400000807c001ff020000040000400004000008000000000200000555555555540000080000000002000004000040000400000807c00006020000040de0400c0400000818e000180200000400e040300400000801c0006602000004038040ce0400000807c0018e020000040ce0430e04000008007003ff020000040070400e040000080070000e020000040070400e040000081860000e020000041cc0401f040000080f80000002000004000040000400000800000000020000055555555554000008000000000200000400004000040000081fe0000e020000041fe04038040000081800007002000004180040e0040000081f8000e0020000041fc041c00400000801e001de0200000400f041ff04000008007001c782000004007041c384000008007001c382000004007041c384000008006000e30200000400c040e6040000080380003c020000043e00400004000008000000000200000555555555540000080000000002000004000040000400000800000000020000043ff0403c040000083ff0007602000004303040e304000008003000e302000004006040f6040000080060007c0200000400c0403e0400000800c0006f02000004018040c784000008018001838200000403004183840000080300018382000004060040c7040000080600007e020000040000400004000008000000000200000555555555540000080000000002000004000040000400000807800000020000040ce0407c0400000818e000ee02000004387040c604000008387001c702000004387041c7040000083cf001c7020000041ff041c7040000080f7001c702000004007041c70400000800e001c70200000400e041c70400000801c000c602000004038040ee040000080e00007c0200000400004000040000080000000002000005555555555400000aaaaaaaaaaa00000", 'bits), bounds: '{left: 0, top: 0, right: 43, bottom: 123}, width: 2, height: 6, words: '[Array: "\t", "\u0008\u", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]}], pickActionScript: kFunction_10189e9}, ViewKeyDownScript: kFunction_1018bb1, _proto: @protoInputLine}
+		},
+		// the entry's viewSetupChildrenScript: the four cells and the periods between them.
+		func() begin
+			(for i := 1 to numSegs do begin
+					AddArraySlot(stepChildren, {_proto: kLiteral_1017ae5, _parent: self, IPsegment: (i - 1), Locked: (if (Length(CellLocks) = numSegs) then CellLocks[(i - 1)])});
+					if (i < numSegs) then begin
+							AddArraySlot(stepChildren, {_proto: '{text: ".", viewBounds: {left: 0, top: 0, right: 4, bottom: -3}, viewJustify: vjCenterH + vjBottomV + vjParentFullV + vjSiblingRightH + oneLineOnly, viewFont: @fontSystem12Bold, _proto: @protoStaticText}})
+						end
+				end)
+		end),
+	// viewSetupFormScript: the cells are made afresh.
+	viewSetupFormScript: func() begin
+		(self.stepChildren := [Array: ])
+	end,
+	viewJustify: vjParentFullH,
+	CellLocks: [|Array|: nil, nil, nil, nil],
+	// CheckCellLocks(): applies CellLocks to the cells.
+	CheckCellLocks: func() begin
+		(foreach item in self:ChildViewFrames() do begin
+				if (Length(CellLocks) = numSegs) then begin
+						item:?AdjustLocks(CellLocks)
+					end;
+				item:?LockCell()
+			end)
+	end,
+	// viewQuitScript: saves the setup.
+	viewQuitScript: func() begin
+		newtAppBase.targetView:?StartFlush();
+		inherited:?viewQuitScript()
+	end,
+	viewClass: clView
+};
+
+name := "";
+
+OverviewIconBits := bitmap('bits, "resources/bits/1019229.png", "000000000004000000000000001e001e", 1);
+
+// the logical services not excluding a kind (the same as DependenciesLoaded's)
+partItem := func(a1) begin
+	if functions.InetGetServiceList then begin
+			logicalService := InetGetServiceList('LogicalService)
+		end else begin
+			return nil
+		end;
+	if (Length(logicalService) = 0) then begin
+			return nil
+		end;
+	list := [Array: ];
+	local logicalService;
+	local list;
+	local l3;
+	(foreach item in logicalService do begin
+			l3 := nil;
+			(foreach item2 in item.excludeFrom do begin
+					if (item2 = a1) then begin
+							l3 := true;
+							break
+						end
+				end);
+			if (not l3) then begin
+					AddArraySlot(list, item)
+				end
+		end);
+	(if (Length(list) > 0) then list)
+end;
+
+partItem_2 := {_proto: partItem_2Proto, preAllocatedContext: 'line};
+
+partItem_3 := {_proto: partItem_3Proto, preAllocatedContext: 'pwBtn};
+
+// the password button proto
+partItem_3Proto := {
+	// buttonClickScript: opens the password slip.
+	buttonClickScript: func() begin
+		self:EditPassword()
+	end,
+	viewBounds: {left: 0, top: 10, right: 30, bottom: 23},
+	path: 'password,
+	// AdjustBounds(): "Edit Password" or "Set Password", sized to fit.
+	AdjustBounds: func() begin
+		SetValue(self, 'text, (if StrFilled(target.(path)) then "Edit Password" else "Set Password"));
+		(self.viewBounds.right := (StrWidth(self.text) + 8))
+	end,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV + oneLineOnly,
+	// viewSetupFormScript: its own bounds to change.
+	viewSetupFormScript: func() begin
+		(viewBounds := Clone(viewBounds))
+	end,
+	// viewSetupDoneScript: its text and size.
+	viewSetupDoneScript: func() begin
+		self:AdjustBounds();
+		self:SyncView()
+	end,
+	_proto: @protoTextButton
+};
+
+// EditPassword(): opens the system's password slip on the setup's password; setting it
+// saves the setup and updates the button.
+EditPassword := func() begin
+	(passwordSlip := BuildContext({_proto: @passwordSlip, path: 'password, currentPassword: func() begin
+		target.(path)
+	end, verifyPassword: nil})).target := target;
+	passwordSlip.targetView := self;
+	passwordSlip.setpassword := func(a1) begin
+		target.(path) := a1;
+		targetView:?StartFlush();
+		targetView:AdjustBounds();
+		targetView:SyncView()
+	end;
+	passwordSlip.viewQuitScript := func() begin
+		targetView.passwordSlip := nil;
+		inherited:?viewQuitScript()
+	end;
+	passwordSlip:Open()
+end;
+
+// the picker proto of an editor whose value is a symbol from MakePopup's choices
+objectsProto := {
+	viewBounds: {left: 3, top: 10, right: -3, bottom: 26},
+	alwaysCallPickActionScript: true,
+	// GetSelectedText(): the name of the current choice.
+	GetSelectedText: func() begin
+		(if (Length(labelCommands) > 0) then (foreach key, value in labelCommands do begin
+					if (value.symbol = target.(path)) then begin
+							return value.item
+						end
+				end) else "")
+	end,
+	// labelActionScript(index): stores the choice and saves.
+	labelActionScript: func(index) begin
+		target.(path) := Clone(labelCommands[index].symbol);
+		newtAppBase.targetView:?StartFlush()
+	end,
+	// textSetup(): the current choice.
+	textSetup: func() begin
+		self:GetSelectedText()
+	end,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	// viewSetupFormScript: the label and the choices (MakePopup).
+	viewSetupFormScript: func() begin
+		SetValue(self, 'text, labelText);
+		labelCommands := [Array: ];
+		labelCommands := self:?MakePopup();
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @protoLabelPicker
+};
+
+// the picker of how an address is set (its class: popupOptions)
+partItem_4 := {
+	viewBounds: {left: 0, top: 2, right: 0, bottom: 16},
+	viewJustify: vjParentFullH + oneLineOnly,
+	// viewSetupFormScript: the label and the choices.
+	viewSetupFormScript: func() begin
+		text := labelText;
+		labelCommands := popupOptions;
+		inherited:?viewSetupFormScript()
+	end,
+	// textSetup(): the choice for the address's class.
+	textSetup: func() begin
+		labelCommands[self:GetOption(ClassOf(target.(path)))].item
+	end,
+	// labelActionScript(index): classes the address with the choice and saves.
+	labelActionScript: func(index) begin
+		SetClass(target.(path), labelCommands[index].symbol);
+		newtAppBase.targetView:?StartFlush()
+	end,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'picker
+};
+
+// the address entry under that picker (all cells locked when masterlock)
+partItem_5 := {
+	// viewSetupFormScript: below the picker; masterlock locks every cell.
+	viewSetupFormScript: func() begin
+		self.viewBounds := Clone(self.viewBounds);
+		self.viewBounds := RelBounds(0, (picker.viewBounds.bottom + 3), 0, 24);
+		if masterlock then begin
+				self.CellLocks := Array(numSegs, true)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	// viewQuitScript: the proto's.
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript()
+	end,
+	_proto: partItem_2ProtoItem_2Proto,
+	preAllocatedContext: 'IPLine
+};
+
+domainName := "Domain Name";
+
+// GetString(choices, symbol): the name of the choice with that symbol, else the symbol printed.
+GetString := func(a1, a2) begin
+	if (not a1) then begin
+			return ""
+		end;
+	(foreach key, value in a1 do begin
+			if (value.symbol = a2) then begin
+					return value.item
+				end
+		end);
+	SPrintObject(a2)
+end;
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewChangedScript_literal14 := same("partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewChangedScript.literals[14]");
+
+CalculateBounds_literal2 := same("partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].CalculateBounds.literals[2]");
+
+words_value := same("partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[0]");
+
+StringExtract_literal2 := same("part[0]._ExportTable[0].objects[1].StringExtract.literals[2]");
+
+StringExtract_literal5 := same("part[0]._ExportTable[0].objects[1].StringExtract.literals[5]");
+
+buttonClickScript_code := same("partItem_3Proto.buttonClickScript.instructions");
+
+formatFunc_code := same("part[0]._ExportTable[0].objects[3].infoFrame.formatFunc.instructions");
+
+devInstallScript_code := same("part[0].devInstallScript.instructions");

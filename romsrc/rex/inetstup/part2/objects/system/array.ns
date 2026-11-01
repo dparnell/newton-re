@@ -1,0 +1,4 @@
+// array: the Ethernet module's configuration choices (Manual, or addresses from a server),
+// the Configuration picker's items. The file holds it and what only it reaches.
+
+array := [|Array|: {item: "Manual", symbol: 'manual}, {item: "DHCP Server", symbol: 'usingServer}];

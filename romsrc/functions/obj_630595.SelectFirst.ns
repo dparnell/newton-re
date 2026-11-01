@@ -1,5 +1,0 @@
-@@ 0x5abfe1
-func() begin
-	self:SelectEntry(0)
-end
-@@end

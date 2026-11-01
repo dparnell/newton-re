@@ -1,5 +1,0 @@
-@@ 0x4427e5
-func(a1) begin
-	((a1 mod 10000) div 100)
-end
-@@end

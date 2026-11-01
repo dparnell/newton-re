@@ -1,5 +1,0 @@
-@@ 0x41d535
-func() begin
-	(if (text = nil) then (text := ""))
-end
-@@end

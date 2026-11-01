@@ -1,0 +1,4 @@
+// The title icon's bitmap several Connection slips share (naturalize.py put it
+// here).
+
+titleIconBits := bitmap('bits, "resources/bits/752479.png", "000000000004010701070091011200a4", 1);

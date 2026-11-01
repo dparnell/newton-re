@@ -1,0 +1,4 @@
+// callSlip (magic pointer 27): in this ROM an empty frame - the magic pointer
+// is kept, with nothing behind it (nothing in the tree refers to it by name)
+
+callSlip := {};

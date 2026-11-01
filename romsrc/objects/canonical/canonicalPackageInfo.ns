@@ -1,0 +1,15 @@
+// canonicalPackageInfo, and what only it reaches
+//
+// A package's description: its icons and their titles,
+// name, data entry id, application titles, part indexes and deletion
+// scripts.
+
+canonicalPackageInfo := {
+	icons: [|Array|: ],
+	iconTitles: [|Array|: ],
+	packageName: nil,
+	packageDataEntryId: nil,
+	appTitles: [|Array|: ],
+	partIndices: [|Array|: ],
+	DeletionScript: [|Array|: ]
+};

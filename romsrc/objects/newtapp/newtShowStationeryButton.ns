@@ -1,0 +1,56 @@
+// newtShowStationeryButton: the NewtApp Show button (NPR 2.0): lists the viewDefs
+// (of types, by default viewers and editors) registered for the current entry's
+// dataDef, checking the one shown, and shows the entry with the one chosen.
+//
+// This file holds newtShowStationeryButton and what only it reaches.
+
+newtShowStationeryButton := {
+	form: 'viewDef,
+	keyButton: '_showKeyButton,
+	text: show_2,
+	types: [|Array|: 'viewer, 'editor],
+	// leave the overview if in it, and show the entries with the viewDef chosen (it
+	// is also the preferred one from now on)
+	statScript: func(statArrayItem) begin
+		if (newtAppBase.currentLayout = 'overview) then begin
+				newtAppBase:ShowLayout(nil)
+			end;
+		preferredViewDef := statArrayItem.symbol;
+		layout.viewDef := statArrayItem.symbol;
+		layout:Retarget(true)
+	end,
+	// popup: the picker's items, one for each stationery (name, or title; icon when it
+	// has one); indented (24) to leave room for the icons when any has one
+	// and the viewDef shown checked ($\uFC0B, the check mark)
+	BuildPopup: func() begin
+		popup := [Array: ];
+		statArray := self:SetUpStatArray();
+		if sorter then begin
+				Sort(statArray, sorter, 'name)
+			end;
+		l1 := nil;
+		local l1;
+		(foreach item in statArray do begin
+				local l4, l5;
+				l4 := (if item.name then item.name else item.title);
+				l5 := (if item.icon then begin
+						l1 := true;
+						{item: l4, icon: item.icon}
+					end else {item: l4});
+				if (item.symbol = layout.viewDef) then begin
+						l5.mark := $\uFC0B
+					end;
+				AddArraySlot(popup, l5)
+			end);
+		(if l1 then (popup[0].indent := 24))
+	end,
+	// the viewDefs of the entry view's dataDef; none when there is no entry
+	SetUpStatArray: func() begin
+		(if targetView.targetDataDef then GetDefs(form, [Array: targetView.targetDataDef.symbol], types) else [Array: ])
+	end,
+	_proto: @newtStationeryPopupButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+statScript_code := same("newtShowStationeryButton.statScript.instructions");

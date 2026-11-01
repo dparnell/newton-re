@@ -1,9 +1,0 @@
-@@ 0x1011a11
-func(a1) begin
-	inherited:labelActionScript(a1);
-	(if labelCommands then begin
-			newDef := labelCommands[a1].symbol;
-			self:AdjustHelpText(labelCommands[a1].help)
-		end)
-end
-@@end

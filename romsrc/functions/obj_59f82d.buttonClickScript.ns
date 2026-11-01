@@ -1,5 +1,0 @@
-@@ 0x59f7cd
-func() begin
-	callassist:buttonClickScript()
-end
-@@end

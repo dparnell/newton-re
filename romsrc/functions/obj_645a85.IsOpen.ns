@@ -1,5 +1,0 @@
-@@ 0x422ef1
-func() begin
-	return (_channel <> nil)
-end
-@@end

@@ -1,0 +1,88 @@
+// protoBatteryGauge: a gauge of the battery's charge (Newton Programmer's
+// Reference "protoBatteryGauge"), updated every viewIdleFrequency
+// milliseconds and whenever the power status changes.  With no battery the
+// gauge is hidden.
+//   batteryLabelForm   an optional text view the gauge keeps set to the
+//                      charging state ("Charging", "Charged", "Battery", ...)
+//   gauge              the child gauge view (its viewValue: the capacity)
+
+protoBatteryGauge := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewBounds: nil,
+	batteryLabelForm: nil,
+	viewIdleFrequency: 10000,
+	// every 10 seconds: rereads the battery and answers the time until the
+	// next idle
+	viewIdleScript: func() begin
+		self:ReadBattery(nil);
+		viewIdleFrequency
+	end,
+	// before the children are made: hides them (viewFlags 0) when the unit
+	// has no battery
+	viewSetupChildrenScript: func() begin
+		(if (BatteryCount() < 1) then begin
+				gauge.viewFlags := 0;
+				(if batteryLabelForm then (batteryLabelForm.viewFlags := 0))
+			end)
+	end,
+	// after setup, with a battery: reads it, starts the idle script and
+	// registers for power status changes under a symbol unique to this view
+	// ("batteryGauge." and the view's C object)
+	viewSetupDoneScript: func() begin
+		(if (gauge.viewFlags <> 0) then begin
+				self:ReadBattery(nil);
+				self:SetupIdle(viewIdleFrequency);
+				self.powerStatusChangeSym := Intern(Stringer([Array: "batteryGauge.", viewCObject]));
+				// the power-status callback is given the new status frame
+				RegPowerStatusChange(powerStatusChangeSym, func(a1) begin
+					self:ReadBattery(a1)
+				end)
+			end)
+	end,
+	// on closing: removes the power status registration
+	viewQuitScript: func() begin
+		(if self.powerStatusChangeSym then UnRegPowerStatusChange(powerStatusChangeSym))
+	end,
+	// ReadBattery(status): updates the label and the gauge from a
+	// BatteryStatus frame (read from battery 0 when status is nil).  A
+	// rechargeable battery (NiCd, NiMH) on the adapter but discharging is
+	// "Waiting" to charge.
+	ReadBattery: func(a1) begin
+		local text;
+		if (not a1) then begin
+				a1 := BatteryStatus(0)
+			end;
+		if batteryLabelForm then begin
+				if ((a1.chargeState = 'preliminaryCharge) or (a1.chargeState = 'fastCharging)) then begin
+						text := "Charging"
+					end else begin
+						if (a1.chargeState = 'deepToast) then begin
+								text := "Fault"
+							end else begin
+								if ((a1.chargeState = 'trickleCharge) or (a1.chargeState = 'trickleChargeContinuous)) then begin
+										text := "Charged"
+									end else begin
+										if (if (if (a1.acPower = 'yes) then (a1.chargeState = 'discharging)) then ((a1.batteryType = 'nicd) or (a1.batteryType = 'nimh))) then begin
+												text := "Waiting"
+											end else begin
+												if (a1.acPower = 'yes) then begin
+														text := "Adapter"
+													end else begin
+														text := "Battery"
+													end
+											end
+									end
+							end
+					end;
+				// set only on a change, to avoid redrawing
+				if (batteryLabelForm.text <> text) then begin
+						SetValue(batteryLabelForm, 'text, text)
+					end
+			end;
+		(if (gauge.viewValue <> a1.batteryCapacity) then SetValue(gauge, 'viewValue, a1.batteryCapacity))
+	end,
+	viewChildren: [viewChildren: gauge],
+	gauge: nil,
+	allocateContext: [|Array|: 'gauge, gauge]
+};

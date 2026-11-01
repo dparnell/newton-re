@@ -1,5 +1,0 @@
-@@ 0x72bff5
-func() begin
-	(changed := true)
-end
-@@end

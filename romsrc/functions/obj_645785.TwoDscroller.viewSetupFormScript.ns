@@ -1,6 +1,0 @@
-@@ 0x4bcf85
-func() begin
-	inherited:?viewSetupFormScript();
-	self:CommonScrollerSetupFormScript()
-end
-@@end

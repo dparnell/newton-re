@@ -1,0 +1,7 @@
+// The default Action menu icon of a transport (protoTransport). A 1-bit bitmap frame (bits,
+// bounds), 21 x 12 pixels. Magic pointer @769. Used by protoTransport.
+
+routeTransport := {
+	bits: bitmap('bits, "resources/bits/46390d.png", "00000000000400550055007c00610091", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 12}
+};

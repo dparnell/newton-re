@@ -1,0 +1,4 @@
+// classinfoPrototype: the prototype of a class info object (_classinfo holds
+// the C++ TClassInfo), whose methods come from its _parent, classinfoEnabler.
+
+classinfoPrototype := {_parent: classinfoEnabler, _proto: nil, _classinfo: nil};

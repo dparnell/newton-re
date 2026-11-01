@@ -1,5 +1,0 @@
-@@ 0x4ca9a9
-func() begin
-	self:teardownForm()
-end
-@@end

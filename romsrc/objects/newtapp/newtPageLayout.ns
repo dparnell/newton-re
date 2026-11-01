@@ -1,0 +1,66 @@
+// newtPageLayout: the NewtApp page layout (NPR 2.0): one entry at a time, which may
+// be longer than the screen; scrolling moves a screenful through the entry and then
+// on to the next (or previous) one.  Its child is protoChild, the entry view.
+//
+// This file holds newtPageLayout and what only it reaches.
+
+newtPageLayout := {
+	_proto: @newtLayout,
+	hasOnePage: nil,
+	// the last entry of the cursor (set when the cursor has no next)
+	lastItem: nil,
+	lastHeight: 0,
+	viewOriginY: 0,
+	// one child, the entry view, when there is an entry
+	viewSetupChildrenScript: func() begin
+		inherited:viewSetupChildrenScript();
+		if (not dataCursor:clone():Next()) then begin
+				lastItem := entries[0]
+			end;
+		lastHeight := self:LocalBox().bottom;
+		if entries[0] then begin
+				self.viewChildren := Array(1, protoChild)
+			end else begin
+				RemoveSlot(self, 'viewChildren)
+			end;
+		layout:Retarget(nil)
+	end,
+	// scroll down (maxLines > 0) or up a screenful: within the entry while it goes on,
+	// else to the next or previous entry; scrolling up to an entry shows its end when
+	// scrollingUpBehavior is 'bottom
+	Scroller: func(maxLines) begin
+		local box, entry, height;
+		if HiliteOwner() then begin
+				// 48: the command that takes all the selection away (src/views/Commands.h names it
+				// aeRemoveAllHilites, a name of the reconstruction's)
+				PostCommand(HiliteOwner(), 48)
+			end;
+		box := self:LocalBox();
+		if (maxLines > 0) then begin
+				// an entry's height slot: how far it reaches, a third of a screen added
+				height := (if ((entry := dataCursor:entry()).height = nil) then 0 else (entry.height + (box.bottom div 3)));
+				if (if (entry <> lastItem) then ((height - viewOriginY) < box.bottom)) then begin
+						viewOriginY := 0;
+						self:ScrollCursor(1)
+					end else begin
+						viewOriginY := (viewOriginY + box.bottom)
+					end
+			end else begin
+				if (viewOriginY > 0) then begin
+						viewOriginY := max(0, (viewOriginY - box.bottom))
+					end else begin
+						if self:ScrollCursor(-1) then begin
+								height := dataCursor:entry().height;
+								if (if (scrollingUpBehavior = 'bottom) then height) then begin
+										viewOriginY := ((height div box.bottom) * box.bottom)
+									end else begin
+										viewOriginY := 0
+									end
+							end
+					end
+			end;
+		layout:Retarget(true)
+	end,
+	Jogged: Jogged,
+	GetActiveViewX: GetActiveViewX
+};

@@ -1,0 +1,216 @@
+// The Address edit view (@8193): street, second line, city, state or region,
+// postal code and country, with the locale's labels; the card's own address or
+// an element of its addresses array.
+
+address := {
+	type: 'editor,
+	symbol: 'address,
+	stepChildren: [stepChildren: addressItem, addressItem_2, addressItem_3, addressItem_4, addressItem_5, country],
+	// For a U.S. address (or none given) the state line uses the locale's state
+	// dictionaries; for another country it takes words as letters, numbers and
+	// punctuation.
+	UpdateCountryInfo: func() begin
+		local locale, countryEntry, l3;
+		locale := GetLocale();
+		l3 := true;
+		if target.(country.path) then begin
+				if (Length((countryEntry := GetCountryEntry(target.(country.path)))) > 0) then begin
+						l3 := (countryEntry[0].symbol = 'USA)
+					end
+			end;
+		(if l3 then SetValue(State.entryLine, 'dictionaries, locale.recogStateDictionaries) else SetValue(State.entryLine, 'viewFlags, vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vNameField + vCapsRequired))
+	end,
+	// Sets up the state line for the country.
+	viewSetupDoneScript: func() begin
+		self:UpdateCountryInfo();
+		inherited:?viewSetupDoneScript()
+	end,
+	name: "Address",
+	declareSelf: 'addressView,
+	infoFrame: {
+		checkPrefix: [|Array|: true, [pathExpr: 'addresses]],
+		checkPaths: [|Array|: 'address, 'address2, 'city, 'region, 'postal_code, 'country],
+		// The address as lines: street, second line, "City, State Zip" (without the
+		// comma when either is missing) and the country.
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			(if (if StrFilled(v20_wwwwwwwwwwvvvvvv[2]) then StrFilled(v20_wwwwwwwwwwvvvvvv[3])) then ParamStr("^?0^0\n||^?1^1\n||^?2^2, ||^?3^3 ||^?4^4||^?5\n^5||", v20_wwwwwwwwwwvvvvvv) else ParamStr("^?0^0\n||^?1^1\n||^?2^2 ||^?3^3 ||^?4^4||^?5\n^5||", v20_wwwwwwwwwwvvvvvv))
+		end
+	},
+	protection: 'private,
+	// Gives the country's class to the country string (SetCountryClass).
+	viewQuitScript: func() begin
+		local l1, l2;
+		inherited:?viewQuitScript();
+		(if (l2 := target.(country.path)) then SetCountryClass(l2))
+	end,
+	fieldOrder: nil,
+	_proto: @8240,
+	address1: nil,
+	stepAllocateContext: [|Array|:
+		'address1,
+		addressItem,
+		'address2,
+		addressItem_2,
+		'city,
+		addressItem_3,
+		'State,
+		addressItem_4,
+		'zipcode,
+		addressItem_5,
+		'country,
+		country
+	],
+	address2: nil,
+	city: nil,
+	State: nil,
+	zipcode: nil,
+	country: nil
+};
+
+// The street line, with the locale's label.
+addressItem := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 33},
+	viewLineSpacing: 26,
+	flavor: @newtCustomFilter,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed + vAddressField + vCapsRequired,
+	addPath: 'address,
+	label: nil,
+	// Sends key code 56 into the field once it is open (deferred KeyIn).
+	viewSetupDoneScript: func() begin
+		AddDeferredCall(functions.KeyIn, [Array: 56, nil]);
+		inherited:?viewSetupDoneScript()
+	end,
+	// The locale's street label.
+	viewSetupFormScript: func() begin
+		local locale;
+		label := (locale := GetLocale()).streetLabel;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'address1
+};
+
+// The second address line.
+addressItem_2 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 32},
+	viewLineSpacing: 25,
+	flavor: @newtCustomFilter,
+	label: nil,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed + vAddressField + vCapsRequired,
+	addPath: 'address2,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'address2
+};
+
+// The city line, with the locale's label and city dictionaries.
+addressItem_3 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 33},
+	viewLineSpacing: 26,
+	flavor: @newtCustomFilter,
+	label: nil,
+	newDictionaries: nil,
+	// The locale's city label and city dictionaries.
+	viewSetupFormScript: func() begin
+		local locale;
+		label := (locale := GetLocale()).cityLabel;
+		newDictionaries := locale.recogCityDictionaries;
+		inherited:?viewSetupFormScript()
+	end,
+	memory: 'cityName,
+	addPath: 'city,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'city
+};
+
+// The state or region line, with the locale's label.
+addressItem_4 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 33},
+	viewLineSpacing: 26,
+	flavor: @newtCustomFilter,
+	label: nil,
+	memory: 'regionName,
+	// The locale's region (state, province ...) label.
+	viewSetupFormScript: func() begin
+		label := GetLocale().regionLabel;
+		inherited:?viewSetupFormScript()
+	end,
+	newRecFlags: nil,
+	addPath: 'region,
+	_proto: @newtLabelInputLine,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	preAllocatedContext: 'State
+};
+
+// The postal code line: the postal code dictionary, the locale's label.
+addressItem_5 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 33},
+	viewLineSpacing: 26,
+	// Only the card's own address (not an element of addresses) creates its slot
+	// when written in.
+	viewSetupFormScript: func() begin
+		label := GetLocale().postalCodeLabel;
+		if (selectedPath <> true) then begin
+				RemoveSlot(self, 'viewChangedScript)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	flavor: @newtCustomFilter,
+	label: nil,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vCustomDictionaries,
+	addPath: 'postal_code,
+	newDictionaries: kPostalCodeDictionary,
+	newRecTextFlags: 520,
+	_proto: addressItem_5Proto,
+	preAllocatedContext: 'zipcode
+};
+
+// The country line: its picker pops up the countries on the card's country (or
+// the first address's, or the user's).
+country := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 32},
+	viewLineSpacing: 25,
+	flavor: {
+		_proto: @newtCountryFilter,
+		// The countries' picker, at the card's country (else its first address's).
+		Picker: func() begin
+			if (if (if (not (country := (if StrFilled(target.country) then target.country))) then (addresses := target.addresses)) then ((count := Length(addresses)) > 0)) then begin
+					local country;
+					local addresses;
+					local count;
+					local countryEntry;
+					(for i := 0 to (count - 1) do begin
+							if (if addresses[i] then StrFilled(addresses[i].country)) then begin
+									break (country := addresses[i].country)
+								end
+						end)
+				end;
+			if (not country) then begin
+					country := UserConfiguration.currentCountry
+				end;
+			@locationPopup:new({default: (if (Length((countryEntry := GetCountryEntry(country))) > 0) then countryEntry[0]), spots: @countrySoupName, result: 'name}, self:GlobalLabelBounds(), self)
+		end
+	},
+	label: "Country",
+	addPath: 'country,
+	// A new country changes how the state line is recognised.
+	Retarget: func() begin
+		inherited:?Retarget();
+		addressView:UpdateCountryInfo()
+	end,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'country
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code := same("addressItem.viewSetupDoneScript.instructions");
+
+viewSetupFormScript_code_2 := same("addressItem.viewSetupFormScript.instructions");
+
+viewSetupFormScript_code_3 := same("addressItem_4.viewSetupFormScript.instructions");

@@ -1,0 +1,89 @@
+// export145: the To Do conversion data def ('convertTodo) - converts tasks between the 1.x
+// format ('oneO: a To Do soup item) and the 2.x one ('twoO: a topic of a day entry). The
+// file holds it and what only it reaches.
+
+export145 := {
+	_proto: export145Proto,
+	supportTypes: [|Array|: 'oneO, 'twoO],
+	// Convert(frame, from, to): converts a task between the two formats.
+	Convert: compile(
+		options: "names",
+		func(aFrame, srcFormat, dstFormat) begin
+			(if (if SetContains(supportTypes, srcFormat) then SetContains(supportTypes, dstFormat)) then (if (if (srcFormat = 'oneO) then (dstFormat = 'twoO)) then self:Convert10to20(aFrame) else (if (if (srcFormat = 'twoO) then (dstFormat = 'oneO)) then self:Convert20to10(aFrame) else aFrame)))
+		end),
+	// Convert10to20(entry): a 1.x item as a 2.x task.
+	Convert10to20: compile(
+		options: "names",
+		func(aEntry) begin
+			local task;
+			(task := self:ConvertOldEntry(aEntry))
+		end),
+	// Convert20to10(task): a 2.x task as a 1.x To Do item (a paragraph; 19-pixel lines become 16).
+	Convert20to10: compile(
+		options: "names",
+		func(aEntry) begin
+			local oldTask, convertFrame, newHeight;
+			oldTask := {};
+			convertFrame := DeepClone(aEntry);
+			oldTask.viewStationery := 'TodoItem;
+			oldTask.mtgPriority := convertFrame.mtgPriority;
+			oldTask.mtgDone := convertFrame.mtgDone;
+			oldTask.mtgStartDate := aEntry.date;
+			newHeight := (((newHeight := (convertFrame.viewBounds.bottom - convertFrame.viewBounds.top)) div 19) * 16);
+			convertFrame.viewBounds.top := 0;
+			convertFrame.viewBounds.bottom := newHeight;
+			convertFrame.viewBounds.left := 0;
+			oldTask.height := newHeight;
+			oldTask.data := [Array: {viewStationery: 'para, viewBounds: convertFrame.viewBounds, text: convertFrame.text, viewFont: tsSimple + tsSize(12)}];
+			oldTask
+		end),
+	// ConvertOldEntry(entry): a task made from a 1.x To Do item - its text, priority, done
+	// state and date (a past undone one moved to today); its source the symbol RO0..RO4 of
+	// the item's store, which marks it as a 1.x task. nil for an empty item.
+	ConvertOldEntry: compile(
+		options: "names",
+		func(anEntry) begin
+			local text, task, date, today;
+			if anEntry.data then begin
+					text := ExtractData(anEntry.data, "...", 256)
+				end else begin
+					return nil
+				end;
+			if (StrLen(text) = 0) then begin
+					return nil
+				end;
+			task := self:StringToTopic(text, 0);
+			if IsSoupEntry(anEntry) then begin
+					task.source := '[Array: RO0, RO1, RO2, RO3, RO4][SetContains(GetStores(), EntrySoup(anEntry):GetStore())]
+				end else begin
+					task.source := nil
+				end;
+			if anEntry.mtgPriority then begin
+					task.mtgPriority := anEntry.mtgPriority
+				end;
+			if anEntry.mtgDone then begin
+					task.mtgDone := anEntry.mtgDone
+				end;
+			today := ((today := Time()) - (today mod 1440));
+			if anEntry.mtgStartDate then begin
+					date := ((anEntry.mtgStartDate div 1440) * 1440)
+				end else begin
+					date := today
+				end;
+			if (if (date < today) then (anEntry.mtgDone = nil)) then begin
+					task.date := today
+				end else begin
+					task.date := date
+				end;
+			task.mtgStartDate := task.date;
+			task.converted := true;
+			task.class := 'todo;
+			task
+		end)
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ConvertOldEntry_literal7 := same("export145.ConvertOldEntry.literals[7]");
+
+ConvertOldEntry_literal1 := same("export145.ConvertOldEntry.literals[1]");

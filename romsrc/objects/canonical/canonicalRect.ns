@@ -1,0 +1,6 @@
+// canonicalRect, and what only it reaches
+//
+// A bounds frame {left, top, right, bottom}: what every native that answers
+// a rectangle clones (src/frames/Objects.cpp, ToObject).
+
+canonicalRect := {left: nil, top: nil, right: nil, bottom: nil};

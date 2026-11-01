@@ -1,0 +1,18 @@
+// export123: the list's "new topic" button - a new topic at the same level. The file
+// holds it and what only it reaches.
+
+export123 := {
+	viewBounds: {left: 0, top: 0, right: 26, bottom: 13},
+	icon: {
+		bits: bitmap('bits, "resources/bits/78d8a5.png", "00000000000401a901a9019b01b401b1", 1),
+		bounds: {left: 0, top: 0, right: 22, bottom: 11}
+	},
+	// buttonClickScript: a new topic at the same level (sister).
+	buttonClickScript: compile(
+		options: "names",
+		func() begin
+			editor:NewRelative('sister)
+		end),
+	debug: 5781968,
+	_proto: @protoPictureButton
+};

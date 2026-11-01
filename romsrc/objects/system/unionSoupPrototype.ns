@@ -1,0 +1,112 @@
+// unionSoupPrototype, and what only it reaches
+//
+// The prototype of a union soup - one soup made of the soups of the same
+// name on every store (GetUnionSoup / GetUnionSoupAlways, magic pointer
+// 232). Its _parent holds the union soup methods; many are natives (class
+// #132), the rest go to the member soup on a given store. soupList holds
+// the members.
+
+unionSoupPrototype := {
+	_parent: {
+		GetName: {class: #132, funcPtr: 866232, numArgs: 0},
+		GetSize: {class: #132, funcPtr: 6898207, numArgs: 0},
+		collect: {class: #132, funcPtr: 6895020, numArgs: 1},
+		// Discontinued in 2.0: complains (BadWickedNaughtyNoot) and adds entry a1
+		// to the first store's member.
+		Add: func(a1) begin
+			BadWickedNaughtyNoot(Stringer([Array: "usoup:Add(\"", self:GetName(), "\")"]), 'discontinued);
+			self:AddToStore(a1, GetStores()[0])
+		end,
+		// Whether the soup has tags: true if every member has; with no members,
+		// whether its registered soup definition has a 'tags index.
+		HasTags: func() begin
+			local count, soupDef, indexes;
+			if ((count := Length(self.soupList)) <> 0) then begin
+					(repeat count := (count - 1); if (not self.soupList[count]:HasTags()) then begin
+								return nil
+							end until (count = 0));
+					return true
+				end;
+			if (soupDef := GetSoupDef(self:GetName())) then begin
+					if (indexes := soupDef.indexes) then begin
+							count := Length(indexes);
+							(while (count > 0) do begin
+									count := (count - 1);
+									(if (indexes[count].type = 'tags) then return true)
+								end)
+						end
+				end;
+			nil
+		end,
+		// Adds adoptEntry to the member soup on store (making the member if need
+		// be); answers the entry.
+		AddToStore: func(adoptEntry, store) begin
+			self:GetMember(store):Add(adoptEntry)
+		end,
+		// AddToStore, then, given a3 (the changeSym), broadcasts 'entryAdded.
+		AddToStoreXmit: func(a1, store, a3) begin
+			local addToStore;
+			addToStore := self:AddToStore(a1, store);
+			if a3 then begin
+					XmitSoupChange(self:GetName(), a3, 'entryAdded, a1)
+				end;
+			addToStore
+		end,
+		// The member soup on store, made (CreateUSoupMember) if there is none.
+		GetMember: func(store) begin
+			local name, soup;
+			if (not (soup := store:GetSoup((name := self:GetName())))) then begin
+					soup := CreateUSoupMember(name, store)
+				end;
+			soup
+		end,
+		// AddFlushedXmit(entry, changeSym): adds the entry to the default store's
+		// member without making a cached entry of it, broadcasting the change.
+		AddFlushedXmit: func(a1, a2) begin
+			self:AddToStoreFlushedXmit(a1, GetDefaultStore(), a2)
+		end,
+		AddTags: {class: #132, funcPtr: 6898206, numArgs: 1},
+		AddTagsXmit: AddTagsXmit,
+		// The same, to the member on a given store.
+		AddToStoreFlushedXmit: func(a1, store, a3) begin
+			self:GetMember(store):AddFlushedXmit(a1, a3)
+		end,
+		AddIndex: {class: #132, funcPtr: 6915108, numArgs: 1},
+		AddIndexXmit: AddIndexXmit,
+		GetTags: {class: #132, funcPtr: 6897121, numArgs: 0},
+		ModifyTag: {class: #132, funcPtr: 6899232, numArgs: 2},
+		RemoveTags: {class: #132, funcPtr: 6899233, numArgs: 1},
+		ModifyTagXmit: ModifyTagXmit,
+		RemoveTagsXmit: RemoveTagsXmit,
+		// A copy of the member soups' array.
+		GetSoupList: func() begin
+			Clone(self.soupList)
+		end,
+		// Adds entry a1 to the member soup on the default store.
+		AddToDefaultStore: func(a1) begin
+			self:AddToStore(a1, GetDefaultStore())
+		end,
+		// AddToDefaultStore, then, given a2 (the changeSym), broadcasts 'entryAdded.
+		AddToDefaultStoreXmit: func(a1, a2) begin
+			local addToDefaultStore;
+			addToDefaultStore := self:AddToDefaultStore(a1);
+			if a2 then begin
+					XmitSoupChange(self:GetName(), a2, 'entryAdded, a1)
+				end;
+			addToDefaultStore
+		end,
+		RemoveIndex: {class: #132, funcPtr: 6915110, numArgs: 1},
+		RemoveIndexXmit: RemoveIndexXmit,
+		Query: {class: #132, funcPtr: 6895019, numArgs: 1},
+		NaughtyFlush: {class: #132, funcPtr: 6915109, numArgs: 0},
+		// Discontinued in 2.0: complains (BadWickedNaughtyNoot), then flushes.
+		flush: func() begin
+			BadWickedNaughtyNoot(Stringer([Array: "usoup:Flush(\"", self:GetName(), "\")"]), 'discontinued);
+			self:NaughtyFlush()
+		end
+	},
+	class: 'UnionSoup,
+	soupList: nil,
+	theName: nil,
+	cursors: nil
+};

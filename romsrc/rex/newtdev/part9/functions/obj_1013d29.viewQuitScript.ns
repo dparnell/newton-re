@@ -1,7 +1,0 @@
-@@ 0x1013f1d
-func() begin
-	RemoveSlot(self, 'viewFlags);
-	RemoveSlot(self, 'viewJustify);
-	inherited:?viewQuitScript()
-end
-@@end

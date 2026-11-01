@@ -1,0 +1,4 @@
+// frcanTimeFilter: the French Canadian time template for the protoCharEdit
+// corrector: the US one as a 24-hour "HH:MM" comb.
+
+frcanTimeFilter := {_proto: @usTimeFilter, |string|: "     ", format: "20_30"};

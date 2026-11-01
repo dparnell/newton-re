@@ -1,7 +1,0 @@
-@@ 0x1022265
-func() begin
-	self:updateText(self:ConvertToDefaultText(target.(path)));
-	chooserIsOpen := true;
-	GetRoot().NetChooser:OpenNetChooser((if HaveZones() then target.(path) else "*"), "=:IPGATEWAY@", nil, self, "Use IP Gateway", "MacIP Gateway", "Gateway")
-end
-@@end

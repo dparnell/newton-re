@@ -1,5 +1,0 @@
-@@ 0x4e6235
-func() begin
-	return hardWords[self:SetHardWordsIndex()]
-end
-@@end

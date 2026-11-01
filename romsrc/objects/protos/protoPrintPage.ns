@@ -1,0 +1,47 @@
+// protoPrintPage: the view a page of a document is printed or faxed through
+// (built on the shared content-area proto): it turns itself to page pageNum
+// and, when showMarks is set, overlays the ink marks kept for that page
+// (fields.body.printMarks) in the printMarks edit view.
+
+protoPrintPage := {
+	_proto: protoContentAreaProto,
+	viewJustify: 0,
+	viewFlags: vVisible + vReadOnly + vClipping,
+	viewFormat: vfFrameGray + vfPen(1) + vfInset(3),
+	viewLineSpacing: 0,
+	// once open: make itself the content area and current page, show the
+	// page; printMarks2 is [page, marks, page, marks, ...]: when this page
+	// has an entry (l2), the marks after it become the overlay's children
+	viewSetupDoneScript: func() begin
+		local printMarks2, l2;
+		contentArea := self;
+		CuPage := self;
+		self:TurnToPage(pageNum);
+		(if showMarks then (if (l2 := (if (printMarks2 := fields.body.printMarks) then LSearch(printMarks2, pageNum, 0, '|=|, nil))) then begin
+					printMarks.viewChildren := printMarks2[(l2 + 1)];
+					printMarks:Open()
+				end))
+	end,
+	contentArea: nil,
+	CuPage: nil,
+	printing: true,
+	showMarks: nil,
+	edgeWidth: 1,
+	pagesShowing: 1,
+	viewChildren: [viewChildren: printMarks],
+	printMarks: nil,
+	allocateContext: [|Array|: 'printMarks, printMarks]
+};
+
+// the overlay of a page's marks: an edit view the size of the page, made
+// ahead but not shown (viewFlags 0) until the page has marks to show
+printMarks := {
+	viewClass: clEditView,
+	viewFlags: 0,
+	viewFormat: 0,
+	// The page's size.
+	viewSetupFormScript: func() begin
+		(self.viewBounds := RelBounds(0, 0, cuPageSize.width, cuPageSize.height))
+	end,
+	preallocatedContext: 'printMarks
+};

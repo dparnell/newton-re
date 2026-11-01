@@ -1,0 +1,28 @@
+// newtSmartAddressFilter: a NewtApp filter for an address from the Names soup: as
+// the user writes, the addresses of the Names cards that hold the words are offered,
+// and choosing one fills the entry from that card.  Not in the NPR.
+//
+// This file holds newtSmartAddressFilter and what only it reaches.
+
+newtSmartAddressFilter := {
+	_proto: @newtTextFilter,
+	// recFlags: the entry line's view flags (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed + vCapsRequired,
+	// the Names entries (the cardfile union soup) holding the words written
+	PathQuery: func(a1) begin
+		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
+	end,
+	// a card whose address holds the words, offered by its address
+	QueryItem: func(entry, preQuery) begin
+		(if (if entry.address then FindStringInFrame(entry.address, preQuery, nil)) then {item: entry.address, id: MakeEntryAlias(entry)})
+	end,
+	// the user picked one of them: take what this field wants from that Names entry
+	// (targetView is the entry view, whose jamFromEntry passes it to every slot view)
+	ResolveItem: func(a1) begin
+		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
+	end,
+	// the field's part of a Names entry: its address
+	EntryToPath: func(resolveEntryAlias) begin
+		(target.(path) := resolveEntryAlias.address)
+	end
+};

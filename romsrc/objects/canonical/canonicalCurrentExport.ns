@@ -1,0 +1,7 @@
+// canonicalCurrentExport, and what only it reaches
+//
+// One unit a package exports, as CurrentExports() lists it
+// (src/packages/Units.cpp): its name, version (major, minor), how many use
+// it, and its objects (ExportTable).
+
+canonicalCurrentExport := {name: nil, major: nil, minor: nil, refCount: nil, ExportTable: nil};

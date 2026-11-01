@@ -1,0 +1,6 @@
+// canonicalGestaltVersion, and what only it reaches
+//
+// Gestalt's frame for kGestalt_Version (src/system/SystemNatives.cpp): the
+// Gestalt version.
+
+canonicalGestaltVersion := {version: nil};

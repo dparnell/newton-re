@@ -1,5 +1,0 @@
-@@ 0x1016a55
-func(a1, a2, a3) begin
-	(if a3 then self:DoEvent('UnBindFailure, [Array: a3]) else self:DoEvent('UnBindSuccess, nil))
-end
-@@end

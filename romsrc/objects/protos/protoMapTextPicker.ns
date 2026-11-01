@@ -1,0 +1,34 @@
+// protoMapTextPicker: a protoTextPicker for choosing a country (place) -
+// tapping it pops up the locationPopup over the country soup; the chosen
+// name is kept in place and shown as the picker's text.
+
+protoMapTextPicker := {
+	viewBounds: nil,
+	label: uCardPositionAlertButton,
+	// the chosen place (a country's name), nil until one is picked
+	place: nil,
+	// what locationPopup lists: entries of the country soup, returning their name slot
+	params: {spots: @countrySoupName, result: 'name},
+	// protoTextPicker calls this to open the popup; x is the width it should take,
+	// so the popup is placed at the picker's global box cut to that width.
+	Popit: func(x) begin
+		local box;
+		(box := self:GlobalBox()).right := (box.left + x);
+		@locationPopup:New(params, box, self)
+	end,
+	// The text protoTextPicker shows: the place, or an empty string.
+	TextSetup: func() begin
+		(if place then place else "")
+	end,
+	// Called back by the popup with the place chosen (index is the place itself,
+	// not a position); stores it and lets protoTextPicker redraw.
+	pickActionScript: func(index) begin
+		place := index;
+		inherited:pickActionScript(nil)
+	end,
+	_proto: @protoTextPicker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TextSetup_code := same("protoMapTextPicker.TextSetup.instructions");

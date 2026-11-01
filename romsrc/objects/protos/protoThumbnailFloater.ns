@@ -1,0 +1,88 @@
+// protoThumbnailFloater: a floating window (protoFloatNGo) at the bottom
+// right of its parent holding a protoThumbnail - a reduced image of a larger
+// view (as of a page) with a grey box for the part shown, which the user can
+// drag to scroll. It passes Update and RelocateGreyBox on to the thumbnail.
+
+protoThumbnailFloater := {
+	// whether the view scrolls while the grey box is dragged (passed to the
+	// thumbnail)
+	trackWhileScrolling: true,
+	// setup(image): shows another image in the open floater, re-sizing it
+	// (image is a temporary slot, removed again unless the floater had one)
+	setup: func(a1) begin
+		local l1;
+		if HasSlot(self, 'image) then begin
+				l1 := true
+			end;
+		self.image := a1;
+		self:SyncView();
+		self:RedoChildren();
+		(if l1 then RemoveSlot(self, 'image))
+	end,
+	// Update(): redraws the thumbnail
+	Update: func() begin
+		actualThumbnail:Update()
+	end,
+	// RelocateGreyBox(scalingInfo): moves the grey box to the part shown
+	RelocateGreyBox: func(scalingInfo) begin
+		actualThumbnail:RelocateGreyBox(scalingInfo)
+	end,
+	// ToggleThumbnail(image): opens the floater on the image, or closes it if
+	// open; no image closes it
+	ToggleThumbnail: func(andStashThumbnail) begin
+		local l1;
+		if HasSlot(self, 'image) then begin
+				l1 := true
+			end;
+		self.image := andStashThumbnail;
+		if (not image) then begin
+				self:Close()
+			end else begin
+				self:Toggle()
+			end;
+		(if l1 then RemoveSlot(self, 'image))
+	end,
+	// OpenThumbnail(image): opens the floater on the image (or, if it is
+	// open, shows the new image)
+	OpenThumbnail: func(andStashThumbnail) begin
+		local l1;
+		if Visible(self) then begin
+				self:setup(andStashThumbnail);
+				return nil
+			end;
+		if HasSlot(self, 'image) then begin
+				l1 := true
+			end;
+		self.image := andStashThumbnail;
+		self:Open();
+		(if l1 then RemoveSlot(self, 'image))
+	end,
+	// the box the image is fitted into, relative to the parent's bottom right
+	baseBounds: {left: -120, top: -142, right: -20, bottom: -28},
+	viewJustify: vjParentRightH + vjParentBottomV,
+	viewEffect: 35718144,
+	maxW: nil,
+	maxH: nil,
+	// viewSetupFormScript(): fits the image's bounds into baseBounds, plus a
+	// 4-pixel border and 14 pixels below for the floater's controls
+	viewSetupFormScript: func() begin
+		(if image then begin
+				self.viewBounds := FitToBox(ShapeBounds(image), Clone(baseBounds), viewJustify);
+				viewBounds.right := (viewBounds.right + 4);
+				viewBounds.bottom := ((viewBounds.bottom + 4) + 14);
+				(actualThumbnail.trackWhileScrolling := trackWhileScrolling)
+			end)
+	end,
+	stepChildren: [stepChildren: actualThumbnail],
+	actualThumbnail: nil,
+	stepallocatecontext: [|Array|: 'actualThumbnail, actualThumbnail],
+	_proto: @protoFloatNGo
+};
+
+// the thumbnail itself, filling the floater less its borders
+actualThumbnail := {
+	viewBounds: {left: 2, top: 2, right: -2, bottom: -16},
+	viewJustify: vjParentFullH + vjParentFullV,
+	preallocatedContext: 'actualThumbnail,
+	_proto: @protoThumbnail
+};

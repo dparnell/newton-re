@@ -1,0 +1,379 @@
+// assistUtilities: helper methods of the Assistant's task templates
+// (assistFrames.ns) - filtering the words of an utterance, working out the
+// time a request means (a meeting or a reminder: "lunch with Bob tomorrow"),
+// choosing names and phone numbers for a call, and checking that the
+// frontmost application can be printed, faxed or mailed from.
+
+assistUtilities := {
+	// the strings of phrases whose input items are a4 (isa) taken out of copy;
+	// nil when nothing is left
+	FilterAction: func(input, phrases, copy, a4) begin
+		(foreach key, value in input do begin
+				if (isa(value, a4) <> nil) then begin
+						copy := FilterStrings(phrases[key], copy)
+					end
+			end);
+		(if (Length(copy) = 0) then return nil else return copy)
+	end,
+	// whether prevStr is a noise word: two to four characters long and in the
+	// stop word list ("the", "for", ...)
+	IsNoise: func(prevStr) begin
+		local len;
+		if (((len := StrLen(prevStr)) < 2) or (len > 4)) then begin
+				return nil
+			end;
+		return FindStringInArray(@stopWordList, prevStr)
+	end,
+	// copy without the strings that are in a2; nil when nothing is left
+	FilterNoise: func(copy, a2) begin
+		(foreach key, value in copy do begin
+				if (FindStringInArray(a2, value) <> nil) then begin
+						copy := FilterStrings(value, copy)
+					end
+			end);
+		(if (Length(copy) = 0) then return nil else return copy)
+	end,
+	// takes phrase out of glueStrings, with a noise word before it and a space
+	// after it
+	RemoveFromString: func(glueStrings, phrase, a3) begin
+		local len, pos, prevStr, l4;
+		len := StrLen(phrase);
+		if ((pos := StrPos(glueStrings, phrase, 0)) > 0) then begin
+				if (if (prevStr := self:prevStr(glueStrings, pos)) then self:IsNoise(prevStr)) then begin
+						l4 := (StrLen(prevStr) + 1);
+						pos := (pos - l4);
+						len := (len + l4)
+					end
+			end;
+		if ((pos + len) < StrLen(glueStrings)) then begin
+				len := (len + 1)
+			end;
+		StrMunger(glueStrings, pos, len, nil, 0, 0);
+		return glueStrings
+	end,
+	// the word before position pos of glueStrings, or nil
+	prevStr: func(glueStrings, pos) begin
+		local part, prevSubStr2;
+		pos := (pos - 2);
+		if ((prevSubStr2 := PrevSubStr(glueStrings, pos)) < pos) then begin
+				part := Substr(glueStrings, prevSubStr2, ((pos + 1) - prevSubStr2))
+			end;
+		return part
+	end,
+	// the time the task is for, in minutes: the time written (a1, the time and
+	// date phrases matched), else the template's usual time, moved on if it has
+	// passed (GetActionTime); without either, now
+	GetTime: func(a1, frame2) begin
+		if a1 then begin
+				frame2.givenTime := self:GetUserTime(a1, frame2)
+			end else begin
+				if frame2.usualTime then begin
+						frame2.givenTime := frame2.usualTime
+					end
+			end;
+		(if frame2.givenTime then return self:GetActionTime(frame2) else return frame2.currentTime)
+	end,
+	// the time and date phrases a1 as a time in minutes; a bare hour from 1 to 6
+	// (no am or pm) is taken as the afternoon (720 minutes later).  Notes in
+	// frame2 whether a time, a date and a day of the week were given.
+	GetUserTime: func(a1, frame2) begin
+		list := Array((count := Length(a1)), nil);
+		local i;
+		local date2;
+		local a1ItemItem;
+		local count;
+		local list;
+		(for i := 0 to (count - 1) do begin
+				local value, glueStrings2, stringToDateFrame2;
+				value := getSlot((a1ItemItem := a1[i][0]), 'value);
+				list[i] := value;
+				if HasSlot(a1ItemItem, 'Time) then begin
+						frame2.hasTime := true;
+						if (if (not StrEqual(StringFilter(value, "am", 'passAll), "am")) then (not StrEqual(StringFilter(value, "pm", 'passAll), "pm"))) then begin
+								date2 := (date2 := Date(StringToTime(value))).hour
+							end
+					end;
+				if HasSlot(a1ItemItem, 'Date) then begin
+						frame2.hasDate := true
+					end
+			end);
+		if (if (frame2.hasTime = nil) then (frame2.usualTime <> nil)) then begin
+				AddArraySlot(list, frame2.usualValue)
+			end;
+		glueStrings2 := GlueStrings(list);
+		if frame2.hasDate then begin
+				stringToDateFrame2 := StringToDateFrame(glueStrings2);
+				frame2.dayOfWeek := (if (if stringToDateFrame2.dayOfWeek then (not stringToDateFrame2.Date)) then (not stringToDateFrame2.month))
+			end;
+		a1ItemItem := StringToDate(glueStrings2);
+		if (date2 <> nil) then begin
+				// 1 to 6 o'clock without am or pm means pm
+				if (if (date2 >= 1) then (date2 < 7)) then begin
+						a1ItemItem := (a1ItemItem + 720)
+					end
+			end;
+		return a1ItemItem
+	end,
+	// a time that has passed is moved on: by delayTime's minutes, else to the
+	// next year (a date was given) or the next day (1440 minutes)
+	GetActionTime: func(frame2) begin
+		local givenTime, usualTime, delayTime, date2;
+		givenTime := frame2.givenTime;
+		usualTime := frame2.usualTime;
+		if (frame2.givenTime <> nil) then begin
+				if (((delayTime := self:delayTime(frame2)) > 0) or (delayTime < 0)) then begin
+						if (delayTime > 0) then begin
+								givenTime := (givenTime + delayTime)
+							end else begin
+								if frame2.hasDate then begin
+										(date2 := Date(givenTime)).year := (date2.year + 1);
+										givenTime := TotalMinutes(date2)
+									end else begin
+										givenTime := (frame2.givenTime + 1440)
+									end
+							end
+					end
+			end else begin
+				givenTime := frame2.currentTime
+			end;
+		return givenTime
+	end,
+	// how far past the given time now is, as the step to move it on by: 0 not
+	// past, 30 or 60 minutes for a usual time just passed, a week (10080
+	// minutes) for a day of the week, else -1
+	delayTime: func(frame2) begin
+		local givenTime, currentTime;
+		givenTime := frame2.givenTime;
+		currentTime := frame2.currentTime;
+		if (givenTime >= currentTime) then begin
+				return 0
+			end;
+		if (if (frame2.hasTime = nil) then (frame2.usualTime <> nil)) then begin
+				if ((givenTime + 30) > currentTime) then begin
+						return 30
+					end;
+				if ((givenTime + 60) > currentTime) then begin
+						return 60
+					end
+			end;
+		if frame2.dayOfWeek then begin
+				return 10080
+			end;
+		return -1
+	end,
+	// for a call to a custom field or an affiliate of a Names entry, sets the
+	// name of listItem from it; true when it did
+	SetDisplayName: func(listItem, a2, resolveEntryAlias) begin
+		local cls, l2, name;
+		if ((cls := ClassOf(a2)) = 'custom) then begin
+				listItem.name := {last: Clone(resolveEntryAlias.(a2.path))};
+				l2 := true
+			end else begin
+				if (cls = 'affiliate) then begin
+						l2 := true;
+						name := resolveEntryAlias.names[a2.path];
+						if (ObjEntryClass(listItem) = 'company) then begin
+								listItem.company := Clone(GetRoot():bcFullName(name))
+							end else begin
+								if (ObjEntryClass(listItem) = 'person) then begin
+										listItem.name := name
+									end
+							end
+					end
+			end;
+		return l2
+	end,
+	// fills a call slip's frame a1 from the Assistant's candidates: the first
+	// person or place is the one called (toRef), the rest, and each of their
+	// other phone numbers, are alternatives; without candidates the raw text
+	// written is the name
+	FillPhoneSlip: func(a1, a2) begin
+		(if (a1.candidates <> nil) then begin
+				l2 := HasSlot(a1, 'dialdirect);
+				l3 := true;
+				l4 := 0;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				(foreach l5, l6 in a1.candidates do begin
+						if (not (l9 := IsSubclass(ObjEntryClass((l8 := ResolveEntryAlias(l6.alias))), 'group))) then begin
+								l10 := self:GetSelectedPhones(a1, l8)
+							end;
+						if ((l9 or l10) or l2) then begin
+								if self:SetDisplayName((l1 := GetDataDefs(a2):MakeNameRef(l8, a2)), l6, l8) then begin
+										l1._alias := nil
+									end;
+								if (not l9) then begin
+										dsSetCandidatePhone(a1, l1, l10)
+									end;
+								if (l3 <> nil) then begin
+										a1.toRef := [Array: l1];
+										l3 := nil
+									end else begin
+										if (not a1.alternatives) then begin
+												a1.alternatives := [Array: ]
+											end;
+										ArrayInsert(a1.alternatives, l1, l4);
+										l4 := (l4 + 1)
+									end;
+								l11 := 0;
+								if l10 then begin
+										l11 := Length(l10)
+									end;
+								if (l11 > 1) then begin
+										local l8;
+										local l9;
+										local l10;
+										local l11;
+										(for l5 := 1 to (l11 - 1) do begin
+												local l14, l15;
+												l14 := l10[l5];
+												(l15 := Clone(l1)).name := Clone(l15.name);
+												l15.phone := l14;
+												if (not a1.alternatives) then begin
+														a1.alternatives := [Array: ]
+													end;
+												ArrayInsert(a1.alternatives, l15, l4);
+												l4 := (l4 + 1)
+											end)
+									end
+							end
+					end)
+			end else (if ((a1.rawtext <> nil) or (a1.dialdirect <> nil)) then begin
+					l1 := GetDataDefs(a2):MakeNameRef({name: {last: a1.rawtext}}, a2);
+					dsSetCandidatePhone(a1, l1, nil);
+					(a1.toRef := [Array: l1])
+				end))
+	end,
+	// removes the groups from allEntries, in place
+	RemoveAllGroups: func(allEntries) begin
+		l1 := 0;
+		local l1;
+		(foreach key, value in allEntries do begin
+				if (ObjEntryClass(value.alias) <> 'group) then begin
+						if (l1 <> key) then begin
+								allEntries[l1] := allEntries[key]
+							end;
+						l1 := (l1 + 1)
+					end
+			end);
+		SetLength(allEntries, l1)
+	end,
+	// removes the groups from allEntries except those with members of class a2
+	RemoveGroupsExcept: func(allEntries, a2) begin
+		l1 := 0;
+		local l1;
+		local objEntryClass2;
+		local resolveEntryAlias2;
+		(foreach key, value in allEntries do begin
+				if ((not IsSubclass((objEntryClass2 := ObjEntryClass((resolveEntryAlias2 := ResolveEntryAlias(value.alias)))), 'group)) or IsInstance(resolveEntryAlias2.members, a2)) then begin
+						if (l1 <> key) then begin
+								allEntries[l1] := allEntries[key]
+							end;
+						l1 := (l1 + 1)
+					end
+			end);
+		SetLength(allEntries, l1)
+	end,
+	// slot a1 of the transport that handles taskType's group, if any
+	GetTransportTags: func(a1) begin
+		local groupTransport, l2;
+		if (groupTransport := GetGroupTransport(taskType)) then begin
+				if (if (l2 := GetRoot().(groupTransport)) then l2.(a1)) then begin
+						return l2.(a1)
+					end
+			end;
+		return nil
+	end,
+	// iaWorkTags on a weekday between 9:00 and 18:00 (540 and 1080 minutes into
+	// the day), else iaHomeTags
+	GetPreferredSymb: func() begin
+		local date2, l2, l3;
+		l2 := (date2 := Date(Time())).dayOfWeek;
+		l3 := ((date2.hour * 60) + date2.minute);
+		(if (if (if (l2 > 0) then (l2 < 6)) then (if (l3 >= 540) then (l3 <= 1080))) then 'iaWorkTags else 'iaHomeTags)
+	end,
+	// entry a2's phone numbers of the kinds the task asks for (a1.phoneTag), or nil
+	GetSelectedPhones: func(a1, a2) begin
+		if HasSlot(a1, 'phoneTag) then begin
+				if (bcPhoneNumber := GetRoot().cardfile:bcPhoneNumber(a2, '[Array: string])) then begin
+						list := Array(Length(bcPhoneNumber), nil);
+						l3 := 0;
+						local list;
+						local bcPhoneNumber;
+						local l3;
+						(foreach item in a1.phoneTag do begin
+								(foreach item2 in bcPhoneNumber do begin
+										if item2 then begin
+												if (item = 'phone) then begin
+														if ((ClassOf(item2) = 'phone) or (ClassOf(item2) = '|string.phone|)) then begin
+																list[l3] := item2;
+																l3 := (l3 + 1)
+															end
+													end else begin
+														if IsInstance(item2, item) then begin
+																list[l3] := item2;
+																l3 := (l3 + 1)
+															end
+													end
+											end
+									end)
+							end);
+						if (l3 > 0) then begin
+								SetLength(list, l3)
+							end else begin
+								list := nil
+							end
+					end
+			end;
+		list
+	end,
+	// the frontmost application's routing target for printing, faxing or mailing
+	// (groupTransport) - or nil, after telling the user, when there is nothing
+	// to send or the application cannot send it that way
+	iaGetTargetInfo: func(a1, groupTransport, transportStr) begin
+		if (not (activeView := a1:GetActiveView())) then begin
+				GetRoot():Notify(3, "Assist", ParamStr("There is nothing to ^0.", [Array: Lower(Clone(transportStr))]));
+				return nil
+			end;
+		routing := activeView:GetTargetInfo('Routing);
+		if (not (value := GetVariable(a1, 'appSymbol))) then begin
+				GetRoot():Notify(3, "Assist", ParamStr("^0 not supported for frontmost window.", [Array: transportStr]));
+				return nil
+			end;
+		if (routing.target = nil) then begin
+				GetRoot():Notify(3, "Assist", ParamStr("There is nothing to ^0.", [Array: Lower(Clone(transportStr))]));
+				return nil
+			end;
+		if ((appFormats := GetAppFormats(value)) = nil) then begin
+				appFormats := GetRouteFormats(routing.target)
+			end;
+		local activeView;
+		local routing;
+		local value;
+		local appFormats;
+		local formatTransports;
+		local l6;
+		(foreach item in (formatTransports := GetFormatTransports(appFormats, routing.target)) do begin
+				local value2;
+				if ((value2 := GetVariable(item, 'appSymbol)) = groupTransport) then begin
+						l6 := true;
+						break
+					end
+			end);
+		if (not l6) then begin
+				GetRoot():Notify(3, "Assist", ParamStr("^0 not supported for frontmost window.", [Array: transportStr]));
+				return nil
+			end;
+		return routing
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetUserTime_literal11 := same("assistUtilities.GetUserTime.literals[11]");
+
+iaGetTargetInfo_literal2 := same("assistUtilities.iaGetTargetInfo.literals[2]");
+
+iaGetTargetInfo_literal13 := same("assistUtilities.iaGetTargetInfo.literals[13]");

@@ -1,0 +1,67 @@
+// protoTapiPicker: a label picker ("Using") that chooses the telephony
+// (TAPI) service a call is made with: the registered TAPI services that can
+// dial (and, if onlyIncoming, receive calls), then "Telephone" (no service).
+// The application supplies SetProvider and DefaultProvider.
+
+protoTapiPicker := {
+	text: "Using",
+	labelCommands: [|Array|: ],
+	// non-nil: offer only services that can take incoming calls
+	onlyIncoming: nil,
+	// SetProvider(slot): the user (or TextSetup) chose a service, the comm
+	// config registry's symbol for it, or nil for the telephone
+	SetProvider: func(slot) begin
+		nil
+	end,
+	// DefaultProvider(): the service to show at first (the slot symbol)
+	DefaultProvider: func() begin
+		nil
+	end,
+	// viewSetupFormScript(): builds the picker's list from the TAPI comm
+	// configs. A service is listed when it can make outgoing calls and send
+	// digits, takes incoming calls if that is asked for, and - when the
+	// locale is speakerless - has a serviceId
+	viewSetupFormScript: func() begin
+		speakerless := GetLocale().speakerless;
+		commConfig := GetCommConfig(nil, "TAPI", nil);
+		labelCommands := [Array: ];
+		// (the decompiler puts these declarations after the uses: only layout)
+		local speakerless;
+		local commConfig;
+		(foreach item in commConfig do begin
+				local l5;
+				if (if (if (if (if (if (l5 := CommConfigRegistry.(item)) then l5.config) then l5.config.supportsMakeOutgoing) then l5.config.supportsSendDigit) then ((not onlyIncoming) or (if onlyIncoming then l5.config.supportsEventIncoming))) then ((not speakerless) or (if speakerless then l5.serviceId))) then begin
+						AddArraySlot(labelCommands, {item: Clone(l5.name), slot: item})
+					end
+			end);
+		// the services sorted by name, a separator, then the telephone
+		if (Length(labelCommands) >= 1) then begin
+				AddArraySlot((labelCommands := Sort(labelCommands, '|str<|, 'item)), 'pickseparator)
+			end;
+		AddArraySlot(labelCommands, {item: "Telephone", slot: nil});
+		inherited:?viewSetupFormScript()
+	end,
+	// TextSetup(): picks the default provider's entry (the last, the
+	// telephone, if it is not listed), tells SetProvider and returns its name
+	// as the picker's text
+	TextSetup: func() begin
+		key2 := (Length(labelCommands) - 1);
+		defaultProvider := self:DefaultProvider();
+		local key2;
+		local defaultProvider;
+		(foreach key, value in labelCommands do begin
+				if (if (value <> 'pickseparator) then (defaultProvider = value.slot)) then begin
+						key2 := key;
+						break
+					end
+			end);
+		self:SetProvider(labelCommands[key2].slot);
+		labelCommands[key2].item
+	end,
+	// LabelActionScript(index): the user picked an entry
+	LabelActionScript: func(index) begin
+		self:SetProvider(labelCommands[index].slot)
+	end,
+	debug: 136028,
+	_proto: @protoLabelPicker
+};

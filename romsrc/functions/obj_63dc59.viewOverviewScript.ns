@@ -1,5 +1,0 @@
-@@ 0x42ccb1
-func() begin
-	self:Notify(3, "Overview", noOverview)
-end
-@@end

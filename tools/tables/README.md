@@ -72,7 +72,7 @@ What each format's bytes are, and how it was established:
   begins with some code.  A value is therefore added by splitting a code
   in two (`v 0101` becomes `v 01010` and `w 01011`), not by inventing a
   fresh one, which would begin with an existing code and be refused.
-  Who reads the second book: `romsrc/magic.tsv` names @145 `obj_63dedd`;
+  Who reads the second book: `romsrc/magic.tsv` names @145 `paragraphCodebook2`;
   the ROM constant `Rparagraphcodebook2` (0x0068133c) is that magic
   pointer (0x247), the word at 0x003af248 - the magic-pointer table's
   entry - is the only other place the ROM holds 0x0063dedd, and the one
@@ -97,7 +97,7 @@ What each format's bytes are, and how it was established:
   export for packages, which nothing references either (`analysis/
   xrefs.py ... Rtrig RStrig`, and a byte search of `rom.bin`).  The
   cursive recogniser's trigrams are a different table, `DTETrigrams`
-  (`obj_623fc9`, 40 symbols, read by `Xrlv.cpp`).  So what the weights
+  (`DTETrigrams`, 40 symbols, read by `Xrlv.cpp`).  So what the weights
   1-3 mean is not established.
 - **letter-images.** As `recognition/LetterShapes.h` describes it (from
   `LILetterCount`, `GetNextLetter`, `LIGetVariantInfo`, `LIGetStrokeInfo`
@@ -133,7 +133,7 @@ to a picture (every later offset moves).
 
 ParaGraph's cursive ("xr") recogniser (`recognition/ParaGraph.h`) reads
 four binaries of `charsetInfoResources` - `DTEHeader`, `DTEMain`,
-`PPDMain` and `DTETrigrams` (`obj_648ecd` in `romsrc/objects/misc-004.ns`).
+`PPDMain` and `DTETrigrams` (`paragraphData`, `romsrc/objects/system/paragraphData.ns`).
 `hwrtables.py` gives each a text form, with the same conventions
 (`format <kind>` first, `#` comments) and the ROM's own bytes for every
 committed file:

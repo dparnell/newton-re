@@ -1,0 +1,4 @@
+// The system's own soups (@8278), which the Dock lists as "System information"
+// for synchronize and backup.
+
+export86 := [|Array|: "directory", "library", "system", "SystemAlarmSoup"];

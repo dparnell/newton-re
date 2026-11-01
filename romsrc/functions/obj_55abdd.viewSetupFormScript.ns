@@ -1,5 +1,0 @@
-@@ 0x55abbd
-func() begin
-	(indent := (StrFontWidth(label, labelFont) + 16))
-end
-@@end

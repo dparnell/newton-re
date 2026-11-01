@@ -1,5 +1,0 @@
-@@ 0x1010ecd
-func() begin
-	'postQuit
-end
-@@end

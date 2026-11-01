@@ -1,0 +1,28 @@
+// newtTextDateView: the editable NewtApp slot view for a date (NPR 2.0), based on
+// newtroTextDateView.
+//
+// This file holds newtTextDateView and what only it reaches.
+
+newtTextDateView := {
+	_proto: @newtroTextDateView,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vDateField,
+	// the user changed the text: store the date written (unchanged when it cannot be read; nil when empty) in target.(path) and start the flush timer
+	// (not while Retarget sets the text: then the view's hack slot is true)
+	viewChangedScript: func(slot, view) begin
+		local stringToDate2;
+		(if (if (not GetVariable(view, 'hack)) then (slot = 'text)) then begin
+				if StrFilled(view.(slot)) then begin
+						if (stringToDate2 := StringToDate(view.(slot))) then begin
+								GetVariable(view, 'target).(path) := stringToDate2
+							end
+					end else begin
+						GetVariable(view, 'target).(path) := nil
+					end;
+				self:StartFlush()
+			end)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewChangedScript_code_3 := same("newtTextDateView.viewChangedScript.instructions");

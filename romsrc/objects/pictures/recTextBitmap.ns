@@ -1,0 +1,7 @@
+// The text recognition setting's icon. A 1-bit bitmap frame (bits, bounds), 13 x 10 pixels.
+// Magic pointer @720. Used by recToggle, recognizerUserChoices.
+
+recTextBitmap := {
+	bits: bitmap('bits, "resources/bits/3dad1d.png", "00000000000400b200b2005c00bc0069", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 10}
+};

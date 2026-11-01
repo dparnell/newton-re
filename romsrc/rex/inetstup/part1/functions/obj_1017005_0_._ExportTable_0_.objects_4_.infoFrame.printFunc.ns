@@ -1,5 +1,0 @@
-@@ 0x101b6bd
-func(a1) begin
-	(if StrFilled(a1[0]) then ParamStr("Setup Name: ^0", [Array: a1[0]]) else "Setup Name: <None>")
-end
-@@end

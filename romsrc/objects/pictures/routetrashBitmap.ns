@@ -1,0 +1,8 @@
+// The Action menu icon of Delete (a trash can). A 1-bit bitmap frame (bits, bounds), 14 x
+// 15 pixels. Magic pointer @291. Used by calendar, extrasdrawer, newtApplication,
+// protoRoutingSlip, todo_2, viewRoot and others.
+
+routetrashBitmap := {
+	bits: bitmap('bits, "resources/bits/3d5d55.png", "00000000000401dd01dd00a001ec00ae", 1),
+	bounds: {left: 0, top: 0, right: 14, bottom: 15}
+};

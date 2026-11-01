@@ -1,5 +1,0 @@
-@@ 0x4ae495
-func(a1) begin
-	self:AddEntryFromStationery(a1.symbol)
-end
-@@end

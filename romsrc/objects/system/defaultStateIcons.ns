@@ -1,0 +1,5 @@
+// defaultStateIcons: magic pointer @290, an empty frame; by its name the
+// default set of item state icons, but nothing in the ROM's NewtonScript
+// refers to it.
+
+defaultStateIcons := {};

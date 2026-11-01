@@ -1,0 +1,30 @@
+// protoTimeTextPicker: a text picker (label and value) for a time of day;
+// tapping it pops up the digital time picker (digitalTimePopup). The time,
+// in minutes, is in Time.
+
+protoTimeTextPicker := {
+	viewBounds: nil,
+	label: time_3,
+	// the time, in minutes since 1904 (as Time() gives)
+	Time: nil,
+	// the datetimeStrSpecs entry the value is shown with
+	format: 'shortTimeStrSpec,
+	// the popup's step, in minutes
+	increment: 12,
+	// Popit(x): opens the time popup under the picker's value, x pixels wide
+	Popit: func(x) begin
+		local box;
+		(box := self:GlobalBox()).right := (box.left + x);
+		@digitalTimePopup:New(Time, increment, box, self)
+	end,
+	// TextSetup(): the value's text, the time in the chosen format
+	TextSetup: func() begin
+		TimeStr(Time, @datetimeStrSpecs.(format))
+	end,
+	// PickActionScript(time): the popup picked a new time
+	pickActionScript: func(index) begin
+		Time := index;
+		inherited:pickActionScript(index)
+	end,
+	_proto: @protoTextPicker
+};

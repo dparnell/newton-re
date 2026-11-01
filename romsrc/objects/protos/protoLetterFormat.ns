@@ -1,0 +1,131 @@
+// protoLetterFormat: a print format (coverPageFormat) that prints an item's
+// text as a letter - the data (target.(dataPath)) is reflowed into the page
+// width (ReFlow, in reflowParams' font) and laid out page after page. The
+// first page holds headerKids and as much text as fits, placed at the top,
+// centre or bottom (firstPage); later pages (page2Guts) continue the text.
+
+protoLetterFormat := {
+	type: 'printFormat,
+	path: nil,
+	// the first page's contents: one view holding the header and the reflowed text
+	page1guts: [|Array|:
+		{
+			viewClass: clView,
+			viewBounds: nil,
+			viewFlags: vVisible + vReadOnly,
+			viewFormat: 0,
+			viewJustify: vjParentCenterH + vjParentCenterV + vjChildrenLasso + vjReflow,
+			// Before opening: placed at the top, centre or bottom of the page as
+			// firstPage says, over the whole page less the bottom margin.
+			viewSetupFormScript: func() begin
+				if (firstPage = 'top) then begin
+						viewJustify := vjParentCenterH + vjChildrenLasso + vjReflow
+					end else begin
+						if (firstPage = 'center) then begin
+								viewJustify := vjParentCenterH + vjParentCenterV + vjChildrenLasso + vjReflow
+							end else begin
+								viewJustify := vjParentCenterH + vjParentBottomV + vjChildrenLasso + vjReflow
+							end
+					end;
+				(self.viewBounds := RelBounds(0, 0, pageWidth, (pageHeight - bottomMargin)))
+			end,
+			// The first time, makes kids: headerKids followed by the views ReFlow
+			// makes of the data, in the box under the header (a copy of
+			// reflowParams, its pageBounds the printer page inset 60 pixels at the
+			// sides and the bottom margin top and bottom). Then the views from
+			// reflowStart on become this page's children.
+			viewSetupChildrenScript: func() begin
+				local box, insetRect2, copy;
+				if (not kids) then begin
+						kids := Clone(headerKids);
+						(box := self:LocalBox()).top := (box.top + headerHeight);
+						box.bottom := (box.bottom - bottomMargin);
+						(insetRect2 := InsetRect(fields.printerPageBounds, 60, 0)).top := (insetRect2.top + bottomMargin);
+						insetRect2.bottom := (insetRect2.bottom - bottomMargin);
+						if (not (copy := Clone(reflowParams)).pageBounds) then begin
+								copy.pageBounds := insetRect2
+							end;
+						ArrayMunger(kids, Length(headerKids), 0, ReFlow(data, copy, fields.targetBox, box), 0, nil)
+					end;
+				(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+			end,
+			// After opening: reflowStart moves past the views this page holds, so
+			// the next page starts with the next one.
+			viewSetupDoneScript: func() begin
+				(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
+			end
+		}
+	],
+	// the index in kids of the first view not yet printed
+	reflowStart: 0,
+	routingType: 'Print,
+	headerHeight: 0,
+	data: nil,
+	// the slot of the target holding the text to print
+	dataPath: 'data,
+	_proto: @coverPageFormat,
+	// where the first page's text goes: 'top, 'center or (anything else) the bottom
+	firstPage: 'center,
+	// views printed before the text on the first page
+	headerKids: [|Array|: ],
+	symbol: nil,
+	bottomMargin: 60,
+	// how ReFlow lays the text out
+	reflowParams: {
+		reflowFont: tsFancy + tsSize(12),
+		unistyle: 'font,
+		graphicsGutter: 16,
+		textGutter: -16,
+		viewLineSpacing: 28
+	},
+	// Called by the print system to ask for another page: if views remain to be
+	// printed, the format makes its children again (the next page) and returns
+	// non-nil; nil when the text is done.
+	printNextPageScript: func() begin
+		(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
+	end,
+	title: nil,
+	name: nil,
+	// the later pages' contents: a view inset so its top left is at least 60
+	// pixels from the paper's
+	page2Guts: [|Array|:
+		{
+			viewClass: clView,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewFormat: 0,
+			// Before opening: moves the view's top left in to 60 pixels from the
+			// global origin, if it is not already that far in.
+			viewSetupFormScript: func() begin
+				local box;
+				box := self:GlobalBox();
+				(viewBounds := SetBounds(max((60 - box.left), 0), max((60 - box.top), 0), 0, 0))
+			end,
+			viewChildren: page2GutsViewChildren
+		}
+	],
+	// Before opening: coverPageFormat's setup, then the data to print and the
+	// first page.
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		self.data := target.(dataPath);
+		(self.reflowStart := 0)
+	end,
+	// the header and reflowed views of the whole letter (made by the first page)
+	kids: nil,
+	version: 1,
+	// The page's contents: the first page's while nothing has been printed yet,
+	// else a later page's.
+	viewSetupChildrenScript: func() begin
+		self.stepChildren := (if (self.reflowStart = 0) then page1guts else page2Guts);
+		inherited:viewSetupChildrenScript()
+	end,
+	margins: {left: 60, top: 0, right: 60, bottom: 0}
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+printNextPageScript_code := same("protoLetterFormat.printNextPageScript.instructions");
+
+viewSetupFormScript_code_15 := same("protoLetterFormat.page2Guts[0].viewSetupFormScript.instructions");

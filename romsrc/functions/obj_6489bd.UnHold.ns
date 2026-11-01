@@ -1,5 +1,0 @@
-@@ 0x52e801
-func(a1) begin
-	self:SendOption("unho", 'ignore, a1)
-end
-@@end

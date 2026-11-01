@@ -1,0 +1,5 @@
+// defaultConfiguration: protoTransport's default defaultConfiguration - the
+// preference settings a transport has before the user changes any: show the
+// status dialogs (autoStatus).
+
+defaultConfiguration := {autoStatus: true};

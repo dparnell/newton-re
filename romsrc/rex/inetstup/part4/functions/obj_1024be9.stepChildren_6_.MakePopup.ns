@@ -1,8 +1,0 @@
-@@ 0x1025685
-@@const kROM_8206
-@8206
-@@main
-func() begin
-	kROM_8206
-end
-@@end

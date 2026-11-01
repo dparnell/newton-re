@@ -1,0 +1,35 @@
+// protoTableEntry: the default view of a row (cell) of a protoTable, made
+// from protoTableDef's tabProtos: a line of text that selects itself when
+// tapped.
+
+protoTableEntry := {
+	viewClass: clTextView,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: 0,
+	viewTransferMode: modeOr,
+	// 8388612 = vjLeftH + vjCenterV + oneLineOnly (0x800000, the NPG's value)
+	viewJustify: vjCenterV + oneLineOnly,
+	// the cell's value (protoTableDef's tabValueSlot)
+	text: nil,
+	viewBounds: nil,
+	// viewClickScript(unit): a tap selects the cell - its text becomes the
+	// table's currentSelection and the table's SelectThisCell hilites it
+	viewClickScript: func(unit) begin
+		currentSelection := text;
+		self:selectThisCell(self);
+		true
+	end,
+	// viewHiliteScript(on): inverts the cell's area (modeXor, black), widened
+	// by the table's indentX, and returns true so the system does not hilite
+	// it as well; with no indentX returns nil (the default hilite)
+	viewHiliteScript: func(on) begin
+		local l1, viewBounds;
+		l1 := nil;
+		if def.indentX then begin
+				viewBounds := self.viewBounds;
+				self:DrawShape(MakeRect((-def.indentX), 0, (viewBounds.right - def.indentX), (viewBounds.bottom - viewBounds.top)), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+				l1 := true
+			end;
+		return l1
+	end
+};

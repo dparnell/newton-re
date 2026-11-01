@@ -1,5 +1,0 @@
-@@ 0x104c0dd
-func() begin
-	self:DoEvent('CleanUp, nil)
-end
-@@end

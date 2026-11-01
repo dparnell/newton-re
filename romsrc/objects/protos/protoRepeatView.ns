@@ -1,0 +1,595 @@
+// protoRepeatView: the "Repeat Other" slip of the Dates application (the
+// RepeatingView protoRepeatPicker opens): a cluster of repeat kinds on the
+// left and, beside it, the picker that kind needs - days of the week, a day
+// of the month, a date in the year, weeks of the month - with a line of
+// text describing the result (RepeatInfoToText). The choice is kept in
+// repeatType and mtgInfo (Newton Programmer's Reference 16-24);
+// repeatType 6, the "every day" button, is kept as kDayOfWeek with every
+// day and every week set.
+
+protoRepeatView := {
+	// the number of day bits (kSunday ... kSaturday) set in bAnd2, counting
+	// no further than a2 + 1. (The locals declared after their first use
+	// are the decompiler's layout.)
+	NumberOfDays: func(bAnd2, a2) begin
+		l1 := 0;
+		l2 := kSunday;
+		local l1;
+		local l2;
+		(for i := 1 to 7 do begin
+				if (BAnd(bAnd2, l2) <> 0) then begin
+						l1 := (l1 + 1)
+					end;
+				if (l1 > a2) then begin
+						break
+					end;
+				l2 := (l2 >> 1)
+			end);
+		l1
+	end,
+	// once open: show the picker for the meeting's repeat kind (every day as
+	// the every-day kind, 6)
+	viewSetupDoneScript: func() begin
+		local repeatType2;
+		if self:IsCurrentSettingsSameAsEveryDay() then begin
+				repeatType2 := 6
+			end else begin
+				repeatType2 := repeatType
+			end;
+		self:SetupRepeatViews(repeatType2)
+	end,
+	// the occurrence's original date, and the meeting's start as a Date frame
+	originalMtgDate: nil,
+	mtgDate: nil,
+	// the weeks of the month's bits, first to last
+	weekBit: [|Array|: kFirstWeek, kSecondWeek, kThirdWeek, kFourthWeek, kLastWeek],
+	MinHourSpec: nil,
+	// whether the setting is every day of every week
+	IsCurrentSettingsSameAsEveryDay: func() begin
+		(if (repeatType = kDayOfWeek) then (mtgInfo = BOr(kEveryday, kEveryWeek)))
+	end,
+	// shows the picker for repeat kind a1 (hiding the others) and sets
+	// repeatType; an empty mtgInfo (0) is given the meeting's own day, date
+	// or week first: the meeting's day of every week, or every other week
+	// from its day (its day number, minutes div 1440, the minutes in a
+	// day, above a period of 14 days)
+	SetupRepeatViews: func(a1) begin
+		local repeatPickers2, bAnd2, date2;
+		(repeatPickers2 := repeatPickers).DayPicker:Hide();
+		repeatPickers2.datepicker:Hide();
+		repeatPickers2.DateAndMonthPicker:Hide();
+		repeatPickers2.WeekPicker:Hide();
+		repeatPickers2.LastWeekPicker:Hide();
+		repeatType := a1;
+		if (a1 = 6) then begin
+				repeatType := kDayOfWeek;
+				mtgInfo := BOr(kEveryday, kEveryWeek)
+			end else begin
+				if ((a1 = kDayOfWeek) or (a1 = kPeriod)) then begin
+						if (mtgInfo = 0) then begin
+								if (repeatType = kDayOfWeek) then begin
+										mtgInfo := ((kSunday >> mtgDate.dayOfWeek) + kEveryWeek)
+									end else begin
+										if (repeatType = kPeriod) then begin
+												mtgInfo := ((mtgInfo := ((TotalMinutes(mtgDate) div 1440) << 8)) + 14)
+											end
+									end
+							end;
+						// the days to show: the day bits, or the period's day
+						// (a single choice, the DayPicker's second argument)
+						bAnd2 := 0;
+						if (repeatType = kDayOfWeek) then begin
+								bAnd2 := BAnd(mtgInfo, kEveryday)
+							end else begin
+								date2 := Date((date2 := ((mtgInfo >> 8) * 1440)));
+								bAnd2 := (kSunday >> date2.dayOfWeek)
+							end;
+						repeatPickers2.DayPicker:Initialize(bAnd2, (repeatType = kPeriod));
+						repeatPickers2.DayPicker:Show()
+					end else begin
+						if (a1 = kDateInMonth) then begin
+								repeatPickers2.datepicker:Initialize();
+								repeatPickers2.datepicker:Show()
+							end else begin
+								if (a1 = kDateInYear) then begin
+										repeatPickers2.DateAndMonthPicker:Initialize();
+										repeatPickers2.DateAndMonthPicker:Show()
+									end else begin
+										if (a1 = kWeekInMonth) then begin
+												repeatPickers2.WeekPicker:Initialize();
+												repeatPickers2.WeekPicker:Show()
+											end else begin
+												// a week in the year: a date, and whether
+												// its week is the fourth or the last
+												if (a1 = kWeekInYear) then begin
+														repeatPickers2.DateAndMonthPicker:Initialize();
+														repeatPickers2.DateAndMonthPicker:Show();
+														if self:IsAmbiguousWeek(mtgDate) then begin
+																repeatPickers2.LastWeekPicker:Initialize();
+																repeatPickers2.LastWeekPicker:Show()
+															end
+													end
+											end
+									end
+							end
+					end
+			end;
+		self:UpdateText()
+	end,
+	MonthList: nil,
+	viewBounds: {left: 0, top: 0, right: 204, bottom: 190},
+	_proto: @protoFloatNGo,
+	repeatPickers: nil,
+	repeatType: kNever,
+	MessageBox: nil,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	// whether date a1 (a Date frame) is in the fourth week of its month and
+	// also its last (no same weekday a week later), so that "fourth" or
+	// "last" week must be chosen
+	IsAmbiguousWeek: func(a1) begin
+		local l1;
+		(if ((l1 := (((a1.Date - 1) div 7) + 1)) = 4) then ((a1.Date + 7) > self:daysInMonth(a1.month, a1.year)))
+	end,
+	// shows the setting in words in the message box (from the date picked
+	// when the date picker is up); empty when nothing is set
+	UpdateText: func() begin
+		local mtgStartDate;
+		mtgStartDate := meetingInstance.mtgStartDate;
+		if Visible(repeatPickers.DateAndMonthPicker) then begin
+				mtgStartDate := repeatPickers.DateAndMonthPicker.selectedDates[0]
+			end;
+		(if (mtgInfo <> 0) then SetValue(MessageBox, 'text, RepeatInfoToText(mtgInfo, repeatType, mtgStartDate)) else SetValue(MessageBox, 'text, ""))
+	end,
+	stepallocatecontext: [|Array|: 'repeatPickers, repeatPickers, 'MessageBox, MessageBox],
+	declareSelf: 'base,
+	// on opening: the time format, the locale's month names, and the
+	// meeting's start as a Date frame
+	viewSetupFormScript: func() begin
+		MinHourSpec := @datetimeStrSpecs.shortTimeStrSpec;
+		MonthList := GetLocale().longDateFormat.longMonth;
+		(mtgDate := Date(meetingInstance.mtgStartDate))
+	end,
+	// the repeat template the setting gives: the meeting's own when nothing
+	// changed, nil for no repeat, else a new one - a copy of the template
+	// (or of the meeting) converted to repeat this way (ConvertToRepeating,
+	// stopping where it did or never), starting at the first occurrence on
+	// or after the start of the meeting's week (one day a week, or every
+	// other week), month or year, from which NextMeeting finds it. l3 is the
+	// new date's midnight, l7 the meeting's store
+	GetRepeatSpec: func() begin
+		local repeatTemplate, newMtgDate2, l3, date2, copy, mtgStopDate, l7, firstDayOfWeek, totalMinutes2;
+		(if ((if ((repeatTemplate := meetingInstance.repeatTemplate) = nil) then (repeatType = kNever)) or (if (if repeatTemplate then (repeatTemplate.mtgInfo = mtgInfo)) then (repeatTemplate.repeatType = repeatType))) then repeatTemplate else (if (repeatType = kNever) then nil else begin
+					date2 := Date((l3 := ((newMtgDate2 := newMtgDate) - (newMtgDate2 mod 1440))));
+					if ((copy := (if repeatTemplate then Clone(repeatTemplate) else Clone(meetingInstance))).viewStationery = 'meeting) then begin
+							copy.viewStationery := 'RepeatingMeeting
+						end;
+					if (not (mtgStopDate := copy.mtgStopDate)) then begin
+							mtgStopDate := kForever
+						end;
+					l7 := (if IsSoupEntry(meetingInstance) then EntryStore(meetingInstance));
+					GetRoot().calendar:ConvertToRepeating(copy, repeatType, mtgInfo, mtgStopDate, l7);
+					if ((if (repeatType = kDayOfWeek) then (self:NumberOfDays(BAnd(mtgInfo, kEveryday), 1) = 1)) or (repeatType = kPeriod)) then begin
+							if (not (firstDayOfWeek := GetUserConfig('firstDayOfWeek))) then begin
+									firstDayOfWeek := GetLocale().firstDayOfWeek
+								end;
+							if (not firstDayOfWeek) then begin
+									firstDayOfWeek := 0
+								end;
+							date2.Date := ((date2.Date - date2.dayOfWeek) + firstDayOfWeek)
+						end else begin
+							if ((repeatType = kDateInMonth) or (repeatType = kWeekInMonth)) then begin
+									date2.Date := 1
+								end else begin
+									if ((repeatType = kDateInYear) or (repeatType = kWeekInYear)) then begin
+											date2.month := 1;
+											date2.Date := 1
+										end
+								end
+						end;
+					totalMinutes2 := TotalMinutes(date2);
+					copy.mtgStartDate := NextMeeting(totalMinutes2, copy);
+					(copy := DeepClone(copy))
+				end))
+	end,
+	// the day picker was tapped (day a1, 0 Sunday): weekly, the days picked
+	// in every week; every other week, the period's start moved to day a1
+	// of its week (l3 days on)
+	HitItem: func(a1) begin
+		local selected, date2, l3;
+		if (repeatType = kDayOfWeek) then begin
+				mtgInfo := BOr((selected := DayPicker:GetSelected()), kEveryWeek)
+			end else begin
+				date2 := Date(((mtgInfo >> 8) * 1440));
+				l3 := (a1 - date2.dayOfWeek);
+				date2.Date := (date2.Date + l3);
+				mtgInfo := (((TotalMinutes((date2 := Date(TotalMinutes(date2)))) div 1440) << 8) + 14)
+			end;
+		self:UpdateText()
+	end,
+	mtgInfo: 0,
+	stepChildren: [stepChildren:
+		{title: "Repeat Other", _proto: @protoTitle},
+		// the kinds of repeat: each button's value is the repeatType it sets
+		// (6 the every-day kind)
+		{
+			viewBounds: {left: 2, top: 4, right: 96, bottom: 116},
+			viewJustify: vjSiblingBottomV,
+			clusterValue: kNever,
+			lastClusterValue: nil,
+			// on opening: the button of the meeting's repeat kind
+			viewSetupFormScript: func() begin
+				(if self:IsCurrentSettingsSameAsEveryDay() then (clusterValue := 6) else (clusterValue := RepeatingView.repeatType))
+			end,
+			// another kind was chosen: start it afresh (mtgInfo 0) and show
+			// its picker
+			ClusterChanged: func() begin
+				(if (clusterValue <> lastClusterValue) then begin
+						RepeatingView.mtgInfo := 0;
+						self:SetupRepeatViews(clusterValue);
+						lastClusterValue := clusterValue;
+						self:UpdateText()
+					end)
+			end,
+			viewChildren: [viewChildren:
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+					viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+					viewValue: nil,
+					text: donTRepeat,
+					buttonValue: kNever,
+					viewFont: tsSystem + tsSize(9) + tsBold,
+					_proto: @protoRadioButton
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+					viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+					viewValue: nil,
+					text: everyDay,
+					buttonValue: 6,
+					_proto: @protoRadioButton
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+					viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+					viewValue: nil,
+					text: everyWeek,
+					buttonValue: kDayOfWeek,
+					_proto: @protoRadioButton
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+					viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+					viewValue: nil,
+					text: everyOtherWeek,
+					buttonValue: kPeriod,
+					_proto: @protoRadioButton
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+					viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+					viewValue: nil,
+					text: everyMonth,
+					buttonValue: kDateInMonth,
+					_proto: @protoRadioButton
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+					viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+					viewValue: nil,
+					text: everyYear,
+					buttonValue: kDateInYear,
+					_proto: @protoRadioButton
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+					viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+					viewValue: nil,
+					text: "Week in month",
+					buttonValue: kWeekInMonth,
+					_proto: @protoRadioButton
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+					viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+					viewValue: nil,
+					text: "Week in year",
+					buttonValue: kWeekInYear,
+					_proto: @protoRadioButton
+				}
+			],
+			_proto: @protoRadioCluster
+		},
+		repeatPickers,
+		MessageBox
+	],
+	// the number of days in month (1-12) of year. Looks like a ROM bug: the
+	// leap-year test gives February 29 days only in a year divisible by 400
+	// (2000), 28 in 1996 or 2004; it only matters to IsAmbiguousWeek, which
+	// then takes February 22-28 of a leap year as possibly the last week
+	daysInMonth: func(month, year) begin
+		(if ArrayPos('[Array: 1, 3, 5, 7, 8, 10, 12], month, 0, nil) then 31 else (if ArrayPos('[Array: 4, 6, 9, 11], month, 0, nil) then 30 else (if (((year mod 4) <> 0) or ((year mod 400) <> 0)) then 28 else 29)))
+	end,
+	meetingInstance: nil
+};
+
+// the setting in words, under the pickers
+MessageBox := {
+	viewClass: clParagraphView,
+	viewBounds: {left: 0, top: 10, right: 196, bottom: 35},
+	viewFlags: vVisible + vReadOnly,
+	viewFont: tsSystem + tsSize(9) + tsBold,
+	viewFormat: vfFrameGray + vfPen(1),
+	viewJustify: vjCenterH + vjParentCenterH + vjSiblingBottomV,
+	preallocatedContext: 'MessageBox
+};
+
+// the day of the month (kDateInMonth): a month view of March 1992 - 31
+// days, starting on a Sunday - standing for any month; baseMinutes is its
+// first day in minutes, and each day 1440 (minutes in a day) on
+datepicker := {
+	viewClass: clMonthView,
+	viewBounds: {left: 0, top: 6, right: 0, bottom: 68},
+	viewFlags: vVisible + vClickable,
+	viewFormat: 0,
+	viewJustify: vjParentFullH,
+	firstDayOfWeek: 0,
+	singleDay: true,
+	selectedDates: [|Array|: 46370880],
+	basedate: {year: 1992, month: 3, Date: 1, dayOfWeek: 0, hour: 0, minute: 0, second: 0},
+	baseMinutes: 46370880,
+	// select the meeting's date (an empty setting becomes it)
+	Initialize: func() begin
+		if (mtgInfo = 0) then begin
+				mtgInfo := mtgDate.Date
+			end;
+		selectedDates := [Array: (baseMinutes + (1440 * (mtgDate.Date - 1)))];
+		datepicker:Dirty()
+	end,
+	// a day was tapped: it is the date in the month
+	monthChangedScript: func() begin
+		local date2;
+		date2 := Date(selectedDates[0]);
+		if (repeatType = kDateInMonth) then begin
+				mtgInfo := date2.Date
+			end;
+		self:UpdateText();
+		self:Dirty()
+	end,
+	preallocatedContext: 'datepicker
+};
+
+// a date in the year (kDateInYear: the month in bits 8 up, the date below)
+// or a week in the year (kWeekInYear: the month in bits 12 up, the day and
+// the week of the month below)
+DateAndMonthPicker := {
+	viewBounds: {left: 0, top: 6, right: 0, bottom: 88},
+	viewFlags: vVisible + vClickable,
+	viewFormat: 0,
+	viewJustify: vjParentFullH,
+	selectedDates: [|Array|: 1],
+	// select the meeting's date (an empty setting becomes it; l1 its week
+	// of the month, from 0)
+	Initialize: func() begin
+		local l1;
+		if (mtgInfo = 0) then begin
+				if (repeatType = kDateInYear) then begin
+						mtgInfo := ((mtgDate.month << 8) + mtgDate.Date)
+					end else begin
+						l1 := ((mtgDate.Date - 1) div 7);
+						mtgInfo := (((mtgDate.month << 12) + (kSunday >> mtgDate.dayOfWeek)) + (kFirstWeek >> l1))
+					end
+			end;
+		selectedDates := [Array: TotalMinutes(mtgDate)];
+		self:SetTitle();
+		DateAndMonthPicker:Dirty()
+	end,
+	// a date was picked: the setting becomes it; for a week in the year, a
+	// date that may be in the fourth or the last week takes the choice of
+	// LastWeekPicker (shown then)
+	DateChanged: func(selectedDates2) begin
+		local date2, clusterValue;
+		date2 := Date(selectedDates[0]);
+		if (repeatType = kDateInYear) then begin
+				mtgInfo := ((date2.month << 8) + date2.Date)
+			end else begin
+				if self:IsAmbiguousWeek(date2) then begin
+						clusterValue := LastWeekPicker.clusterValue;
+						LastWeekPicker:Show()
+					end else begin
+						clusterValue := (kFirstWeek >> ((date2.Date - 1) div 7));
+						LastWeekPicker:Hide()
+					end;
+				mtgInfo := (((date2.month << 12) + (kSunday >> date2.dayOfWeek)) + clusterValue)
+			end;
+		self:UpdateText();
+		self:Dirty()
+	end,
+	preallocatedContext: 'DateAndMonthPicker,
+	_proto: @protoDatepicker
+};
+
+// "fourth week" or "last week", for a date that may be either
+LastWeekPicker := {
+	viewBounds: {left: 0, top: -28, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentBottomV,
+	clusterValue: kFourthWeek,
+	// choose the button of the setting's week bits
+	Initialize: func() begin
+		local bAnd2;
+		self:SetClusterValue((bAnd2 := BAnd(mtgInfo, kEveryWeek)))
+	end,
+	// the other was chosen: replace the setting's week bits by it
+	ClusterChanged: func() begin
+		local bAnd2;
+		(if ((bAnd2 := BAnd(mtgInfo, kEveryWeek)) <> clusterValue) then begin
+				mtgInfo := (BAnd(mtgInfo, bnot(kEveryWeek)) + clusterValue);
+				self:Initialize();
+				self:UpdateText()
+			end)
+	end,
+	preallocatedContext: 'LastWeekPicker,
+	viewChildren: [viewChildren:
+		{
+			viewBounds: {left: 20, top: 0, right: 0, bottom: 14},
+			viewJustify: vjCenterV + vjParentFullH,
+			viewValue: nil,
+			text: "fourth week",
+			buttonValue: kFourthWeek,
+			_proto: @protoRadioButton
+		},
+		{
+			viewBounds: {left: 20, top: 0, right: 0, bottom: 14},
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+			viewValue: nil,
+			text: "last week",
+			buttonValue: kLastWeek,
+			_proto: @protoRadioButton
+		}
+	],
+	_proto: @protoRadioCluster
+};
+
+// the days of the week (kDayOfWeek), or the one day of every other week
+// (kPeriod); a tap sends HitItem
+DayPicker := {
+	viewBounds: {left: 0, top: 11, right: 0, bottom: 31},
+	viewJustify: vjParentFullH,
+	preallocatedContext: 'DayPicker,
+	_proto: @protoDayPicker
+};
+
+// the box beside the cluster that holds the pickers, one shown at a time
+repeatPickers := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewBounds: {left: 94, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjSiblingFullV,
+	preallocatedContext: 'repeatPickers,
+	viewChildren: [viewChildren: datepicker, DateAndMonthPicker, LastWeekPicker, DayPicker, WeekPicker],
+	datepicker: nil,
+	allocateContext: [|Array|:
+		'datepicker,
+		datepicker,
+		'DateAndMonthPicker,
+		DateAndMonthPicker,
+		'LastWeekPicker,
+		LastWeekPicker,
+		'DayPicker,
+		DayPicker,
+		'WeekPicker,
+		WeekPicker
+	],
+	DateAndMonthPicker: nil,
+	LastWeekPicker: nil,
+	DayPicker: nil,
+	WeekPicker: nil
+};
+
+// the weeks of the month (kWeekInMonth): a checkbox per week, first to last
+WeekPicker := {
+	viewClass: clView,
+	viewFlags: vVisible + vClickable,
+	viewBounds: {left: 25, top: 11, right: 0, bottom: 81},
+	viewJustify: vjParentFullH,
+	// check the boxes of the setting's weeks; an empty setting becomes the
+	// meeting's day in its week of the month (l3, from 0). mtgInfo here is
+	// a local copy (declared below, the decompiler's layout); repeatType2 is
+	// set but not used
+	Initialize: func() begin
+		mtgInfo := RepeatingView.mtgInfo;
+		repeatType2 := repeatType;
+		if (mtgInfo = 0) then begin
+				l3 := ((mtgDate.Date - 1) div 7);
+				mtgInfo := (weekBit[l3] + (kSunday >> mtgDate.dayOfWeek));
+				RepeatingView.mtgInfo := mtgInfo
+			end;
+		local repeatType2;
+		local mtgInfo;
+		local l3;
+		local childViewFrames;
+		local childViewFrame;
+		(foreach item in (childViewFrames := WeekPicker:ChildViewFrames()) do begin
+				item.viewValue := nil
+			end);
+		(for i := 0 to 4 do begin
+				childViewFrame := childViewFrames[i];
+				if (BAnd(weekBit[i], mtgInfo) > 0) then begin
+						childViewFrame.viewValue := true
+					end else begin
+						childViewFrame.viewValue := nil
+					end;
+				childViewFrame:UpdateBitmap()
+			end)
+	end,
+	// a checkbox was tapped: toggle week bit a1, unless that would leave no
+	// week at all (then the boxes are just reset)
+	AddWeek: func(a1) begin
+		local bxor2;
+		(if (BAnd((bxor2 := bxor(mtgInfo, a1)), kEveryWeek) > 0) then begin
+				mtgInfo := bxor2;
+				self:Initialize();
+				self:UpdateText()
+			end else self:Initialize())
+	end,
+	preallocatedContext: 'WeekPicker,
+	viewChildren: [viewChildren:
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			text: first_2,
+			// Checked or not: the first week of the month added or taken out.
+			valueChanged: func() begin
+				self:AddWeek(kFirstWeek)
+			end,
+			_proto: @protoCheckbox
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewValue: nil,
+			text: second,
+			// The second week.
+			valueChanged: func() begin
+				self:AddWeek(kSecondWeek)
+			end,
+			_proto: @protoCheckbox
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewValue: nil,
+			text: third,
+			// The third week.
+			valueChanged: func() begin
+				self:AddWeek(kThirdWeek)
+			end,
+			_proto: @protoCheckbox
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewValue: nil,
+			text: fourth,
+			// The fourth week.
+			valueChanged: func() begin
+				self:AddWeek(kFourthWeek)
+			end,
+			_proto: @protoCheckbox
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewValue: nil,
+			text: last,
+			// The last week.
+			valueChanged: func() begin
+				self:AddWeek(kLastWeek)
+			end,
+			_proto: @protoCheckbox
+		}
+	]
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+valueChanged_code := same("WeekPicker.viewChildren[4].valueChanged.instructions");

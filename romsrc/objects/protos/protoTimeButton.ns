@@ -1,0 +1,25 @@
+// protoTimeButton: a text button that shows the current time (the clock of
+// a status bar, its timeField); it refreshes itself on an idle timer and
+// tapping it opens what the shared buttonClickScript_3 opens.
+
+protoTimeButton := {
+	_proto: @protoTextButton,
+	// the button is its own title view (declared to itself as 'title)
+	declareSelf: 'title,
+	lastSeed: nil,
+	TimeString: TimeString,
+	TimeBox: TimeBox,
+	// viewSetupFormScript(): sets the text to the current time, sizes the
+	// button to fit it (if TimeBox gives a box) and asks for idle calls every
+	// 30 seconds
+	viewSetupFormScript: func() begin
+		local timeBox;
+		if (timeBox := self:TimeBox((text := self:TimeString()))) then begin
+				viewBounds := timeBox
+			end;
+		self:SetupIdle(30000)
+	end,
+	viewIdleScript: viewIdleScript,
+	viewDrawScript: viewDrawScript,
+	buttonClickScript: buttonClickScript_3
+};

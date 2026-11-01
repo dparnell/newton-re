@@ -1,0 +1,59 @@
+// longLatPicker: a pop-up with a latitude and a longitude picker. Opened by
+// :New(longitude, latitude, worldClock, bbox, context): with worldClock set
+// the values are in the World Clock's units and are converted
+// (protoLongitudePicker ConvertFromWC/ConvertToWC). It calls
+// context:pickActionScript(longitude, latitude) when closed.
+
+longLatPicker := {
+	viewBounds: {left: 0, top: 0, right: 170, bottom: 68},
+	longitude: nil,
+	latitude: nil,
+	worldClock: nil,
+	// Opens it at longitude a1 and latitude a2 (converted from Time Zones' units
+	// when a3), over box a4, for context a5.
+	New: func(a1, a2, a3, a4, a5) begin
+		local init;
+		init := self:Init();
+		if a3 then begin
+				init.longitude := @protoLongitudePicker:ConvertFromWC(a1);
+				init.latitude := @protoLongitudePicker:ConvertFromWC(a2)
+			end else begin
+				init.longitude := a1;
+				init.latitude := a2
+			end;
+		init.worldClock := a3;
+		init.context := a5;
+		init:popup(a4)
+	end,
+	// Gives the pickers their values.
+	viewSetupFormScript: func() begin
+		lat.value := latitude;
+		(long.value := longitude)
+	end,
+	// The close box: hands the values (converted back when worldClock) to the
+	// context.
+	Affirmative: func() begin
+		(if worldClock then context:?pickActionScript(@protoLongitudePicker:ConvertToWC(long.value), @protoLongitudePicker:ConvertToWC(lat.value)) else context:?pickActionScript(long.value, lat.value))
+	end,
+	stepChildren: [stepChildren: lat, long],
+	lat: nil,
+	stepallocatecontext: [|Array|: 'lat, lat, 'long, long],
+	long: nil,
+	_proto: @protoGeneralPopup
+};
+
+lat := {
+	_proto: @protoLatitudePicker,
+	viewBounds: {left: 2, top: 5, right: 152, bottom: 35},
+	viewJustify: 0,
+	value: nil,
+	preallocatedContext: 'lat
+};
+
+long := {
+	_proto: @protoLongitudePicker,
+	viewBounds: {left: 2, top: 35, right: 152, bottom: 65},
+	viewJustify: 0,
+	value: nil,
+	preallocatedContext: 'long
+};

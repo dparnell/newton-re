@@ -1,0 +1,21 @@
+// protoGauge: a read-only bar gauge (clGaugeView) showing viewValue between
+// minValue and maxValue; protoSlider is the one the user can set.
+
+protoGauge := {
+	viewClass: clGaugeView,
+	viewFlags: vVisible + vReadOnly,
+	viewBounds: nil,
+	viewFormat: 0,
+	// draw the gauge's limits (the clGaugeView option)
+	gaugeDrawLimits: true,
+	minValue: 0,
+	maxValue: 100,
+	viewValue: nil,
+	// viewSetupFormScript: takes the value from vars.(valuePath), as protoSlider
+	// stores it - so a gauge without those slots overrides this script (the
+	// Reference's example sets it to nil and gives viewValue itself)
+	viewSetupFormScript: func() begin
+		(self.viewValue := vars.(valuePath))
+	end,
+	debug: 45415
+};

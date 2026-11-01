@@ -1,0 +1,4 @@
+// kosErrorAlertTextBounds: the OS error alert's text, above its buttons
+// (src/alert/AlertDialog.cpp).
+
+kosErrorAlertTextBounds := {left: 10, top: 10, right: 182, bottom: 45};

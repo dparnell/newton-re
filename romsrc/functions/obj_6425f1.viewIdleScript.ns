@@ -1,6 +1,0 @@
-@@ 0x4db5d1
-func() begin
-	self:UpdateLocationFields();
-	60000
-end
-@@end

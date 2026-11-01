@@ -1,0 +1,10 @@
+// defaultInboxPrefInfo: the proto of protoTransportPrefs' inboxPrefs - a
+// transport preference for received items: file read items (the inboxFiling
+// configuration slot), shown when the transport handles ReceiveRequest.
+
+defaultInboxPrefInfo := {
+	_proto: @protoPrefInfo,
+	logText: "File read items in",
+	fileConfig: 'inboxFiling,
+	testMethod: 'ReceiveRequest
+};

@@ -1,0 +1,36 @@
+// previewRemoteView (@679): the remote view (clRemoteView) a print preview
+// shows the page in - a print form drawn scaled down to fit its parent, keeping
+// the printer page's proportions (pagePreviewForm, ioPrintPreview).
+
+previewRemoteView := {
+	viewClass: clRemoteView,
+	viewBounds: nil,
+	viewFlags: vVisible + vReadOnly + vClipping,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewFormat: vfFrameGray + vfPen(1),
+	margin: 10,
+	viewKeyDownScript: viewKeyDownScript,
+	_DoDefaultButton: _DoDefaultButton,
+	textFlags: 50176,
+	// viewSetupFormScript: makes the view the largest box with the printer page's
+	// aspect ratio (fields.printerPageBounds) that fits the parent less the
+	// margin, and makes it the key view.
+	viewSetupFormScript: func() begin
+		local copy, printerPageBounds, l3, floor2, floor3;
+		(copy := Clone(self:Parent():LocalBox())).bottom := (copy.bottom - margin);
+		copy.right := (copy.right - margin);
+		l3 := ((printerPageBounds := fields.printerPageBounds).bottom / printerPageBounds.right);
+		floor2 := floor((copy.bottom / l3));
+		floor3 := floor((copy.right * l3));
+		if (floor2 < copy.right) then begin
+				copy.right := floor2;
+				copy.bottom := floor((floor2 * l3))
+			end else begin
+				copy.bottom := floor3;
+				copy.right := floor((floor3 / l3))
+			end;
+		self.viewBounds := copy;
+		SetKeyView(self, 0)
+	end,
+	viewChildren: [viewChildren: {_proto: @protoPrintForm}]
+};

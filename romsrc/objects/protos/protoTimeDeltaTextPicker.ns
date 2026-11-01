@@ -1,0 +1,31 @@
+// protoTimeDeltaTextPicker: a text picker (label and value) for a length of
+// time, which may be negative; tapping it pops up a time-delta picker
+// (timeDeltaPopup). The value, in minutes, is in Time.
+
+protoTimeDeltaTextPicker := {
+	viewBounds: nil,
+	label: "ﰁOffset",
+	// the duration, in minutes (negative shown with a minus sign)
+	Time: nil,
+	// the picker's step, in minutes, and the smallest value it allows (nil:
+	// no minimum; 0 or more hides the +/- control)
+	increment: 1,
+	minValue: nil,
+	// Popit(x): opens the time-delta popup under the picker's value, x
+	// pixels wide, with this view as its callback
+	Popit: func(x) begin
+		local box;
+		(box := self:GlobalBox()).right := (box.left + x);
+		@timeDeltaPopup:New(Time, {increment: increment, minValue: minValue}, box, self)
+	end,
+	// TextSetup(): the value's text, e.g. "-1:30"
+	TextSetup: func() begin
+		Stringer([Array: (if (Time < 0) then $-), TimerToString(abs(Time))])
+	end,
+	// PickActionScript(value): the popup picked a new duration
+	pickActionScript: func(index) begin
+		Time := index;
+		inherited:pickActionScript(index)
+	end,
+	_proto: @protoTextPicker
+};

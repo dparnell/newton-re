@@ -1,0 +1,6 @@
+// canonicalDataContext, and what only it reaches
+//
+// The context of a view built over a data frame (src/views/BuildView.cpp):
+// a canonicalContext with realData, the frame it shows.
+
+canonicalDataContext := {_proto: nil, _parent: nil, viewCObject: nil, realData: nil};

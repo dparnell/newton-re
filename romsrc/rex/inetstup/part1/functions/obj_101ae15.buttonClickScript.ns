@@ -1,5 +1,0 @@
-@@ 0x101aed9
-func() begin
-	self:EditPassword()
-end
-@@end

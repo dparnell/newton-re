@@ -1,0 +1,6 @@
+// canonicalFontParms, and what only it reaches
+//
+// A font's parameters - family, size, face and pen size - as the
+// clipboard's label uses them (src/views/ClipboardView.cpp).
+
+canonicalFontParms := {family: nil, size: nil, face: nil, pensize: nil};

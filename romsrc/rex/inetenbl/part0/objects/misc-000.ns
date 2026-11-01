@@ -1,3 +1,0 @@
-obj_1000805 := array(nil, {DoNotInstall: function("functions/obj_1000805_0_.DoNotInstall.ns"), installScript: function("functions/obj_1000805_0_.installScript.ns"), text: obj_1000ebd, TapAction: function("functions/obj_1000805_0_.TapAction.ns")});
-obj_1000ebd := "Newton Internet Enabler";
-obj_1001241 := same("obj_1000805[0].installScript.literals[1].literals[9]");

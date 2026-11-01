@@ -1,6 +1,0 @@
-@@ 0x104b1f1
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
-	(if a1.infoError then self:DoEvent('ProcessingStackActivePhysicalLayerFailure, nil) else (if (a1.infoStatus = 'Processed) then self:DoEvent('ProcessingStackActivePhysicalLayerSuccess, nil)))
-end
-@@end

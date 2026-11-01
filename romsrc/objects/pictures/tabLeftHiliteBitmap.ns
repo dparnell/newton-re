@@ -1,0 +1,7 @@
+// The left tab of the show bar, hilited. A 1-bit bitmap frame (bits, bounds), 9 x 12
+// pixels. Magic pointer @728. Used by protoNewShowBar.
+
+tabLeftHiliteBitmap := {
+	bits: bitmap('bits, "resources/bits/3db06d.png", "00000000000400a900a9018200b5018b", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 12}
+};

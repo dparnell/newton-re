@@ -1,0 +1,10 @@
+// newtqbeLabelInputLine: a "query by example" labelled input line: what the user
+// writes is not stored but looked up in the application's soup (newtTextFilter's
+// PathQuery), and the first entry holding it is gone to and shown.  Not in the NPR.
+//
+// This file holds newtqbeLabelInputLine and what only it reaches.
+
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
+// access 'queryOnly: text written only looks entries up (newtProtoLineBase's viewIdleScript); usePopup nil:
+// the matches are not offered in a popup
+newtqbeLabelInputLine := {_proto: @newtProtoLine, flavor: @newtTextFilter, access: 'queryOnly, usePopup: nil};

@@ -1,0 +1,39 @@
+// edgeDrawer: magic pointer @78, protoBook's edgeDrawer - the viewDrawScript a
+// book's content block uses to draw edges round itself (MakeBlockView,
+// src/books/Pages.cpp).  The block's look says which edges: 256 the top, 512
+// the left, 1024 the bottom, 2048 the right, each drawn edgeWidth outside the
+// view in the view's pen size and pattern (default pattern 5).
+
+edgeDrawer := func() begin
+	local l1, l2, list, list2, drawPenPat;
+	l2 := (self.viewBounds.bottom - self.viewBounds.top);
+	l1 := (self.viewBounds.right - self.viewBounds.left);
+	inherited:?viewDrawScript();
+	list := [Array: ];
+	if (BAnd(look, 256) <> 0) then begin
+			AddArraySlot(list, MakeLine(-1, ((-edgeWidth) - 1), (l1 + 1), ((-edgeWidth) - 1)))
+		end;
+	if (BAnd(look, 512) <> 0) then begin
+			AddArraySlot(list, MakeLine(((-edgeWidth) - 1), -1, ((-edgeWidth) - 1), (l2 + 1)))
+		end;
+	if (BAnd(look, 1024) <> 0) then begin
+			AddArraySlot(list, MakeLine(-1, (l2 + 1), (l1 + 1), (l2 + 1)))
+		end;
+	if (BAnd(look, 2048) <> 0) then begin
+			AddArraySlot(list, MakeLine((l1 + 1), -1, (l1 + 1), (l2 + 1)))
+		end;
+	(if (Length(list) > 0) then begin
+			list2 := [Array: self.drawPenSizeX, self.drawPenSizeY];
+			drawPenPat := 5;
+			if self.drawPenPat then begin
+					drawPenPat := self.drawPenPat
+				end;
+			if (not list2[0]) then begin
+					list2[0] := 1
+				end;
+			if (not list2[1]) then begin
+					list2[1] := 1
+				end;
+			self:DrawShape(list, {pensize: list2, penPattern: drawPenPat})
+		end)
+end;

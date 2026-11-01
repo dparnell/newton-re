@@ -1,0 +1,4 @@
+// wordFilter: the protoCharEdit corrector template for a single word of
+// letters.
+
+wordFilter := {item: words, filters: [|Array|: abcdefghijklmnopqrstuvwxyz]};

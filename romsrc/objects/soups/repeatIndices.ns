@@ -1,0 +1,8 @@
+// The indexes of the repeating meetings and notes soups. An array of soup index
+// specifications (the indexes of a soup definition). Magic pointer @238. Used by
+// repeatMeetingSoupDef, repeatNotesSoupDef.
+
+repeatIndices := [|Array|:
+	{structure: 'slot, path: 'mtgStopDate, type: 'int},
+	{structure: 'slot, path: 'mtgAlarm, type: 'int}
+];

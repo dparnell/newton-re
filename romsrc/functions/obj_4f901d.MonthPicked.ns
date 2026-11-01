@@ -1,5 +1,0 @@
-@@ 0x4f8ffd
-func() begin
-	(dateChangedBecauseMonthPicked := true)
-end
-@@end

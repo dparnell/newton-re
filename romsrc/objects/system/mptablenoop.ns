@@ -1,0 +1,5 @@
+// mptablenoop (@861-@867): an empty array that fills the unused ("no-op")
+// entries at the end of the magic-pointer table, so those seven indices are
+// valid and name nothing.
+
+mptablenoop := [|Array|: ];

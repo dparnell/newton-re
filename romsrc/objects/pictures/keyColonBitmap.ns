@@ -1,0 +1,7 @@
+// The colon key. A 1-bit bitmap frame (bits, bounds), 4 x 10 pixels. Magic pointer @735.
+// Used by viewRoot.
+
+keyColonBitmap := {
+	bits: bitmap('bits, "resources/bits/3d8eb5.png", "00000000000401ba01ba01c001c401c4", 1),
+	bounds: {left: 0, top: 0, right: 4, bottom: 10}
+};

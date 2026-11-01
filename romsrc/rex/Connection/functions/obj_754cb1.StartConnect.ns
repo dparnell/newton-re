@@ -1,5 +1,0 @@
-@@ 0x756421
-func() begin
-	AddDeferredSend(self, 'DeferredConnect, nil)
-end
-@@end

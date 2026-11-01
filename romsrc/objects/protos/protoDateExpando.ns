@@ -1,0 +1,26 @@
+// protoDateExpando: a protoTextExpando line (label and entry line, showing
+// target.(path)) for a date: the entry line takes dates, the value is shown
+// with ShortDateStr and read back with StringToDate.
+
+protoDateExpando := {
+	_proto: @protoTextExpando,
+	// the entry line's viewFlags
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vDateField,
+	// the date format given to ShortDateStr (a packed date-string spec)
+	Date: 183017,
+	// sent to make the text shown: the date in target.(path), if any
+	TextSetup: func() begin
+		inherited:TextSetup();
+		(if target.(path) then ShortDateStr(target.(path), Date))
+	end,
+	// sent when the user changes the entry line: an empty line clears the
+	// date, anything else is parsed into target.(path)
+	textChanged: func() begin
+		inherited:textChanged();
+		(if (StrLen(entryLine.text) = 0) then (target.(path) := nil) else (target.(path) := StringToDate(entryLine.text)))
+	end,
+	// answers the text to show for the target frame a1 (nil without a date)
+	setup2: func(a1) begin
+		(if (if a1 then a1.(path)) then ShortDateStr(a1.(path), Date))
+	end
+};

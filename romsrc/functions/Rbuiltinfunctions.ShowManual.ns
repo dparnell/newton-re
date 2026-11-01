@@ -1,5 +1,0 @@
-@@ 0x523b7d
-func() begin
-	GetRoot().TinyTim:Open()
-end
-@@end

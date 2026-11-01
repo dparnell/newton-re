@@ -1,0 +1,12 @@
+// export160: the phone keypad (protoPhonePad) on Setup's phone pages. The file holds it
+// and what only it reaches.
+
+export160 := {
+	viewJustify: vjParentCenterH,
+	// viewSetupFormScript: nothing.
+	viewSetupFormScript: func() begin
+		nil
+	end,
+	viewBounds: {left: 0, top: 166, right: 121, bottom: 292},
+	_proto: @phonePad
+};

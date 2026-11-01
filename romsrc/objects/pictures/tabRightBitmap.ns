@@ -1,0 +1,7 @@
+// The right tab of the show bar. A 1-bit bitmap frame (bits, bounds), 9 x 11 pixels. Magic
+// pointer @727. Used by protoNewShowBar.
+
+tabRightBitmap := {
+	bits: bitmap('bits, "resources/bits/3db009.png", "00000000000400610061006f006c0078", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 11}
+};

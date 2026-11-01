@@ -1,0 +1,71 @@
+// protoCheckboxIcon: a checkbox drawn as a picture (onBitmap when checked,
+// offBitmap when not); protoCheckbox adds a text label to it.
+//   viewValue     nil when unchecked, buttonValue when checked
+//   buttonValue   the value a check gives viewValue (true by default)
+// valueChanged is the hook for the checkbox's owner: sent after every change.
+
+protoCheckboxIcon := {
+	viewClass: clPictureView,
+	viewFlags: vVisible + vClickable,
+	viewFormat: 0,
+	viewJustify: vjCenterV,
+	icon: CheckOff,
+	declareSelf: 'base,
+	viewValue: nil,
+	buttonValue: true,
+	onBitmap: CheckOn,
+	offBitmap: CheckOff,
+	text: uCardPositionAlertButton,
+	viewFont: @fontSystem9,
+	// after setup: shows the picture for the initial viewValue
+	viewSetupDoneScript: func() begin
+		self:UpdateBitmap()
+	end,
+	// on a tap: toggles the check if the pen is lifted inside the box; the
+	// tap is always answered as handled
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
+				self:toggleCheck();
+				self:hilite(nil)
+			end;
+		true
+	end,
+	// flips viewValue between nil and buttonValue (undoably: undo sends
+	// toggleCheck again) and tells valueChanged
+	toggleCheck: func() begin
+		AddUndoAction('toggleCheck, [Array: ]);
+		if (viewValue = nil) then begin
+				viewValue := buttonValue
+			end else begin
+				viewValue := nil
+			end;
+		self:valueChanged();
+		self:UpdateBitmap()
+	end,
+	// shows onBitmap or offBitmap for viewValue and redraws
+	UpdateBitmap: func() begin
+		if viewValue then begin
+				base.icon := onBitmap
+			end else begin
+				base.icon := offBitmap
+			end;
+		base:Dirty()
+	end,
+	// SetCheck(value): checks (value true) or unchecks the box from code
+	SetCheck: func(value) begin
+		(if (viewValue <> value) then begin
+				viewValue := (if value then buttonValue);
+				self:valueChanged();
+				self:UpdateBitmap()
+			end)
+	end,
+	// the hook sent after viewValue changes; does nothing here
+	valueChanged: func() begin
+		nil
+	end,
+	// sent by SetValue: a change of viewValue from outside counts as a change
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'viewValue) then self:valueChanged())
+	end,
+	debug: 5800980
+};

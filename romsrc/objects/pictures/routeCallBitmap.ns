@@ -1,0 +1,7 @@
+// The Action menu icon of Call. A 1-bit bitmap frame (bits, bounds), 18 x 15 pixels. Magic
+// pointer @760. Used by basicCallTransport.
+
+routeCallBitmap := {
+	bits: bitmap('bits, "resources/bits/3db13d.png", "000000000004006f006f00e2007e00f4", 1),
+	bounds: {left: 0, top: 0, right: 18, bottom: 15}
+};

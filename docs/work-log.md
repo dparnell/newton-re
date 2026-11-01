@@ -18,6 +18,154 @@ entry point (`AndroidMain.cpp`) and the host window (`HostWindow.cpp`, an
 as the pen), and `tools/android/build_apk.py` packs the APK with the SDK's own
 tools.  bionic has no `pthread_tryjoin_np` (`TaskRuntime.cpp`).  It builds
 and signs; it has not been run on a device (docs/host-android.md).
+## 2026-11-01: Windows releases that run on any x86-64 CPU
+
+A user's Celeron laptop ran none of the Windows releases (001-004): newton
+opened and closed at once, leaving a crash dump.  zig with no target built for
+the runner's CPU, and the binary had AVX, AVX2, AVX-512, BMI2 and F16C
+instructions from start-up on.  `zig-toolchain.cmake` now gives a native build
+`-mcpu=baseline` (`ZIG_CPU`), and the `windows` job checks newton and
+newtonscript with the new `tools/ci/cpuscan.py` (`docs/releases.md`).
+
+## 2026-10-31: romsrc/ commented, and its numbers named by hand
+
+The owner asked for the NewtonScript in romsrc/ to be commented and its
+magic numbers named while at it.  The tree builds the same object file,
+byte for byte, after every change (checked after each batch of edits and
+on the merged tree; the full ctest suite passes).
+
+- **Comments.**  21,400 comment lines in 1,221 files: every file opens
+  with what its object is and what uses it, every function (7,548; 74 are
+  covered only by a comment on their group, `romsrc_comments.py`) says
+  when it is called, what it takes and what it gives back, with notes on
+  the logic that is not plain.  They were written from the code, the
+  Newton Programmer's Guide and Reference (`documentation/`) and `src/`;
+  `romsrc/README.md` "Comments and constants" gives the rules.
+- **Numbers.**  About 1,900 more named, only where Apple names them and
+  only where the meaning there is certain: `Notify(kNotifyAlert, ...)`
+  (some 300), viewJustify sums with `oneLineOnly` (some 400), GetPoint's
+  selectors, the Dates repeat types and day bits, `kForever`, transfer
+  modes, view effects, the gesture codes, option opcodes, keyboard
+  modifiers, Gestalt selectors, dictionary ids, text flags and error
+  codes.  124 constants were added to `constants.tsv`, each section citing
+  its source.  A number with no Apple name keeps it and gets a comment.
+- **The constant that was wrong twice.**  `oneLineOnly` is 0x800000 and
+  `noLineLimits` 0 (the Guide's Table 3-1; the Reference's table is out of
+  line in its text, which pairs oneLineOnly with 0x1000000, `oneWordOnly`).
+  One helper took the Reference's; another caught it.  A wrong value for a
+  name still builds the same while it is used for the right number, so
+  only reading catches it.  `src/views/TextView.h` has `vjNoLineLimits =
+  0x01000000`, which is not the Guide's value (next-steps).
+- **A tool pitfall.**  An editor that writes `$ﰋ` as the character
+  itself leaves a function that does not compile; comments are kept ASCII
+  and an added line with a character outside it is suspect.
+- **79 places that look like ROM bugs** are marked `looks like a ROM bug:`
+  and left as they are, among them `protoRepeatView.daysInMonth` (February
+  has 29 days only in years divisible by 400), `protoRoutingFormat.ParseCursor`
+  (`if (error := -10617)` assigns), `GetDialinNetwork` reading the
+  misspelt `DialinNetworkRegsitry`, `MakeModemOption` sending a fixed
+  blind-dial delay, `printerChooserButton.nbpString` testing a misspelt
+  `npbType`, `viewRoot.Reopen` testing left where top was meant.  `git grep
+  -n "looks like a ROM bug" -- romsrc` lists them.
+- Curiosities: the World Clock's Area 51, a backup dated Black Tuesday,
+  `d_invertrect` in ROT13.
+
+## 2026-10-31: romsrc/'s functions - numbers by name, arguments and locals named
+
+The owner asked next for the functions' numbers by name and their
+arguments named.  `tools/newton-rom/analysis/naturalcode.py` rewrote the
+tree's function source in place; it builds the same object file.
+
+- **Numbers.**  `constants.tsv` gained the error codes: the DDK headers'
+  `#define`s and enums evaluated (`naturalize.py`'s `header_values`), then
+  the reconstruction's (`src/frames/NSErrors.h` names NewtonScript's own,
+  which the DDK has no header for).  478 numbers in functions are named:
+  a view's slot (`viewJustify:`, `.viewFont :=`, `SetValue(v, 'viewFlags,
+  ...)`) and an error code given to a throw or error function or put in or
+  compared with an `error` slot.  Not every number in the codes' range is
+  one: -21600 and -10800 are time zones' offsets, and -10800 is also
+  `kError_DMA_Base`.  The builder makes each name its number before
+  compiling, and a sum of names that is a whole operand one number
+  (`romsrc.py`'s `code_with_constants`).
+- **Names.**  The compiler keeps none (`dbgNoVarNames`), so any name will
+  do - provided it is no word the function uses as a variable (a free
+  variable would be captured) and the function's argument frame stays
+  under 21 slots: past 20 the host's compiler, as the ROM's, keeps the
+  map sorted (`AddSlot`), so a name decides a variable's place - found
+  when Handwriting's `wordExample.drawExampleScript`, grown by the host's
+  engines, compiled to `c2a4` where it had `c2a3`.  6,786 were named after
+  a script's signature or a local's first value (the last step of a chain:
+  a slot, a call less its verb, the one symbol a getter is given), then
+  2,167 arguments after what their function's calls pass, in four rounds
+  as names spread.  About 40% of the uses are still `a1`, `l1`.
+- `CODE_TOKEN` has numbers; ctest `tools.ROMSourceNotation` checks the
+  constants' substitution.
+
+## 2026-10-31: romsrc/ in its natural form
+
+The owner asked for the NewtonScript source the default boot is built
+from to read more naturally, to help with customising it later; they
+chose all four of: functions in their frames, real names, constants by
+name, and a directory per kind of thing, and let the tree stop building
+the ROM's bytes (the tag `romsrc-rom` keeps the proof).  It did not need
+to: `tools/newton-rom/analysis/naturalize.py` rewrote the tree once and
+the result builds the same object file byte for byte.
+
+- **Functions in their frames.**  The 5,482 files of `functions/` (and
+  the part trees') are gone: each is written where it is used,
+  `slot: func(...) begin ... end`, or `compile(constants: {...}, options:
+  "...", source)` for the records with constants of their own, compiler
+  options or a value rather than a func.  The Reader takes NewtonScript
+  to the end of its expression (`code_extent`); comments are kept.  Five
+  function files no definition used (functions `same()` takes from the
+  ones that share them) went with the directory.
+- **Names.**  857 of the 873 magic pointers are named by the ROM's
+  R-constants that are magic pointers (`ROMConstants.cpp`), spelt as the
+  ROM spells them - only 110 are - or cut into the words of the ROM's
+  and the DDK headers' camel-case names (`protoperiodicalarmeditor` ->
+  `protoPeriodicAlarmEditor`; the ROM itself spells one
+  `ProToadDressPicker`, so a spelling that starts with a capital where
+  the name does not is not taken).  The R-constants name 170 more; the
+  rest take a name from what they say of themselves (`preallocatedContext`,
+  `symbol`, a string's words) or what holds them, an export with neither
+  its index in the export table (`export27`).  `@name` works in the
+  objects and in functions (`magic.tsv`'s object, or its other names).
+  `renames.tsv` keeps every old name; `romsrc.py rename` renames one,
+  layout, magic table and `@`s included (a definition's name is how the
+  layout knows it).
+- **Constants.**  1,552 integers of `viewFlags`, `viewJustify`,
+  `viewFormat`, `viewClass` and font slots are sums of `constants.tsv`'s
+  (from `views/ViewFlags.h`, and `tsSystem + tsSize(9) + tsBold` for the
+  packed font specs), where the number is exactly such a sum.
+- **Files.**  A file per root object and what only it reaches (a
+  dominator tree over the definitions), in `objects/apps|protos|newtapp|
+  canonical|slips|views|pictures|sounds|soups|recognition|system/`;
+  `values.ns`, and `shared/` for what several roots reach.
+- **The builder** reads both forms; two changes made the proof
+  possible: the objects new to the layout are ordered by their
+  definition's address in the layout rather than their path's text, and
+  the maps it makes are numbered in that order - both had followed the
+  names.  Ctest `tools.ROMSourceNotation`; `newtonstore.py`, edit-test,
+  the font and table tests read `objects/`'s subdirectories and a
+  definition written a slot to a line.
+
+## 2026-10-25: the Host page opened on the T-Deck Pro again (a Screen page)
+
+The owner's report: on the T-Deck the Prefs Host page did not work.  A tap
+on it printed "exception in a unit handler: evt.ex (-8505)" and nothing
+opened: -8505 is `kViewErrNoViewBounds`.  The ROM's Prefs open every panel
+through `OpenPrefsTo` in a slip whose template has `viewBounds: nil` (set
+on the context afterwards); the floater's base proto (@132) removes
+`viewBounds` at setup when the slip's box is off the application area, so
+the template's nil is all that is left.  The T-Deck's page, with the
+e-paper settings, was 292 pixels on a 320-pixel screen already (broken
+before Auto-lock), 314 with it.  Reproduced on the desktop at 240x320 by
+padding the page.  Fixed on our side (`HostSettings.ns`): the screen's
+settings on a **Screen** page of their own and any page too tall for the
+application area either way up split in two - the T-Deck's pages are now
+182 pixels each, checked on the board (Host with Auto-lock's picker,
+Screen with the panel's clean-ups).  Ctest `host.NewtonHostPages`;
+`docs/host-settings.md`, "Two pages".
 
 ## 2026-10-25: the lock screen on every host - auto-lock and notifications
 

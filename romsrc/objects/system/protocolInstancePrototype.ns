@@ -1,0 +1,6 @@
+// protocolInstancePrototype: the frame NewByName clones for a protocol instance
+// it makes; its _parent becomes the class info's frame (the classinfoEnabler
+// methods) and _instance holds the C++ instance (docs/protocols/README.md,
+// src/system/SystemNatives.cpp).
+
+protocolInstancePrototype := {_parent: classinfoEnabler, _instance: nil};

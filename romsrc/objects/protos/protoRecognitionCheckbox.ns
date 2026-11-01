@@ -1,0 +1,27 @@
+// protoRecognitionCheckbox: a checkbox in the handwriting recognition
+// preferences that shows and sets one boolean of the user configuration
+// (config, the slot's symbol), then has the recognition settings recomputed.
+
+protoRecognitionCheckbox := {
+	_proto: @protoCheckbox,
+	// the userConfiguration slot this checkbox edits
+	config: nil,
+	// on opening: checked as the user configuration says
+	viewSetupFormScript: func() begin
+		(viewValue := userConfiguration.(config))
+	end,
+	// protoCheckbox sends it when tapped: store the new value and have the
+	// recognition settings rebuilt from it
+	valueChanged: func() begin
+		userConfiguration.(config) := viewValue;
+		self:RecalcRecognition()
+	end,
+	// sent to put the control back to the stored value
+	viewResetValue: func() begin
+		(viewValue := userConfiguration.(config))
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_2 := same("protoRecognitionCheckbox.viewSetupFormScript.instructions");

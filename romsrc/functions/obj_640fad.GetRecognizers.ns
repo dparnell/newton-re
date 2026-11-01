@@ -1,5 +1,0 @@
-@@ 0x47ee5d
-func() begin
-	GetRoot()._recognizerUserChoices.recognizers
-end
-@@end

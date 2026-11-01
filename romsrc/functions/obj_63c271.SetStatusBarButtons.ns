@@ -1,5 +1,0 @@
-@@ 0x51c50d
-func(a1) begin
-	cntrlPanel:SetStatusBarButtons(a1)
-end
-@@end

@@ -1,0 +1,19 @@
+// printForm (@341): the print view (clPrintView) a print job is drawn from;
+// PrintNow (viewRoot) builds it with BuildContext and sends it Render
+// (src/views/PrintView.h).
+
+printForm := {
+	_proto: @protoPrintForm,
+	viewClass: clPrintView,
+	viewFlags: vReadOnly,
+	fields: nil,
+	printView: nil,
+	_setupChildrenNow: nil,
+	// Render(): sets up the children now and posts the view command 56, which
+	// starts the print job (TPrintView's kPrintCommand).
+	Render: func() begin
+		_setupChildrenNow := true;
+		self:?viewSetupChildrenScript();
+		PostCommand(self, 56)
+	end
+};

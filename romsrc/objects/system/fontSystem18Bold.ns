@@ -1,0 +1,4 @@
+// fontSystem18Bold: a font frame for the 18-point System (Espy) font, bold - one of
+// the system's standard fonts, ready made for templates and code to use.
+
+fontSystem18Bold := {family: 'espy, face: kFaceBold, size: 18};

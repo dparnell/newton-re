@@ -1,8 +1,0 @@
-@@ 0x1011ca5
-func() begin
-	(if newDef then begin
-			appBase:?BeginNewEntry(newDef, nil);
-			base:Close()
-		end else GetRoot():Notify(3, "Internet Setup", "Please select a connection method from the connect using popup menu."))
-end
-@@end

@@ -1,0 +1,6 @@
+// canonicalCorrectInfo, and what only it reaches
+//
+// A styles frame with its correction information (src/views/ParagraphView.cpp):
+// the text's style runs and the correctInfo kept for its words.
+
+canonicalCorrectInfo := {styles: nil, correctInfo: nil};

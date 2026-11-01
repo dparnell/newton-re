@@ -1,5 +1,0 @@
-@@ 0x4a77a9
-func() begin
-	Clone(self)
-end
-@@end

@@ -1,8 +1,0 @@
-@@ 0x49a129
-func() begin
-	if (currentKeyboard = self) then begin
-			currentKeyboard := nil
-		end;
-	(firstTime := true)
-end
-@@end

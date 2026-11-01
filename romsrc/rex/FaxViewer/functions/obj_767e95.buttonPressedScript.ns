@@ -1,5 +1,0 @@
-@@ 0x767f05
-func() begin
-	pagePalette:ScrollBy(1)
-end
-@@end

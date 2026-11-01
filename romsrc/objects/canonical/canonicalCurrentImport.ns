@@ -1,0 +1,6 @@
+// canonicalCurrentImport, and what only it reaches
+//
+// One unit import, as CurrentImports() lists it (src/packages/Units.cpp):
+// the import table and its client, the importing package's store entry.
+
+canonicalCurrentImport := {ImportTable: nil, client: nil};

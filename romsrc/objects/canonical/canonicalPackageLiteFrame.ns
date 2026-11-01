@@ -1,0 +1,6 @@
+// canonicalPackageLiteFrame, and what only it reaches
+//
+// The short package frame PidToPackageLite(pid) answers
+// (src/packages/StorePackageNatives.cpp): id, size, store and pssid.
+
+canonicalPackageLiteFrame := {id: nil, size: nil, store: nil, pssid: nil};

@@ -1,0 +1,6 @@
+// canonicalRegionShape, and what only it reaches
+//
+// The 'region shape MakeRegion clones (src/views/DrawShape.cpp): the region
+// as data.
+
+canonicalRegionShape := {class: 'region, data: nil};

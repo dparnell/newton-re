@@ -1,5 +1,0 @@
-@@ 0x521065
-func() begin
-	(self.viewBounds := pageBounds)
-end
-@@end

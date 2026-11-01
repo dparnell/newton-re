@@ -1,0 +1,177 @@
+// protoBook: the base view of the book reader ("Digital Books", class
+// 'copperfield as a Find target).  Most of its methods are native code
+// (class #132: a C function pointer and its argument count) that page
+// through, search and draw a book's content; the NewtonScript ones handle
+// story cards (pop-up notes on a word), Find and setup.
+
+protoBook := {
+	// the story card shown, if any
+	storyCard: nil,
+	CurrentKiosk: {class: #132, funcPtr: 6962673, numArgs: 0},
+	FindPageByValue: {class: #132, funcPtr: 6967940, numArgs: 3},
+	BookData: BookData,
+	// the book view itself (set at setup)
+	CuPage: nil,
+	viewLineSpacing: 0,
+	// Find's question of what can be searched: answers a frame per online
+	// book, its title as the name and its ISBN as the target
+	AppFindTargets: func() begin
+		local onlineBooks;
+		result := (foreach item in (onlineBooks := self:GetOnlineBooks()) collect {name: item.title, target: item.isbn});
+		result
+	end,
+	TurnToContent: {class: #132, funcPtr: 6984864, numArgs: 2},
+	CurrentPage: {class: #132, funcPtr: 6962674, numArgs: 0},
+	target: {class: 'copperfield},
+	InsertForm: InsertForm,
+	TurnToPage: {class: #132, funcPtr: 6984865, numArgs: 1},
+	RegisterBookRef: {class: #132, funcPtr: 6979577, numArgs: 2},
+	viewFlags: vApplication + vClipping + vClickable,
+	// closes the story card, if one is open
+	HideStoryCard: func() begin
+		(if (storyCard <> nil) then begin
+				storyCard:Close();
+				(storyCard := nil)
+			end)
+	end,
+	CountPages: {class: #132, funcPtr: 6961630, numArgs: 0},
+	bookRef: nil,
+	// ShowStoryCard(slot, value, bounds): toggles a story card - closes the
+	// open one, or opens a protoStoryCard in bounds with the first content
+	// item FindContentByValue finds: a picture shown as one, anything else as
+	// text, with the item's font, styles, tabs and justification (layout bit
+	// 4: centred)
+	ShowStoryCard: func(a1, a2, a3) begin
+		local frame2, data;
+		(if (storyCard <> nil) then self:HideStoryCard() else (if (Length((theContent := self:FindContentByValue(a1, a2, true))) <> 0) then begin
+					frame2 := {_proto: @protoStoryCard, viewBounds: a3};
+					if (ClassOf((data := theContent[0].data)) = 'picture) then begin
+							frame2.viewClass := clPictureView;
+							frame2.icon := data
+						end else begin
+							frame2.text := data
+						end;
+					if theContent[0].viewFont then begin
+							frame2.viewFont := theContent[0].viewFont
+						end;
+					if theContent[0].styles then begin
+							frame2.styles := theContent[0].styles
+						end;
+					if theContent[0].tabs then begin
+							frame2.tabs := theContent[0].tabs
+						end;
+					if theContent[0].viewJustify then begin
+							frame2.viewJustify := theContent[0].viewJustify
+						end else begin
+							if theContent[0].layout then begin
+									if (BAnd(theContent[0].layout, 4) <> 0) then begin
+											frame2.viewJustify := vjCenterH
+										end
+								end
+						end;
+					(storyCard := self:InsertForm(frame2)):Show()
+				end))
+	end,
+	// turns to the page of a subject (an index or contents entry)
+	TurnToSubject: func(a1) begin
+		self:TurnToPage(self:FindPageBySubject(a1))
+	end,
+	_proto: @protoFloater,
+	WhereIsBook: {class: #132, funcPtr: 6985922, numArgs: 1},
+	// Find in one book (target, an ISBN): adds a found item per hit of the
+	// native CuFind to findAllResults; the items show no checkboxes
+	// ('NotCheckable)
+	FindTargeted: compile(
+		constants: {
+			// no checking of the items found
+			kFunction_5198d9: func(a1) begin
+				'NotCheckable
+			end,
+			kLiteral_5198f9: {_proto: @compatibleFinder, CheckState: kFunction_5198d9, SelectItem: nil, MoveTo: nil}
+		},
+		func(findText, findAllResults, a3, a4, target) begin
+			list := [Array: ];
+			local item;
+			local list;
+			(if self:CuFind(findText, self, list, a3, a4, [Array: {isbn: target}]) then (foreach item in list do begin
+						// (decompiler layout: list and item are locals of the function)
+				AddArraySlot(findAllResults, {_proto: kLiteral_5198f9, owner: self, title: item.title, findType: 'text, findWords: SplitString(findText), items: item.items})
+					end))
+		end),
+	// sent by Find to show a hit: opens its book, turns to its page (found
+	// from the content and cached in the hit the first time) and hilites the
+	// found text
+	ShowFoundItem: func(a1) begin
+		local found, page;
+		self:OpenBook(a1.isbn);
+		if (found := a1.found).page then begin
+				page := found.page
+			end else begin
+				page := self:FindPageByContent(found.item, found.char, found.bookSoup);
+				found.page := page
+			end;
+		self:TurnToPage(page);
+		self:HiliteBlock(found.item, found.char, found.len)
+	end,
+	FindContentBySlot: {class: #132, funcPtr: 6966900, numArgs: 2},
+	ZoomView: {class: #132, funcPtr: 6985935, numArgs: 4},
+	viewJustify: 0,
+	CuFind: {class: #132, funcPtr: 6962668, numArgs: 6},
+	title: "Digital Books",
+	HiliteBlock: {class: #132, funcPtr: 6972175, numArgs: 3},
+	// the Find message find(text, results, scope, statusForm): with no book
+	// reference open, searches every online book for a 'globalFind, else the
+	// current one (self.isbn), adding a found item per hit to results
+	find: compile(
+		constants: {
+			// no checking of the items found
+			kFunction_5198d9: func(a1) begin
+				'NotCheckable
+			end,
+			kLiteral_5198f9: {_proto: @compatibleFinder, CheckState: kFunction_5198d9, SelectItem: nil, MoveTo: nil}
+		},
+		func(a1, a2, a3, a4) begin
+			(if (bookRef = nil) then begin
+					list := [Array: ];
+					if (a3 = 'globalFind) then begin
+							onlineBooks := self:GetOnlineBooks()
+						end else begin
+							onlineBooks := [Array: {isbn: self.isbn}]
+						end;
+					local item;
+					local list;
+					local onlineBooks;
+					(if self:CuFind(a1, self, list, a3, a4, onlineBooks) then (foreach item in list do begin
+								AddArraySlot(a2, {_proto: kLiteral_5198f9, owner: self, title: item.title, findType: 'text, findWords: SplitString(a1), items: item.items})
+							end))
+				end)
+		end),
+	FindPageByContent: {class: #132, funcPtr: 6967938, numArgs: 3},
+	declareSelf: 'base,
+	// at setup: records the view as CuPage and takes the keyboard focus
+	viewSetupFormScript: func() begin
+		CuPage := self;
+		SetKeyView(self, 0)
+	end,
+	AddToContentArea: {class: #132, funcPtr: 6956349, numArgs: 1},
+	CurrentBook: {class: #132, funcPtr: 6962672, numArgs: 0},
+	FindPageBySubject: {class: #132, funcPtr: 7023982, numArgs: 1},
+	debug: 22697,
+	pickItems: [|Array|: ],
+	viewFont: @fontSystem9,
+	AuthorData: {class: #132, funcPtr: 6957397, numArgs: 0},
+	version: 2,
+	UnregisterBookRef: {class: #132, funcPtr: 7025041, numArgs: 1},
+	FindContentByValue: {class: #132, funcPtr: 6966902, numArgs: 3},
+	edgeDrawer: @edgeDrawer
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+FindTargeted_literal3 := same("protoBook.FindTargeted.literals[3]");
+
+FindTargeted_literal1 := same("protoBook.FindTargeted.literals[1]");
+
+FindTargeted_literal8 := same("protoBook.FindTargeted.literals[8]");
+
+TurnToSubject_code := same("protoBook.TurnToSubject.instructions");

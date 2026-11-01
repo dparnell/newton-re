@@ -1,5 +1,0 @@
-@@ 0x516ac9
-func() begin
-	self:DrawShape(drawShapes, bodyStyle)
-end
-@@end

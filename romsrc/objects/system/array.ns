@@ -1,0 +1,5 @@
+// array: a frame map (a shared map, class 2, no supermap) for frames with the
+// slots type, indexPath, beginKey, endKey - the shape of a soup query spec.
+// Compiled code that builds such a frame literal shares this map.
+
+array := array(2, nil, 'type, 'indexPath, 'beginKey, 'endKey);

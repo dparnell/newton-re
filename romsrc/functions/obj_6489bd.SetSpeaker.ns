@@ -1,5 +1,0 @@
-@@ 0x52e8f5
-func(a1, a2) begin
-	self:SendOption("tasp", a1, a2)
-end
-@@end

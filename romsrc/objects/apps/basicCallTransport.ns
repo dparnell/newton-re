@@ -1,0 +1,911 @@
+// basicCallTransport: the "Phone" transport ('|PhoneHome:Newton|), the
+// protoTransport behind the Call routing action: it dials a Names card's
+// phone number through a TAPI endpoint (protoTapiEndpoint) of the user's
+// chosen dialing service ('currentDialSpeaker: the built-in speaker
+// dialler, a modem or a phone card), shows a status dialog with a phone
+// keypad while the call is up, and logs each call made or received as an
+// item of the Call application ('callapp). It can also wait for incoming
+// calls ('phoneAutoReceive) on a service that reports them. Its routing
+// slip (routingSlip) and preferences slip (preferencesForm) are below.
+
+basicCallTransport := {
+	key: '|PhoneHome:Newton|,
+	// The power-off check: never while waiting for calls; otherwise the
+	// transport's own, except that an idle check is refused.
+	PowerOffCheck: func(a1) begin
+		(if (status = 'Listening) then true else (if (a1 = 'idle) then nil else inherited:PowerOffCheck(a1)))
+	end,
+	// Opens a TAPI endpoint on transportProvider (a service's comm frame), with
+	// a Stop button while it connects that sets abortCall; a stop then cancels
+	// the request and throws the cancel.
+	InstallEndpoint: func(transportProvider, a2) begin
+		abortCall := nil;
+		if transportProvider.serviceId then begin
+				self:SetStatusDialog('Connecting, 'vStatus, {primary: {text: "Stop", script: func() begin
+					(GetRoot().(appSymbol).abortCall := true)
+				end}})
+			end;
+		callEndpoint := {_proto: @protoTapiEndpoint, _parent: self, configOptions: transportProvider.config.configOptions, afterOptions: transportProvider.config.afterOptions, serviceId: transportProvider.serviceId};
+		callEndpoint:Open(a2);
+		(if abortCall then begin
+				status := 'cancelling;
+				self:CancelRequest('userCancel);
+				Throw('|evt.ex.comm|, kCommErrRequestCanceled)
+			end)
+	end,
+	// Closes the call: unless waiting for calls (and not connecting), closes
+	// the endpoint and goes idle; otherwise turns the speaker back on and goes
+	// back to waiting.
+	Shutdown: func() begin
+		(if ((not self:GetConfig('phoneAutoReceive)) or (status = 'Connecting)) then begin
+				self:CloseStatusDialog(nil);
+				currentItem := nil;
+				self:SetConfig('phoneAutoReceive, nil);
+				transportProvider := nil;
+				speakerNeedsReset := nil;
+				if callEndpoint then begin
+						self:UpdateStatusSlots('Disconnecting, nil, nil);
+						callEndpoint:Close();
+						callEndpoint := nil
+					end;
+				UnRegCommConfigChange(appSymbol);
+				self:UpdateStatusSlots('idle, nil, nil)
+			end else begin
+				if speakerNeedsReset then begin
+						self:SetSpeaker(true)
+					end;
+				self:UpdateStatusSlots('Listening, nil, nil)
+			end)
+	end,
+	// Turns the endpoint's speaker on or off, remembering to turn it back on.
+	SetSpeaker: func(a1) begin
+		callEndpoint:SetSpeaker(a1, true);
+		(speakerNeedsReset := (not a1))
+	end,
+	// The endpoint's event: the phone was hung up.
+	EventOnHook: func() begin
+		GetRoot().(appSymbol):CancelRequest(0)
+	end,
+	owner: 'callapp,
+	preallocatedContext: '|PhoneHome:Newton|,
+	// A comm configuration change of service a1: restart waiting for calls on
+	// it.
+	Redo: func(a1) begin
+		(if (if (if (if transportProvider then (transportProvider.serviceId = a1)) then callEndpoint) then self:GetConfig('phoneAutoReceive)) then begin
+				self:SetConfig('phoneAutoReceive, nil);
+				self:StopAutoReceive();
+				self:SetConfig('phoneAutoReceive, true);
+				self:StartAutoReceive()
+			end)
+	end,
+	// the status dialog's texts by status (^0: the name or number, or the
+	// service while connecting)
+	dialogStatusMsgs: {
+		Connecting: "Preparing ^0…",
+		DialingTo: "Dialing ^0…",
+		DialingDone: "Call in progress…",
+		DialingDoneTo: "Call to ^0 in progress…",
+		DialingDoneFrom: "Call from ^0 in progress…",
+		Ringing: "Ringing…",
+		RingingFrom: "Call from ^0…",
+		AnswerInProgress: "Answering…",
+		Busy: "Busy, hanging up…",
+		HangingUp: "Hanging up…",
+		cancelling: "Cancelling…",
+		Disconnecting: @disconnectMessage,
+		Listening: "Ready for call…"
+	},
+	actionTitle: phone,
+	// Stops waiting for calls.
+	StopAutoReceive: func() begin
+		self:CancelRequest(0)
+	end,
+	speakerNeedsReset: nil,
+	lastRing: nil,
+	dismissCall: nil,
+	// The title of call item a1: its own, else "Call from/to" its name or number.
+	GetItemTitle: func(a1) begin
+		local title, l2, l3;
+		if ((title := a1.title) = nil) then begin
+				l2 := (if StrFilled(a1.name) then a1.name else (if StrFilled(a1.phoneNumber) then a1.phoneNumber));
+				l3 := (a1.state = 'Received);
+				if l2 then begin
+						if l3 then begin
+								title := ParamStr("Call from ^0", [Array: l2])
+							end else begin
+								title := ParamStr("Call to ^0", [Array: l2])
+							end
+					end else begin
+						if l3 then begin
+								title := "Call received"
+							end else begin
+								title := "Call placed"
+							end
+					end
+			end;
+		title
+	end,
+	// Counts down the seconds a service needs before dialing (one a second,
+	// shown with a Stop button), then dials.
+	DelayDialing: func(outgoingNeededDelay) begin
+		(try begin
+				if abortCall then begin
+						status := 'cancelling;
+						self:CancelRequest('userCancel);
+						return nil
+					end;
+				(if (outgoingNeededDelay > 0) then begin
+						self:SetStatus('Connecting, {statusText: (if (outgoingNeededDelay > 1) then ParamStr("^0 seconds to dialing\u2026\u", [Array: NumberStr(outgoingNeededDelay)]) else "1 second to dialing\u2026\u"), primary: {text: "Stop", script: func() begin
+							(GetRoot().(appSymbol).abortCall := true)
+						end}});
+						AddDelayedCall(func(a1) begin
+							self:DelayDialing(a1)
+						end, [Array: (outgoingNeededDelay - 1)], 1000)
+					end else self:FinishDialing())
+			end onexception |evt.ex| do begin
+				(if self:HandleThrow() then self:Shutdown())
+			end)
+	end,
+	// Answers at once ('Now) when asked how to detect a connection.
+	ConnectionDetect: func() begin
+		'Now
+	end,
+	currentItem: nil,
+	// While ringing: once 480 ticks (8 seconds) passed since the last ring, the
+	// call is taken as given up and the transport goes back to waiting;
+	// otherwise it checks again then.
+	StopEventIncoming: func() begin
+		local l1;
+		(if (status = 'RingingFrom) then (if ((l1 := (Ticks() - lastRing)) >= 480) then begin
+					dismissCall := nil;
+					currentItem := nil;
+					self:CloseStatusDialog(nil);
+					self:UpdateStatusSlots('Listening, nil, nil)
+				end else AddDelayedCall(func() begin
+					self:StopEventIncoming()
+				end, nil, ((480 - l1) * 16))))
+	end,
+	_proto: @protoTransport,
+	// The endpoint's event: the phone was picked up while ringing - answer.
+	EventOffHook: func() begin
+		(if (if (status = 'RingingFrom) then currentItem) then GetRoot().(appSymbol):receiveRequestComplete())
+	end,
+	statusTemplate: {declareSelf: 'base, vPhoneKeypad: @vPhoneKeypad, _proto: @protoStatusTemplate},
+	// The folder completed calls are filed in.
+	GetFolderName: func(target) begin
+		self:GetConfig('phoneCompletedFiling)
+	end,
+	// Answers a ringing call: commits the item and has the endpoint answer
+	// (or, for a service that cannot, "dial" nothing to take the line).
+	receiveRequestComplete: func() begin
+		self:CloseStatusDialog(nil);
+		self:UpdateStatusSlots('AnswerInProgress, 'vStatus, nil);
+		self:ItemCommit(currentItem);
+		(try begin
+				(if transportProvider.config.supportsAnswerIncoming then callEndpoint:AnswerIncoming(true) else callEndpoint:MakeOutgoing("", true))
+			end onexception |evt.ex| do begin
+				(if self:HandleThrow() then self:Shutdown())
+			end)
+	end,
+	appSymbol: '|PhoneHome:Newton|,
+	// Makes service a1 (a symbol) the transport's provider, closing the
+	// endpoint of a different one; watches comm configuration changes.
+	SetTransportProvider: func(a1) begin
+		local transportProvider2;
+		RegCommConfigChange(appSymbol, func(a1, a2) begin
+			self:Redo(a1)
+		end);
+		transportProvider2 := transportProvider;
+		if (if (if (if a1 then transportProvider2) then transportProvider2.symbol) then (a1 <> transportProvider2.symbol)) then begin
+				self:SetConfig('phoneAutoReceive, nil);
+				if callEndpoint then begin
+						callEndpoint:Close();
+						callEndpoint := nil
+					end
+			end;
+		((transportProvider := DeepClone(GetTAPICommFrame(a1))).symbol := a1)
+	end,
+	icon: @routeCallBitmap,
+	title: phone,
+	// Cancels the current request: while connecting this only sets abortCall
+	// (the connection code sees it); otherwise completes the item with reason
+	// symbol2 and shuts down.
+	CancelRequest: func(symbol2) begin
+		(if (status = 'Connecting) then begin
+				abortCall := true;
+				nil
+			end else begin
+				abortCall := nil;
+				self:ItemCompleted(currentItem, nil, symbol2);
+				self:Shutdown();
+				true
+			end)
+	end,
+	dataTypes: [|Array|: ],
+	// The endpoint finished dialing; error -54021 is reported as no dial tone.
+	MakeOutgoingDone: func(error) begin
+		if (error = -54021) then begin
+				error := kModemErrNoDialTone
+			end;
+		GetRoot().(appSymbol):DialingComplete(error)
+	end,
+	// The status text, with the name of the other party or of the service.
+	GetStatusString: func() begin
+		local text, name;
+		text := inherited:?GetStatusString();
+		if ((((status = 'DialingTo) or (status = 'DialingDoneTo)) or (status = 'DialingDoneFrom)) or (status = 'RingingFrom)) then begin
+				if StrFilled((name := currentItem.name)) then begin
+						text := ParamStr(text, [Array: name])
+					end else begin
+						if (status = 'RingingFrom) then begin
+								text := dialogStatusMsgs.Ringing
+							end else begin
+								text := dialogStatusMsgs.DialingDone
+							end
+					end
+			end else begin
+				if (status = 'Connecting) then begin
+						text := ParamStr(text, [Array: transportProvider.name])
+					end
+			end;
+		text
+	end,
+	// the transport's preferences, kept by GetConfig/SetConfig
+	defaultConfiguration: {
+		phonenocalllogging: nil,
+		phoneAutoReceive: nil,
+		phoneCompletedFiling: 'completed,
+		phoneCompletedLogging: 'log,
+		autoStatus: true,
+		enableAutoUI: nil
+	},
+	transportProvider: nil,
+	// Starts waiting for calls on the user's dialing service.
+	StartAutoReceive: func() begin
+		if currentItem then begin
+				self:ItemCompleted(currentItem, nil, nil)
+			end;
+		(try begin
+				self:SetTransportProvider(GetUserConfig('currentDialSpeaker));
+				if (not callEndpoint) then begin
+						self:InstallEndpoint(transportProvider, nil);
+						self:CloseStatusDialog(nil)
+					end;
+				self:UpdateStatusSlots('Listening, nil, nil)
+			end onexception |evt.ex| do begin
+				(if self:HandleThrow() then self:Shutdown())
+			end)
+	end,
+	modalStatus: nil,
+	// Completes call item a1: hangs up an active call and logs the item (with
+	// a symbol error, such as 'userCancel, kept as its hangupreason).
+	ItemCompleted: func(a1, state2, error) begin
+		local state;
+		// ROM BUG (fixed): the call is hung up only if the status is one of a
+		//  call's - but it is read after SetStatusDialog has made it 'HangingUp
+		//  (or 'cancelling), so the endpoint is never told: the keypad's Hang
+		//  Up (CancelRequest) logs the call and leaves it up.  Unseen on a
+		//  MessagePad, whose built-in "Speaker" provider has no endpoint (the
+		//  call is the handset's); a provider that holds the call - the host's
+		//  cellular one, docs/host-tdeck-pro-phone.md - must be told.  The fix
+		//  reads the status from before; with NEWTON_ROM_BUGS=1 (RomBugFixed()
+		//  nil) the ROM's code runs.
+		local callStatus := status;
+		self:SetStatusDialog((if (status = 'cancelling) then 'cancelling else 'HangingUp), 'vStatus, {primary: nil});
+		if not RomBugFixed() then
+			callStatus := status;
+		if (if callEndpoint then ((((((callStatus = 'DialingDone) or (callStatus = 'DialingDoneTo)) or (callStatus = 'DialingDoneFrom)) or (callStatus = 'RingingFrom)) or (callStatus = 'AnswerInProgress)) or (callStatus = 'DialingTo))) then begin
+				try begin
+						callEndpoint:hangup(nil)
+					end onexception |evt.ex| do begin end
+			end;
+		manualStatus := true;
+		if a1 then begin
+				state := a1.state;
+				if IsInstance(error, 'symbol) then begin
+						a1.error := 0;
+						a1.hangupreason := error;
+						error := nil
+					end;
+				if ((error = nil) or (error = 0)) then begin
+						state := 'log
+					end;
+				a1.endTime := TimeInSeconds();
+				inherited:ItemCompleted(a1, state, error)
+			end;
+		currentItem := nil;
+		self:CloseStatusDialog(nil)
+	end,
+	manualStatus: true,
+	// An incoming call answered (or not): the transport's DialingComplete with
+	// result a1.
+	AnswerIncomingDone: func(a1) begin
+		GetRoot().(appSymbol):DialingComplete(a1)
+	end,
+	debug: 8202,
+	// A new, empty call item.
+	NewItem: func(viewfrontmostapp) begin
+		local l1;
+		(l1 := inherited:NewItem(viewfrontmostapp)).toRef := nil;
+		l1.fromRef := nil;
+		l1.phoneNumber := "";
+		l1.name := "";
+		l1.numberToDial := "";
+		l1.callDate := nil;
+		l1.startTime := 0;
+		l1.endTime := 0;
+		l1.serviceProvider := GetUserConfig('currentDialSpeaker);
+		l1.saveAsLog := (not self:GetConfig('phonenocalllogging));
+		l1.fromCallApp := nil;
+		l1.state := nil;
+		l1.Connect := true;
+		l1
+	end,
+	abortCall: nil,
+	callEndpoint: nil,
+	// the Phone preferences slip: where new calls are stored, what is done with
+	// completed calls, and which service receives calls (shown only when
+	// enableAutoUI); waiting for calls is started or stopped as it closes
+	preferencesForm: {
+		viewBounds: {left: 0, top: 0, right: 215, bottom: 130},
+		viewJustify: vjParentCenterH + vjParentCenterV,
+		overview: phoneHome,
+		appSymbol: '|PhoneHome:Newton|,
+		wasAutoReceive: nil,
+		transport: nil,
+		// Without the receive-calls interface (enableAutoUI) the slip is shorter and
+		// receiving is off; otherwise remembers whether calls were being received
+		// (and only while the transport is busy).
+		viewSetupFormScript: func() begin
+			transport := GetRoot().(appSymbol);
+			if (not transport:GetConfig('enableAutoUI)) then begin
+					transport:SetConfig('phoneAutoReceive, nil);
+					(viewBounds := Clone(viewBounds)).bottom := (viewBounds.bottom - 24)
+				end;
+			if (wasAutoReceive := transport:GetConfig('phoneAutoReceive)) then begin
+					wasAutoReceive := (transport.status <> 'idle);
+					transport:SetConfig('phoneAutoReceive, wasAutoReceive)
+				end;
+			SetKeyView(self, 0)
+		end,
+		// Starts or stops waiting for calls if the setting changed.
+		viewQuitScript: func() begin
+			local phoneAutoReceive;
+			(if (if (phoneAutoReceive := transport:GetConfig('phoneAutoReceive)) then (wasAutoReceive = nil)) then transport:StartAutoReceive() else (if (if (not phoneAutoReceive) then (wasAutoReceive = true)) then transport:StopAutoReceive()))
+		end,
+		ReOrientToScreen: @defRotateFunc,
+		viewChildren: [viewChildren:
+			{
+				title: nil,
+				// The title: "<transport> Preferences".
+				viewSetupFormScript: func() begin
+					title := ParamStr("^0 Preferences", [Array: transport.title]);
+					inherited:viewSetupFormScript()
+				end,
+				_proto: @protoTitle
+			},
+			{
+				viewFont: @fontSystem10,
+				text: "Always store new calls internally",
+				viewBounds: {left: 10, top: 25, right: 10, bottom: 37},
+				viewJustify: vjCenterV + vjParentFullH + oneLineOnly,
+				// Checked as the owning application's internalStore preference.
+				viewSetupFormScript: func() begin
+					(viewValue := GetRoot().(transport.owner):GetAppPreferences().internalStore)
+				end,
+				// The slip closed: stored in the application's preferences cache.
+				viewQuitScript: func() begin
+					(if GetRoot().(transport.owner).prefsCache then (GetRoot().(transport.owner).prefsCache.internalStore := viewValue))
+				end,
+				_proto: @protoCheckbox
+			},
+			{
+				viewBounds: {left: 0, top: 10, right: 0, bottom: 42},
+				viewJustify: vjParentFullH + vjSiblingFullH + vjSiblingBottomV + oneLineOnly,
+				info: {
+					logText: "After completing a call",
+					logChoices: [|Array|: "Delete the call", "File the call"],
+					logConfig: 'phoneCompletedLogging,
+					logActions: [|Array|: nil, 'log],
+					fileText: fileIn,
+					fileChoices: [|Array|: nil, logEntries],
+					fileConfig: 'phoneCompletedFiling,
+					testMethod: 'SendRequest
+				},
+				_proto: @protoLogPicker
+			},
+			{
+				_proto: @protoTapiPicker,
+				viewBounds: {left: 0, top: 8, right: 195, bottom: 24},
+				viewJustify: vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
+				text: " Receive calls using",
+				onlyIncoming: true,
+				initialProvider: nil,
+				// Hidden without the receive-calls interface.
+				viewSetupDoneScript: func() begin
+					(if (not transport:GetConfig('enableAutoUI)) then self:Hide())
+				end,
+				// The service calls are received on: the user's dialing service, if it
+				// reports incoming calls and receiving is on; else none (receiving off).
+				DefaultProvider: func() begin
+					local currentDialSpeaker2, currentDialSpeaker;
+					if ((((not (currentDialSpeaker := GetTAPICommFrame((currentDialSpeaker2 := GetUserConfig('currentDialSpeaker))))) or (not currentDialSpeaker.config)) or (not currentDialSpeaker.config.supportsEventIncoming)) or (not transport:GetConfig('phoneAutoReceive))) then begin
+							currentDialSpeaker2 := nil
+						end;
+					transport:SetConfig('phoneAutoReceive, (currentDialSpeaker2 <> nil));
+					currentDialSpeaker2
+				end,
+				// A service picked: receiving is on only if it reports incoming calls; it
+				// becomes the user's dialing service.
+				SetProvider: func(slot) begin
+					local tAPICommFrame;
+					if (((not (tAPICommFrame := GetTAPICommFrame(slot))) or (not tAPICommFrame.config)) or (not tAPICommFrame.config.supportsEventIncoming)) then begin
+							slot := nil
+						end;
+					transport:SetConfig('phoneAutoReceive, (slot <> nil));
+					SetUserConfig('currentDialSpeaker, slot)
+				end
+			},
+			{_proto: @protoCancelButton}
+		],
+		_proto: @protoFloater
+	},
+	// The endpoint's event: a ring. The first makes a "Received" call item
+	// (with the caller's number if the service gives it) and a status dialog
+	// with Take Call; StopEventIncoming then checks after 8 seconds whether
+	// the ringing stopped.
+	EventIncoming: func() begin
+		lastRing := Ticks();
+		if (if (not dismissCall) then (status <> 'AnswerInProgress)) then begin
+				playsound(@funBeep)
+			end;
+		(if (if (status <> 'RingingFrom) then (not currentItem)) then begin
+				(currentItem := self:NewItem(nil)).callDate := Time();
+				currentItem.state := 'Received;
+				currentItem.saveAsLog := true;
+				RemoveSlot(currentItem, 'Connect);
+				if transportProvider.config.supportsCallerId then begin
+						currentItem.phoneNumber := callEndpoint:GetCallerId()
+					end;
+				self:SetStatusDialog('RingingFrom, 'vStatus, {primary: {text: "Take Call", script: func() begin
+					GetRoot().(appSymbol):receiveRequestComplete()
+				end}, closeBox: func() begin
+					GetRoot().(appSymbol).dismissCall := true;
+					GetRoot().(appSymbol):CloseStatusDialog(nil)
+				end});
+				AddDelayedCall(func() begin
+					self:StopEventIncoming()
+				end, nil, 8000)
+			end)
+	end,
+	// Dialing (or answering) finished: on success, shows the phone keypad
+	// (in the status bar, rather than a dialog, when the call is being logged).
+	DialingComplete: func(error) begin
+		local numberToDial, frame2, l3, l4;
+		if (currentItem = nil) then begin
+				return nil
+			end;
+		(try begin
+				if error then begin
+						Throw('|evt.ex.comm|, error)
+					end;
+				(if (status <> 'DialingDoneTo) then begin
+						currentItem.startTime := TimeInSeconds();
+						frame2 := {keyedDigits: (numberToDial := currentItem.numberToDial), SpeakerToggle: transportProvider.config.supportsSpeaker, closeBox: func() begin
+							GetRoot().(appSymbol):CloseStatusDialog(nil)
+						end};
+						l3 := nil;
+						if currentItem.saveAsLog then begin
+								frame2.primary := nil;
+								if (StrFilled(numberToDial) or (status <> 'DialingTo)) then begin
+										l3 := true
+									end
+							end;
+						l4 := (if (status = 'DialingTo) then 'DialingDoneTo else 'DialingDoneFrom);
+						(if l3 then begin
+								self:CloseStatusDialog(nil);
+								self:UpdateStatusSlots(l4, 'vPhoneKeypad, frame2);
+								(userClosedStatus := nil)
+							end else self:SetStatusDialog(l4, 'vPhoneKeypad, frame2))
+					end)
+			end onexception |evt.ex| do begin
+				(if self:HandleThrow() then self:Shutdown())
+			end)
+	end,
+	// Places a call: the item from the request, the number from its first
+	// Names reference; without a service the call is just logged. Opens the
+	// endpoint and dials, after the service's delay if it needs one.
+	SendRequest: func(request) begin
+		local routingInfoItem;
+		if (request.cause = 'submit) then begin
+				return nil
+			end;
+		if currentItem then begin
+				if (status = 'RingingFrom) then begin
+						self:SetStatus(status, nil);
+						dismissCall := nil;
+						self:EventIncoming();
+						return nil
+					end else begin
+						self:ItemCompleted(currentItem, nil, nil)
+					end
+			end;
+		if ((currentItem := self:ItemRequest(request)).serviceProvider = nil) then begin
+				currentItem.startTime := TimeInSeconds();
+				status := 'DialingDoneTo;
+				return nil
+			end;
+		routingInfoItem := GetDataDefs('|nameRef.phone|):GetRoutingInfo(currentItem.toRef[0])[0];
+		currentItem.numberToDial := routingInfoItem.phoneNumber;
+		// DEVIATION (host addition): a provider whose config says dialsAsWritten
+		//  - the host's cellular one (comms/host/HostCell.ns) - is given the
+		//  number as the card has it, not as the worksite's dialling rules make
+		//  it: a mobile network takes "0412 345 678" or "+61 412 345 678" as
+		//  they are, and the rules - a landline's area code and a card's
+		//  country - turned an Australian mobile number into a local call
+		//  stripped of its "04", or an international call to the US
+		//  (docs/host-tdeck-pro-phone.md).  Other providers dial as the ROM does.
+		local dialProvider := GetTAPICommFrame(currentItem.serviceProvider);
+		if dialProvider and dialProvider.config and dialProvider.config.dialsAsWritten then
+			currentItem.numberToDial := routingInfoItem.rawNumber;
+		manualStatus := currentItem.saveAsLog;
+		(try begin
+				self:SetTransportProvider(currentItem.serviceProvider);
+				if (not callEndpoint) then begin
+						self:InstallEndpoint(transportProvider, true)
+					end;
+				(if (if transportProvider.config.outgoingNeededDelay then StrFilled(currentItem.numberToDial)) then begin
+						abortCall := nil;
+						self:DelayDialing(transportProvider.config.outgoingNeededDelay)
+					end else self:FinishDialing())
+			end onexception |evt.ex| do begin
+				(if self:HandleThrow() then self:Shutdown())
+			end)
+	end,
+	// the routing slip: the service picker, Log checkbox, sender, close and Call
+	// buttons, the call options (callassist), the name and phone picker
+	// (callPhoneLine) and the number that will be dialed (willDial)
+	routingSlip: {
+		callPhoneLine: nil,
+		willDial: nil,
+		validateDialog: nil,
+		viewChildren: [viewChildren:
+			{
+				_proto: @protoTapiPicker,
+				viewBounds: {left: 10, top: 125, right: 135, bottom: 138},
+				viewJustify: oneLineOnly,
+				newProvider: nil,
+				// The service: the item's own, unless waiting for calls (then the user's).
+				DefaultProvider: func() begin
+					(if (if HasPath(fields, 'serviceProvider) then (not transport:GetConfig('phoneAutoReceive))) then fields.serviceProvider else (fields.serviceProvider := GetUserConfig('currentDialSpeaker)))
+				end,
+				// Choosing another service while calls are received on one asks first.
+				SetProvider: func(slot) begin
+					local symbol2, tAPICommFrame, transportProvider;
+					symbol2 := transport.transportProvider.symbol;
+					newProvider := slot;
+					(if (if (if transport:GetConfig('phoneAutoReceive) then slot) then (slot <> symbol2)) then begin
+							tAPICommFrame := GetTAPICommFrame(slot);
+							transportProvider := transport.transportProvider;
+							self:Confirm("PhoneHome", ParamStr("Changing the service to \u201C\u^0\u201D\u will turn off your preference to receive calls using the \u201C\u^1\u201D\u service.", [Array: tAPICommFrame.name, transportProvider.name]), self, 'ConfirmChange)
+						end else self:ConfirmChange(true))
+				end,
+				// The answer to SetProvider's question: yes takes the new service (the
+				// user's own too, unless receiving calls); no shows the old one again.
+				ConfirmChange: func(a1) begin
+					local transportProvider;
+					(if a1 then begin
+							fields.serviceProvider := newProvider;
+							(if (not transport:GetConfig('phoneAutoReceive)) then SetUserConfig('currentDialSpeaker, newProvider))
+						end else self:UpdateText((transportProvider := transport.transportProvider).name))
+				end
+			},
+			logcheck,
+			fromTransport_2,
+			_closeBox_3,
+			_defaultButton_22,
+			callassist,
+			{
+				// After the number is written in: the number to dial updated.
+				JamIt: func() begin
+					inherited:JamIt();
+					self:UpdatePhone()
+				end,
+				_proto: @protoSenderPopup
+			},
+			callPhoneLine_2,
+			willDial_2
+		],
+		ReOrientToScreen: @defRotateFunc,
+		// A number edited in the call options slip is kept with the reference
+		// (asIsPhone).
+		UpdatePhone: func() begin
+			local routingInfoItem;
+			if (if (if callOptionsSlip.viewCObject then fields.toRef) then (Length(fields.toRef) > 0)) then begin
+					if (if (if (routingInfoItem := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0]) then routingInfoItem.phoneNumber) then (StrCompare(routingInfoItem.phoneNumber, callOptionsSlip.outNumber.text) <> 0)) then begin
+							fields.toRef[0].asIsPhone := callOptionsSlip.outNumber.text
+						end
+				end;
+			self:Retarget()
+		end,
+		viewBounds: {left: 0, top: 0, right: 230, bottom: 120},
+		// The owner's info changed: the number to dial updated.
+		OwnerInfoChanged: func() begin
+			self:UpdatePhone()
+		end,
+		allocateContext: [|Array|:
+			'logcheck,
+			logcheck,
+			'fromTransport,
+			fromTransport_2,
+			'_closeBox,
+			_closeBox_3,
+			'_defaultButton,
+			_defaultButton_22,
+			'callassist,
+			callassist,
+			'callPhoneLine,
+			callPhoneLine_2,
+			'willDial,
+			willDial_2
+		],
+		_proto: @protoRouteSlip,
+		_defaultButton: nil,
+		fromTransport: nil,
+		// The number picked becomes the item's toRef, and is shown.
+		Retarget: func() begin
+			fields.toRef := callPhoneLine.selected;
+			willDial:SetWillDial()
+		end,
+		appSymbol: '|PhoneHome:Newton|,
+		viewJustify: vjParentCenterH + vjParentCenterV,
+		callassist: nil,
+		declareSelf: 'base,
+		// The item is addressed to a Names card's phone; the log checkbox readied.
+		viewSetupFormScript: func() begin
+			self:ToRefCheck('|nameRef.phone|);
+			inherited:?viewSetupFormScript();
+			logcheck:prepareThyself()
+		end,
+		_closeBox: nil,
+		debug: 2105737,
+		bottomIndent: 50,
+		logcheck: nil
+	},
+	// Dials the number, showing it in the status dialog.
+	FinishDialing: func() begin
+		(try begin
+				self:SetStatusDialog('DialingTo, 'vStatusTitle, {primary: nil, titleText: currentItem.numberToDial});
+				callEndpoint:MakeOutgoing(currentItem.numberToDial, true)
+			end onexception |evt.ex| do begin
+				(if self:HandleThrow() then self:Shutdown())
+			end)
+	end
+};
+
+phoneHome := "PhoneHome";
+
+// the Log checkbox: log the call in the Call application (always for a
+// call made from there)
+logcheck := {
+	viewBounds: {left: 0, top: 0, right: 57, bottom: 0},
+	viewJustify: vjCenterV + vjSiblingRightH + vjSiblingFullV + oneLineOnly,
+	viewValue: nil,
+	buttonValue: true,
+	viewFlags: vVisible + vClickable,
+	text: log,
+	// From the Call application: the box hidden, and the call logged.
+	prepareThyself: func() begin
+		(if fields.fromCallApp then begin
+				viewFlags := 0;
+				(fields.saveAsLog := true)
+			end)
+	end,
+	// Checked if the item says to log the call, else as the transport's
+	// setting (phonenocalllogging off).
+	viewSetupFormScript: func() begin
+		if HasPath(fields, 'saveAsLog) then begin
+				viewValue := fields.saveAsLog
+			end else begin
+				viewValue := (fields.saveAsLog := (not transport:GetConfig('phonenocalllogging)))
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	// The choice kept in the item (and in the setting).
+	viewQuitScript: func() begin
+		fields.saveAsLog := viewValue;
+		if (viewValue = true) then begin
+				fields.fromCallApp := true
+			end;
+		(if (viewValue = transport:GetConfig('phonenocalllogging)) then transport:SetConfig('phonenocalllogging, (not viewValue)))
+	end,
+	preallocatedContext: 'logcheck,
+	_proto: @protoCheckbox
+};
+
+fromTransport_2 := {preallocatedContext: 'fromTransport, _proto: @protoTransportPopup};
+
+// the close box, put at the bottom of the slip's envelope
+_closeBox_3 := {
+	viewBounds: {left: -24, top: 0, right: -11, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH,
+	// At the bottom of the envelope.
+	viewSetupFormScript: func() begin
+		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 18) - 2);
+		(viewBounds.bottom := (viewBounds.top + 13))
+	end,
+	preallocatedContext: '_closeBox,
+	_proto: @protoCancelButton
+};
+
+// the Call button: makes sure the user's location (area code and country)
+// is set, then DoCall
+_defaultButton_22 := {
+	viewBounds: {left: -32, top: 0, right: -7, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
+	text: call_2,
+	// Call: asks where the user is calling from (the area code and country)
+	// if not known, then DoCall.
+	buttonClickScript: func() begin
+		self:ValidateConfig('location, nil, '[Array: areacode, country], "Where are you calling from?", 'validateDialog, 'DoCall)
+	end,
+	// Fills in the call item from the slip and submits it.
+	DoCall: func(a1) begin
+		local routingInfoItem, fields2;
+		fields.title := transport:GetItemTitle(fields);
+		fields.fromRef := GetUserConfig('currentPersona);
+		if ((fields.toRef = nil) or (Length(fields.toRef) = 0)) then begin
+				fields.toRef := [Array: GetDataDefs('|nameRef.phone|):MakeNameRef({}, '|nameRef.phone|)];
+				fields.toRef[0].phone := ""
+			end;
+		routingInfoItem := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0];
+		fields.name := routingInfoItem.name;
+		fields.phoneNumber := routingInfoItem.rawNumber;
+		userConfiguration.currentDialNumber := routingInfoItem.rawNumber;
+		fields.error := nil;
+		fields.hangupreason := nil;
+		fields.state := 'ready;
+		fields2 := fields;
+		base:Close();
+		transport:ItemSubmit(fields2)
+	end,
+	debug: 33744,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};
+
+// the call options button: opens the call options slip on the number
+callassist := {
+	// Opens the call options slip on the number (and its country) of the first
+	// recipient.
+	buttonClickScript: func() begin
+		local routingInfoItem;
+		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
+				RemoveSlot(fields.toRef[0], 'asIsPhone);
+				routingInfoItem := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0];
+				callOptionsSlip.inNumber := routingInfoItem.rawNumber;
+				callOptionsSlip.inCountry := routingInfoItem.country
+			end else begin
+				callOptionsSlip.inNumber := nil;
+				callOptionsSlip.inCountry := nil
+			end;
+		inherited:buttonClickScript();
+		(optionsUp := callOptionsSlip.viewCObject)
+	end,
+	preallocatedContext: 'callassist,
+	_proto: @protoCallassistButton
+};
+
+// the person and phone number to call
+callPhoneLine_2 := {
+	text: name,
+	viewBounds: {left: 30, top: 50, right: -20, bottom: 63},
+	selected: nil,
+	alternatives: nil,
+	class: '|nameRef.phone|,
+	useMemory: nil,
+	// The recipients and their other numbers.
+	viewSetupFormScript: func() begin
+		selected := fields.toRef;
+		alternatives := fields.alternatives;
+		inherited:?viewSetupFormScript()
+	end,
+	// Opens the picker (closing the call options slip, and dropping any number
+	// taken as is).
+	buttonClickScript: func() begin
+		if optionsUp then begin
+				callOptionsSlip:Close()
+			end;
+		optionsUp := nil;
+		(foreach item in selected do begin
+				RemoveSlot(item, 'asIsPhone)
+			end);
+		inherited:buttonClickScript()
+	end,
+	// A number picked: retargets.
+	pickActionScript: func(index) begin
+		inherited:?pickActionScript(index);
+		self:Retarget()
+	end,
+	preallocatedContext: 'callPhoneLine,
+	_proto: @protoAddressPicker
+};
+
+// the number that will be dialed; a tap opens the call options. A number
+// written as ink is first converted (ConvertInkText as a phone field).
+willDial_2 := {
+	text: uCardPositionAlertButton,
+	asIs: nil,
+	viewBounds: {left: 10, top: 5, right: -10, bottom: 18},
+	viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	viewFont: tsSimple + tsSize(9),
+	viewFlags: vVisible + vClickable,
+	// A tap: the call options.
+	buttonClickScript: func() begin
+		callassist:buttonClickScript()
+	end,
+	viewClickScript: viewClickScript,
+	// Inverts a rounded box around the number.
+	viewHiliteScript: func(on) begin
+		local box, l2;
+		self:DrawShape(MakeRoundRect((l2 := ((((box := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (box.right - l2), box.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		true
+	end,
+	InkConvert: nil,
+	// The number to dial.
+	viewSetupDoneScript: func() begin
+		(text := self:GetPhoneText())
+	end,
+	// Closes the ink conversion slip, if open.
+	viewQuitScript: func() begin
+		if InkConvert then begin
+				InkConvert:Close()
+			end;
+		(InkConvert := nil)
+	end,
+	// Shows the number to dial again.
+	SetWillDial: func() begin
+		SetValue(self, 'text, self:GetPhoneText())
+	end,
+	// The phone number of the first recipient, "" if none; a number written as
+	// ink is converted first (deferred), the result shown when done.
+	GetPhoneText: func() begin
+		local theInfo;
+		local text;
+		text := "";
+		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
+				if IsRichString((theInfo := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0]).rawNumber) then begin
+						AddDeferredCall(func() begin
+							self:ConvertStart(theInfo)
+						end, nil)
+					end else begin
+						text := theInfo.phoneNumber
+					end
+			end;
+		text
+	end,
+	// Opens the ink conversion slip on the number written as ink.
+	ConvertStart: func(theInfo) begin
+		self:ConvertInkText(theInfo.rawNumber, 'phone, vPhoneField, ParamStr("Phone for ^0 ", [Array: theInfo.name]), ParamStr("Please verify that ^0 is converted correctly", [Array: theInfo.rawNumber]), 'InkConvert, 'ConvertComplete, theInfo)
+	end,
+	// The conversion done: the number kept in the recipient and shown (a1 nil:
+	// cancelled).
+	ConvertComplete: func(a1, a2, a3) begin
+		InkConvert := nil;
+		(if (if a1 then a2) then begin
+				fields.toRef[0].phone := a2;
+				self:SetWillDial()
+			end)
+	end,
+	debug: "willDial",
+	preallocatedContext: 'willDial,
+	_proto: @protoStaticText
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_39 := same("_closeBox_3.viewSetupFormScript.instructions");
+
+EventOnHook_code := same("basicCallTransport.EventOnHook.instructions");
+
+InstallEndpoint_code := same("basicCallTransport.InstallEndpoint.literals[5].instructions");

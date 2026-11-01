@@ -1,0 +1,6 @@
+// ValidateDone (@8282): the worksite validation slip's answer, passed on to the
+// callback CallValidate kept.
+
+export90 := func(a1) begin
+	(if self.thecallback then call self.thecallback with (a1))
+end;

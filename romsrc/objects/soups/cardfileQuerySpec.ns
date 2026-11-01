@@ -1,0 +1,4 @@
+// A query of the Names soup by unique id. A soup query specification (a querySpec frame for
+// Query). Magic pointer @46. Used by bootScriptwannabes.
+
+cardfileQuerySpec := {type: 'index, indexPath: '_uniqueID};

@@ -1,0 +1,12 @@
+// The soup of the calendar's repeating meetings. A soup definition (the soupDef frame
+// RegUnionSoup and RegSoupDef take: name, userName, ownerApp, userDescr, indexes). Magic
+// pointer @366. Used by bootSoupwannabes, globalvarwannabes.
+
+repeatMeetingSoupDef := {
+	name: @repeatMeetingName,
+	userName: "repeating meetings",
+	ownerApp: 'calendar,
+	ownerAppName: dates_2,
+	userDescr: "repeating meetings in the calendar",
+	indexes: @repeatIndices
+};

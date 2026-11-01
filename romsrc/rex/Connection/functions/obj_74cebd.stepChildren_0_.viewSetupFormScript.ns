@@ -1,5 +1,0 @@
-@@ 0x74f18d
-func() begin
-	(self.text := labels[1])
-end
-@@end

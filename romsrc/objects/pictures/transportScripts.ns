@@ -1,0 +1,8 @@
+// The icon of a transport's extra commands in the In/Out Box transport button. A 1-bit
+// bitmap frame (bits, bounds), 14 x 9 pixels. Magic pointer @774. Used by
+// ioTransportButton.
+
+transportScripts := {
+	bits: bitmap('bits, "resources/bits/463cfd.png", "00000000000401390139027a01420288", 1),
+	bounds: {left: 0, top: 0, right: 14, bottom: 9}
+};

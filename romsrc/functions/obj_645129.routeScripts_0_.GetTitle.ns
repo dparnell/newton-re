@@ -1,5 +1,0 @@
-@@ 0x4a9505
-func(a1) begin
-	(if a1 then "Duplicate")
-end
-@@end

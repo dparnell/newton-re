@@ -1,0 +1,15 @@
+// The poof sound (an item vanishing in a cloud). A 'codec sound frame whose samples the
+// tIMACodec codec decompresses (IMA ADPCM) when it is played. Magic pointer @314. Used by
+// part, protoRouteSlip.
+
+poof := {
+	sndFrameType: 'codec,
+	samplingRate: samplingRate_2,
+	codecName: tIMACodec,
+	dataType: 16,
+	bufferSize: 10240,
+	bufferCount: 4,
+	compressionType: 6,
+	compressionRatio: compressionRatio,
+	samples: imasound('samples, "resources/samples/3cf5e9.wav")
+};

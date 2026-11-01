@@ -1,5 +1,0 @@
-@@ 0x10277f1
-func() begin
-	(if (not self.viewChildren) then self:DrawShape(self:ScriptNotFound(), '{}))
-end
-@@end

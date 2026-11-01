@@ -1,0 +1,8 @@
+// A small image. A 1-bit bitmap frame (bits, bounds) with a mask, 13 x 5 pixels. Magic
+// pointer @691.
+
+bindi := {
+	mask: bitmap('mask, "resources/mask/3d62c1.png", "00000000000400b000b001de00b501eb", 1),
+	bits: bitmap('bits, "resources/bits/3d62f1.png", "00000000000400b000b001cf00b501dc", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 5}
+};

@@ -1,0 +1,102 @@
+// protoSmartCluster: a cluster of radio buttons or checkboxes made from a
+// list of titles (itemTitles), laid out in as many columns as the view's
+// height requires; childrenType says which ('radioButton or 'checkBox).
+// Methods get and set the items' text and states.
+
+protoSmartCluster := {
+	viewFormat: vfFillWhite,
+	viewFlags: vVisible + vReadOnly + vClipping,
+	// the items' titles (a placeholder by default)
+	itemTitles: [|Array|: "knuckleHead"],
+	childrenType: 'radioButton,
+	clusterValue: nil,
+	// the first item's offset (left, top) and an item's size (right: a
+	// column's width, 0 to share the width out; bottom: the height)
+	itemViewBounds: {left: 3, right: 0, top: 2, bottom: 12},
+	// getLayout(): how many rows fit in the view's height, and so how many
+	// columns the items need
+	getLayout: func() begin
+		local l1, ceiling2;
+		l1 := (self:LocalBox().bottom div (itemViewBounds.bottom + itemViewBounds.top));
+		ceiling2 := ceiling((Length(itemTitles) / l1));
+		{numRows: l1, numColumns: ceiling2}
+	end,
+	// GetTopColumnViewBounds(layout, index): the bounds of the first item of
+	// a column (the others are justified below their sibling)
+	GetTopColumnViewBounds: func(getLayout, key) begin
+		local right, l2;
+		if (if itemViewBounds then (itemViewBounds.right <> 0)) then begin
+				right := itemViewBounds.right
+			end else begin
+				right := (self:LocalBox().right div getLayout.numColumns)
+			end;
+		RelBounds((l2 := (itemViewBounds.left + ((key div getLayout.numRows) * right))), itemViewBounds.top, right, itemViewBounds.bottom)
+	end,
+	// viewSetupChildrenScript(): makes a button per title - the top of each
+	// column placed by GetTopColumnViewBounds, the rest below their sibling;
+	// each button's value is its index. An unknown childrenType is taken as
+	// 'radioButton
+	viewSetupChildrenScript: func() begin
+		if (if (childrenType <> 'radioButton) then (childrenType <> 'checkBox)) then begin
+				childrenType := 'radioButton
+			end;
+		getLayout := self:getLayout();
+		// frame2: the proto of an item below another; frame3: of a column's
+		// first item
+		frame2 := {_proto: nil, viewBounds: RelBounds(0, itemViewBounds.top, 0, itemViewBounds.bottom), viewJustify: vjSiblingFullH + vjSiblingBottomV};
+		frame3 := {_proto: nil, viewJustify: 0};
+		if (childrenType = 'radioButton) then begin
+				frame2._proto := @protoRadioButton;
+				frame3._proto := @protoRadioButton
+			end else begin
+				if (childrenType = 'checkBox) then begin
+						frame2._proto := @protoCheckbox;
+						frame3._proto := @protoCheckbox
+					end
+			end;
+		// (the decompiler puts these declarations after the uses: only layout)
+		local getLayout;
+		local frame2;
+		local frame3;
+		(self.viewChildren := (foreach key, value in itemTitles collect (if ((key mod getLayout.numRows) = 0) then {_proto: frame3, viewBounds: self:GetTopColumnViewBounds(getLayout, key), text: value, buttonValue: key} else {_proto: frame2, text: value, buttonValue: key})))
+	end,
+	// SetItemText(index, text): changes an item's title
+	SetItemText: func(a1, a2) begin
+		// looks like a ROM bug: the item is indexed by itemText, a variable
+		// found by inheritance (if at all), not by the index argument a1
+		SetValue(self:ChildViewFrames()[itemText], 'text, Clone(a2))
+	end,
+	// GetItemText(index): an item's title
+	GetItemText: func(a1) begin
+		self:ChildViewFrames()[a1].text
+	end,
+	// GetItemState(index): an item's viewValue
+	GetItemState: func(a1) begin
+		self:ChildViewFrames()[a1].viewValue
+	end,
+	// SetItemState(index, state): selects that radio button, or checks or
+	// unchecks that checkbox
+	SetItemState: func(a1, a2) begin
+		(if (childrenType = 'radioButton) then self:SetClusterValue(a1) else self:ChildViewFrames()[a1]:SetCheck(a2))
+	end,
+	// GetAllStates(): every item's viewValue, in order
+	GetAllStates: func() begin
+		(foreach item in self:ChildViewFrames() collect item.viewValue)
+	end,
+	// SetAllStates(states): checks the checkboxes from an array of states
+	// (does nothing for radio buttons)
+	SetAllStates: func(a1) begin
+		(if (childrenType = 'checkBox) then begin
+				childViewFrames := self:ChildViewFrames();
+				local childViewFrames;
+				(foreach key, value in a1 do begin
+						childViewFrames[key]:SetCheck(value)
+					end)
+			end)
+	end,
+	_proto: @protoRadioCluster
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetItemText_code := same("protoSmartCluster.GetItemText.instructions");

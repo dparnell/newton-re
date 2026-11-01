@@ -1,0 +1,7 @@
+// An up arrow of the recognition setting's popup, drawn inside. A 1-bit bitmap frame (bits,
+// bounds), 21 x 13 pixels.
+
+recogArrowUpInside := {
+	bits: bitmap('bits, "resources/bits/3d8c15.png", "0000000000040054005402d1006102e6", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 13}
+};

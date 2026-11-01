@@ -1,0 +1,312 @@
+// protoPeopleDataDef: the data definition (on protoNameRefDataDef) for
+// picking Names entries - people, owners, companies, groups and worksites -
+// in a protoListpicker, used for routing (e-mail, fax, beam ...): it shows
+// each entry's primary value (a person's name, a company ...), adds new
+// entries through the Names application (cardfile), and turns name
+// references into routing information (GetRoutingInfo, GetRoutingTitle).
+
+protoPeopleDataDef := {
+	_proto: @protoNameRefDataDef,
+	name: @cardfileSoupName,
+	class: '|nameRef.people|,
+	entryType: 'person,
+	// the slot shown in the first column, and the one each class of entry
+	// keeps it in
+	primaryPath: 'name,
+	primaryPathMapper: {person: 'name, owner: 'name, company: 'company, group: 'group, worksite: 'place},
+	preferredRouting: nil,
+	// the slot of the routing information (an address) a subclass routes to
+	routePath: nil,
+	validationFrame: @nameRefValidationFrame,
+	defaultEditTitle: "New Person",
+	// the Names soup in sorton order, keeping only the classes this lists
+	querySpec: {
+		type: 'index,
+		indexPath: 'sorton,
+		// people, companies, owners, groups, or plain frames
+		validTest: func(a1) begin
+			local cls;
+			((((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or IsSubclass(cls, 'group)) or (cls = 'frame))
+		end
+	},
+	// dataDef:MakeNameRef(object, class) - a canonical name reference holding the
+	// object's primary value in the primary path for its class; a plain string
+	// given for a name becomes {last: string}.
+	MakeNameRef: func(frame3, cls) begin
+		local canonicalNameRef, frame2, primaryPath, entryFromObj2;
+		canonicalNameRef := self:MakeCanonicalNameRef(frame3, cls);
+		primaryPath := self:GetPrimaryPath(frame3);
+		if IsFrame((entryFromObj2 := (if IsEntryAlias(frame3) then ResolveEntryAlias(frame3) else frame3))) then begin
+				if (if (not (frame2 := entryFromObj2.(primaryPath))) then IsNameRef(entryFromObj2)) then begin
+						if (entryFromObj2 := EntryFromObj(entryFromObj2)) then begin
+								frame2 := entryFromObj2.(primaryPath)
+							end
+					end
+			end else begin
+				frame2 := entryFromObj2
+			end;
+		if (if IsInstance(frame2, 'string) then (primaryPath = 'name)) then begin
+				frame2 := {last: frame2}
+			end;
+		canonicalNameRef.(primaryPath) := frame2;
+		canonicalNameRef
+	end,
+	// The slot holding the object's primary value, by its entry class
+	// (primaryPathMapper), else primaryPath.
+	GetPrimaryPath: func(a1) begin
+		local objEntryClass2, l2;
+		if (objEntryClass2 := ObjEntryClass(a1)) then begin
+				l2 := primaryPathMapper.(objEntryClass2)
+			end;
+		(if l2 then l2 else primaryPath)
+	end,
+	// dataDef:GetPrimaryValue(object, format) - the primary value (from the
+	// entry behind an alias or name reference); as 'text a name frame is
+	// "first last", as 'sortText "last, first" or the entry's sorton; empty
+	// text becomes "Untitled Person" (or the like for the entry's class) or
+	// "--", as strings of class 'string.noData.
+	GetPrimaryValue: compile(
+		constants: {
+			kLiteral_4559fd: {person: SetClass(Clone("Untitled Person"), '|string.noData|), owner: SetClass(Clone("Untitled Owner"), '|string.noData|), company: SetClass(Clone("Untitled Company"), '|string.noData|), group: SetClass(Clone("Untitled Group"), '|string.noData|), worksite: SetClass(Clone("Untitled Worksite"), '|string.noData|)},
+			kLiteral_450465: SetClass(Clone("--"), '|string.noData|)
+		},
+		func(a1, a2) begin
+			local text, resolveEntryAlias2, entryFromObj2, objEntryClass2;
+			if IsEntryAlias(a1) then begin
+					resolveEntryAlias2 := ResolveEntryAlias(a1)
+				end else begin
+					resolveEntryAlias2 := a1
+				end;
+			if IsFrame(resolveEntryAlias2) then begin
+					if IsNameRef(resolveEntryAlias2) then begin
+							if (entryFromObj2 := EntryFromObj(resolveEntryAlias2)) then begin
+									resolveEntryAlias2 := entryFromObj2
+								end
+						end;
+					if resolveEntryAlias2 then begin
+							text := resolveEntryAlias2.(self:GetPrimaryPath(a1))
+						end
+				end else begin
+					text := resolveEntryAlias2
+				end;
+			if ((a2 = 'sortText) or (a2 = 'text)) then begin
+					if IsFrame(text) then begin
+							if (a2 = 'sortText) then begin
+									text := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: text.last, text.first])
+								end else begin
+									text := ParamStr("^?0^?1^0 ^1|^0||^1|", [Array: text.first, text.last])
+								end;
+							if (if (if (a2 = 'sortText) then IsFrame(resolveEntryAlias2)) then resolveEntryAlias2.sorton) then begin
+									text := resolveEntryAlias2.sorton
+								end
+						end;
+					if ((not IsString(text)) or (not StrFilled(text))) then begin
+							if (not (objEntryClass2 := ObjEntryClass(a1))) then begin
+									objEntryClass2 := entryType
+								end;
+							if (not (text := Clone(kLiteral_4559fd.(objEntryClass2)))) then begin
+									text := Clone(kLiteral_450465)
+								end
+						end
+				end;
+			text
+		end),
+	// dataDef:Get(object, fieldPath, format) - the primary path through
+	// GetPrimaryValue; another column of a group is its number of members
+	// ("(n members)" as text); anything else as protoNameRefDataDef gets it.
+	Get: func(a1, a2, a3) begin
+		local objSlot, count;
+		if (if (not (a2 = primaryPath)) then (not (ObjEntryClass(a1) = 'group))) then begin
+				return inherited:Get(a1, a2, a3)
+			end;
+		if (a2 = primaryPath) then begin
+				return self:GetPrimaryValue(a1, a3)
+			end;
+		if IsArray((objSlot := self:GetObjSlot(a1, a2))) then begin
+				count := Length(objSlot)
+			end else begin
+				if a1.members then begin
+						count := Length(a1.members)
+					end else begin
+						count := 0
+					end
+			end;
+		(if (a3 = 'text) then return ParamStr("(^0 members)", [Array: count]) else return objSlot)
+	end,
+	// A tap on a group only toggles its selection (a group is not edited here);
+	// others as protoNameRefDataDef handles them.
+	HitItem: func(a1, trackScrollingItem) begin
+		local l1;
+		(if (ObjEntryClass(a1.nameRef) = 'group) then begin
+				trackScrollingItem:Tapped('Toggle);
+				_tapinfo := nil;
+				_dirtyPaths := nil;
+				(_dirtyValues := nil)
+			end else inherited:HitItem(a1, trackScrollingItem))
+	end,
+	// Copies slot item of nameRef into its entry; for the primary path the
+	// entry's sorton is remade too ("last first" for a person or owner,
+	// "Untitled ..." for none) and Names is told the entry's class
+	// (SetIAClass).
+	ModifyEntryPath: compile(
+		constants: {
+			kLiteral_4559fd: {person: SetClass(Clone("Untitled Person"), '|string.noData|), owner: SetClass(Clone("Untitled Owner"), '|string.noData|), company: SetClass(Clone("Untitled Company"), '|string.noData|), group: SetClass(Clone("Untitled Group"), '|string.noData|), worksite: SetClass(Clone("Untitled Worksite"), '|string.noData|)}
+		},
+		func(nameRef, entryFromObj, item) begin
+			local objEntryClass2, l2;
+			objEntryClass2 := ObjEntryClass(nameRef);
+			(if (item = primaryPathMapper.(objEntryClass2)) then begin
+					l2 := (entryFromObj.(item) := nameRef.(item));
+					entryFromObj.sorton := (if l2 then (if ((objEntryClass2 = 'person) or (objEntryClass2 = 'owner)) then (if l2.last then ParamStr("^1 ^0", [Array: l2.first, l2.last]) else (if l2.first then l2.first)) else l2) else Clone(kLiteral_4559fd.(objEntryClass2)));
+					GetRoot().cardfile:SetIAClass(entryFromObj)
+				end else (entryFromObj.(item) := nameRef.(item)))
+		end),
+	// dataDef:ModifyEntry(nameRef, paths) - as protoNameRefDataDef's, each path
+	// through ModifyEntryPath.
+	ModifyEntry: func(nameRef, equivalent) begin
+		if (entryFromObj2 := EntryFromObj(nameRef)) then begin
+				local entryFromObj2;
+				(foreach item in equivalent do begin
+						self:ModifyEntryPath(nameRef, entryFromObj2, item)
+					end);
+				EntryChangeXmit(entryFromObj2, 'entryChanged)
+			end;
+		entryFromObj2
+	end,
+	// dataDef:NewEntry(nameRef, context) - adds the new card through the Names
+	// application (cardfile:addcard), in the name reference's folder (labels).
+	// Returns the entry.
+	NewEntry: func(a1, _context) begin
+		local addcard;
+		(addcard := GetRoot().cardfile:addcard((addcard := self:PrepareToAdd(a1)).class, addcard)).labels := a1.labels;
+		self:FixupPostAdd(a1, addcard);
+		EntryChangeXmit(addcard, 'entryAdded);
+		addcard
+	end,
+	// The edited paths whose values changed: a name when either part (first,
+	// last) differs as a string, another slot when it differs and is not an
+	// equal string.
+	Equivalent: func(nameRef, _dirtyValues, _dirtyPaths) begin
+		list := [Array: ];
+		local list;
+		(foreach item in _dirtyPaths do begin
+				if (item = 'name) then begin
+						if (nameRef.name <> _dirtyValues.name) then begin
+								if (((not (if nameRef.name then _dirtyValues.name)) or (if (nameRef.name.last <> _dirtyValues.name.last) then (not (if (if nameRef.name.last then _dirtyValues.name.last) then StrEqual(nameRef.name.last, _dirtyValues.name.last))))) or (if (nameRef.name.first <> _dirtyValues.name.first) then (not (if (if nameRef.name.first then _dirtyValues.name.first) then StrEqual(nameRef.name.first, _dirtyValues.name.first))))) then begin
+										AddArraySlot(list, item)
+									end
+							end
+					end else begin
+						if (if (nameRef.(item) <> _dirtyValues.(item)) then (not (if (if IsInstance(nameRef.(item), 'string) then IsInstance(_dirtyValues.(item), 'string)) then StrEqual(nameRef.(item), _dirtyValues.(item))))) then begin
+								AddArraySlot(list, item)
+							end
+					end
+			end);
+		list
+	end,
+	// The invalid paths (ValidityCheck), the primary path checked in the slot
+	// the entry's class keeps it in; a group is always valid.
+	Validate: func(nameRef, a2) begin
+		primaryPath2 := self:GetPrimaryPath(nameRef);
+		copy := Clone(a2);
+		if (ObjEntryClass(nameRef) = 'group) then begin
+				return [Array: ]
+			end;
+		local primaryPath2;
+		local copy;
+		(foreach key, value in copy do begin
+				if (value = primaryPath) then begin
+						copy[key] := primaryPath2
+					end
+			end);
+		ValidityCheck(nameRef, validationFrame, copy, nil, nil)
+	end,
+	// One recipient's routing frame: here just its name; subclasses add the address.
+	GetItemRoutingFrame: func(item) begin
+		{name: self:Get(item, primaryPath, 'text)}
+	end,
+	// Adds to array a1 the routing frames of item2: an array's items, a group's
+	// members (its routePath slot), or the item itself.
+	RealGetRoutingInfo: func(a1, item2) begin
+		(if (item2 = nil) then return nil else (if IsArray(item2) then (foreach item in item2 do begin
+						self:RealGetRoutingInfo(a1, item)
+					end) else (if (ObjEntryClass(item2) = 'group) then (foreach item in self:Get(item2, routePath, nil) do begin
+							self:RealGetRoutingInfo(a1, item)
+						end) else AddArraySlot(a1, self:GetItemRoutingFrame(item2)))))
+	end,
+	// dataDef:GetRoutingInfo(nameRefs) - the array of routing frames for a
+	// recipient or an array of them (groups expanded).
+	GetRoutingInfo: func(toRefItem) begin
+		local list;
+		if (toRefItem = nil) then begin
+				return [Array: ]
+			end;
+		self:RealGetRoutingInfo((list := [Array: ]), toRefItem);
+		list
+	end,
+	// dataDef:GetRoutingTitle(nameRefs, width, font) - the recipients' names
+	// joined by ", " (stopping once wider than width), truncated to width in
+	// font when both are given; "None" for an empty array.
+	GetRoutingTitle: func(fromRef, a2, a3) begin
+		if (if fromRef then (IsArray(fromRef) = nil)) then begin
+				text := self:Get(fromRef, primaryPath, 'text)
+			end else begin
+				if (if fromRef then (Length(fromRef) > 0)) then begin
+						local text;
+						(foreach item in fromRef do begin
+								local text2;
+								text2 := self:Get(item, primaryPath, 'text);
+								if (if text then StrFilled(text)) then begin
+										text := ParamStr("^0, ^1", [Array: text, text2])
+									end else begin
+										text := text2
+									end;
+								if (if a3 then a2) then begin
+										if (StrFontWidth(text, a3) > a2) then begin
+												break
+											end
+									end
+							end);
+						if (if (if (if text then StrFilled(text)) then a3) then a2) then begin
+								text := StyledStrTruncate(Clone(text), a2, a3)
+							end
+					end else begin
+						text := "None"
+					end
+			end;
+		text
+	end,
+	// The entry's primary value as text, or "Anonymous".
+	TextFromEntry: func(a1) begin
+		local text;
+		if (not (if (text := self:Get(a1, primaryPath, 'text)) then StrFilled(text))) then begin
+				text := "Anonymous"
+			end;
+		text
+	end,
+	// dataDef:PrepareForRouting(nameRef) - strips what should not travel with
+	// the item: a name reference's alias to the entry. Returns it.
+	PrepareForRouting: func(a1) begin
+		// looks like a ROM bug: for an entry whose routePath holds an array, the
+		// loop below calls PrepareForRouting on a1 again rather than on each item,
+		// which would recurse without end; it is reached only for a frame that is
+		// not a name reference but has an entry class.
+		if IsNameRef(a1) then begin
+				a1._alias := nil
+			end else begin
+				if ObjEntryClass(a1) then begin
+						if (if (get := self:Get(a1, routePath, nil)) then (Length(get) > 0)) then begin
+								local get;
+								(foreach item in get do begin
+										self:PrepareForRouting(a1)
+									end)
+							end
+					end
+			end;
+		a1
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetPrimaryValue_literal19 := same("protoPeopleDataDef.GetPrimaryValue.literals[19]");

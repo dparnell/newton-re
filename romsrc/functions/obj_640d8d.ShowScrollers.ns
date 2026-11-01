@@ -1,5 +1,0 @@
-@@ 0x439725
-func() begin
-	return (if useScrollers then (self:GetTotalLines() > self:GetVisibleLines()))
-end
-@@end

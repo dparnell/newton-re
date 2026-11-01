@@ -1,0 +1,148 @@
+// phone: Setup's "Enter your Home Phone Numbers" page - home voice and fax numbers (an
+// area-code field and a local-number field each, export159) stored in the owner card's
+// phones as 'homePhone and 'homefaxPhone; the area code also goes to the home worksite.
+// The file holds the page and what only it reaches.
+
+phone := {
+	description: tapOnALine,
+	// TearDown: when the page is left, makes the two numbers (MakePhone, classed 'homePhone
+	// and 'homefaxPhone) and replaces the owner's phones of those classes with them, or adds
+	// them when there were none (an empty number is not added).
+	TearDown: func() begin
+		count := Length((phones := fPersona.phones));
+		l3 := nil;
+		l4 := nil;
+		text := "";
+		fWorkSite.AreaCode := vVoice:GetTextArea();
+		SetClass((text := MakePhone({AreaCode: vVoice:GetTextArea(), phone: vVoice:GetTextLocal()})), 'homePhone);
+		if (count > 0) then begin
+				local phones;
+				local count;
+				local l3;
+				local l4;
+				local i;
+				local text;
+				local phone;
+				(for i := 0 to (count - 1) do begin
+						if (ClassOf(phones[i]) = 'homePhone) then begin
+								phones[i] := text;
+								l3 := true
+							end
+					end)
+			end;
+		if ((l3 = nil) or (count = 0)) then begin
+				if (not StrEqual(text, "")) then begin
+						AddArraySlot(fPersona.phones, text)
+					end
+			end;
+		SetClass((phone := MakePhone({AreaCode: vFax:GetTextArea(), phone: vFax:GetTextLocal()})), 'homefaxPhone);
+		if (count > 0) then begin
+				(for i := 0 to (count - 1) do begin
+						if (ClassOf(phones[i]) = 'homefaxPhone) then begin
+								phones[i] := phone;
+								l4 := true
+							end
+					end)
+			end;
+		if ((l4 = nil) or (count = 0)) then begin
+				if (not StrEqual(phone, "")) then begin
+						AddArraySlot(fPersona.phones, phone)
+					end
+			end;
+		(fWorkSite.place := "Home")
+	end,
+	titleTExt: "Enter your Home \u000dPhone Numbers",
+	stepChildren: [stepChildren:
+		nameItem,
+		homeVoice,
+		homeFax,
+		{
+			viewBounds: {left: -5, top: 162, right: 217, bottom: 212},
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewJustify: vjParentCenterH,
+			viewClass: clPictureView,
+			icon: picture('picture, "resources/picture/7b1e69")
+		},
+		{_proto: @8352}
+	],
+	declareSelf: 'PageBase,
+	// viewSetupDoneScript: the caret in the voice number's area code.
+	viewSetupDoneScript: func() begin
+		SetKeyView(vVoice.vInputCityCode, 0);
+		inherited:?viewSetupDoneScript()
+	end,
+	debug: "phone",
+	_proto: @8353,
+	vVoice: nil,
+	stepAllocateContext: [|Array|:
+		'_defaultButton,
+		nameItem_2,
+		'vGoBackButton,
+		nameItem_3,
+		'vCloser,
+		nameItem_4,
+		'vFeedback,
+		nameItem_5,
+		'vVoice,
+		homeVoice,
+		'vFax,
+		homeFax
+	],
+	vFax: nil
+};
+
+homeVoice := {
+	entryFlags: vVisible + vClickable,
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	// viewSetupFormScript: fills the fields from the owner's 'homePhone (ParsePhone splits it
+	// into area code and local number).
+	viewSetupFormScript: func() begin
+		local phones;
+		local count;
+		local item;
+		local parsePhone2;
+		(if ((count := Length((phones := fPersona.phones))) > 0) then (foreach item in phones do begin
+					if (ClassOf(item) = 'homePhone) then begin
+							if (if ((parsePhone2 := ParsePhone(item)).AreaCode <> nil) then (not StrEqual(parsePhone2.AreaCode, ""))) then begin
+									vVoice:SetTextArea(parsePhone2.AreaCode)
+								end;
+							if (if (parsePhone2.phone <> nil) then (not StrEqual(parsePhone2.phone, ""))) then begin
+									vVoice:SetTextLocal(parsePhone2.phone)
+								end
+						end
+				end))
+	end,
+	label: "Home Voice",
+	_proto: @8351,
+	preAllocatedContext: 'vVoice
+};
+
+homeFax := {
+	label: "Home Fax",
+	// textChanged: nothing to do on a change.
+	textChanged: func() begin
+		nil
+	end,
+	entryFlags: vVisible + vClickable,
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	// viewSetupFormScript: fills the fields from the owner's 'homefaxPhone.
+	viewSetupFormScript: func() begin
+		local phones;
+		local count;
+		local item;
+		local parsePhone2;
+		(if ((count := Length((phones := fPersona.phones))) > 0) then (foreach item in phones do begin
+					if (ClassOf(item) = 'homefaxPhone) then begin
+							if (if ((parsePhone2 := ParsePhone(item)).AreaCode <> nil) then (not StrEqual(parsePhone2.AreaCode, ""))) then begin
+									vFax:SetTextArea(parsePhone2.AreaCode)
+								end;
+							if (if (parsePhone2.phone <> nil) then (not StrEqual(parsePhone2.phone, ""))) then begin
+									vFax:SetTextLocal(parsePhone2.phone)
+								end
+						end
+				end))
+	end,
+	_proto: @8351,
+	preAllocatedContext: 'vFax
+};

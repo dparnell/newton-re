@@ -1,0 +1,9 @@
+// The recognition toggle at the foot of the Names edit slips (@8212): the
+// popup of text, ink text and the recognition settings.
+
+export20 := {
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+	viewBounds: {top: -18, left: 2, right: 20, bottom: -5},
+	_recogPopup: [|Array|: 'recogText, 'recogInkText, 'pickseparator, 'recToggleSettings],
+	_proto: @recToggle
+};

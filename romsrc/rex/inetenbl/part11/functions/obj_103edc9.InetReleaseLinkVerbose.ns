@@ -1,8 +1,0 @@
-@@ 0x104d6d1
-func(a1, a2, a3) begin
-	local l1, l2;
-	l1 := InetStartUp();
-	(l2 := l1:MBuildCallback(a1, a2, a3)).fVerbose := true;
-	l1:DoEvent('RemoveLinkClient, [Array: l2])
-end
-@@end

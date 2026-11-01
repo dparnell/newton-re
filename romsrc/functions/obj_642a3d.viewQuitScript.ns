@@ -1,5 +1,0 @@
-@@ 0x43be49
-func() begin
-	(if self.powerStatusChangeSym then UnRegPowerStatusChange(powerStatusChangeSym))
-end
-@@end

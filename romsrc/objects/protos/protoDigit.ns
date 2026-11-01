@@ -1,0 +1,117 @@
+// protoDigit: one digit of a number setter (a protoDigitBase holds the
+// digits, as digitBase).  It draws a frame of the digits strip (digitSlides)
+// and steps the value up or down while the pen is held on its upper or lower
+// half, rolling the changed digits with a reveal effect.
+//   value, minValue, maxValue   the number and its limits
+//   increment   what one step adds (1 for the units digit, 10 for tens ...)
+//   GetIndex    maps the number to the frame this digit shows
+
+protoDigit := {
+	viewClass: clPictureView,
+	viewFormat: nil,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentCenterV + vjSiblingLeftH + vjSiblingCenterV,
+	viewBounds: {left: -23, top: 0, right: 0, bottom: 28},
+	viewFlags: vVisible + vClickable,
+	icon: nil,
+	digits: @digitSlides,
+	// how many frames the strip holds
+	totalFrames: 10,
+	// where in the view one frame is drawn
+	digitFrame: nil,
+	increment: 1,
+	// GetIndex(value): the frame for value - its last decimal digit
+	GetIndex: func(value) begin
+		(value mod 10)
+	end,
+	nextDigit: nil,
+	// the transfer mode the frame is drawn with
+	copyMode: modeOr,
+	// ticks between steps while the pen stays down, and before the first
+	repeatingTapDelay: 15,
+	firstTapDelay: 30,
+	currentIndex: 0,
+	// after setup: picks the frame for value and, once, works out
+	// digitFrame - one frame's size placed in the view by the view's own
+	// horizontal and vertical justification
+	viewSetupDoneScript: func() begin
+		local box, viewJustify2, l3;
+		currentIndex := self:GetIndex(value);
+		if (not (canHideDigits exists)) then begin
+				self.canHideDigits := nil
+			end;
+		(if (not digitFrame) then begin
+				(digitFrame := SetBounds(0, 0, (digits.bounds.right - digits.bounds.left), (digits.bounds.bottom - digits.bounds.top))).right := (digitFrame.right div totalFrames);
+				box := self:LocalBox();
+				if (BAnd((viewJustify2 := viewJustify), vjRightH) <> 0) then begin
+						digitFrame.left := (box.right - digitFrame.right);
+						digitFrame.right := box.right
+					end else begin
+						if (BAnd(viewJustify2, vjCenterH) <> 0) then begin
+								l3 := ((box.right - digitFrame.right) div 2);
+								digitFrame.left := l3;
+								digitFrame.right := (digitFrame.right + l3)
+							end
+					end;
+				(if (BAnd(viewJustify2, vjBottomV) <> 0) then begin
+						digitFrame.top := (box.bottom - digitFrame.bottom);
+						(digitFrame.bottom := box.bottom)
+					end else (if (BAnd(viewJustify2, vjCenterV) <> 0) then begin
+							l3 := ((box.bottom - digitFrame.bottom) div 2);
+							digitFrame.top := l3;
+							(digitFrame.bottom := (digitFrame.bottom + l3))
+						end))
+			end)
+	end,
+	// draws frame currentIndex of the strip
+	viewDrawScript: func() begin
+		DrawXBitmap(digitFrame, digits, currentIndex, copyMode)
+	end,
+	// on a tap: below the middle steps down, above it up (l2); steps once,
+	// waits firstTapDelay, then steps every repeatingTapDelay ticks until the
+	// pen is lifted; PrepareForClick and ClickDone are optional hooks
+	viewClickScript: func(unit) begin
+		local box, l2, l3;
+		InkOff(unit);
+		self:?PrepareForClick();
+		box := self:GlobalBox();
+		l2 := (if (GetPoint(firstY, unit) > ((box.bottom + box.top) div 2)) then (-increment) else increment);
+		l3 := (Ticks() + firstTapDelay);
+		(repeat self:Advance(l2); if ((l3 := (l3 - Ticks())) > 0) then begin
+					Sleep(l3)
+				end; l3 := (Ticks() + repeatingTapDelay) until StrokeDone(unit));
+		self:?ClickDone();
+		return true
+	end,
+	// Advance(delta): adds delta to value unless that leaves minValue ..
+	// maxValue (answers nil then); updates every digit of digitBase whose
+	// frame changes, rolls their union up or down, and answers the new value.
+	// The decompiler places the locals after their uses.
+	Advance: func(a1) begin
+		if (((l1 := (value + a1)) > maxValue) or (l1 < minValue)) then begin
+				return nil
+			end;
+		box := self:GlobalBox();
+		local l1;
+		local box;
+		(foreach item in digitBase:ChildViewFrames() do begin
+				local index, box2;
+				if (item <> self) then begin
+						if ((index := item:?GetIndex(l1)) <> item.currentIndex) then begin
+								item.currentIndex := index;
+								box := UnionRect(box, item:GlobalBox())
+							end
+					end
+			end);
+		value := l1;
+		currentIndex := self:GetIndex(l1);
+		box2 := digitBase:GlobalBox();
+		box := OffsetRect(box, (-box2.left), (-box2.top));
+		digitBase:RevealEffect((if (a1 > 0) then (-box.bottom) else box.bottom), box, @click, nil, nil);
+		l1
+	end,
+	// shows the frame for the current value again
+	Update: func() begin
+		currentIndex := self:GetIndex(value);
+		self:Dirty()
+	end
+};

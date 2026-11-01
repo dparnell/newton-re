@@ -1,0 +1,6 @@
+// connValidTestExclusion: for Newton Connection's selective restore, the slots
+// in which a soup's entries may differ and still be duplicates, by soup name
+// (Notes: timestamp).  TDocker::IsDuplicateEntry leaves these slots out when it
+// looks for an existing copy of an entry (src/comms/Docker.cpp).
+
+connValidTestExclusion := {notes: [|Array|: 'timestamp]};

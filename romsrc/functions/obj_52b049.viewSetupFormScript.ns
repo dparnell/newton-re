@@ -1,5 +1,0 @@
-@@ 0x52afb5
-func() begin
-	(cursor := @505:New('{}, items))
-end
-@@end

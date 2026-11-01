@@ -1,0 +1,191 @@
+// protoPalette: a scrolling strip of tiles (horizontal or vertical) showing
+// items 1 to GetItemcount() - each tile's picture is made by the user's
+// Abstract(item, box) - of which one can be selected (selectedItem). Dragging
+// the pen past either end scrolls by scrollAmount; choosing a tile calls
+// SelectItem. The overview (protoOverview) shares much of this design.
+
+protoPalette := {
+	// how many tiles fit in the view
+	maxTiles: nil,
+	viewFormat: nil,
+	// Draws the tiles' pictures (pieces) in viewStyle and the selected tile's
+	// highlight.
+	viewDrawScript: func() begin
+		local box, hiliteShape;
+		if (not viewStyle) then begin
+				viewStyle := {font: viewFont}
+			end;
+		if pieces then begin
+				self:DrawShape(pieces, viewStyle)
+			end;
+		(if hilitedIndex then begin
+				(box := self:LocalBox()).(direction) := tileSize;
+				self:hiliter((hiliteShape := self:GetHiliteShape(0, 0, box)), hilitedIndex)
+			end)
+	end,
+	viewFlags: vVisible + vClickable,
+	// how many tiles are shown (fewer than maxTiles at the end of the items)
+	numTiles: nil,
+	// a tile's length along the strip (default: the strip's thickness, square tiles)
+	tileSize: nil,
+	totalItems: nil,
+	viewBounds: {left: 5, top: 273, right: 226, bottom: 315},
+	// Makes pieces: the Abstract of each visible item from firstVisibleItem, in
+	// a box moved along the strip tile by tile, until maxTiles or Abstract
+	// returns nil (no more items); numTiles is how many.
+	SetupPieces: func() begin
+		(box := self:LocalBox()).(direction) := tileSize;
+		self.pieces := Array(maxTiles, nil);
+		local box;
+		local l2;
+		local l3;
+		l3 := (for i := 0 to (maxTiles - 1) do begin
+				local abstract;
+				if (not (abstract := self:Abstract((i + firstVisibleItem), box))) then begin
+						break i
+					end;
+				pieces[i] := abstract;
+				// the box's leading edge (left or top) moves to its trailing one, which moves on a tile
+				box.(direction) := ((box.('{right: left, bottom: top}.(direction)) := box.(direction)) + tileSize)
+			end);
+		if l3 then begin
+				SetLength(pieces, l3)
+			end;
+		(self.numTiles := Length(pieces))
+	end,
+	// how many tiles a scroll moves by ('page: as many as are shown)
+	scrollAmount: 1,
+	viewStyle: nil,
+	pieces: nil,
+	// the item in the first tile (items count from 1)
+	firstVisibleItem: 1,
+	// 'horizontal or 'vertical
+	orientation: 'horizontal,
+	// the tile highlighted (counting from 0), or nil
+	hilitedIndex: nil,
+	maxFirstItem: nil,
+	// Highlights the tile of selectedItem if it is visible, and redraws.
+	Update: func() begin
+		hilitedIndex := (if (if (if selectedItem then (selectedItem >= firstVisibleItem)) then (selectedItem < (firstVisibleItem + numTiles))) then (selectedItem - firstVisibleItem));
+		self:Dirty()
+	end,
+	// The shape that highlights a tile: the tile's box (box3) inverted (XOR);
+	// the first two arguments (where in the tile the pen is) are not used here.
+	GetHiliteShape: func(box, box2, box3) begin
+		[Array: '{transferMode: modeXor, penPattern: 0, fillPattern: 5}, MakeShape(box3)]
+	end,
+	// Called with the item tapped (a1) and the pen's place in its tile: it
+	// becomes selectedItem and SelectItem is sent. Returns true.
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+		selectedItem := a1;
+		self:SelectItem(a1);
+		true
+	end,
+	// A tap: TrackScrolling follows the pen (run through DoDrawing); if it ends
+	// on a tile, HitItem. The tap is always taken.
+	viewClickScript: func(unit) begin
+		local trackScrolling;
+		if (trackScrolling := self:DoDrawing('TrackScrolling, [Array: unit])) then begin
+				self:HitItem(trackScrolling[0], trackScrolling[1], trackScrolling[2])
+			end;
+		true
+	end,
+	// the item chosen (counting from 1), or nil
+	selectedItem: nil,
+	// Sets direction (the box slot along the strip: 'right when horizontal,
+	// 'bottom when vertical), tileSize if not given (the strip's thickness),
+	// and maxTiles.
+	CalculateTileSizes: func() begin
+		local box;
+		self.direction := '{horizontal: right, vertical: bottom}.(orientation);
+		box := self:LocalBox();
+		if (not tileSize) then begin
+				self.tileSize := box.('{right: bottom, bottom: right}.(direction))
+			end;
+		(self.maxTiles := (box.(direction) div tileSize))
+	end,
+	viewClass: clView,
+	// Follows the pen of stroke a1, highlighting the tile under it; past the
+	// strip's start or end it scrolls (ScrollBy). Off the strip's sides,
+	// nothing is under the pen. Returns [item, x, y in the tile] for the tile
+	// the pen leaves the screen on, or nil. With autoDeselect the highlight is
+	// taken off at the end.
+	TrackScrolling: func(a1) begin
+		// l1: the tile under the pen (from 0) or nil; l2, l3: the pen's place in its tile
+		local l1, l2, l3, box, hiliteShape, pt, pt2, box2, shapeBounds2, l10;
+		InkOff(a1);
+		BusyBoxControl(2);
+		playsound(@click);
+		box := self:GlobalBox();
+		(repeat pt := GetPoint(finalX, a1); pt2 := GetPoint(finalY, a1); l2 := (pt - box.left); l3 := (pt2 - box.top); if (direction = 'right) then begin
+					l2 := (l2 mod tileSize)
+				end else begin
+					l3 := (l3 mod tileSize)
+				end; if (not hiliteShape) then begin
+					(box2 := self:LocalBox()).(direction) := tileSize;
+					shapeBounds2 := ShapeBounds((hiliteShape := self:GetHiliteShape(l2, l3, box2)));
+					shapeBounds2 := RelBounds(box.left, box.top, (shapeBounds2.right - shapeBounds2.left), (shapeBounds2.bottom - shapeBounds2.top))
+				end; if ((if (direction = 'right) then ((pt2 < shapeBounds2.top) or (pt2 > shapeBounds2.bottom))) or (if (direction = 'bottom) then ((pt < shapeBounds2.left) or (pt > shapeBounds2.right)))) then begin
+					l1 := nil
+				end else begin
+					l1 := ((l10 := (if (direction = 'right) then (pt - box.left) else (pt2 - box.top))) div tileSize);
+					if (l10 < 0) then begin
+							self:hiliter(hiliteShape, hilitedIndex);
+							self:ScrollBy(scrollAmount);
+							hilitedIndex := (l1 := nil)
+						end else begin
+							if (l1 >= numTiles) then begin
+									self:hiliter(hiliteShape, hilitedIndex);
+									if (l1 >= maxTiles) then begin
+											self:ScrollBy((-scrollAmount))
+										end;
+									hilitedIndex := (l1 := nil)
+								end
+						end
+				end; if (l1 <> hilitedIndex) then begin
+					self:hiliter(hiliteShape, hilitedIndex);
+					self:hiliter(hiliteShape, (hilitedIndex := l1))
+				end until StrokeDone(a1));
+		(if l1 then begin
+				if autoDeselect then begin
+						self:hiliter(hiliteShape, hilitedIndex);
+						hilitedIndex := nil
+					end;
+				[Array: (l1 + firstVisibleItem), l2, l3]
+			end)
+	end,
+	// Sets up the strip: tile sizes, the last possible first item, the tiles'
+	// pictures, scrollAmount for 'page, and the highlight.
+	viewSetupChildrenScript: func() begin
+		self:CalculateTileSizes();
+		maxFirstItem := max(1, ((self:GetItemcount() - maxTiles) + 1));
+		self:SetupPieces();
+		if (scrollAmount = 'page) then begin
+				scrollAmount := numTiles
+			end;
+		(hilitedIndex := (if (if (if selectedItem then (selectedItem >= firstVisibleItem)) then (selectedItem < (firstVisibleItem + numTiles))) then (selectedItem - firstVisibleItem)))
+	end,
+	direction: nil,
+	// Draws (XOR: toggles) the highlight on tile hilitedIndex, the shape moved
+	// along the strip to it; nothing for nil.
+	hiliter: func(hiliteShape, hilitedIndex) begin
+		(if hilitedIndex then self:DrawShape(hiliteShape, {transform: (if (direction = 'right) then [Array: (hilitedIndex * tileSize), 0] else [Array: 0, (hilitedIndex * tileSize)])}))
+	end,
+	// Scrolls by a1 tiles (kept within 1..maxFirstItem); if that moved, remakes
+	// the pictures and highlight, tells the user (Scrolled, if defined) and
+	// redraws with the screen locked.
+	ScrollBy: func(a1) begin
+		local firstVisibleItem2;
+		firstVisibleItem2 := firstVisibleItem;
+		(if ((firstVisibleItem := max(1, min((firstVisibleItem + a1), maxFirstItem))) <> firstVisibleItem2) then begin
+				self:LockScreen(true);
+				self:SetupPieces();
+				self:Update();
+				self:?Scrolled();
+				RefreshViews();
+				self:LockScreen(nil)
+			end)
+	end,
+	// non-nil: the highlight goes when the pen is lifted
+	autoDeselect: nil
+};

@@ -1,5 +1,0 @@
-@@ 0x45b3a5
-func() begin
-	Stringer([Array: LatitudeToString(latitude), " ", $ , " ", LongitudeToString(longitude)])
-end
-@@end

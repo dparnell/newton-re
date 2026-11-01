@@ -1,0 +1,24 @@
+// An item of a panel's list (@8305): a bullet and its text; a tap launches the
+// formula (LaunchFormula).
+
+export113 := {
+	text: changeMe,
+	viewBounds: {top: 0, left: 10, right: -10, bottom: 16},
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV + oneLineOnly,
+	viewFont: @fontSystem10Bold,
+	// Puts a bullet before the text.
+	viewSetupFormScript: func() begin
+		(self.text := Stringer([Array: "\u2022\u", " ", text]))
+	end,
+	// A tap launches the formula.
+	viewClickScript: func(unit) begin
+		self:LaunchFormula();
+		return true
+	end,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	_proto: @protoStaticText
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_literal1 := same("export113.viewSetupFormScript.literals[1]");

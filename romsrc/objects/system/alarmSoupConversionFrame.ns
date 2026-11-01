@@ -1,0 +1,14 @@
+// alarmSoupConversionFrame: DataConversionRegistry's converter for the alarms
+// soup (globalHeapvarwannabes.ns), found by GetConversionFrame('alarms).  Its
+// Convert(body, fromVersion, toVersion, ...) is sent with data format version
+// symbols such as 'oneO and 'twoO (1.x and 2.x data).
+
+alarmSoupConversionFrame := {
+	// Convert(body, fromVersion, toVersion, ...): see below.
+	Convert: func(body, a2, a3, a4) begin
+		// returns nil (the entry is not converted) when converting from 'oneO.
+		// looks like a ROM bug: it tests toVersion against 'one0 (a zero, not the letter
+		// O) and returns `entry`, a variable it does not have, rather than body
+		(if (if (a2 <> 'oneO) then (a3 <> 'one0)) then entry)
+	end
+};

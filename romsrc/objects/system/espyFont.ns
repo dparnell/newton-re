@@ -1,0 +1,23 @@
+// espyFont: magic pointer @80, the font family frame of the System (Espy)
+// font, the font tsSystem names: its screen font data (plain and bold sfnt),
+// the PostScript font that stands in for it when printing (Helvetica at
+// psScale 1.0, a 16.16 fixed-point number), and the sizes the user is offered.
+
+espyFont := {
+	name: @systemSoupName,
+	encoding: 0,
+	macFontID: 0,
+	screenSym: 'espyFont,
+	psName: 'helvetica,
+	psScale: 65536,
+	badFontMap: 1,
+	plainData: sfnt('sfnt, "resources/sfnt/3db801"),
+	boldData: sfnt('sfnt, "resources/sfnt/3e21c1"),
+	italicData: nil,
+	boldItalicData: nil,
+	userSizes: userSizes,
+	usable: nil,
+	tsID: tsSystem
+};
+
+userSizes := [|Array|: 9, 10, 12, 18];

@@ -1,0 +1,7 @@
+// canonicalCaretInfo, and what only it reaches
+//
+// The frame GetCaretInfo() answers, and the root's saved selections
+// (src/views/ViewNatives.cpp, RootView.cpp): the key view and its selection
+// (a canonicalParaCaretInfo or canonicalEditCaretInfo).
+
+canonicalCaretInfo := {view: nil, info: nil};

@@ -1,0 +1,58 @@
+// locationPopup: protoLocationPopup, a pop-up holding a locationPicker.
+// Opened by :New(params, bbox, context): params.spots the location soup
+// (cities by default), .default the place to start at, .result the slot of
+// the picked entry to return, .nameBased to list by name only. It calls
+// context:pickActionScript(entry or its result slot), or
+// pickCancelledScript if nothing was picked.
+
+locationPopup := {
+	viewBounds: {left: 0, top: 0, right: 140, bottom: 198},
+	viewFormat: vfFillWhite,
+	spots: @citySoupName,
+	countryAndName: true,
+	initialSpot: nil,
+	result: nil,
+	returnSlot: nil,
+	// Opens the popup with the params above.
+	New: func(a1, a2, a3) begin
+		local init;
+		(init := self:Init()).context := a3;
+		if a1.spots then begin
+				init.spots := a1.spots
+			end;
+		init.initialSpot := a1.default;
+		init.returnSlot := a1.result;
+		if HasPath(a1, 'nameBased) then begin
+				init.countryAndName := (not nameBased)
+			end else begin
+				init.countryAndName := (init.spots = @citySoupName)
+			end;
+		init:popup(a2)
+	end,
+	// The close box: hands the pick to the context.
+	Affirmative: func() begin
+		(if result then context:?pickActionScript((if returnSlot then result.(returnSlot) else result)) else context:?pickCancelledScript())
+	end,
+	viewChildren: [|Array|:
+		picker_2,
+		// a close box that counts as closing, not cancelling
+		{
+			viewBounds: {left: -20, top: -20, right: -7, bottom: -7},
+			// Closes, not cancelled.
+			buttonClickScript: func() begin
+				cancelled := nil;
+				inherited:buttonClickScript()
+			end,
+			_proto: @protoCancelButton
+		}
+	],
+	picker: nil,
+	allocateContext: [|Array|: 'picker, picker_2],
+	_proto: @protoGeneralPopup
+};
+
+picker_2 := {preallocatedContext: 'picker, _proto: @locationPicker};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Affirmative_code := same("locationPopup.Affirmative.instructions");

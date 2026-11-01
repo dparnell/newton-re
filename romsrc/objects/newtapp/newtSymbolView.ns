@@ -1,0 +1,30 @@
+// newtSymbolView: the editable version of newtroSymbolView: text written is stored as
+// the symbol textFrame has for it (or interned).  Not in the NPR.
+//
+// This file holds newtSymbolView and what only it reaches.
+
+newtSymbolView := {
+	_proto: @newtroSymbolView,
+	// looks like a ROM bug: vDateField, probably carried over from newtTextDateView;
+	// nothing here wants a date recognised
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vDateField,
+	// the user changed the text: store the symbol for the text written (unchanged when textFrame has no symbol with that text, or the text is empty) in target.(path) and start the flush timer
+	// (not while Retarget sets the text: then the view's hack slot is true)
+	viewChangedScript: func(slot, view) begin
+		(if (if (not GetVariable(view, 'hack)) then (slot = 'text)) then begin
+				if StrFilled(view.(slot)) then begin
+						if textFrame then begin
+								(foreach key, value in textFrame do begin
+										if StrEqual((if textFramePath then value.(textFramePath) else value), view.(slot)) then begin
+												GetVariable(view, 'target).(path) := key;
+												break
+											end
+									end)
+							end else begin
+								GetVariable(view, 'target).(path) := Intern(view.(slot))
+							end
+					end;
+				self:StartFlush()
+			end)
+	end
+};

@@ -1,0 +1,7 @@
+// The A-Z index tabs (as the Names application shows them). A 1-bit bitmap frame (bits,
+// bounds), 237 x 18 pixels. Magic pointer @396. Used by azTabs.
+
+aztabsBitmap := {
+	bits: bitmap('bits, "resources/bits/43cd7d.png", "00000000002000fe00fe000c011000f9", 1),
+	bounds: {left: 0, top: 0, right: 237, bottom: 18}
+};

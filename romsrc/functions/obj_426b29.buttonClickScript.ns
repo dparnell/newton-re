@@ -1,5 +1,0 @@
-@@ 0x426b09
-func() begin
-	self:Parent():buttonClickScript()
-end
-@@end

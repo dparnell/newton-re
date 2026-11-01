@@ -1,0 +1,150 @@
+// The Custom edit view (@8217's 'custom view): the card's custom fields
+// (custom1-custom10), each a line labelled with the label the user gave it,
+// and a button to edit the labels.
+
+custom := {
+	name: custom_2,
+	symbol: 'custom,
+	type: 'custom,
+	stepChildren: [stepChildren:
+		text,
+		editCustomLabels,
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 7},
+			viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewClass: clView
+		}
+	],
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|:
+			'custom1,
+			'custom2,
+			'custom3,
+			'custom4,
+			'custom5,
+			'custom6,
+			'custom7,
+			'custom8,
+			'custom9,
+			'custom10
+		],
+		// "Label: value" for each filled field that has a label, a line each.
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			text := "";
+			if (customInfo := GetRoot().cardfile:GetCustomInfo()) then begin
+					local customInfo;
+					local l2;
+					local text;
+					(foreach key, value in v20_wwwwwwwwwwvvvvvv do begin
+							if (if (if StrFilled(value) then (l2 := customInfo.(checkPaths[key]))) then StrFilled(l2.label)) then begin
+									if StrFilled(text) then begin
+											text := Stringer([Array: text, "\n"])
+										end;
+									text := Stringer([Array: text, ParamStr("^0: ^1", [Array: customInfo.(checkPaths[key]).label, value])])
+								end
+						end)
+				end;
+			text
+		end,
+		// Draws those lines, keeping each line's field in misc for a tap.
+		shapeFunc: func(a1, a2, a3, a4) begin
+			l4 := [Array: ];
+			l5 := [Array: ];
+			l6 := FontAscent(a4.font);
+			l7 := fontHeight(a4.font);
+			l8 := a2.left;
+			l9 := a2.right;
+			if (l1 := GetRoot().cardfile:GetCustomInfo()) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					local l6;
+					local l7;
+					local l8;
+					local l9;
+					(foreach l10, l11 in a1 do begin
+							if (if (if StrFilled(l11) then (l2 := l1.(checkPaths[l10]))) then StrFilled(l2.label)) then begin
+									l3 := ParamStr("^0: ^1", [Array: l1.(checkPaths[l10]).label, l11]);
+									a2.bottom := (a2.top + l6);
+									AddArraySlot(l5, MakeText(l3, l8, a2.top, l9, a2.bottom));
+									AddArraySlot(l4, checkPaths[l10]);
+									a2.top := (a2.top + l7)
+								end
+						end)
+				end;
+			(if (Length(l5) > 0) then {shape: l5, misc: l4})
+		end,
+		// A tap on a line hilites it and opens the edit slip on that field.
+		actionFunc: func(a1, a2, a3, box, target, path, misc) begin
+			local l1, l2, fontHeight2, l4;
+			fontHeight2 := fontHeight(a3.viewFont);
+			l1 := (a2 div fontHeight2);
+			box.top := (box.top + (l1 * fontHeight2));
+			box.bottom := (box.top + fontHeight2);
+			a3:DoDrawing('Hiliter, [Array: MakeShape(box)]);
+			GetRoot().cardfile:ShowEditSlip('custom, misc[l1], nil, nil, nil);
+			true
+		end
+	},
+	protection: 'private,
+	fieldOrder: nil,
+	_proto: @8240,
+	customData: nil,
+	stepAllocateContext: [|Array|: 'customData, text, 'gotoCustomEditor, editCustomLabels],
+	gotoCustomEditor: nil
+};
+
+// A custom field's line: labelled with the field's label (when it has one),
+// remembering what was written in that field before.
+text := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	path: nil,
+	label: "text",
+	addPaths: nil,
+	// Takes the field's label (truncated to half the width) and its memory slot.
+	viewSetupFormScript: func() begin
+		local customInfo, box;
+		if (if (customInfo := self:GetCustomInfo()) then customInfo.(path)) then begin
+				box := self:parent():LocalBox();
+				StyledStrTruncate((label := Clone(customInfo.(path).label)), (((box.right - box.left) - 25) div 2), viewFont);
+				self.memory := (if IsSymbol(path) then path else path[0])
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	// Marks the value a custom field string (string.custom) and saves the card.
+	viewQuitScript: func() begin
+		if target.(path) then begin
+				SetClass(target.(path), '|string.custom|);
+				self:StartFlush()
+			end;
+		inherited:?viewQuitScript()
+	end,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'customData
+};
+
+// "Edit Custom Labels": closes the slip and opens the label editor.
+editCustomLabels := {
+	// Closes the slip (deferred) and opens the label editor.
+	buttonClickScript: func() begin
+		AddDeferredSend(base, Close, '[Array: ]);
+		self:EditCustomLabels()
+	end,
+	text: "Edit Custom Labels",
+	viewBounds: {left: 0, top: 7, right: 99, bottom: 20},
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV + oneLineOnly,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'gotoCustomEditor
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+formatFunc_literal9 := same("custom.infoFrame.formatFunc.literals[9]");
+
+shapeFunc_literal17 := same("custom.infoFrame.shapeFunc.literals[17]");

@@ -1,5 +1,0 @@
-@@ 0x4f7b69
-func(a1) begin
-	PressButton(statusbar.actionButton)
-end
-@@end

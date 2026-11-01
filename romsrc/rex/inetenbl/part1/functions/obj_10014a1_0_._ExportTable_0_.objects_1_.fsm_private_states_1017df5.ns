@@ -1,6 +1,0 @@
-@@ 0x1017df5
-func(a1) begin
-	self:?DoErrorCallback("Endpoint Listen", a1);
-	self:DoEvent('UnBind, nil)
-end
-@@end

@@ -1,0 +1,9 @@
+// Strings several of the Formulas panels share (naturalize.py put them here).
+
+formulas := "Formulas";
+
+staticText := "Static Text";
+
+changeMe := "Change Me";
+
+interestRate := "Interest Rate (%)";

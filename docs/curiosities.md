@@ -2400,7 +2400,7 @@ handset's mouthpiece. Nothing in the ROM can ring the Newton, and the
 it has had (`docs/host-tdeck-pro-phone.md`).
 
 That is also why a bug in it never showed. The keypad's Hang Up runs
-`CancelRequest` → `ItemCompleted` (`obj_6471d9.ItemCompleted`), which
+`CancelRequest` → `ItemCompleted` (`basicCallTransport.ItemCompleted`), which
 hangs the endpoint up only if the status is one of a call's. It reads
 the status *after* `SetStatusDialog` has set it to `'HangingUp`, so the
 endpoint is never told. With "Speaker" there is no endpoint and the call
@@ -2419,7 +2419,7 @@ as `format:TextScript(item, reserved)`: "reserved: Ignore this
 parameter". A transport that handles text, such as a mail transport,
 calls it to get the item's text. But the ROM's own formats read the data
 from that parameter, not from the item: `protoFrameFormat`'s `TextScript`
-(`obj_6417cd`) asks `GetDataDefs(DataClassOf(a2))`. Passed nil, as the
+(`protoRoutingFormat`) asks `GetDataDefs(DataClassOf(a2))`. Passed nil, as the
 documentation invites, every Note answers "No Text available for this
 item". The host's text message transport (`comms/host/HostText.ns`) passes
 the item's body, resolved.
@@ -2601,3 +2601,78 @@ for an equality test, not for a sorted list's binary search; and no
 vtable in the ROM points at it, so no such comparer was ever made.
 (`docs/views/README.md`, "What nothing calls"; `docs/codebase-map.md`,
 "Build, portability and the ROM-study tools".)
+
+## A Prefs panel that is too tall is never opened
+
+The Preferences roll opens every panel through `OpenPrefsTo` (romsrc
+`builtinFunctions.OpenPrefsTo` in `objects/system/builtinFunctions.ns`): it builds a slip from a
+template (@809, a protoFloatNGo) whose `viewBounds` is `nil`, sets the
+bounds on the new context, and opens it.  The floater's base proto (@132)
+has a `viewSetupFormScript` that keeps a dragged floater on the screen:
+if its box lies outside the application area it *removes* `viewBounds`
+from the context, expecting the proto's default to take over.  Here the
+template's `nil` is what is left, and the view constructor throws -8505
+(`kViewErrNoViewBounds`) - the panel simply does not open.  On a
+MessagePad's 320x480 screen no ROM panel comes close; the host's Host
+page did, on the T-Deck Pro's 320-pixel-high screen, and was split so
+that it never meets it (`docs/host-settings.md`, "Two pages").
+
+## Eleven names cut in the wrong places
+
+The ROM keeps a short array of symbols (`_knownglobalsymbols`, the
+R-constant `R_knownglobalsymbols`; romsrc
+`objects/system/_knownglobalsymbols.ns`) that are the names of NewtApp
+and other protos - spelt as if a program had put back the capitals of
+lower-case names by finding English words in them, and found the wrong
+ones: `ProToadDressPicker` (protoAddressPicker), `ProToyEarPicker`
+(protoYearPicker), `NewTabOutView` (newtAboutView), `NewTinFoBox`
+(newtInfoBox), `NewTrollEntryView` (newtRollEntryView), `NewTenTryView`
+(newtEntryView), `ProtoValidAteSlip` (protoValidateSlip).  A symbol is
+the same whatever its case, so nothing minds.  Nothing in the C code
+reads the array.  We met them putting back the capitals of the R-constants'
+lower-case names ourselves (`tools/newton-rom/analysis/naturalize.py`'s
+`Speller`), which took the ROM's own spelling of a name wherever it had
+one - until `protoAddressPicker` came out as `ProToadDressPicker`.
+
+## Plan 9 from Groom Lake
+
+The World Clock's city info picks the city nearest where you tap
+(romsrc `objects/apps/worldClock.ns`), and one place on the map is
+special: a city at latitude 55526371 and longitude 364152580 calls the
+global function `InitiatePlan9()` before it is set as the location.
+World Clock keeps degrees in units of 360/2^29, longitude eastwards from
+nought, so that is 37.2333 N, 115.8167 W - Groom Lake, Area 51.  What
+Plan 9 (from Outer Space, presumably) does is mundane: it puts the
+Dates application's built-in meeting types (`|MeetingTypesROM-51|`, the
+51 again) back as the prototype of its meeting-type registry
+(`objects/system/builtinFunctions.ns`).  Found while commenting
+romsrc/ (2026-10-31).
+
+## A backup made on Black Tuesday
+
+When the Backup slip restores from a backup whose info has lost its
+date, it warns "Restore at your own risk!" and fills the date in as
+13584276 (romsrc `objects/slips/backupSlip.ns`).  Newton dates are
+minutes since 1904: that is 29 October 1929, 12:36 - Black Tuesday,
+the day of the Wall Street crash.
+
+## d_invertrect, in ROT13
+
+The root view has a method `q_vairegerpg` (romsrc
+`objects/system/viewRoot.ns`) that reports itself through
+`BadWickedNaughtyNoot` as undocumented and then calls `InvertRect`.  Its
+name is `d_invertrect` in ROT13: a private alias for InvertRect left in
+the ROM, with its name hidden in plain sight.
+
+## Three names in the corners of Dates Preferences
+
+The Dates Preferences slip (the "i" button, then Preferences) has an
+easter egg in its `viewClickScript` (romsrc `objects/apps/calendar.ns`,
+`prefsView`).  A tap within 3 pixels of the slip's left and top edges
+shows "Fred Tou"; within 3 pixels of the right edge and the top, "Scott
+Jenson"; within 3 pixels of the left edge and 6 of the bottom (the test
+is `bottom - 3 - 3`), "Jeremy Wyld".  The name comes up in a `protoGlance`
+(`who`, kept in the slip's slot `xyzzy` - the magic word of Colossal Cave
+Adventure) to the sound of `cuckooSound`.  The bottom right corner is
+left out because the slip's close button sits there; any other tap goes
+on to the inherited click script.

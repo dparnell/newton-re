@@ -1,0 +1,7 @@
+// canonicalPackageCallbackInfo, and what only it reaches
+//
+// The frame a package's progress callback gets while it is read in
+// (src/stores/LargeObjects.cpp): the package's name and size, its parts,
+// the part being read and how much has been read.
+
+canonicalPackageCallbackInfo := {packageName: nil, packageSize: 0, numberOfParts: 0, currentPartNumber: 0, amountRead: 0};

@@ -1,2 +1,0 @@
-obj_10005a1 := array(nil, {text: obj_100068d, TapAction: function("functions/obj_10005a1_0_.TapAction.ns"), installScript: function("functions/obj_10005a1_0_.installScript.ns"), devInstallScript: function("functions/obj_10005a1_0_.devInstallScript.ns"), devRemoveScript: function("functions/obj_10005a1_0_.devRemoveScript.ns")});
-obj_100068d := "Newton Devices";

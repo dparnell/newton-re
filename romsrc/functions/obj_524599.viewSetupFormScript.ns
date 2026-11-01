@@ -1,5 +1,0 @@
-@@ 0x521ab9
-func() begin
-	(self.maxValue := fields.body.nPages)
-end
-@@end

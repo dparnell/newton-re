@@ -1,0 +1,141 @@
+// The Net Present Value panel (@8308): periods, interest rate per period,
+// present value, future value and payment - any four give the fifth - straight
+// through the solvers (@8304).  The periods line has an "x12" button, the
+// interest rate a "/12" one.
+
+export116 := {
+	viewBounds: {left: 0, top: 0, right: 224, bottom: 225},
+	stepChildren: [stepChildren:
+		clear,
+		export111Item,
+		{
+			title: netPresentValue,
+			viewBounds: {left: 2, top: 2, right: 138, bottom: 26},
+			_proto: @protoTitle
+		},
+		export116Item,
+		export116Item_2,
+		export116Item_3,
+		export116Item_4,
+		export116Item_5
+	],
+	changeInProgress: nil,
+	solvedFor: nil,
+	// The panel's lines, in the order the solvers' list has them.
+	viewSetupDoneScript: func() begin
+		AddArraySlot((FSViews := [Array: ]), Periods);
+		AddArraySlot(FSViews, InterestRate);
+		AddArraySlot(FSViews, PresentValue);
+		AddArraySlot(FSViews, FutureValue);
+		AddArraySlot(FSViews, Payment);
+		inherited:?viewSetupDoneScript()
+	end,
+	formulaSymbol: 'NetPresentValue,
+	overview: netPresentValue,
+	_proto: @8304,
+	Periods: nil,
+	stepAllocateContext: [|Array|:
+		'Periods,
+		export116Item,
+		'InterestRate,
+		export116Item_2,
+		'PresentValue,
+		export116Item_3,
+		'FutureValue,
+		export116Item_4,
+		'Payment,
+		export116Item_5
+	],
+	InterestRate: nil,
+	PresentValue: nil,
+	FutureValue: nil,
+	Payment: nil
+};
+
+netPresentValue := "Net Present Value";
+
+// Periods (line 0).
+export116Item := {
+	calcLineLabel: "Periods",
+	// The periods for the other four values; an alert when there are none.
+	ComputeValue: func(list) begin
+		local solveForPeriod;
+		if (((solveForPeriod := self:SolveForPeriod(list[1], list[2], list[3], list[4])) = nil) or (solveForPeriod < 0)) then begin
+				solveForPeriod := nil;
+				self:Notify(kNotifyAlert, "Net Present Value", "No solution.")
+			end;
+		return solveForPeriod
+	end,
+	lineNumber: 0,
+	// Puts the caret at the end of the line's field.
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		SetKeyView(self.CalcLine.value.value, 9999)
+	end,
+	_proto: @8298,
+	preAllocatedContext: 'Periods
+};
+
+// Interest rate per period, % (line 1).
+export116Item_2 := {
+	calcLineLabel: interestRate,
+	// The rate for the other four values; an alert when out of range.
+	ComputeValue: func(list) begin
+		local solveForInterestRate;
+		if ((solveForInterestRate := self:SolveForInterestRate(list[0], list[2], list[3], list[4])) = nil) then begin
+				self:Notify(kNotifyAlert, "Net Present Value", "Interest rate out of range.")
+			end;
+		return solveForInterestRate
+	end,
+	lineNumber: 1,
+	_proto: @8297,
+	preAllocatedContext: 'InterestRate
+};
+
+// Present value (line 2).
+export116Item_3 := {
+	calcLineLabel: "Present Value",
+	// The present value for the other four values.
+	ComputeValue: func(list) begin
+		local solveForPresentValue;
+		if ((solveForPresentValue := self:SolveForPresentValue(list[0], list[1], list[3], list[4])) = nil) then begin
+				self:Notify(kNotifyAlert, "Net Present Value", "Interest rate out of range.")
+			end;
+		return solveForPresentValue
+	end,
+	lineNumber: 2,
+	_proto: @8296,
+	preAllocatedContext: 'PresentValue
+};
+
+// Future value (line 3).
+export116Item_4 := {
+	calcLineLabel: "Future Value",
+	// The future value for the other four values.
+	ComputeValue: func(list) begin
+		local solveForFutureValue;
+		if ((solveForFutureValue := self:SolveForFutureValue(list[0], list[1], list[2], list[4])) = nil) then begin
+				self:Notify(kNotifyAlert, "Net Present Value", "Interest rate out of range.")
+			end;
+		return solveForFutureValue
+	end,
+	lineNumber: 3,
+	_proto: @8296,
+	preAllocatedContext: 'FutureValue
+};
+
+// Payment (line 4).
+export116Item_5 := {
+	calcLineLabel: "Payment",
+	// The payment for the other four values.
+	ComputeValue: func(list) begin
+		local solveForPayment;
+		if ((solveForPayment := self:SolveForPayment(list[0], list[1], list[2], list[3])) = nil) then begin
+				self:Notify(kNotifyAlert, "Net Present Value", "No solution.")
+			end;
+		return solveForPayment
+	end,
+	lineNumber: 4,
+	_proto: @8296,
+	preAllocatedContext: 'Payment
+};

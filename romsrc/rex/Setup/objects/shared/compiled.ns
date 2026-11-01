@@ -1,0 +1,15 @@
+// objects several roots reach, none alone (naturalize.py)
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code := same("nameItemProto.viewSetupDoneScript.instructions");
+
+viewClickScript_code := same("nameItemProto.viewClickScript.instructions");
+
+viewSetupFormScript_literal3 := same("nameItem_2.viewSetupFormScript.literals[3]");
+
+buttonClickScript_code := same("nameItem_2.buttonClickScript.instructions");
+
+viewSetupFormScript_literal10 := same("nameItem.stepChildren[0].stepChildren[8].viewSetupFormScript.literals[10]");
+
+viewSetupDoneScript_code_2 := same("nameItem.stepChildren[0].stepChildren[8].viewSetupDoneScript.instructions");

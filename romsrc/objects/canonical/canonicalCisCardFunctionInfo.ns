@@ -1,0 +1,7 @@
+// canonicalCisCardFunctionInfo, and what only it reaches
+//
+// One function of a PC Card as its CIS describes it, in a
+// canonicalSocketInfo's cisFunctions (src/pcmcia/CardInfo.cpp): the function
+// id (-1 for none) and its extension tuples.
+
+canonicalCisCardFunctionInfo := {cisFunctionId: -1, cisFunctionExts: [|Array|: ]};

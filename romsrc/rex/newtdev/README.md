@@ -20,7 +20,7 @@ builds the package file alone.
 ## What was changed, and why
 
 DEVIATION: no AppleTalk panel in the Prefs list.  Its install script
-(`part7/functions/obj_100c95d_0_.devInstallScript.ns`) registered one
+(`part[0].devInstallScript` in `part7/objects/part.ns`) registered one
 (`RegPrefs('AppleTalk, ...)`: "Connect using" a card), but the host has
 no AppleTalk (`docs/next-steps.md`, declined), so the call is taken out
 under a `// DEVIATION` comment; the link registry it sets up beside it is

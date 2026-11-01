@@ -1,5 +1,0 @@
-@@ 0x418629
-func() begin
-	{appAreaGlobalTop: displayParams.appAreaGlobalTop, appAreaGlobalLeft: displayParams.appAreaGlobalLeft, appAreaTop: displayParams.appAreaTop, appAreaLeft: displayParams.appAreaLeft, appAreaWidth: displayParams.appAreaWidth, appAreaHeight: displayParams.appAreaHeight, appAreaBounds: displayParams.appAreaBounds, buttonBarBounds: displayParams.buttonBarBounds, buttonBarPosition: displayParams.buttonBarPosition}
-end
-@@end

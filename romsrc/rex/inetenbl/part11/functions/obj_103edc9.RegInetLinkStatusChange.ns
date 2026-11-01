@@ -1,7 +1,0 @@
-@@ 0x104cb15
-func(a1, a2, a3) begin
-	local l1;
-	(l1 := InetStartUp()).fLinkClients.(a1) := l1:MBuildCallback(a1, a2, a3);
-	a1
-end
-@@end

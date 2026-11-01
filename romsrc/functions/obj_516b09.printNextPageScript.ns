@@ -1,9 +1,0 @@
-@@ 0x516a29
-func() begin
-	drawShapes := nil;
-	if oldShapes then begin
-			self:setupNextPage()
-		end;
-	drawShapes
-end
-@@end

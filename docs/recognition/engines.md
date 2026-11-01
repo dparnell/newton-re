@@ -35,7 +35,7 @@ changes ROM behaviour is a `DEVIATION`.
   0x0019cfd8) reads `userConfiguration.letterSetSelection` and calls
   `SetUpRosetta` (set 2: `UseWRec("WREC")`, word at a time) and
   `SetUpParaGraph` (anything else: `UseWRec("XRWR")`, line at a time).
-- **The slip's control is a two-button cluster.**  `romsrc` `obj_5afced`
+- **The slip's control is a two-button cluster.**  `romsrc` `LetterSetCluster`
   (`'LetterSetCluster`): "Printing (separate letters)" = 2 and "Cursive
   (connected letters)" = 0.  Its `viewSetupFormScript` accepts 0..4 and
   resets anything else to 2; `ClusterChanged` writes the value to
@@ -46,9 +46,9 @@ changes ROM behaviour is a `DEVIATION`.
   (`WordRecognizer.cpp`, `XrDomains.cpp`, `StrXrDomain.cpp`; 4 turns
   learning off), so 1, 3 and 4 are taken.  The ROM's scripts test
   `letterSetSelection <> 2` to save and load ParaGraph's letter weights
-  (`obj_63d7e5`, `obj_641585`).
+  (`@loadLetterWeights`, `@saveLetterWeights`).
 - **The example word is indexed by the letter set.**
-  `drawExampleScript` (`obj_5b033d`) draws `wordBits[letterSetSelection]`,
+  `drawExampleScript` (`wordExample`) draws `wordBits[letterSetSelection]`,
   so a new value needs an entry there (or a guard).
 
 ## What is built (the framework)
@@ -83,13 +83,13 @@ changes ROM behaviour is a `DEVIATION`.
    is marked DEVIATION.  Left as they are: `WRecIsBeingUsed()` (true only
    for Rosetta) and auto-add (only for Rosetta, `AddAutoAdd`).
 4. **The letter-set box knows the engines (in `romsrc/`), and the
-   Prefs form is grown at boot.**  The box (`obj_646c8d`, ROM magic
+   Prefs form is grown at boot.**  The box (`protoRecognitionCluster`, ROM magic
    pointer 506) is the label, the letter-set cluster and the example
    word under it, and the Setup assistant's "Describe your Handwriting"
    page and the Handwriting Recognition slip both show it.  Since the
    working tree's `romsrc/` may be changed (the byte-for-byte check
    builds the tag `romsrc-rom`), the box does the work itself:
-   - the cluster (`obj_5afced`) adds a radio button per engine from
+   - the cluster (`LetterSetCluster`) adds a radio button per engine from
      `HostWordEngines()` (`viewSetupChildrenScript`, new) and grows a row
      for each; `viewSetupFormScript` shows a chosen engine as its button;
      `ClusterChanged` keeps an engine's number in `hostWordEngine` and the
@@ -98,7 +98,7 @@ changes ROM behaviour is a `DEVIATION`.
      slot `hostEngineRow`, 13 - also the mark that the box knows the
      engines); Setup's page gives the box a fixed 125 pixels, room for
      three more rows, and its own `viewSetupFormScript` shadows the box's;
-   - the example (`obj_5b033d.drawExampleScript`) draws the chosen
+   - the example (`wordExample.drawExampleScript`) draws the chosen
      engine's own example - `HostWordEngines()`'s `example`, words of
      letters, each a stroke with a dot where the pen goes down - in place
      of the letter set's bitmaps (`wordBits`).  The unistroke engine's is

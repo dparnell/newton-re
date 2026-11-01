@@ -1,9 +1,0 @@
-@@ 0x1016f1d
-func(a1) begin
-	local l1;
-	if GetRoot().|InternetSetup:Newton| then begin
-			RemoveSlot(GetRoot(), '|InternetSetup:Newton|)
-		end;
-	call l1.NewtRemoveScript with ((l1 := a1.removeFrame))
-end
-@@end

@@ -1,0 +1,22 @@
+// protoPreferencesField: a labelled input line in a preferences panel that
+// edits one user configuration entry (configPath, a userConfiguration slot
+// symbol): it shows GetUserConfig's value and stores what is written back
+// with SetUserConfig.
+
+protoPreferencesField := {
+	viewJustify: vjSiblingBottomV,
+	viewBounds: {left: 0, top: 0, right: 230, bottom: 30},
+	// the entry line's viewFlags: text and numbers, capitalized
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vCapsRequired,
+	viewLineSpacing: 24,
+	indent: 65,
+	// protoLabelInputLine asks for the text to start with: the configuration's value
+	TextSetup: func() begin
+		GetUserConfig(configPath)
+	end,
+	// sent when the entry's text has changed: store it in the user configuration
+	textChanged: func() begin
+		SetUserConfig(configPath, text)
+	end,
+	_proto: @protoLabelInputLine
+};

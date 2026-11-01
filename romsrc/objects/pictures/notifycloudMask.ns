@@ -1,0 +1,4 @@
+// The mask of the notification slip's cloud. A QuickDraw picture (PICT). Magic pointer @74.
+// Used by protoNotifyForm.
+
+notifycloudMask := picture('picture, "resources/picture/63c7bd");

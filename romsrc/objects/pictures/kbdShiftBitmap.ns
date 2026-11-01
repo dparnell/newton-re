@@ -1,0 +1,7 @@
+// The shift key of the keyboard. A 1-bit bitmap frame (bits, bounds), 18 x 14 pixels. Magic
+// pointer @753. Used by alphaKeys.
+
+kbdShiftBitmap := {
+	bits: bitmap('bits, "resources/bits/3d78a1.png", "0000000000040149014900c9015700db", 1),
+	bounds: {left: 0, top: 0, right: 18, bottom: 14}
+};

@@ -1,5 +1,0 @@
-@@ 0x7b0b05
-func() begin
-	self:LeaveWelcomeScreen()
-end
-@@end

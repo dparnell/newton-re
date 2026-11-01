@@ -1,0 +1,68 @@
+// analogClock: the little clock face at the left of a status bar (magic pointer
+// @5, a child of protoStatusBar beside its timeField).  It draws the hour and
+// minute hands from a strip of 24 small bitmaps (smallClocks: 12 hour hands,
+// then 12 minute hands at five-minute steps) and redraws itself every five
+// minutes; tapping it toggles the timeField glance (the date, time and battery
+// level).
+
+analogClock := {
+	viewClass: clView,
+	viewFlags: vVisible + vClickable,
+	// the rounded frame round the clock (corner radius 6)
+	viewFormat: vfRound(6),
+	viewBounds: {left: 4, top: 0, right: 21, bottom: 17},
+	viewJustify: vjParentCenterV,
+	drawFillPat: 5,
+	smallClocks: {
+		bits: bitmap('bits, "resources/bits/3d8449.png", "00000000003401ab01ab003501bc01cd", 1),
+		bounds: {left: 0, top: 0, right: 408, bottom: 17}
+	},
+	handsBounds: {left: 0, top: 0, right: 17, bottom: 17},
+	hours: 0,
+	minutes: 0,
+	lastSeed: 0,
+	// sets hours and minutes (the minute hand's five-minute step, 0-11) from the
+	// clock, and returns the milliseconds to the next five-minute boundary for the
+	// idle script
+	calcTime: func() begin
+		local timeInSeconds2;
+		hours := ((minutes := ((timeInSeconds2 := TimeInSeconds()) div 60)) div 60);
+		// past 35 minutes the hour hand is drawn at the next hour
+		if ((minutes := ((minutes mod 60) div 5)) > 6) then begin
+				hours := (hours + 1)
+			end;
+		hours := (hours mod 12);
+		((300 - (timeInSeconds2 mod 300)) * 1000)
+	end,
+	// Starts the idle at the time to the next five minutes.
+	viewSetupFormScript: func() begin
+		self:SetupIdle(self:calcTime())
+	end,
+	// Draws the hour and minute hands (the time worked out again when the clock
+	// was set).
+	viewDrawScript: func() begin
+		// setTimeSeed changes when the clock is set: recompute the time and the idle
+		if (lastSeed <> setTimeSeed) then begin
+				lastSeed := setTimeSeed;
+				self:SetupIdle(self:calcTime())
+			end;
+		DrawXBitmap(handsBounds, smallClocks, hours, 0);
+		DrawXBitmap(handsBounds, smallClocks, (12 + minutes), 1)
+	end,
+	// A tap opens or closes the time field.
+	viewClickScript: func(unit) begin
+		InkOff(unit);
+		self:hilite(true);
+		timeField:Toggle();
+		self:hilite(nil);
+		true
+	end,
+	// Every five minutes: the hands moved.
+	viewIdleScript: func() begin
+		local calcTime;
+		calcTime := self:calcTime();
+		self:Dirty();
+		calcTime
+	end,
+	debug: 72801
+};

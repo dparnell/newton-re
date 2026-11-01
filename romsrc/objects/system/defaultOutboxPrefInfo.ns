@@ -1,0 +1,13 @@
+// defaultOutboxPrefInfo: the proto of protoTransportPrefs' outboxPrefs - a
+// transport preference for sent items: what to do after sending, log them
+// (outboxLogging) or file them (outboxFiling), shown when the transport handles
+// SendRequest.
+
+defaultOutboxPrefInfo := {
+	_proto: @protoPrefInfo,
+	logText: "After sending",
+	logConfig: 'outboxLogging,
+	fileConfig: 'outboxFiling,
+	testMethod: 'SendRequest,
+	sibling: 'siblingCheck
+};

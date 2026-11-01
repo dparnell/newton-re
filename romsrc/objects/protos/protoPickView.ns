@@ -1,0 +1,5 @@
+// protoPickView: the bare clPickView view class, the class of the list a
+// pop-up menu (PopupMenu, protoPicker) shows its items in. Nothing but the
+// view class over protoView.
+
+protoPickView := {viewClass: clPickView, _proto: @protoView};

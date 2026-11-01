@@ -1,5 +1,0 @@
-@@ 0x74b001
-func() begin
-	return endpoint:IdleConnection(true)
-end
-@@end

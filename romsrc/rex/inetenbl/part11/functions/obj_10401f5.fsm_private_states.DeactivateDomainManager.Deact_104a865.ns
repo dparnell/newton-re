@@ -1,9 +1,0 @@
-@@ 0x104a865
-func() begin
-	self:MUpdateProgressSlip('Update, nil, 20);
-	(if fDomainServiceFSM then begin
-			fDomainServiceFSM:DoEvent('Cancel, nil);
-			fDomainServiceFSM:DoEvent('Disconnect, [Array: self, 'MDeactivateDomainManagerCallback])
-		end else self:DoEvent('DeactivateDomainManagerSkipped, nil))
-end
-@@end

@@ -1,9 +1,0 @@
-@@ 0x440671
-func() begin
-	scrollerState := Array(ArrowCount, 0);
-	if (not scrollView) then begin
-			scrollView := self
-		end;
-	self:AdjustArrows()
-end
-@@end

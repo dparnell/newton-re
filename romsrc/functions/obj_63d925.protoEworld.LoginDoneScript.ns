@@ -1,5 +1,0 @@
-@@ 0x59eb89
-func() begin
-	self:SendNextMessage()
-end
-@@end

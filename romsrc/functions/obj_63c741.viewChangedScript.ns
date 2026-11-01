@@ -1,5 +1,0 @@
-@@ 0x442429
-func(a1, a2) begin
-	(if (if (a2 = self) then (a1 = 'value)) then a2:RedoChildren())
-end
-@@end

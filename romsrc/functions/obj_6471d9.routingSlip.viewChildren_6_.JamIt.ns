@@ -1,6 +1,0 @@
-@@ 0x532511
-func() begin
-	inherited:JamIt();
-	self:UpdatePhone()
-end
-@@end

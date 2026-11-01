@@ -1,0 +1,57 @@
+// systemConversionFrame, and what only it reaches
+//
+// The conversion of the System soup's entries from a Newton 1.x backup
+// (DataConversionRegistry's 'system entry, magic pointer 569): the user
+// configuration is copied slot by slot into this system's
+// userConfiguration, the user dictionary, modem and package-owned
+// (tag with a colon) entries are kept as they are, and the rest dropped.
+
+systemConversionFrame := {
+	// Copies the slots named in a3 (a symbol or an array of them) that body has
+	// into userConfiguration.
+	CopyValue: func(userConfiguration, body, a3) begin
+		if (ClassOf(a3) <> 'Array) then begin
+				a3 := [Array: a3]
+			end;
+		(foreach item in a3 do begin
+				if HasSlot(body, item) then begin
+						userConfiguration.(item) := body.(item)
+					end
+			end)
+	end,
+	// Converts one 1.x System soup entry, body: answers the entry to keep, or
+	// nil when it is dropped or (UserConfiguration) taken into userConfiguration.
+	Convert: func(body, a2, a3, a4) begin
+		local tag, lFetch2, beepSound;
+		(if StrEqual((tag := body.tag), "UserConfiguration") then begin
+				self:CopyValue(userConfiguration, body, '[Array: mailAccount, mailPassword, mailPhone]);
+				self:CopyValue(userConfiguration, body, '[Array: locale, Keyboard, paperSize]);
+				self:CopyValue(userConfiguration, body, '[Array: location, name, address, cityZip, company, country, countrySlot, phone, faxPhone, currentCountry, currentAreaCode, dialingPrefix, homePhone, currentPrinter, mailNetwork, callingCard, longDistanceAccess]);
+				// 1.x sleep times, in seconds: 1, 5, 10 and 30 minutes (5 by default)
+				if body.SleepTime then begin
+						if (not (lFetch2 := LFetch([Array: 60, 300, 600, 1800], body.SleepTime, 0, '|=|, nil))) then begin
+								lFetch2 := 300
+							end;
+						userConfiguration.SleepTime := lFetch2
+					end else begin
+						userConfiguration.SleepTime := 300
+					end;
+				self:CopyValue(userConfiguration, body, '[Array: actionSoundEffects, alarmSoundEffects, penSoundEffects]);
+				// only the four 1.x beep sounds are kept; anything else becomes simpleBeep
+				if (beepSound := body.beepSound) then begin
+						beepSound := LFetch('[Array: simpleBeep, wakeupBeep, funBeep, plinkBeep], body.beepSound, 0, '|=|, nil)
+					end;
+				if (not beepSound) then begin
+						beepSound := 'simpleBeep
+					end;
+				userConfiguration.beepSound := beepSound;
+				self:CopyValue(userConfiguration, body, '[Array: zapAutoReceive]);
+				self:CopyValue(userConfiguration, body, '[Array: dialing, modemSoundVolume, blinddialing, currentDialSpeaker]);
+				if body.userFolders then begin
+						|Restore1.XFolders|(body.userFolders)
+					end;
+				EntryChange(userConfiguration);
+				return nil
+			end else (if StrEqual(tag, "UserDictionary") then body else (if StrEqual(tag, "Modems") then body else (if StrPos(tag, ":", 0) then body))))
+	end
+};

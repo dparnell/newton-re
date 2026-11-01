@@ -1,7 +1,0 @@
-@@ 0x1013399
-func(a1) begin
-	local f;
-	f := func() :|romsrc:closure:10133e1|(f);
-	call f with (a1)
-end
-@@end

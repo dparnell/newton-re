@@ -1,5 +1,0 @@
-@@ 0x729c5d
-func(a1) begin
-	ParamStr("^?0^0 ||^?1^1 ||^?2^2||", a1)
-end
-@@end

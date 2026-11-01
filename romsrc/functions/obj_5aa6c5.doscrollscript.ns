@@ -1,5 +1,0 @@
-@@ 0x5aa421
-func(a1) begin
-	self:Dirty()
-end
-@@end

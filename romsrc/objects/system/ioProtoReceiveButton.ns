@@ -1,0 +1,70 @@
+// ioProtoReceiveButton (@822): the In/Out Box's Receive button (Send in the
+// Out Box): a popup of the installed transports that can receive (or send)
+// for this application; picking one starts that transport.
+
+ioProtoReceiveButton := {
+	width: nil,
+	viewBounds: {left: -57, top: 14, right: -7, bottom: 30},
+	viewJustify: vjCenterH + vjParentRightH,
+	text: receive,
+	items: nil,
+	// viewSetupFormScript: Send or Receive by the box shown; checkSlot is the
+	// transport method a transport must have to be listed.
+	viewSetupFormScript: func() begin
+		if (currentSoupSymbol = 'outbox) then begin
+				self.text := "  Send";
+				self.checkSlot := 'SendRequest
+			end else begin
+				self.text := "  Receive";
+				self.checkSlot := 'ReceiveRequest
+			end;
+		width := StdButtonWidth(text);
+		(viewBounds := Clone(viewBounds)).left := (viewBounds.right - width);
+		(_sendKeyButton := self)
+	end,
+	// buttonClickScript: pops up the transports (root children named in
+	// transports) that have checkSlot and belong to this application.
+	buttonClickScript: func() begin
+		items := [Array: ];
+		(foreach item in transports do begin
+				local l3;
+				if (if (if (l3 := GetRoot().(item)) then l3.(checkSlot)) then (l3.owner = appSymbol)) then begin
+						AddArraySlot(items, {item: l3.title, icon: l3.icon, indent: 28, transport: l3})
+					end
+			end);
+		(connectPopup := GetView(DoPopup(items, (width + 2), 0, self)))
+	end,
+	// pickActionScript(index): with nothing selected, receives (first clearing
+	// the folder filter so the new items show) or sends everything; with a
+	// selection, passes the request and the selection to the transport.
+	pickActionScript: func(index) begin
+		local transport, routing, labelsFilter2;
+		transport := items[index].transport;
+		items := nil;
+		if ((routing := self:GetTargetInfo('Routing)).target = nil) then begin
+				if (self.checkSlot = 'ReceiveRequest) then begin
+						if labelsFilter then begin
+								labelsFilter2 := labelsFilter;
+								labelsFilter := nil;
+								self:FilterChanged();
+								if filterBar then begin
+										filterBar:UpdateFilter(labelsFilter2, nil)
+									end
+							end;
+						self:TransportCall(transport, 'ReceiveRequest, [Array: {cause: 'user}])
+					end else begin
+						self:StartSend(transport, 'user, nil, nil)
+					end
+			end else begin
+				self:ScriptRequest(transport, self.checkSlot, routing.target)
+			end;
+		inherited:pickActionScript(index)
+	end,
+	// forgets the _sendKeyButton
+	viewQuitScript: func() begin
+		(_sendKeyButton := nil)
+	end,
+	_proto: @protoPopupButton
+};
+
+receive := "  Receive";

@@ -1,6 +1,0 @@
-@@ 0x441db9
-func() begin
-	currentIndex := self:GetIndex(value);
-	self:Dirty()
-end
-@@end

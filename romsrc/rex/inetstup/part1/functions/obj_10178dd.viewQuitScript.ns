@@ -1,6 +1,0 @@
-@@ 0x1018d55
-func() begin
-	newtAppBase.targetView:?StartFlush();
-	inherited:?viewQuitScript()
-end
-@@end

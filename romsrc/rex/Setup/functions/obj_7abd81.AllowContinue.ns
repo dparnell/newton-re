@@ -1,5 +1,0 @@
-@@ 0x7abf91
-func(a1) begin
-	(if a1 then _defaultButton:Open() else _defaultButton:Hide())
-end
-@@end

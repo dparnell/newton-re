@@ -1,5 +1,0 @@
-@@ 0x74c93d
-func() begin
-	self:SetTextBounds(self)
-end
-@@end

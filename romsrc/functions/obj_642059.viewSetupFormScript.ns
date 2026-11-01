@@ -1,6 +1,0 @@
-@@ 0x41a52d
-func() begin
-	displayParams := CreateDisplayParams(nil);
-	(self.viewBounds := displayParams.rootBounds)
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x5b401d
-func() begin
-	(if GetUserConfig('AlarmVolumeEqualsSystem) then self:Hide())
-end
-@@end

@@ -1,0 +1,7 @@
+// canonicalGroupee, and what only it reaches
+//
+// A child view's stand-in when ink and views are sorted (src/views/SortInk.cpp,
+// MakeKidForSort): protoed to the child's data, with its bounds; textFlags
+// carries the child's index.
+
+canonicalGroupee := {_proto: nil, viewBounds: nil, textFlags: 0};

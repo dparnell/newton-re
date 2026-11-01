@@ -1,0 +1,559 @@
+// scheduleSlip, and what only it reaches: the Assistant's "schedule" slip
+// (the root's scheduleSlip; the scheduling task, assistFrames.ns, sets totMin,
+// newTitle, nameEntries / locationEntries, event, repeatIt and action from
+// what the user wrote, and opens it).  It shows a meeting - title, date,
+// time, people and place - or, for an event (a special_event_act such as a
+// birthday), an annual event with its person and the range of years, for the
+// user to check; its Schedule button adds it to the Calendar.
+
+scheduleSlip := {
+	// the caret at the end of the title
+	viewSetupDoneScript: func() begin
+		local entryLine;
+		SetKeyView((entryLine := ScheduleTitle.entryLine), 9999)
+	end,
+	// (the Invitees picker; nameEntries: the people the Assistant found, as
+	// name references)
+	Invitees: nil,
+	nameEntries: nil,
+	newHeaderText: nil,
+	// the slots the slip's context is built with (the view system's context cache)
+	_cacheContext: {
+		Invitees: nil,
+		nameEntries: nil,
+		newHeaderText: nil,
+		newTitle: nil,
+		DateValue: nil,
+		newMtgStartTime: nil,
+		viewFlags: vClipping + vFloating + vClickable,
+		selectedLocations: nil,
+		dpSlip: nil,
+		alternativeLocations: nil,
+		viewclipper: nil,
+		_proto: nil,
+		viewCObject: nil,
+		_defaultButton: nil,
+		location: nil,
+		selectedNames: nil,
+		alternativeNames: nil,
+		repeatIt: nil,
+		event: nil,
+		totMin: nil,
+		ScheduleTitle: nil,
+		action: nil,
+		newFirstDate: nil,
+		newMtgStopTime: nil,
+		newMtgDate: nil,
+		_parent: nil,
+		newHeaderIcon: nil,
+		newStopDate: kForever,
+		base: nil,
+		locationEntries: nil
+	},
+	// the meeting forgotten, unless the slip is only being reopened for a
+	// rotation; the viewBounds a short screen gave it removed, so the proto's
+	// show again next time
+	viewQuitScript: func() begin
+		if (not rotationInProgress) then begin
+				nameEntries := nil;
+				locationEntries := nil;
+				selectedNames := nil;
+				alternativeNames := nil;
+				selectedLocations := nil;
+				alternativeLocations := nil;
+				newHeaderText := nil;
+				newTitle := nil;
+				dpSlip := nil;
+				newMtgStartTime := nil;
+				newMtgStopTime := nil;
+				newMtgDate := nil;
+				totMin := nil
+			end;
+		(if HasSlot(self, 'viewBounds) then RemoveSlot(self, 'viewBounds))
+	end,
+	preallocatedContext: 'scheduleSlip,
+	newTitle: nil,
+	DateValue: nil,
+	viewChildren: [viewChildren:
+		{
+			debug: 21204266,
+			// the slip closed
+			buttonClickScript: func() begin
+				scheduleSlip:Close()
+			end,
+			_proto: @protoCancelButton
+		},
+		_defaultButton_14,
+		// the title bar: "Meeting" or "Annual Event", with its icon
+		{
+			titleicon: nil,
+			title: nil,
+			// the heading and icon worked out when the slip was set up
+			viewSetupFormScript: func() begin
+				title := newHeaderText;
+				titleicon := newHeaderIcon;
+				inherited:viewSetupFormScript()
+			end,
+			_proto: @protoTitle
+		},
+		ScheduleTitle,
+		DateValue,
+		// "Time": the meeting's start and end, in 5-minute steps; hidden for an event
+		{
+			label: time_3,
+			labelFont: tsSystem + tsSize(9) + tsBold,
+			entryFont: tsHWFont + tsSize(10),
+			viewJustify: 0,
+			increment: 5,
+			// placed by the layout; the meeting's start and end
+			viewSetupFormScript: func() begin
+				if event then begin
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
+					end;
+				viewBounds := RelBounds(0, dpSlip.timeFieldTop, 220, 18);
+				startTime := newMtgStartTime;
+				(stopTime := newMtgStopTime)
+			end,
+			// (start, stop) picked, in minutes since 1904: kept as minutes into
+			// the day (1440 in a day) - the end at most midnight, the start at
+			// most 23:30 (1410), and an end before the start made an hour after it
+			pickActionScript: func(index, a2) begin
+				local l1, l2;
+				newMtgStartTime := (index mod 1440);
+				l1 := (index - newMtgStartTime);
+				newMtgStopTime := min((a2 - l1), 1440);
+				a2 := (l1 + newMtgStopTime);
+				l2 := 1410;
+				if (newMtgStartTime > l2) then begin
+						newMtgStartTime := l2;
+						index := (l1 + newMtgStartTime)
+					end;
+				if (newMtgStopTime < newMtgStartTime) then begin
+						newMtgStopTime := min(1440, (newMtgStartTime + 60));
+						a2 := (l1 + newMtgStopTime)
+					end;
+				inherited:pickActionScript(index, a2)
+			end,
+			debug: 741783,
+			_proto: @protoDurationTextPicker
+		},
+		Invitees,
+		location,
+		// an event's headings: "This meeting occurs on" (its date) and the
+		// range below; hidden for a meeting
+		{
+			debug: 143920,
+			viewJustify: vjBottomV + oneLineOnly,
+			viewBounds: nil,
+			viewFont: tsSystem + tsSize(9) + tsBold,
+			text: thisMeetingOccursOn,
+			// hidden for a meeting; placed by the layout
+			viewSetupFormScript: func() begin
+				if (event = nil) then begin
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
+					end;
+				(viewBounds := RelBounds(0, dpSlip.mtgMsgHeaderTop, 200, 10))
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			debug: 1392176,
+			viewJustify: vjBottomV + oneLineOnly,
+			viewBounds: nil,
+			viewFont: tsSystem + tsSize(9) + tsBold,
+			text: "This recurring event occurs between:",
+			// hidden for a meeting; placed by the layout
+			viewSetupFormScript: func() begin
+				if (event = nil) then begin
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
+					end;
+				(viewBounds := RelBounds(4, dpSlip.seriesMsgHeaderTop, 200, 10))
+			end,
+			_proto: @protoStaticText
+		},
+		// "Dates": an event's first and last date (kForever: no end); hidden
+		// for a meeting
+		{
+			label: dates,
+			labelFont: tsSystem + tsSize(9) + tsBold,
+			entryFont: tsHWFont + tsSize(10),
+			viewJustify: 0,
+			longFormat: nil,
+			shortFormat: 'numericDateStrSpec,
+			// placed by the layout, hidden for a meeting; the event's range
+			viewSetupFormScript: func() begin
+				viewBounds := RelBounds(0, dpSlip.dateRangeTop, 220, 18);
+				if (event = nil) then begin
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
+					end;
+				startTime := newFirstDate;
+				(stopTime := newStopDate)
+			end,
+			// a range picked: the event's date moved to the first date when
+			// it falls before it
+			pickActionScript: func(index, a2) begin
+				newFirstDate := index;
+				newStopDate := a2;
+				if (newFirstDate > newMtgDate) then begin
+						DateValue.Date := newFirstDate;
+						DateValue:viewSetupChildrenScript()
+					end;
+				inherited:pickActionScript(index, a2)
+			end,
+			debug: 9104503,
+			_proto: @protoDateDurationTextPicker
+		}
+	],
+	newMtgStartTime: nil,
+	// the fields' tops, worked out down the slip into dpSlip (each field's
+	// height plus 2 between them; headings 12 high): after the title, an
+	// event has people, its heading, the date, the range's heading and the
+	// range; a meeting has the date, the time, the people and the place
+	LayoutSlip: func() begin
+		local dpSlip2, l2, slipTitleHt;
+		self.dpSlip := {};
+		(dpSlip2 := dpSlip).slipTitleHt := 13;
+		dpSlip2.titleFieldHt := 70;
+		dpSlip2.dateFieldHt := 24;
+		dpSlip2.timeFieldHt := 24;
+		dpSlip2.peopleFieldHt := 22;
+		dpSlip2.locFieldHt := 22;
+		dpSlip2.repeatFieldHt := 22;
+		dpSlip2.mtgMsgHeaderTop := 0;
+		dpSlip2.dateFieldTop := 0;
+		dpSlip2.timeFieldTop := 0;
+		dpSlip2.peopleFieldTop := 0;
+		dpSlip2.locFieldTop := 0;
+		dpSlip2.repeatFieldTop := 0;
+		dpSlip2.seriesMsgHeaderTop := 0;
+		dpSlip2.dateRangeTop := 0;
+		l2 := 12;
+		slipTitleHt := dpSlip2.slipTitleHt;
+		dpSlip2.titleFieldTop := slipTitleHt;
+		slipTitleHt := ((slipTitleHt + dpSlip2.titleFieldHt) + 2);
+		(if event then begin
+				dpSlip2.peopleFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.peopleFieldHt) + 2);
+				dpSlip2.mtgMsgHeaderTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + l2) + 2);
+				dpSlip2.dateFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.dateFieldHt) + 2);
+				dpSlip2.seriesMsgHeaderTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + l2) + 2);
+				dpSlip2.dateRangeTop := slipTitleHt;
+				(slipTitleHt := ((slipTitleHt + dpSlip2.dateFieldHt) + 2))
+			end else begin
+				dpSlip2.dateFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.dateFieldHt) + 2);
+				dpSlip2.timeFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.timeFieldHt) + 2);
+				dpSlip2.peopleFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.peopleFieldHt) + 2);
+				dpSlip2.locFieldTop := slipTitleHt;
+				(slipTitleHt := ((slipTitleHt + dpSlip2.locFieldHt) + 2))
+			end)
+	end,
+	viewFlags: vClipping + vFloating + vClickable,
+	selectedLocations: nil,
+	dpSlip: nil,
+	alternativeLocations: nil,
+	// on rotation the slip is closed and opened again; rotationInProgress
+	// keeps the meeting from being forgotten (or worked out again) meanwhile
+	ReOrientToScreen: func() begin
+		rotationInProgress := true;
+		self:Close();
+		self:Open()
+	end,
+	viewBounds: {left: 0, top: 0, right: 220, bottom: 268},
+	allocateContext: [|Array|:
+		'_defaultButton,
+		_defaultButton_14,
+		'ScheduleTitle,
+		ScheduleTitle,
+		'DateValue,
+		DateValue,
+		'Invitees,
+		Invitees,
+		'location,
+		location
+	],
+	// all but the first of the count entries: the alternatives to the one chosen
+	PopOne: func(nameEntries, count) begin
+		local list;
+		ArrayMunger((list := Array((count - 1), nil)), 0, (count - 1), nameEntries, 1, nil)
+	end,
+	_proto: @protoFloater,
+	_defaultButton: nil,
+	location: nil,
+	selectedNames: nil,
+	alternativeNames: nil,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	event: nil,
+	totMin: nil,
+	ScheduleTitle: nil,
+	newFirstDate: nil,
+	declareSelf: 'base,
+	rotationInProgress: nil,
+	// (unless reopened for a rotation) the meeting worked out from totMin -
+	// its date, and an hour from its start (to midnight from 23:30 on) - the
+	// first person found chosen and the others offered, and for an event a
+	// range starting at its date with no end (kForever), for a meeting the
+	// first place found likewise; on a screen under 320 pixels high the slip
+	// is made 210 high, 8 from the top; then the layout.  Not enough memory:
+	// an alert, and the slip does not open
+	viewSetupFormScript: compile(
+		constants: {
+			// (a helper of the notation, run when the tree is built: a binary of
+			// class cls from hex digits - the two title icons below)
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_4d4505: {bits: call kBinaryFromHex with ("00000000000400a400a400d500af00e37ff80000fffc0000cccc0000fffc0000cccc0000fffc0000fccc0000fffc0000cccc0000fffc00007ff80000", 'bits), bounds: '{left: 0, top: 0, right: 14, bottom: 11}},
+			kLiteral_4d457d: {bits: call kBinaryFromHex with ("0000000000040059005900d7006400e67ffc0000fffe0000cfe60000c7c60000d3960000c1060000e7ce0000dff60000c7c60000fffe00007ffc0000", 'bits), bounds: '{left: 0, top: 0, right: 15, bottom: 11}}
+		},
+		func() begin
+			local count, nameEntries2;
+			(try begin
+					if (not rotationInProgress) then begin
+							newMtgStartTime := (totMin mod 1440);
+							newMtgDate := (totMin - newMtgStartTime);
+							if (newMtgStartTime > 1410) then begin
+									newMtgStartTime := 1410;
+									newMtgStopTime := 1440
+								end else begin
+									newMtgStopTime := (newMtgStartTime + 60)
+								end;
+							if (if (nameEntries2 := nameEntries) then (Length(nameEntries2) > 0)) then begin
+									selectedNames := [Array: nameEntries2[0]];
+									if ((count := Length(nameEntries2)) > 1) then begin
+											alternativeNames := self:PopOne(nameEntries2, count)
+										end
+								end;
+							if event then begin
+									newFirstDate := newMtgDate;
+									newStopDate := kForever;
+									newHeaderText := "Annual Event";
+									newHeaderIcon := kLiteral_4d4505
+								end else begin
+									newHeaderText := "Meeting";
+									newHeaderIcon := kLiteral_4d457d;
+									if (if (nameEntries2 := locationEntries) then (Length(nameEntries2) > 0)) then begin
+											selectedLocations := [Array: nameEntries2[0]];
+											if ((count := Length(nameEntries2)) > 1) then begin
+													alternativeLocations := self:PopOne(nameEntries2, count)
+												end
+										end
+								end
+						end else begin
+							rotationInProgress := nil
+						end;
+					if (displayParams.appAreaHeight < 320) then begin
+							self.viewBounds := Clone(viewBounds);
+							self.viewBounds.top := 8;
+							self.viewBounds.bottom := (viewBounds.top + 210);
+							self.viewJustify := vjParentCenterH + vjParentCenterV
+						end;
+					self:LayoutSlip()
+				end onexception |evt.ex.outofmem| do begin
+					self:Notify(kNotifyAlert, "Assist", "There is not enough memory to open the slip");
+					return nil
+				end)
+		end),
+	newMtgStopTime: nil,
+	newMtgDate: nil,
+	newHeaderIcon: nil,
+	newStopDate: kForever,
+	debug: 165658,
+	locationEntries: nil
+};
+
+// "Schedule", the default button: refuses an empty time; remembers the
+// person and place for the pickers; opens the Calendar if it is not up and
+// adds an annual event (titled by the action's GetTitle for the person when
+// it has one; the action may add it to the person's card, AddToCardfile) or
+// a meeting (with its place); then the invitees, the Calendar shown at it,
+// and the slip closed
+_defaultButton_14 := {
+	debug: 119418192,
+	viewBounds: {left: -57, top: 0, right: -7, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
+	text: schedule_2,
+	// (see above)
+	buttonClickScript: func() begin
+		local root, calendar, newTitle2, yearly, selectedName, entryFromObj2;
+		root := GetRoot();
+		if (newMtgStartTime >= newMtgStopTime) then begin
+				root:Notify(kNotifyAlert, "Assist", "Please specify a meeting/event time");
+				return nil
+			end;
+		if selectedNames then begin
+				Invitees:AddMemoryItem()
+			end;
+		if selectedLocations then begin
+				location:AddMemoryItem()
+			end;
+		calendar := root.calendar;
+		ClearUndoStacks();
+		if (not whoIsUp('calendar)) then begin
+				calendar:Open()
+			end;
+		if newMtgDate then begin
+				newTitle2 := newTitle;
+				if event then begin
+						if (if selectedNames then (Length(selectedNames) > 0)) then begin
+								selectedName := selectedNames[0];
+								if HasSlot(action, 'GetTitle) then begin
+										newTitle2 := action:GetTitle(selectedName)
+									end
+							end;
+						yearly := calendar:AddEvent(newTitle2, newMtgDate, 'yearly, nil)
+					end else begin
+						yearly := calendar:AddAppointment(newTitle2, (newMtgDate + newMtgStartTime), (newMtgStopTime - newMtgStartTime), nil, nil)
+					end;
+				if yearly then begin
+						if event then begin
+								yearly.mtgIconType := 'annualEvent;
+								if (entryFromObj2 := EntryFromObj(selectedName)) then begin
+										action:?AddToCardfile(entryFromObj2, newMtgDate, yearly)
+									end
+							end else begin
+								if (if (selectedLocations <> nil) then (Length(selectedLocations) > 0)) then begin
+										yearly.mtgLocation := selectedLocations[0]
+									end
+							end;
+						yearly.mtgInvitees := selectedNames;
+						EntryChangeXmit(yearly, 'calendarAPI);
+						calendar:ScrollToMeeting(yearly)
+					end
+			end;
+		calendar:redisplayScript();
+		scheduleSlip:Close()
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};
+
+// "Title": the meeting's title, rich, several lines (as remindSlip's)
+ScheduleTitle := {
+	debug: 5301797,
+	entryFlags: 326145,
+	viewFont: tsHWFont + tsSize(12),
+	viewBounds: {left: 0, top: 2, right: -14, bottom: 72},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	label: title_2,
+	labelFont: tsSystem + tsSize(9) + tsBold,
+	memory: 'scheduleMtgTitle,
+	textFlags: vFixedTextStyle + vFixedInkTextStyle,
+	viewLineSpacing: 30,
+	text: nil,
+	// a copy of the title
+	viewSetupFormScript: func() begin
+		(text := Clone(newTitle))
+	end,
+	// the title as edited (a rich string)
+	textChanged: func() begin
+		(newTitle := MakeRichString(text, styles))
+	end,
+	preallocatedContext: 'ScheduleTitle,
+	_proto: @protoRichLabelInputLine
+};
+
+// "Date": the meeting's (or event's) day; a day picked is kept as its
+// midnight (1440 minutes in a day)
+DateValue := {
+	label: date,
+	labelFont: tsSystem + tsSize(9) + tsBold,
+	entryFont: tsHWFont + tsSize(10),
+	viewJustify: 0,
+	longFormat: 'abbrDateStrSpec,
+	// placed by the layout; the meeting's day
+	viewSetupFormScript: func() begin
+		viewBounds := RelBounds(0, dpSlip.dateFieldTop, 220, 18);
+		(Date := newMtgDate)
+	end,
+	// a day picked: kept as its midnight
+	pickActionScript: func(index) begin
+		local indexItem;
+		newMtgDate := ((indexItem := index[0]) - (indexItem mod 1440));
+		inherited:pickActionScript(index)
+	end,
+	debug: 16503,
+	preallocatedContext: 'DateValue,
+	_proto: @protoDateTextPicker
+};
+
+// the people: a schedule picker on the Names file (one person for an event)
+Invitees := {
+	debug: 9693,
+	viewBounds: nil,
+	text: invitees_2,
+	otherText: otherNames,
+	class: '|nameRef.people|,
+	textSlot: 'name,
+	memory: 'schedInvitees,
+	selected: nil,
+	alternatives: nil,
+	// one person only for an event; placed by the layout; the people found
+	// and the others offered
+	viewSetupFormScript: func() begin
+		if event then begin
+				singleSelect := true
+			end;
+		self.viewBounds := RelBounds(0, dpSlip.peopleFieldTop, 0, 18);
+		selected := selectedNames;
+		alternatives := alternativeNames;
+		inherited:?viewSetupFormScript()
+	end,
+	// the people picked kept
+	pickActionScript: func(index) begin
+		inherited:pickActionScript(index);
+		(selectedNames := selected)
+	end,
+	preallocatedContext: 'Invitees,
+	_proto: @protoSchedulePicker
+};
+
+// the place: a schedule picker on the meeting places (by company); hidden
+// for an event
+location := {
+	_picker: @protoMeetingPlacePopup,
+	debug: 9476,
+	viewBounds: nil,
+	text: location_2,
+	otherText: "Other Locations",
+	class: '|nameRef.meetingPlace|,
+	textSlot: 'company,
+	memory: 'schedLocation,
+	selected: nil,
+	alternatives: nil,
+	// hidden for an event; placed by the layout; the places found and the
+	// others offered
+	viewSetupFormScript: func() begin
+		if event then begin
+				viewFlags := BAnd(viewFlags, bnot(vVisible))
+			end;
+		self.viewBounds := RelBounds(0, dpSlip.locFieldTop, 0, 18);
+		selected := selectedLocations;
+		alternatives := alternativeLocations;
+		inherited:?viewSetupFormScript()
+	end,
+	// the place picked kept
+	pickActionScript: func(index) begin
+		inherited:pickActionScript(index);
+		(selectedLocations := selected)
+	end,
+	preallocatedContext: 'location,
+	_proto: @protoSchedulePicker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+pickActionScript_code_2 := same("Invitees.pickActionScript.instructions");
+
+textChanged_code := same("ScheduleTitle.textChanged.instructions");

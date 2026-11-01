@@ -1,0 +1,5 @@
+// indexDescPrototype: the index every soup gets first, an integer index on
+// _uniqueID; the natives copy it when making a new soup's indexes
+// (AddNewSoupIndexes, src/stores/Soups.cpp).
+
+indexDescPrototype := {structure: 'slot, path: '_uniqueID, type: 'int, index: nil};

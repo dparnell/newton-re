@@ -1,0 +1,17 @@
+// canonicalFirstGroup, and what only it reaches
+//
+// The view the printer's reflow puts first on a page (src/views/Reflow.cpp,
+// ReFlow): a lasso-justified group as wide as the page, under its sibling,
+// its children the views poured in.  Like canonicalGroup but starting at
+// the top of the page.
+
+canonicalFirstGroup := {
+	_parent: nil,
+	viewCObject: nil,
+	viewClass: clView,
+	viewFlags: vVisible + vCalculateBounds,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 80},
+	viewJustify: vjParentFullH + vjSiblingBottomV + vjChildrenLasso,
+	viewChildren: nil,
+	debug: 1222
+};

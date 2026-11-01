@@ -1,0 +1,25 @@
+// protoClockShowBar: a show bar (protoNewShowBar) whose title is the current
+// time, kept up to date by an idle script; tapping the title acts as the
+// clock button does.
+
+protoClockShowBar := {
+	_proto: @protoNewShowBar,
+	// the vars.setTimeSeed last seen, to notice the clock having been set
+	lastSeed: nil,
+	TimeString: TimeString,
+	TimeBox: TimeBox,
+	// at setup: the title shows the time and an idle script runs every 30
+	// seconds (30000 ms) to refresh it
+	viewSetupFormScript: func() begin
+		title.text := self:TimeString();
+		self:SetupIdle(30000);
+		inherited:viewSetupFormScript()
+	end,
+	// keeps the title to one line: viewJustify oneLineOnly
+	viewSetupChildrenScript: func() begin
+		(title.viewJustify := oneLineOnly)
+	end,
+	viewIdleScript: viewIdleScript,
+	viewDrawScript: viewDrawScript,
+	titleClickScript: buttonClickScript_3
+};

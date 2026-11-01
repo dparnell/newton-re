@@ -1,0 +1,187 @@
+// locationCursor (@258): the cursor GetLocationSoup's union soup of
+// locations (the world-clock cities and countries) hands out. The
+// locations are the WorldData package's soup plus, on the internal store, a
+// soup of the user's changes whose entries have a kind: 'Add (a new
+// place), 'Replace (an edited one) or 'delete (a removed one). A 'Replace or
+// 'delete entry sorts just before the package's entry it stands for, so this
+// cursor wraps the union cursor (realCurs) and skips the pairs: a 'Replace
+// shows instead of the original, a 'delete hides both. With only the
+// package's soup (romOnly) it passes everything straight through.
+
+locationCursor := {
+	// move(n): n entries forward (negative: back), a step at a time so the
+	// pairs are skipped; returns the entry there.
+	move: func(maxLines) begin
+		if romOnly then begin
+				return realCurs:move(maxLines)
+			end;
+		if (maxLines <> 0) then begin
+				if (maxLines < 0) then begin
+						(for i := 1 to abs(maxLines) do begin
+								self:prev()
+							end)
+					end else begin
+						(for i := 1 to maxLines do begin
+								self:Next()
+							end)
+					end
+			end;
+		self:entry()
+	end,
+	// Goto(entry): straight to that entry
+	Goto: func(a1) begin
+		realCurs:Goto(a1)
+	end,
+	// GotoKey(key): the first entry at or after the key, past a 'delete
+	GotoKey: func(a1) begin
+		local gotoKey;
+		if (if (gotoKey := realCurs:GotoKey(a1)) then (gotoKey.kind = 'delete)) then begin
+				gotoKey := self:Next()
+			end;
+		gotoKey
+	end,
+	// Next: the next visible entry. From a 'Replace (or 'delete) entry two
+	// steps, over the original it stands for; 'delete pairs skipped.
+	Next: func() begin
+		local entry;
+		if romOnly then begin
+				return realCurs:Next()
+			end;
+		if (((not (entry := self:entry())) or (not entry.kind)) or (entry.kind = 'Add)) then begin
+				entry := realCurs:Next()
+			end else begin
+				entry := realCurs:move(2)
+			end;
+		(while (if entry then (entry.kind = 'delete)) do (entry := realCurs:move(2)));
+		entry
+	end,
+	// prev: the previous visible entry, looking two back to see whether the
+	// entry before is overridden by a 'Replace (that is returned) or a
+	// 'delete (both skipped).
+	prev: func() begin
+		local prev, prev2;
+		if romOnly then begin
+				return realCurs:prev()
+			end;
+		(while true do begin
+				if ((not (prev := realCurs:prev())) or (prev.kind = 'Add)) then begin
+						return prev
+					end;
+				if (not (prev2 := realCurs:prev())) then begin
+						realCurs:Reset();
+						return prev
+					end;
+				if ((not prev2.kind) or (prev2.kind = 'Add)) then begin
+						return realCurs:Next()
+					end;
+				(if (prev2.kind = 'Replace) then return prev2)
+			end)
+	end,
+	// Reset: to the first visible entry, which it returns
+	Reset: func() begin
+		local reset;
+		reset := realCurs:Reset();
+		self:entry()
+	end,
+	// ResetToEnd: to the last visible entry, which it returns
+	ResetToEnd: func() begin
+		local resetToEnd, move;
+		resetToEnd := realCurs:ResetToEnd();
+		if romOnly then begin
+				return resetToEnd
+			end;
+		if (not (move := realCurs:move(-1))) then begin
+				return realCurs:ResetToEnd()
+			end;
+		if (move.kind = 'delete) then begin
+				return self:prev()
+			end;
+		if (move.kind = 'Replace) then begin
+				return move
+			end;
+		realCurs:move(1)
+	end,
+	// entry: the current entry, first moving past a deleted soup entry or a
+	// 'delete pair
+	entry: func() begin
+		local entry;
+		entry := realCurs:entry();
+		if (not romOnly) then begin
+				(while (if entry then ((entry = 'deleted) or (entry.kind = 'delete))) do (if (entry = 'deleted) then (entry := realCurs:Next()) else (entry := realCurs:move(2))))
+			end;
+		entry
+	end,
+	// clone: a copy with its own copy of the union cursor
+	clone: func() begin
+		local copy;
+		(copy := Clone(self)).realCurs := realCurs:clone();
+		copy
+	end,
+	// map(fn): an array of the entries from here on for which fn (if any)
+	// is true; leaves the cursor at the end
+	|map|: func(a1) begin
+		local list, entry;
+		list := [Array: ];
+		entry := self:entry();
+		(while entry do begin
+				if ((not a1) or (if a1 then call a1 with (entry))) then begin
+						AddArraySlot(list, entry)
+					end;
+				(entry := self:Next())
+			end);
+		list
+	end,
+	// mapadd(fn, array): adds every entry for which fn (if any) is true to
+	// array, from the start, without moving this cursor; returns array
+	mapadd: func(a1, a2) begin
+		local copy, entry;
+		(copy := self:clone()):Reset();
+		entry := copy:entry();
+		(while entry do begin
+				if ((not a1) or (if a1 then call a1 with (entry))) then begin
+						AddArraySlot(a2, entry)
+					end;
+				(entry := copy:Next())
+			end);
+		a2
+	end,
+	// CountEntries: the union cursor's count less the internal store's
+	// 'delete and 'Replace entries (the kind index from 'delete to 'Replace).
+	// Looks like a ROM bug: a 'delete hides its original as well, so each
+	// counts one too many; and the whole soup is counted, not the query's.
+	CountEntries: func() begin
+		local countEntries, indexPath, soup, cursor;
+		if romOnly then begin
+				return realCurs:CountEntries()
+			end;
+		countEntries := realCurs:CountEntries();
+		indexPath := realCurs:indexPath();
+		soup := GetStores()[0]:GetSoup(realCurs:soup():GetName());
+		cursor := soup:Query({type: 'index, indexPath: 'kind, beginKey: 'delete, endKey: 'Replace});
+		(countEntries - cursor:CountEntries())
+	end,
+	// SlowCountEntries: counts by stepping a clone from the start. Looks like
+	// a ROM bug: it starts at 1, so an empty cursor counts 1.
+	SlowCountEntries: func() begin
+		local l1, copy;
+		if romOnly then begin
+				return realCurs:CountEntries()
+			end;
+		l1 := 1;
+		(copy := self:clone()):Reset();
+		(while copy:Next() do (l1 := (l1 + 1)));
+		l1
+	end,
+	// WhichEnd, soup, indexPath: the union cursor's
+	WhichEnd: func() begin
+		realCurs:WhichEnd()
+	end,
+	// (the union cursor's)
+	soup: func() begin
+		realCurs:soup()
+	end,
+	// (the union cursor's)
+	indexPath: func() begin
+		realCurs:indexPath()
+	end
+};

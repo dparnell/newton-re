@@ -1,5 +1,0 @@
-@@ 0x4abead
-func(a1) begin
-	self:AdoptEntryFromStationery(nil, a1, nil)
-end
-@@end

@@ -1,0 +1,87 @@
+// protoDragger: a view the user moves around within its parent by dragging
+// the small nub at the top centre of its rounded frame. It has no contents of
+// its own (the client adds children) and, unless the client sets vApplication
+// and its own scripts, answers the scroll arrows and Overview with a notice
+// that the application does not support them.
+
+protoDragger := {
+	_proto: @protoContainerView,
+	viewFlags: vClickable,
+	viewBounds: protoDraggerViewBounds,
+	viewFormat: vfFillWhite + vfFrameDragShadow + vfPen(7) + vfInset(1) + vfRound(5),
+	declareSelf: 'base,
+	// base:DragWindow(unit), from viewClickScript with the click's unit: clicks,
+	// makes this view the key view's home (the defaultKeyViewName child, or self
+	// when its textFlags take keys, 0x4000) if a keyboard is connected and the
+	// caret is elsewhere, brings it to the front and drags it within the
+	// parent's box (the application area when the parent is the root)
+	DragWindow: func(unit) begin
+		local parent, l2;
+		InkOff(unit);
+		clicker();
+		l2 := (if ((parent := self:Parent()) = GetRoot()) then RelBounds(displayParams.appAreaGlobalLeft, displayParams.appAreaGlobalTop, displayParams.appAreaWidth, displayParams.appAreaHeight) else parent:GlobalBox());
+		if (if (if (not ViewContainsCaretView(self)) then CommandKeyboardConnected()) then (not RestoreKeyView(self))) then begin
+				if self.defaultKeyViewName then begin
+						SetKeyView(self.(defaultKeyViewName), 0)
+					end else begin
+						if (if self.textFlags then (BAnd(self.textFlags, 16384) <> 0)) then begin
+								SetKeyView(self, 0)
+							end
+					end
+			end;
+		self:MoveBehind(nil);
+		self:Drag(unit, l2);
+		self:Dirty()
+	end,
+	// viewClickScript: a tap within 10 pixels of the nub (the top centre) of a
+	// dragger still framed as one (the frame bits, mask 240, are 208) drags it
+	// and returns true; anything else returns nil and goes to the children.
+	// (The Programmer's Reference calls frame 208 vfFrameDragger;
+	// src/views/ViewFlags.h, whose names constants.tsv has, vfFrameDragShadow.)
+	viewClickScript: func(unit) begin
+		local pt, pt2, box;
+		(if (if (self = base) then (BAnd(viewFormat, 240) = vfFrameDragShadow)) then begin
+				pt := GetPoint(firstX, unit);
+				pt2 := GetPoint(firstY, unit);
+				box := self:GlobalBox();
+				(if (if ((pt2 - box.top) < 10) then (abs((pt - ((box.left + box.right) >> 1))) < 10)) then begin
+						base:DragWindow(unit);
+						true
+					end)
+			end)
+	end,
+	noScroll: "This application does not support scrolling",
+	noOverview: "This application does not support Overview",
+	// set once the scroll notice has been shown, so it is shown once per view
+	beenThereDoneThat: nil,
+	// viewSetupFormScript: a dragger whose bounds put it partly outside the
+	// application area has its own viewBounds slot removed, so that the
+	// inherited bounds apply
+	viewSetupFormScript: func() begin
+		local box, displayParams2;
+		(if (box := self:?GlobalBox()) then (if ((((((displayParams2 := displayParams).appAreaGlobalLeft + displayParams2.appAreaWidth) < box.right) or ((displayParams2.appAreaGlobalTop + displayParams2.appAreaHeight) < box.bottom)) or (displayParams2.appAreaGlobalLeft > box.left)) or (displayParams2.appAreaGlobalTop > box.top)) then RemoveSlot(self, 'viewBounds)))
+	end,
+	// viewScrollUpScript, viewScrollDownScript: the first scroll arrow tap tells
+	// the user (a Notify alert) that the application does not scroll
+	viewScrollUpScript: func() begin
+		(if (not beenThereDoneThat) then begin
+				beenThereDoneThat := true;
+				self:Notify(kNotifyAlert, "Up Arrow", noScroll)
+			end)
+	end,
+	// The down arrow: says once that the view does not scroll.
+	viewScrollDownScript: func() begin
+		(if (not beenThereDoneThat) then begin
+				beenThereDoneThat := true;
+				self:Notify(kNotifyAlert, "Down Arrow", noScroll)
+			end)
+	end,
+	// viewOverviewScript: tells the user, every time, that there is no overview
+	viewOverviewScript: func() begin
+		self:Notify(kNotifyAlert, "Overview", noOverview)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewScrollUpScript_code := same("protoDragger.viewScrollUpScript.instructions");

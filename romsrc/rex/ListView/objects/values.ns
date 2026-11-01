@@ -1,0 +1,7 @@
+// ListView's plain values (the priorities' names) the magic pointers and the C code name.
+
+high := "High";
+
+low := "Low";
+
+medium := "Medium";

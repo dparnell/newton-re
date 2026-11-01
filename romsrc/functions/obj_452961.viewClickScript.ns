@@ -1,5 +1,0 @@
-@@ 0x452901
-func(a1) begin
-	inherited:viewClickScript(a1)
-end
-@@end

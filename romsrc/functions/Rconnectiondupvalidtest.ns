@@ -1,5 +1,0 @@
-@@ 0x472bd9
-func(a1) begin
-	ConnEntriesEqual(a1)
-end
-@@end

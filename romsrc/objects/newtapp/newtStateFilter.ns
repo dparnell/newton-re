@@ -1,0 +1,18 @@
+// newtStateFilter: the NewtApp filter for a state or province name or abbreviation
+// (NPR 2.0 Table 3-1).  Its label's "Other" opens the location popup over the U.S.
+// states soup with the North America map.
+//
+// This file holds newtStateFilter and what only it reaches.
+
+newtStateFilter := {
+	_proto: @newtTextFilter,
+	// recFlags: the entry line's view flags (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vCapsRequired + vCustomDictionaries,
+	// dictionary ids: two system dictionaries (43, 44: by their place in the NPR's Table 8-4
+	// the states' ones) and the user's own words
+	dictionaries: [|Array|: 43, 44, kUserDictionary],
+	// the locationPopup over the U.S. states, the state's name coming back to pickActionScript
+	picker: func() begin
+		@locationPopup:New({spots: @usStateSoupName, zoomer: 'northAmerica, result: 'name}, self:GlobalLabelBounds(), self)
+	end
+};

@@ -1,0 +1,56 @@
+// protoDisplayClock: an analog clock that only shows the time (taps do
+// nothing) and keeps running - a protoNewSetClock that, when idle, advances
+// its `time` slot by the minutes that passed, ticks and tocks, and sends
+// TimeChanged; its centre icon is a moon from 6 pm to 6 am, a sun otherwise.
+// Used by the World Clock and in the root view.
+
+protoDisplayClock := {
+	iconMoon: picture('picture, "resources/picture/432fe5"),
+	iconSun: picture('picture, "resources/picture/433479"),
+	icon: nil,
+	tickTock: nil,
+	// idle every 30 seconds
+	viewIdleFrequency: 30000,
+	// the system's Time() when `time` was last advanced
+	lastClock: nil,
+	// viewSetupFormScript: picks the icon for the time of day (1080 and 360 are
+	// 6 pm and 6 am in minutes) and starts the idle script
+	viewSetupFormScript: func() begin
+		local l1;
+		icon := (if (((l1 := (Time mod 1440)) >= 1080) or (l1 < 360)) then iconMoon else iconSun);
+		lastClock := Time();
+		self:SetupIdle(viewIdleFrequency);
+		inherited:viewSetupFormScript()
+	end,
+	// viewClickScript: does nothing, so the clock cannot be set; returns nil
+	viewClickScript: func(unit) begin
+		nil
+	end,
+	// viewIdleScript: when the system's minute has moved on, adds the minutes
+	// passed to `time`, recomputes the hands, plays the tick or the tock, sends
+	// TimeChanged and redraws; returns the next idle interval
+	viewIdleScript: func() begin
+		local l1;
+		if ((l1 := (Time() - lastClock)) <> 0) then begin
+				lastClock := Time();
+				hours := (((Time := (Time + l1)) div 60) mod 24);
+				minutes := (Time mod 60);
+				playsound((tickTock := (if (tickTock = @tockSound) then @tickSound else @tockSound)));
+				self:?TimeChanged();
+				self:Dirty()
+			end;
+		viewIdleFrequency
+	end,
+	// viewDrawScript: swaps the sun and moon icon when the time crosses 6 am or
+	// 6 pm (clearing pix, which presumably caches the drawn face) before
+	// protoNewSetClock draws
+	viewDrawScript: func() begin
+		local l1, l2;
+		if ((l2 := (if (((l1 := (Time mod 1440)) >= 1080) or (l1 < 360)) then iconMoon else iconSun)) <> icon) then begin
+				icon := l2;
+				pix := nil
+			end;
+		inherited:viewDrawScript()
+	end,
+	_proto: @protoNewSetClock
+};

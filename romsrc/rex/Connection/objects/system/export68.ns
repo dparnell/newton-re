@@ -1,0 +1,191 @@
+// The slip the desktop asks the Newton to show (@8260, DisplaySlip): a title, a
+// message and up to three buttons and a close box as the desktop's config frame
+// says; the button tapped (1-3, 0 for the close box) goes to DesktopInputDone.
+
+export68 := {
+	viewBounds: {left: 0, top: 40, right: 220, bottom: 150},
+	stepChildren: [stepChildren:
+		export68Item,
+		export68Item_2,
+		export68Item_3,
+		export68Item_4,
+		export68Item_5,
+		export68Item_6
+	],
+	// Takes the texts from config.  Looks like a ROM bug: with a title the title
+	// line is given config.text, not config.title.
+	viewSetupFormScript: func() begin
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		self.clickHandled := nil;
+		if config then begin
+				message.text := config.message;
+				if config.title then begin
+						title.text := config.text
+					end;
+				if config.button1 then begin
+						button1.text := config.button1
+					end;
+				if config.button2 then begin
+						button2.text := config.button2
+					end;
+				if config.button3 then begin
+						button3.text := config.button3
+					end
+			end;
+		endpoint:StartIdle(self, 2000)
+	end,
+	// Sizes a button to its text, 15 to 90 pixels wide, from its right edge.
+	SetTextBounds: func(a1) begin
+		local copy;
+		(copy := Clone(a1.viewBounds)).left := (copy.right - min(90, max(15, (StrWidth(a1.text) + 7))));
+		(a1.viewBounds := copy)
+	end,
+	// Reports button a1 once; any button but the close box also closes the slip.
+	HandleClick: func(a1) begin
+		(if (not clickHandled) then begin
+				clickHandled := true;
+				call DesktopInputDone with (a1);
+				(if (a1 <> 0) then base:Close())
+			end)
+	end,
+	// Keeps the connection alive while the slip is up.
+	viewIdleScript: func() begin
+		return endpoint:IdleConnection(true)
+	end,
+	// Closing counts as the close box.
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self);
+		self:HandleClick(0);
+		endpoint:StopIdle(self)
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	clickHandled: nil,
+	_proto: @protoFloater,
+	title: nil,
+	stepAllocateContext: [|Array|:
+		'title,
+		export68Item,
+		'message,
+		export68Item_2,
+		'xButton,
+		export68Item_3,
+		'button1,
+		export68Item_4,
+		'button2,
+		export68Item_5,
+		'button3,
+		export68Item_6
+	],
+	message: nil,
+	xButton: nil,
+	button1: nil,
+	button2: nil,
+	button3: nil
+};
+
+// The title, hidden when config has none.
+export68Item := {
+	text: export85Item_3Text,
+	viewBounds: {left: 0, top: 10, right: 172, bottom: 22},
+	viewJustify: vjCenterH + vjParentCenterH + oneLineOnly,
+	// Hidden without a title.
+	viewSetupDoneScript: func() begin
+		(if (not config.title) then self:Hide())
+	end,
+	viewFont: @fontSystem10Bold,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'title
+};
+
+export68Item_2 := {
+	text: export85Item_3Text,
+	viewBounds: {left: 0, top: 5, right: 162, bottom: 70},
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'message
+};
+
+// The close box (button 0), hidden unless config asks for it.
+export68Item_3 := {
+	// Hidden unless the desktop asks for a close box.
+	viewSetupDoneScript: func() begin
+		(if (not config.xButton) then self:Hide())
+	end,
+	// The close box: answer 0.
+	buttonClickScript: func() begin
+		self:HandleClick(0);
+		inherited:?buttonClickScript()
+	end,
+	_proto: @protoCancelButton,
+	preAllocatedContext: 'xButton
+};
+
+// Button 1, hidden unless config names it.
+export68Item_4 := {
+	// Answer 1.
+	buttonClickScript: func() begin
+		self:HandleClick(1)
+	end,
+	text: export85Item_3Text,
+	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Sized to its text.
+	viewSetupFormScript: func() begin
+		self:SetTextBounds(self)
+	end,
+	// Hidden without a first button.
+	viewSetupDoneScript: func() begin
+		(if (not config.button1) then self:Hide())
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'button1
+};
+
+// Button 2.
+export68Item_5 := {
+	// Answer 2.
+	buttonClickScript: func() begin
+		self:HandleClick(2)
+	end,
+	text: export85Item_3Text,
+	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Sized to its text.
+	viewSetupFormScript: func() begin
+		self:SetTextBounds(self)
+	end,
+	// Hidden without a second button.
+	viewSetupDoneScript: func() begin
+		(if (not config.button2) then self:Hide())
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'button2
+};
+
+// Button 3.
+export68Item_6 := {
+	// Answer 3.
+	buttonClickScript: func() begin
+		self:HandleClick(3)
+	end,
+	text: export85Item_3Text,
+	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Sized to its text.
+	viewSetupFormScript: func() begin
+		self:SetTextBounds(self)
+	end,
+	// Hidden without a third button.
+	viewSetupDoneScript: func() begin
+		(if (not config.button3) then self:Hide())
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'button3
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code := same("export68Item.viewSetupDoneScript.instructions");
+
+viewSetupFormScript_code_2 := same("export68Item_4.viewSetupFormScript.instructions");

@@ -1,5 +1,0 @@
-@@ 0x56f97d
-func() begin
-	(if (gameState = 'dealt) then self:Draw() else self:Deal())
-end
-@@end

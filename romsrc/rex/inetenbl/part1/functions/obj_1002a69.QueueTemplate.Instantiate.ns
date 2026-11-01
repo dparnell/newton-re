@@ -1,5 +1,0 @@
-@@ 0x1012f71
-func() begin
-	{_proto: self, queue: [Array: ]}
-end
-@@end

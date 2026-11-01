@@ -1,5 +1,0 @@
-@@ 0x7a0a8d names
-func(hide) begin
-	(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
-end
-@@end

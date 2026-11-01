@@ -1,0 +1,6 @@
+// asciiBreak: magic pointer @6, a byte per Mac Roman character, 1 where the
+// character is a word delimiter (control characters, punctuation) and 0 where
+// it is part of a word.  The text code takes it as gASCIIBreakTable
+// (src/utility/Unicode.cpp, src/frames/UnicodeTables.cpp).
+
+asciiBreak := hexfile('table, "resources/table/63ae4d.txt");

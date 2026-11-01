@@ -1,0 +1,5 @@
+// protoCountryTextPicker: a label picker showing a country's name, with a
+// pop-up list of countries to choose from - protoMapTextPicker as it is
+// (Newton Programmer's Reference "protoCountryTextPicker").
+
+protoCountryTextPicker := {_proto: @protoMapTextPicker};

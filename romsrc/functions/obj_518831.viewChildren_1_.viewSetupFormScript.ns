@@ -1,5 +1,0 @@
-@@ 0x5188ad
-func() begin
-	(text := DisplayLine.ContentText)
-end
-@@end

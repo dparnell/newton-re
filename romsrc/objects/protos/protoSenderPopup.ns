@@ -1,0 +1,153 @@
+// protoSenderPopup: the sender pop-up at the top of a routing slip: two
+// lines, the sender's name (the slip's fromRef, else the current persona)
+// and the city sent from (the current emporium's place, else the user's
+// location), each after a pop-up diamond. Its menu offers the owner's
+// personae, the emporia's cities and "Other City", and choosing one switches
+// to it. Every open sender pop-up is kept in the root's senderList.
+
+protoSenderPopup := {
+	_proto: @protoPopInPlace,
+	viewBounds: {left: 8, top: 10, right: 208, bottom: 36},
+	viewFormat: 0,
+	viewJustify: vjCenterV,
+	// on opening: set the text (and size), and join the root's senderList
+	// (made empty if there is none), so that a change of persona or city can
+	// update every sender pop-up
+	viewSetupFormScript: func() begin
+		text := self:SetupText();
+		if (not GetRoot().senderList) then begin
+				GetRoot().senderList := [Array: ]
+			end;
+		SetAdd(senderList, self, true)
+	end,
+	viewQuitScript: viewQuitScript,
+	// highlighting: invert the whole rounded box (transferMode 2 is modeXor)
+	// rather than the default highlight; true says it is done
+	viewHiliteScript: func(on) begin
+		local box;
+		box := self:LocalBox();
+		self:DrawShape(MakeRoundRect(0, 0, box.right, box.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		true
+	end,
+	// returns the two lines' text and fits the view to it: l1 is the widest
+	// a line may be (half the parent's width), strFontWidth2 the widest line,
+	// l4 the number of lines (then their height). Each line starts with the
+	// small diamond character FC02; the name line is left out when there is
+	// no sender
+	SetupText: func() begin
+		local l1, strTruncate2, strFontWidth2, l4, fromRef, resolveEntryAlias2, currentEmporium, location, box, l10;
+		l1 := (self:Parent():LocalBox().right div 2);
+		strFontWidth2 := 0;
+		l4 := 0;
+		if (if (if self:Parent() then self:Parent().fields) then IsEntryAlias(self:Parent().fields.fromRef)) then begin
+				fromRef := self:Parent().fields.fromRef
+			end else begin
+				fromRef := GetUserConfig('currentPersona)
+			end;
+		if fromRef then begin
+				resolveEntryAlias2 := ResolveEntryAlias(fromRef);
+				strFontWidth2 := StrFontWidth((strTruncate2 := StrTruncate(Stringer([Array: $\uFC02, self:PrimaryName(resolveEntryAlias2)]), l1)), viewFont);
+				l4 := (l4 + 1)
+			end;
+		currentEmporium := GetUserConfig('currentEmporium);
+		location := StrTruncate((location := Stringer([Array: $\uFC02, (if currentEmporium then ResolveEntryAlias(currentEmporium).place else GetUserConfig('location).name)])), l1);
+		strTruncate2 := Stringer([Array: (if strTruncate2 then Stringer([Array: strTruncate2, $\n])), location]);
+		strFontWidth2 := max(strFontWidth2, StrFontWidth(location, viewFont));
+		l4 := (l4 + 1);
+		box := self:GlobalBox();
+		if (strFontWidth2 <> (box.right - box.left)) then begin
+				(l10 := (viewBounds := Clone(viewBounds))).right := (l10.left + strFontWidth2)
+			end;
+		if ((l4 := (l4 * FontHeight(viewFont))) <> (box.bottom - box.top)) then begin
+				(l10 := (viewBounds := Clone(viewBounds))).bottom := (l10.top + l4)
+			end;
+		strTruncate2
+	end,
+	// draws the pop-up diamond (character FC01) at the left, about halfway down
+	viewDrawScript: func() begin
+		self:DrawShape(MakeText("\uFC01\u", 0, 0, 16, ((self:LocalBox().bottom div 2) + 4)), {font: viewFont})
+	end,
+	// a tap: build the menu - the personae's names (l1, when there are more
+	// than one), a separator, the emporia's cities sorted (with their
+	// emporium as value; the user's location when none has a place), then a
+	// separator and "Other City" unless hideOtherCity is set - and pop it up;
+	// with nothing to show, just unhighlight. (The locals declared after
+	// their first use, and pickseparator holding the menu, are the
+	// decompiler's layout and naming.)
+	buttonClickScript: compile(
+		constants: {
+			kLiteral_3c5f65: "Other City"
+		},
+		func() begin
+			if (if (personae := GetUserConfig('personae)) then (Length(personae) > 1)) then begin
+					local l1;
+					local list;
+					local pickseparator;
+					local personae;
+					l1 := (foreach item in personae collect self:PrimaryName(ResolveEntryAlias(item)))
+				end;
+			if (emporia := GetUserConfig('emporia)) then begin
+					list := [Array: ];
+					(foreach item in emporia do begin
+							local emporia, resolveEntryAlias2;
+							if StrFilled((resolveEntryAlias2 := ResolveEntryAlias(item)).place) then begin
+									AddArraySlot(list, {item: resolveEntryAlias2.place, value: item})
+								end
+						end);
+					if (Length(list) = 0) then begin
+							AddArraySlot(list, {item: GetUserConfig('location).name, value: nil})
+						end;
+					Sort(list, '|str<|, 'item);
+					if (not GetVariable(self, 'hideOtherCity)) then begin
+							if (Length(list) > 0) then begin
+									AddArraySlot(list, 'pickseparator)
+								end;
+							AddArraySlot(list, kLiteral_3c5f65)
+						end
+				end else begin
+					if (not GetVariable(self, 'hideOtherCity)) then begin
+							list := [Array: kLiteral_3c5f65]
+						end
+				end;
+			if l1 then begin
+					pickseparator := ArrayMunger(ArrayInsert(list, 'pickseparator, 0), 0, 0, l1, 0, nil)
+				end else begin
+					pickseparator := list
+				end;
+			(if pickseparator then begin
+					popup := pickseparator;
+					inherited:buttonClickScript()
+				end else self:hilite(nil))
+		end),
+	PickOther: PickOther,
+	|map|: {pickActionScript: pickActionScript},
+	// the menu's item index was chosen: the first l2 items are the
+	// personae (l2 is -1 with one or none; the separator after them cannot
+	// be picked), the items before l3 the cities, and the last one, unless
+	// hidden, "Other City", which opens the city picker (PickOther). A persona
+	// or a city (its emporium, the item's value) becomes the current one
+	pickActionScript: func(index) begin
+		local personae, l2, l3, value;
+		l2 := (if (if (personae := GetUserConfig('personae)) then (Length(personae) > 1)) then Length(personae) else -1);
+		l3 := (Length(popup) - (if (not GetVariable(self, 'hideOtherCity)) then 1 else 0));
+		if (index < l2) then begin
+				SetUserConfig('currentPersona, personae[index]);
+				UseCurrentPersona()
+			end else begin
+				if (index < l3) then begin
+						if (value := popup[index].value) then begin
+								SetUserConfig('currentEmporium, value);
+								UseCurrentEmporium()
+							end
+					end else begin
+						self:PickOther()
+					end
+			end;
+		self:hilite(nil)
+	end,
+	JamIt: JamIt
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_literal18 := same("protoSenderPopup.buttonClickScript.literals[18]");

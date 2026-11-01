@@ -1,0 +1,7 @@
+// storePersistent, and what only it reaches
+//
+// The template of the persistent part of a store frame - what a store
+// keeps about itself (its name index, name, signature and ephemerals); the
+// soup code (src/stores/Soups.cpp) clones it when it makes a store object.
+
+storePersistent := {nameIndex: nil, name: nil, signature: nil, ephemerals: nil};

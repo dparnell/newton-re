@@ -1,0 +1,7 @@
+// newtLabelDateInputLine: the NewtApp labelled input line for a date (NPR 2.0): the
+// date is written, or chosen with the date popup the label offers.
+//
+// This file holds newtLabelDateInputLine and what only it reaches.
+
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
+newtLabelDateInputLine := {_proto: @newtProtoLine, flavor: @newtDateFilter};

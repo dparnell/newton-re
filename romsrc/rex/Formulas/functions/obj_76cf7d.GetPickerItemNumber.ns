@@ -1,5 +1,0 @@
-@@ 0x76d42d
-func() begin
-	return pickerItemNumber
-end
-@@end

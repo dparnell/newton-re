@@ -1,0 +1,152 @@
+// ioItemStatus (@817): the status bar of the In/Out Box's item view: the Show
+// popup (which data view shows the item), and in the Out Box the recognition
+// and keyboard buttons for an editable item and a Send button for one ready
+// to go; at the right the close box, the item's action buttons and the
+// routing (transport) button.
+
+ioItemStatus := {
+	declareSelf: 'base,
+	spacing: 6,
+	// the Send button an Out Box item that is ready or pending gets
+	simpleSendButton: {
+		width: nil,
+		viewBounds: {left: -57, top: 14, right: -7, bottom: 30},
+		viewJustify: vjCenterH + vjParentRightH,
+		text: send,
+		// sizes the button to its text, right-aligned, and registers it
+		// as the _sendKeyButton
+		viewSetupFormScript: func() begin
+			width := (StrFontWidth(text, viewFont) + 6);
+			(viewBounds := Clone(viewBounds)).left := (viewBounds.right - width);
+			(_sendKeyButton := self)
+		end,
+		// a pending item (not yet routed) opens its routing slip; else asks the
+		// item's transport to send it (DoRequest 'SendRequest, cause 'user)
+		buttonClickScript: func() begin
+			local itemTransport;
+			(if (fields.state = 'pending) then OpenRoutingSlip(fields, nil) else (if (itemTransport := GetItemTransport(fields)) then self:DoRequest(itemTransport, 'SendRequest, 'user, fields)))
+		end,
+		// forgets the _sendKeyButton
+		viewQuitScript: func() begin
+			(_sendKeyButton := nil)
+		end,
+		_proto: @protoTextButton
+	},
+	transportButton: @ioTransportButton,
+	// the Show popup: the data views (public viewers and editors) the item's
+	// class has
+	menuLeftButtonsDef: [|Array|:
+		{
+			_proto: {
+				text: show_2,
+				// makes the popup's items; the button is shown only when there is
+				// more than one view to choose
+				viewSetupFormScript: func() begin
+					popup := [Array: ];
+					if (if layout then layout.viewDefFrame) then begin
+							(foreach key, value in layout.viewDefFrame do begin
+									if (if ((value.type = 'viewer) or (value.type = 'editor)) then ((value.protection = nil) or (value.protection = 'public))) then begin
+											self:AddToPopup(key, value)
+										end
+								end)
+						end;
+					if (Length(popup) > 1) then begin
+							self.viewFlags := BOr(self.viewFlags, vVisible)
+						end else begin
+							self.viewFlags := BAnd(self.viewFlags, bnot(vVisible))
+						end;
+					inherited:?viewSetupFormScript();
+					(_showKeyButton := self)
+				end,
+				// a view picked: moves the check mark to it and has the entry view
+				// switch (SetViewDef)
+				pickActionScript: func(index) begin
+					inherited:pickActionScript(index);
+					currentViewSymbol := popup[index].symbol;
+					(foreach item in popup do begin
+							if (item.symbol = currentViewSymbol) then begin
+									// $\uFC0B: the check mark character
+									item.mark := $\uFC0B
+								end else begin
+									if item.mark then begin
+											RemoveSlot(item, 'mark)
+										end
+								end
+						end);
+					(if (ioEntryView exists) then begin
+							ioEntryView:SetViewDef(popup[index].symbol);
+							(if itemStatus.viewCObject then itemStatus:RedoChildren())
+						end)
+				end,
+				// AddToPopup(symbol, viewDef): an item for the view, titled by its
+				// title or name, checked if it is the current one
+				AddToPopup: func(key, value) begin
+					local frame2;
+					frame2 := {item: (if value.title then value.title else value.name), symbol: key};
+					if (key = currentViewSymbol) then begin
+							frame2.mark := $\uFC0B
+						end;
+					AddArraySlot(popup, frame2)
+				end,
+				popup: nil,
+				// forgets the _showKeyButton
+				viewQuitScript: func() begin
+					(_showKeyButton := nil)
+				end,
+				debug: 657,
+				_proto: @protoPopupButton
+			}
+		}
+	],
+	// close box (back to the overview), the item's action buttons and the
+	// routing button
+	menuRightButtonsDef: [|Array|:
+		{
+			// registers the close box as _closeBox
+			viewSetupFormScript: func() begin
+				inherited:?viewSetupFormScript();
+				(_closeBox := self)
+			end,
+			// closing an item goes back to the overview
+			buttonClickScript: func() begin
+				newtAppBase:ShowLayout('overview)
+			end,
+			_proto: @protoCancelButton
+		},
+		{_proto: menuRightButtonsDefProto},
+		{_proto: menuRightButtonsDefProto_2},
+		{_proto: @ioTransportButton}
+	],
+	// viewSetupChildrenScript: adds the Out Box's extra buttons. An editor data
+	// view's IOEditFlags say which: bit 2 the keyboard button, bit 1 the
+	// recognition toggle (with the view's own _recogPopup); nil means both.
+	viewSetupChildrenScript: func() begin
+		local iOEditFlags, entry;
+		self.menuLeftButtons := menuLeftButtonsDef;
+		self.menuRightButtons := Clone(menuRightButtonsDef);
+		if (currentSoupSymbol = 'outbox) then begin
+				if (if layout.entryViewDefs then (layout.entryViewDefs[0].type = 'editor)) then begin
+						menuLeftButtons := Clone(menuLeftButtons);
+						if (((iOEditFlags := layout.entryViewDefs[0].IOEditFlags) = nil) or (BAnd(iOEditFlags, 2) <> 0)) then begin
+								ArrayInsert(menuLeftButtons, {_proto: @protoSmallKeyboardButton}, 0)
+							end;
+						if ((iOEditFlags = nil) or (BAnd(iOEditFlags, 1) <> 0)) then begin
+								ArrayInsert(menuLeftButtons, {_proto: @recToggle}, 0);
+								if layout.entryViewDefs[0]._recogPopup then begin
+										menuLeftButtons[0] := {_proto: @recToggle, _recogPopup: layout.entryViewDefs[0]._recogPopup}
+									end
+							end
+					end;
+				if (if (entry := layout.dataCursor:entry()) then ((entry.state = 'ready) or (entry.state = 'pending))) then begin
+						AddArraySlot(menuRightButtons, simpleSendButton)
+					end
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	// draws nothing of its own
+	viewDrawScript: func() begin
+		nil
+	end,
+	preallocatedContext: 'itemStatus,
+	_proto: @newtStatusBarNoClose
+};

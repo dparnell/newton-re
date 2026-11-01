@@ -1,0 +1,21 @@
+// canonicalScrollee, and what only it reaches
+//
+// The scrolled view of a book page's picture block that is larger than the
+// block (src/books/Pages.cpp, MakeBlockView): a picture view, the picture
+// as its icon, which the block's compass moves by changing its origin.
+
+canonicalScrollee := {
+	viewClass: clPictureView,
+	viewFlags: vVisible + vClickable,
+	viewJustify: 0,
+	viewOriginX: 0,
+	viewOriginY: 0,
+	dataBounds: nil,
+	// tell the scroller (its parent) which view it scrolls, and keep viewBounds
+	// of its own (a clone) for the compass to change
+	viewSetupDoneScript: func() begin
+		self:Parent().scrolledView := self;
+		(self.viewBounds := Clone(viewBounds))
+	end,
+	debug: 269199
+};

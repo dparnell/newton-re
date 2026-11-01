@@ -1,0 +1,37 @@
+// objects several roots reach, none alone (naturalize.py)
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+MoveTaskToDate_literal3 := same("export145Proto.MoveTaskToDate.literals[3]");
+
+FlushEntry_literal9 := same("export145Proto.FlushEntry.literals[9]");
+
+FlushEntry_literal11 := same("export145Proto.FlushEntry.literals[11]");
+
+LastToDoDate_literal4 := same("export145Proto.LastToDoDate.literals[4]");
+
+NextToDoDate_literal5 := same("export145Proto.NextToDoDate.literals[5]");
+
+NextToDoDate_literal15 := same("export145Proto.NextToDoDate.literals[15]");
+
+RemoveOldTodoItems_literal7 := same("export145Proto.RemoveOldTodoItems.literals[7]");
+
+RollItemsOver_literal8 := same("export145Proto.RollItemsOver.literals[8]");
+
+AddOldSoupTasks_code := same("export145Proto.AddOldSoupTasks.literals[6].instructions");
+
+NextToDoDate_code := same("export145Proto.NextToDoDate.literals[4].instructions");
+
+GetToDoEntryDefaultStore_literal14 := same("export145Proto.GetToDoEntryDefaultStore.literals[14]");
+
+GetToDoEntryDefaultStore_code := same("export145Proto.GetToDoEntryDefaultStore.literals[13].instructions");
+
+DateFind_literal1 := same("export145Proto.DateFind.literals[1]");
+
+DateFind_literal25 := same("export145Proto.DateFind.literals[25]");
+
+IsThisItemSelected_literal4 := same("export145Proto.protoToDoFinder.IsThisItemSelected.literals[4]");
+
+SelectItem_code := same("export145Proto.protoToDoFinder.SelectItem.literals[6].instructions");
+
+GetToDoShapes_literal1 := same("export145Proto.GetToDoShapes.literals[1]");

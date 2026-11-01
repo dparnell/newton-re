@@ -1,5 +1,0 @@
-@@ 0x773cf9
-func() begin
-	SetKeyView(self, 0)
-end
-@@end

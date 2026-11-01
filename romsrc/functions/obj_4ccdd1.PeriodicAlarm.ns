@@ -1,9 +1,0 @@
-@@ 0x4cb555
-func(a1) begin
-	GetRoot():SysBeep();
-	GetRoot():SysBeep();
-	GetRoot():SysBeep();
-	GetRoot():SysBeep();
-	GetRoot().(owner):StartSend(self, 'periodic, nil, nil)
-end
-@@end

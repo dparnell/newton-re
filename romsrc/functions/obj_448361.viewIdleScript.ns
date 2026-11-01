@@ -1,6 +1,0 @@
-@@ 0x44832d
-func() begin
-	imagebase:?TargetChanged();
-	nil
-end
-@@end

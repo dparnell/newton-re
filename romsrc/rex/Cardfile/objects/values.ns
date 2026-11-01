@@ -1,0 +1,4 @@
+// The plain values the magic pointers and the C code name: the text a person
+// card with no name shows.
+
+untitledPerson := "Untitled Person";

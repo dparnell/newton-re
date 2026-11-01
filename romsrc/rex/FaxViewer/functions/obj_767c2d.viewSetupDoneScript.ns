@@ -1,5 +1,0 @@
-@@ 0x768095
-func() begin
-	pagePalette:Scrolled()
-end
-@@end

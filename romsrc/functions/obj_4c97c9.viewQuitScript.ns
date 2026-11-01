@@ -1,8 +1,0 @@
-@@ 0x4c970d
-func() begin
-	if InkConvert then begin
-			InkConvert:Close()
-		end;
-	(InkConvert := nil)
-end
-@@end

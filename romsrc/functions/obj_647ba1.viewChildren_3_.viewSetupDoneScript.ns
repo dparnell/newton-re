@@ -1,5 +1,0 @@
-@@ 0x490211
-func() begin
-	(if (Length(pkgNames) = 0) then self:Hide())
-end
-@@end

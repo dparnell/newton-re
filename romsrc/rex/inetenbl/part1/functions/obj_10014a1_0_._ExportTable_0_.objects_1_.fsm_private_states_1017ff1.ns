@@ -1,9 +1,0 @@
-@@ 0x1017ff1
-func() begin
-	fState := 'Connected;
-	if self:GetAbort() then begin
-			return self:DoEvent('Abort, nil)
-		end;
-	self:DoEvent('Connected, nil)
-end
-@@end

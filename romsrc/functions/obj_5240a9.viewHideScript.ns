@@ -1,9 +1,0 @@
-@@ 0x524069
-func() begin
-	_closeBox:Close();
-	RemoveSlot(_closeBox, 'viewBounds);
-	RemoveSlot(_closeBox, 'viewFormat);
-	_closeBox._proto := @166;
-	_closeBox:Open()
-end
-@@end

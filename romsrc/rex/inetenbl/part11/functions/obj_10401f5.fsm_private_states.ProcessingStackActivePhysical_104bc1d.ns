@@ -1,8 +1,0 @@
-@@ 0x104bc1d
-func() begin
-	if fAbort then begin
-			return self:DoEvent('Abort, nil)
-		end;
-	self:DoEvent('ProcessStackActiveLinkLayer, nil)
-end
-@@end

@@ -1,0 +1,56 @@
+// blindEntryLine: an input line that hides what is written in it - each
+// character shows as a bullet (dummyChar) while the real text is kept in
+// realText.  The password slip's three lines (old, new and confirmed password)
+// are built from it.
+
+blindEntryLine := {
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	viewBounds: {left: 0, top: 0, right: -10, bottom: 26},
+	viewLineSpacing: 24,
+	indent: 110,
+	// the line recognises no handwriting (no recognition flags): the password is
+	// typed
+	entryFlags: vVisible + vClickable,
+	realText: uCardPositionAlertButton,
+	dummyChar: $\u2022,
+	// the entry line's text changed: brings realText up to date (characters
+	// deleted before the caret, or new ones inserted there) and puts bullets in the
+	// line in place of the new characters
+	textChanged: func() begin
+		len := StrLen((text := entryLine.text));
+		len2 := StrLen(realText);
+		offset := GetCaretInfo().info.offset;
+		(if (len < len2) then (realText := Stringer([Array: Substr(realText, 0, offset), Substr(realText, ((offset + len2) - len), len2)])) else (if (len > len2) then begin
+					l5 := (len - len2);
+					realText := Stringer([Array: Substr(realText, 0, (offset - l5)), Substr(text, (offset - l5), l5), Substr(realText, (offset - l5), ((len2 - offset) + l5))]);
+					local text;
+					local len;
+					local len2;
+					local offset;
+					local l5;
+					(for i := (-l5) to -1 do begin
+							text[(offset + i)] := dummyChar
+						end);
+					SetValue(entryLine, 'text, text);
+					SetKeyView(entryLine, offset)
+				end))
+	end,
+	// sets the real text to a1 and shows as many bullets, with the caret at the end
+	UpdateText: func(a1) begin
+		copy := Clone(a1);
+		realText := a1;
+		local copy;
+		(for i := 0 to (StrLen(copy) - 1) do begin
+				copy[i] := dummyChar
+			end);
+		SetValue(entryLine, 'text, copy);
+		entryLine:SetHilite(9999, 9999, true)
+	end,
+	// a tap (with a click) makes the line the key view, the caret at its end
+	viewClickScript: func(unit) begin
+		playsound(@click);
+		SetKeyView(entryLine, 99999);
+		true
+	end,
+	_proto: @protoLabelInputLine
+};

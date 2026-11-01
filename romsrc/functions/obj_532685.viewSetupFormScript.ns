@@ -1,7 +1,0 @@
-@@ 0x532625
-func() begin
-	selected := fields.toRef;
-	alternatives := fields.alternatives;
-	inherited:?viewSetupFormScript()
-end
-@@end

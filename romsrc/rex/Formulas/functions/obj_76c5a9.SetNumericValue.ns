@@ -1,5 +1,0 @@
-@@ 0x76c80d
-func(a1) begin
-	CalcLine:SetNumericValue(a1)
-end
-@@end

@@ -1,0 +1,107 @@
+// The All Info layout of the Names application (@8196): the A-Z tabs, a rule,
+// up/down scroll arrows and the card's All Info view (@8195) scrolled in its
+// entry view.  Owner cards have no tabs or rule.
+
+export4 := {
+	name: allInfo_2,
+	stepChildren: [stepChildren:
+		export4Item,
+		{
+			viewBounds: {top: -2, left: 0, right: 0, bottom: 0},
+			viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+			_proto: @protoBorder
+		},
+		export4Item_2,
+		export4Item_3
+	],
+	allinfoHeight: 0,
+	childBottom: 0,
+	childToScroll: nil,
+	// The scroll arrows: moves the All Info view 16 pixels a step (times the
+	// repeat count), up to its top or its bottom.
+	ViewScroll2DScript: func(arrowDirection, a2) begin
+		local viewOriginY, l2, most;
+		viewOriginY := childToScroll.viewOriginY;
+		l2 := (max(a2.count, 1) * 16);
+		if (if (arrowDirection = 'up) then (viewOriginY > 0)) then begin
+				most := max(0, (viewOriginY - l2))
+			end else begin
+				if ((viewOriginY + allinfoHeight) < childBottom) then begin
+						most := min((childBottom - allinfoHeight), (viewOriginY + l2))
+					end
+			end;
+		(if most then begin
+				childToScroll:SetOrigin(0, most);
+				scrollArrows.yPos := most;
+				scrollArrows:AdjustArrows();
+				RefreshViews()
+			end)
+	end,
+	// Owner cards: the tabs and the rule are taken out.
+	viewSetupFormScript: func() begin
+		if (superSymbol = 'ownerNames) then begin
+				if IsReadOnly(stepChildren) then begin
+						stepChildren := Clone(stepChildren)
+					end;
+				ArrayMunger(stepChildren, 0, 2, nil, 0, 0)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @8247,
+	azTabs: nil,
+	stepAllocateContext: [|Array|: 'azTabs, export4Item, 'scrollArrows, export4Item_2, 'entryView, export4Item_3],
+	scrollArrows: nil,
+	entryView: nil
+};
+
+export4Item := {_proto: @8235, preAllocatedContext: 'azTabs};
+
+export4Item_2 := {viewClass: clView, _proto: @protoUpDownScroller, preAllocatedContext: 'scrollArrows};
+
+// The entry view holding the card's All Info view.
+export4Item_3 := {
+	viewBounds: {top: 20, left: 0, right: -20, bottom: 0},
+	// Shows the card's class's allinfo view (for a soup entry).
+	viewSetupChildrenScript: func() begin
+		local viewDefs;
+		if (if (if (if target then IsSoupEntry(target)) then (viewDefs := GetViewDefs(target.class))) then viewDefs.allinfo) then begin
+				self.stepChildren := [Array: viewDefs.allinfo]
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	// Owner cards: no tabs above, so the view starts at the top.
+	viewSetupFormScript: func() begin
+		if (superSymbol = 'ownerNames) then begin
+				if IsReadOnly(viewBounds) then begin
+						viewBounds := Clone(viewBounds)
+					end;
+				viewBounds.top := 0
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewFlags: vVisible + vClipping,
+	// Measures the All Info view and shows the arrows only when it is taller than
+	// the room it has.
+	viewSetupDoneScript: func() begin
+		local l1, childViewFrames;
+		inherited:?viewSetupDoneScript();
+		if (if (childViewFrames := self:ChildViewFrames()) then (Length(childViewFrames) > 0)) then begin
+				allinfoHeight := ((l1 := (childToScroll := childViewFrames[0]):GlobalBox()).bottom - l1.top);
+				childBottom := childToScroll:GetBottom()
+			end;
+		(if (childBottom <= allinfoHeight) then (if scrollArrows.viewCObject then scrollArrows:Hide()) else begin
+				scrollArrows.scrollRect := (scrollArrows.dataRect := SetBounds(0, 0, 0, childBottom));
+				scrollArrows.viewRect := SetBounds(0, 0, 0, allinfoHeight);
+				scrollArrows.yPos := 0;
+				if scrollArrows.viewCObject then begin
+						scrollArrows:Show()
+					end else begin
+						scrollArrows:Open()
+					end;
+				scrollArrows:AdjustArrows()
+			end)
+	end,
+	_proto: @newtEntryView,
+	preAllocatedContext: 'entryView
+};

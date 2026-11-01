@@ -1,5 +1,0 @@
-@@ 0x4ccc09
-func() begin
-	(if fields.comments then (self.text := "Comments"))
-end
-@@end

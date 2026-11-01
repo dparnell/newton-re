@@ -1,0 +1,8 @@
+// canonicalCorrector, and what only it reaches
+//
+// The picker DoCorrection clones for a word double-tapped in a view whose
+// viewCorrectionPopupScript may change it (system/builtinFunctions.ns): a
+// protoCorrector with the bounds, the alternative words (pickItems), the
+// refCon (the view and word) and the word's correction info.
+
+canonicalCorrector := {_proto: @protoCorrector, bounds: nil, pickItems: nil, refCon: nil, wordInfo: nil};

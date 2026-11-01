@@ -1,0 +1,12 @@
+// debugCodeBlockPrototype: codeBlockPrototype with a DebuggerInfo slot - the
+// frame the compiler clones for a function compiled with debugging
+// information (gDebugCodeBlockPrototype, src/frames/Compiler.cpp).
+
+debugCodeBlockPrototype := {
+	class: 'CodeBlock,
+	instructions: nil,
+	literals: nil,
+	argFrame: nil,
+	numArgs: nil,
+	DebuggerInfo: nil
+};

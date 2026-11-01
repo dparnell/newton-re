@@ -1,5 +1,0 @@
-@@ 0x100e02d
-func() begin
-	self:updateText(self:textSetup())
-end
-@@end

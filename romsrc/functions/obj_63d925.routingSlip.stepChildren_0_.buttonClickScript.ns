@@ -1,5 +1,0 @@
-@@ 0x599575
-func() begin
-	self:editMessage(nil)
-end
-@@end

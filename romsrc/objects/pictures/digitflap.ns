@@ -1,0 +1,8 @@
+// A digit flap of the flip-number pickers (protoNumberPicker and others). A 1-bit bitmap
+// frame (bits, bounds), 22 x 28 pixels. Magic pointer @686. Used by frames,
+// protoLongitudePicker, protoNumberPicker, protoTimeDeltaPicker, protoYearPicker.
+
+digitflap := {
+	bits: bitmap('bits, "resources/bits/3da6ad.png", "00000000000400de00de005100fa0067", 1),
+	bounds: {left: 0, top: 0, right: 22, bottom: 28}
+};

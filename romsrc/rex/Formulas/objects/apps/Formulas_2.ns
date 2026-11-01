@@ -1,0 +1,203 @@
+// The Formulas application (Formulas_2): a floater listing the formula panels -
+// Metric Conversion, Loan Payment, Net Present Value, Currency Exchange, Date
+// Calculator, Date Conversion and any an application adds with RegFormulas -
+// which opens the one tapped below its title.  Its InitFormulas, run by the
+// package's install script, defines the global functions RegFormulas,
+// UnRegFormulas, GetFormulas and the exchange-rate ones.
+
+Formulas_2 := {
+	viewBounds: {left: 0, top: 25, right: 224, bottom: 205},
+	stepChildren: [stepChildren:
+		{
+			title: formulas,
+			titleIcon: {
+				bits: bitmap('bits, "resources/bits/77319d.png", "00000000000400680068027500740284", 1),
+				bounds: {left: 0, top: 0, right: 15, bottom: 12}
+			},
+			_proto: @protoTitle
+		},
+		Formulas_2Item
+	],
+	viewJustify: vjParentCenterH,
+	viewFlags: vApplication + vClickable,
+	openChild: nil,
+	// Closes the open formula panel with the application.
+	viewQuitScript: func() begin
+		if openChild then begin
+				openChild:Close()
+			end;
+		(openChild := nil)
+	end,
+	// Remembers the base view for the panels (mainFormulasView).
+	viewSetupDoneScript: func() begin
+		(mainFormulasView := base)
+	end,
+	mainFormulasView: nil,
+	declareSelf: 'base,
+	// Sent by the part's devInstallScript: installs the global functions below and
+	// gives FormulasRegistry the built-in panels (@8306-@8311) as its _proto.
+	InitFormulas: compile(
+		constants: {
+			// RegFormulas(appSymbol, formulasTemplate): adds a panel and rebuilds the list
+			// if the Formulas application is open.
+			kFunction_7736e9: func(a1, a2) begin
+				local formulas;
+				FormulasRegistry.(EnsureInternal(a1)) := a2;
+				if (if (formulas := GetRoot().Formulas) then formulas.viewCObject) then begin
+						formulas:RedoChildren()
+					end;
+				nil
+			end,
+			// UnRegFormulas(appSymbol): takes a panel out again.
+			kFunction_7737f5: func(a1) begin
+				local formulas;
+				RemoveSlot(FormulasRegistry, a1);
+				if (if (formulas := GetRoot().Formulas) then formulas.viewCObject) then begin
+						formulas:RedoChildren()
+					end;
+				nil
+			end,
+			// The built-in panels' symbols, in the order the list shows them.
+			kLiteral_7739f1: '[Array: MetricConversion, LoanPayment, NetPresentValue, CurrencyExchange, DateCalculator, DateConversion],
+			// GetFormulas(): the panels' templates - the built-in ones in their order, then
+			// the rest sorted by their overview text.  (foreach deeply also visits the
+			// _proto's slots; the equality test keeps only the template a lookup finds.)
+			kFunction_773909: func() begin
+				list := [Array: ];
+				list2 := [Array: ];
+				local list;
+				local list2;
+				(foreach item in kLiteral_7739f1 do begin
+						if (value := FormulasRegistry.(item)) then begin
+								AddArraySlot(list, value)
+							end
+					end);
+				(foreach item, value deeply in FormulasRegistry do begin
+						if (if (not SetContains(kLiteral_7739f1, item)) then (value = FormulasRegistry.(item))) then begin
+								AddArraySlot(list2, value)
+							end
+					end);
+				Sort(list2, '|str<|, 'overview);
+				ArrayMunger(list, Length(list), nil, list2, 0, nil)
+			end,
+			// The tag of the system soup entry holding the user's own exchange rates.
+			kLiteral_773b31: "UpdatedExchangeRates:Apple",
+			// GetUpdatedExchangeRates(): that entry, added to the internal store's system
+			// soup the first time; its slots are {from: {to: rate}}.
+			kFunction_773aa5: func() begin
+				local soup, entry;
+				if ((entry := Query((soup := GetStores()[0]:GetSoup(@systemSoupName)), {type: 'index, IndexPath: 'tag, beginKey: kLiteral_773b31, endKey: kLiteral_773b31}):entry()) = nil) then begin
+						entry := soup:Add({tag: kLiteral_773b31})
+					end;
+				return entry
+			end,
+			// The built-in exchange rates: units of each country's currency to a US dollar.
+			kROM_8294: @8294,
+			// GetExchangeRate(from, to): a rate the user set (either way round, inverted
+			// when stored the other way), else one from the built-in table; nil when a
+			// country is not in it.
+			kFunction_773b89: func(a1, a2) begin
+				local updatedExchangeRates, l2;
+				if (updatedExchangeRates := GetUpdatedExchangeRates()).(a1) then begin
+						if (l2 := updatedExchangeRates.(a1).(a2)) then begin
+								return l2
+							end
+					end;
+				if updatedExchangeRates.(a2) then begin
+						if (l2 := updatedExchangeRates.(a2).(a1)) then begin
+								return (1 / l2)
+							end
+					end;
+				(if ((kROM_8294.(a1) = nil) or (kROM_8294.(a2) = nil)) then return nil else (if (a1 = 'USA) then return kROM_8294.(a2) else return (kROM_8294.(a2) / kROM_8294.(a1))))
+			end,
+			// SetExchangeRate(from, to, rate): keeps the rate in the user's entry, where a
+			// rate between the two already is (inverted if stored the other way), else
+			// under the first country that has rates, else under a new frame for it.
+			kFunction_773c2d: func(a1, a2, a3) begin
+				local updatedExchangeRates;
+				if (updatedExchangeRates := GetUpdatedExchangeRates()).(a1) then begin
+						if updatedExchangeRates.(a1).(a2) then begin
+								updatedExchangeRates.(a1).(a2) := a3;
+								EntryChange(updatedExchangeRates);
+								return nil
+							end
+					end;
+				if updatedExchangeRates.(a2) then begin
+						if updatedExchangeRates.(a2).(a1) then begin
+								updatedExchangeRates.(a2).(a1) := (1 / a3);
+								EntryChange(updatedExchangeRates);
+								return nil
+							end
+					end;
+				if updatedExchangeRates.(a1) then begin
+						updatedExchangeRates.(a1).(a2) := a3;
+						EntryChange(updatedExchangeRates);
+						return nil
+					end;
+				if updatedExchangeRates.(a2) then begin
+						updatedExchangeRates.(a2).(a1) := (1 / a3);
+						EntryChange(updatedExchangeRates);
+						return nil
+					end;
+				updatedExchangeRates.(a1) := {};
+				updatedExchangeRates.(a1).(a2) := a3;
+				EntryChange(updatedExchangeRates)
+			end
+		},
+		func() begin
+			functions.RegFormulas := kFunction_7736e9;
+			functions.UnRegFormulas := kFunction_7737f5;
+			FormulasRegistry._proto := '{MetricConversion: @8306, LoanPayment: @8307, NetPresentValue: @8308, CurrencyExchange: @8309, DateCalculator: @8310, DateConversion: @8311};
+			DefGlobalVar('FormulaList, [Array: ]);
+			functions.GetFormulas := kFunction_773909;
+			functions.GetUpdatedExchangeRates := kFunction_773aa5;
+			functions.GetExchangeRate := kFunction_773b89;
+			(functions.SetExchangeRate := kFunction_773c2d)
+		end),
+	// Puts the caret (key view) into the application.
+	viewSetupFormScript: func() begin
+		SetKeyView(self, 0)
+	end,
+	ReOrientToScreen: @defRotateFunc,
+	KClassroomAware: true,
+	_proto: @protoFloatNGo,
+	FormulasRoll: nil,
+	stepAllocateContext: [|Array|: 'FormulasRoll, Formulas_2Item],
+	appSymbol: 'Formulas
+};
+
+// The list of panels (FormulasRoll).
+Formulas_2Item := {
+	// Opens the tapped panel (a1 its index) below the title, as wide as the
+	// floater and as tall as the panel's own bounds, closing the one open.
+	buttonClickScript: func(a1) begin
+		local formulasListItem, box, box2, frame2;
+		selection := nil;
+		if openChild then begin
+				openChild:Close()
+			end;
+		formulasListItem := formulasList[a1];
+		box := mainFormulasView:GlobalBox();
+		box2 := mainFormulasView:LocalBox();
+		(openChild := BuildContext({viewBounds: (frame2 := {left: box.left, top: (box.top + 25), right: (box2.right + box.left), bottom: ((box.top + 25) + formulasListItem.viewBounds.bottom)}), _proto: formulasListItem})):Open()
+	end,
+	viewBounds: {top: 20, left: 5, right: -5, bottom: 130},
+	viewFont: @fontSystem10Bold,
+	viewLines: 10,
+	// Fills the list with a bullet and each panel's overview text.
+	viewSetupFormScript: func() begin
+		formulasList := GetFormulas();
+		self.selection := nil;
+		self.listItems := Array(Length(formulasList), nil);
+		(foreach key, value in formulasList do begin
+				self.listItems[key] := Stringer([Array: "\u2022\u", " ", value.overview])
+			end);
+		self:SetupList()
+	end,
+	viewJustify: vjParentFullH,
+	viewFormat: vfFillWhite + vfPen(1),
+	viewFlags: vVisible + vApplication + vClipping + vClickable,
+	formulasList: nil,
+	_proto: @protoTextList,
+	preAllocatedContext: 'FormulasRoll
+};

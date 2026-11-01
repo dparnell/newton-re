@@ -1,5 +1,0 @@
-@@ 0x4bc0f5
-func() begin
-	GetGlobals().PhoneTypes.phoneClasses
-end
-@@end

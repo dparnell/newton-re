@@ -1,0 +1,4 @@
+// kosErrorAlertTextBoundsNoButtons: the OS error alert's text when the alert
+// has no buttons, taking the whole box (src/frames/ROMConstants.cpp).
+
+kosErrorAlertTextBoundsNoButtons := {left: 10, top: 10, right: 182, bottom: 70};

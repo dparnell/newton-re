@@ -1,6 +1,0 @@
-@@ 0x101761d
-func() begin
-	self:?DoErrorCallback("Abort", -16005);
-	self:DoEvent('CleanUp, nil)
-end
-@@end

@@ -1,0 +1,114 @@
+// protoConvertInkSlip: the floating slip for converting a word of ink (or
+// typing a value): a title, an explanation, an entry line and optionally an
+// on-screen keyboard (kbdType 'alpha or 'phone).  Closing it sends compMsg to
+// compView with the entered text.
+//   userTitle / userText   the slip's title and explanation
+//   recFlags    extra recognition flags for the entry line
+//   compView, compMsg, userData   who is told of the result, and how
+
+protoConvertInkSlip := {
+	viewBounds: {left: 0, top: 0, right: 225, bottom: 124},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	// space added below the last child (grows by a keyboard's height)
+	extraHeight: 20,
+	// before the children are made: fills in the title and text, picks the
+	// keyboard (l4) and the entry line's flags
+	viewSetupChildrenScript: func() begin
+		local l1, strFontWidth2, l3, l4;
+		l3 := 'symbol;
+		infoText.text := userText;
+		headerText.title := userTitle;
+		strFontWidth2 := StrFontWidth(headerText.title, headerText.viewFont);
+		headerText.viewBounds := SetBounds(0, 5, strFontWidth2, 15);
+		if (kbdType = 'alpha) then begin
+				l4 := '{_proto: @alphaKeys, viewBounds: {left: 1, top: -101, right: 226, bottom: -20}, viewJustify: vjParentCenterH + vjParentBottomV}
+			end else begin
+				if (kbdType = 'phone) then begin
+						l4 := '{_proto: @phonePad, viewBounds: {left: 0, top: -146, right: 124, bottom: -20}, viewJustify: vjParentCenterH + vjParentBottomV};
+						entryLine.viewFlags := vVisible + vClickable + vGesturesAllowed + vPhoneField
+					end
+			end;
+		// the caller's recognition flags on top of a visible, tappable line
+		// taking gestures
+		if recFlags then begin
+				entryLine.viewFlags := BOr(vVisible + vClickable + vGesturesAllowed, recFlags)
+			end;
+		if l4 then begin
+				self.stepChildren := [Array: l4];
+				extraHeight := (((extraHeight + 10) + l4.viewBounds.bottom) - l4.viewBounds.top)
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	// after setup: makes the slip just tall enough for its children (the
+	// last one before the keyboard, plus extraHeight) and puts the caret in
+	// the entry line
+	viewSetupDoneScript: func() begin
+		local copy, childViewFrames, l3, l4;
+		childViewFrames := self:ChildViewFrames();
+		copy := Clone(self.viewBounds);
+		l4 := (Length(childViewFrames) - (if kbdType then 2 else 1));
+		copy.bottom := ((childViewFrames[l4]:GlobalBox().bottom - self:GlobalBox().top) + extraHeight);
+		SetValue(self, 'viewBounds, copy);
+		inherited:?viewSetupDoneScript();
+		SetKeyView(entryLine, 0)
+	end,
+	// puts the recognized text (richText) into the entry line
+	Recognize: func() begin
+		SetValue(entryLine, 'text, richText)
+	end,
+	ReOrientToScreen: @defRotateFunc,
+	viewChildren: [viewChildren:
+		{
+			// the close box: sends compMsg(isInk, text, userData) to compView
+			// with the entry line's text (isInk true when it holds ink), then
+			// closes the slip.  For a phone conversion the brackets are
+			// replaced by the same brackets - as the strings read here, a no-op.
+			buttonClickScript: func() begin
+				local copy;
+				copy := Clone(entryLine:GetRichString());
+				if phoneCvt then begin
+						StrReplace(copy, "(", "(", 1);
+						StrReplace(copy, ")", ")", 1)
+					end;
+				if compMsg then begin
+						Perform(compView, compMsg, [Array: (not IsRichString(copy)), copy, userData])
+					end;
+				base:Close()
+			end,
+			_proto: @protoCancelButton
+		},
+		headerText,
+		infoText,
+		entryLine_3
+	],
+	headerText: nil,
+	allocateContext: [|Array|: 'headerText, headerText, 'infoText, infoText, 'entryLine, entryLine_3],
+	infoText: nil,
+	entryLine: nil,
+	_proto: @protoFloater
+};
+
+// the slip's title
+headerText := {
+	viewBounds: {left: 0, top: 8, right: 150, bottom: 15},
+	viewJustify: vjParentCenterH,
+	preallocatedContext: 'headerText,
+	_proto: @protoTitle
+};
+
+// the explanation below the title
+infoText := {
+	viewBounds: {left: 10, top: 5, right: -10, bottom: 30},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	preallocatedContext: 'infoText,
+	_proto: @protoStaticText
+};
+
+// the entry line below the explanation
+entryLine_3 := {
+	viewBounds: {left: 10, top: 5, right: -10, bottom: 30},
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	preallocatedContext: 'entryLine,
+	_proto: @protoInputLine
+};

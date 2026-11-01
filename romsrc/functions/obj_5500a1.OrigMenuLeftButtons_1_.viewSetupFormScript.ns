@@ -1,6 +1,0 @@
-@@ 0x54fe2d
-func() begin
-	rotateButton := self;
-	inherited:?viewSetupFormScript()
-end
-@@end

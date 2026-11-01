@@ -1,0 +1,204 @@
+// The auto-dock slip (@8277), opened by BuildAutoDockParams before an
+// automatic dock over a modem (to confirm the number, with a sender popup and
+// call options) or a transport with a button of its own; Connect hands the
+// connection options and password to the callback.
+
+export85 := {
+	viewBounds: {left: 0, top: 50, right: 210, bottom: 170},
+	stepChildren: [stepChildren:
+		{
+			title: dock,
+			viewBounds: {left: 10, top: 0, right: 106, bottom: 16},
+			titleIcon: {bits: titleIconBits, bounds: {left: 0, top: 0, right: 19, bottom: 11}},
+			_proto: @protoTitle
+		},
+		export85Item,
+		{
+			// Cancel: ends the connection.
+			buttonClickScript: func() begin
+				GetRoot().Connection.theEndpoint:ConnectionDone(0);
+				inherited:?buttonClickScript()
+			end,
+			_proto: @protoCancelButton
+		},
+		{
+			text: connect,
+			// Connect: for a modem, the number shown into the options (nil when there is
+			// none); for another transport, its callBeforeConnect is asked first when it
+			// has one.
+			buttonClickScript: func() begin
+				local myCallback;
+				local phone;
+				AddDeferredAction(func() begin
+					base:Close()
+				end, nil);
+				(if (prefsFrame.type = 'modem) then begin
+						phone := modemStuff:GetPhone();
+						if (if (if IsFrame(options) then phone) then (StrLen(phone) > 0)) then begin
+								(options := DeepClone(options)).phonenumber := phone;
+								options := {connectOptions: options, password: password}
+							end else begin
+								options := nil
+							end;
+						AddDeferredCall(callback, [Array: options])
+					end else begin
+						// the answer: the options (with the password), nil if none
+						myCallback := func() begin
+							if IsFrame(options) then begin
+									options := {connectOptions: options, password: password}
+								end else begin
+									options := nil
+								end;
+							call callback with (options)
+						end;
+						(if options.callBeforeConnect then options:callBeforeConnect((options := DeepClone(options)), func(a1) begin
+								options := a1;
+								AddDeferredCall(myCallback, nil)
+							end) else AddDeferredCall(myCallback, nil))
+					end)
+			end,
+			viewBounds: {left: -54, top: -18, right: -7, bottom: -5},
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+			_proto: @protoTextButton
+		},
+		export85Item_2,
+		export85Item_3
+	],
+	options: nil,
+	prefsFrame: nil,
+	callback: nil,
+	password: nil,
+	// Opens the slip with the options, the auto-dock preferences (a2), the
+	// password (a3) and the callback.
+	OpenOn: func(options, a2, a3, callback) begin
+		local context;
+		(context := BuildContext(self)).options := options;
+		context.prefsFrame := a2;
+		context.password := a3;
+		context.callback := callback;
+		context:Open()
+	end,
+	// A transport with a button: no modem lines; otherwise no button.  -2 clears
+	// vVisible.
+	viewSetupFormScript: func() begin
+		if options.button then begin
+				dialAssist.viewFlags := BAnd(dialAssist.viewFlags, -2);
+				modemStuff.viewFlags := BAnd(modemStuff.viewFlags, -2)
+			end else begin
+				special.viewFlags := BAnd(special.viewFlags, -2)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @protoFloater,
+	modemStuff: nil,
+	stepAllocateContext: [|Array|: 'modemStuff, export85Item, 'dialAssist, export85Item_2, 'special, export85Item_3],
+	dialAssist: nil,
+	special: nil
+};
+
+willDial := "Will dial: ";
+
+// The modem lines: the sender popup and "Will dial: number".
+export85Item := {
+	viewBounds: {left: 7, top: 20, right: -7, bottom: 84},
+	viewFlags: vVisible,
+	viewFormat: 0,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 0, top: 0, right: 200, bottom: 26},
+			viewJustify: vjCenterV,
+			// A new sender: the number is worked out again.
+			JamIt: func() begin
+				inherited:?JamIt();
+				modemStuff.phonenumber := nil;
+				self:SetNewWillDial(self:GetPhone())
+			end,
+			_proto: @protoSenderPopup
+		},
+		export85ItemItem
+	],
+	viewJustify: vjParentFullH,
+	// Shows the number to dial.
+	SetNewWillDial: func(a1) begin
+		phonenumber := a1;
+		SetValue(willDial, 'text, Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
+	end,
+	phonenumber: nil,
+	// The number to dial: the one set, or the worksite's connection phone made
+	// dialable from the current location (MungePhone).
+	GetPhone: func() begin
+		local connection, worksite;
+		(if phonenumber then phonenumber else begin
+				connection := GetRoot().Connection;
+				(if (if (worksite := connection:GetWorksite(prefsFrame.phoneCurrentChoice)) then worksite.connectionPhone) then self:MungePhone(MakePhone({areacode: worksite.areacode, phone: worksite.connectionPhone}), connection:WorksiteToCountry(worksite)) else "")
+			end)
+	end,
+	viewClass: clView,
+	willDial: nil,
+	stepAllocateContext: [|Array|: 'willDial, export85ItemItem],
+	preAllocatedContext: 'modemStuff
+};
+
+// "Will dial: number".
+export85ItemItem := {
+	text: willDial,
+	viewBounds: {left: 0, top: -32, right: 0, bottom: 0},
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentBottomV + oneLineOnly,
+	viewFont: tsSimple + tsSize(9),
+	// "Will dial: " and the number.
+	viewSetupFormScript: func() begin
+		(self.text := Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'willDial
+};
+
+// The call options button: opens the call options slip on the worksite's
+// number and country.
+export85Item_2 := {
+	// Opens or closes the call options slip on the worksite's number.
+	buttonClickScript: func() begin
+		local connection, worksite;
+		connection := GetRoot().Connection;
+		if (if (worksite := connection:GetWorksite(prefsFrame.phoneCurrentChoice)) then worksite.connectionPhone) then begin
+				callOptionsSlip.inNumber := MakePhone({areacode: worksite.areacode, phone: worksite.connectionPhone})
+			end else begin
+				callOptionsSlip.inNumber := ""
+			end;
+		callOptionsSlip.inCountry := connection:WorksiteToCountry(worksite);
+		callOptionsSlip.invoker := self;
+		callOptionsSlip:Toggle()
+	end,
+	// The call options slip's number becomes the one to dial.
+	UpdatePhone: func() begin
+		(if callOptionsSlip.outNumber then modemStuff:SetNewWillDial(callOptionsSlip.outNumber.text))
+	end,
+	_proto: @protoCallassistButton,
+	preAllocatedContext: 'dialAssist
+};
+
+// The transport's own button, its title from the options.
+export85Item_3 := {
+	text: export85Item_3Text,
+	// Runs the options' buttonClickScript, if any.
+	buttonClickScript: func() begin
+		(if options.buttonClickScript then call options.buttonClickScript with (options))
+	end,
+	viewBounds: {left: -133, top: -18, right: -79, bottom: -5},
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
+	// The options' button title, sized to fit.
+	viewSetupFormScript: func() begin
+		local copy;
+		(if options.button then begin
+				self.text := options.button.buttonTitle;
+				(copy := Clone(viewBounds)).left := ((viewBounds.right - StrWidth(text)) - 7);
+				(self.viewBounds := copy)
+			end)
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'special
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SetNewWillDial_literal4 := same("export85Item.SetNewWillDial.literals[4]");

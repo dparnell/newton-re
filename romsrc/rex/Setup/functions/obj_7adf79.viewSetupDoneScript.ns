@@ -1,6 +1,0 @@
-@@ 0x7aefc1
-func() begin
-	SetKeyView(self, 0);
-	self:Refresh()
-end
-@@end

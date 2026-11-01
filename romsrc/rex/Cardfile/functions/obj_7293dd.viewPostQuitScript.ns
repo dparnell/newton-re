@@ -1,6 +1,0 @@
-@@ 0x729d01
-func() begin
-	target.phones[0] := savePhoneNum;
-	targetView:StartFlush()
-end
-@@end

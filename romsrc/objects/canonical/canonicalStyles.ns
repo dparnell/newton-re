@@ -1,0 +1,6 @@
+// canonicalStyles, and what only it reaches
+//
+// A styles frame (src/views/StyleRuns.cpp): a paragraph's style runs, its
+// tab stops and its correction information.
+
+canonicalStyles := {styles: nil, tabs: nil, correctInfo: nil};

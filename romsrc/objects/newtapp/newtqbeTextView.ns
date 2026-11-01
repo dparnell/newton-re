@@ -1,0 +1,31 @@
+// newtqbeTextView: a "query by example" text view: what the user writes is not
+// stored but, a second after the last change, looked up in the application's soup;
+// the first entry holding the words is gone to and shown.  Not in the NPR.
+//
+// This file holds newtqbeTextView and what only it reaches.
+
+newtqbeTextView := {
+	_proto: @newtroTextView,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	// (re)start the second's wait (SetupIdle takes milliseconds)
+	viewClickScript: func(unit) begin
+		self:SetupIdle(1000);
+		nil
+	end,
+	// the text changed: look it up a second from now
+	viewChangedScript: func(slot, view) begin
+		(if (if (not hack) then (slot = 'text)) then self:SetupIdle(1000))
+	end,
+	// look the words up in the order of the application's query, and go to the first
+	// entry found; nil: no more idle calls
+	viewIdleScript: func() begin
+		local cursor, l2;
+		(if StrFilled(text) then begin
+				if (if (l2 := (cursor := dataSoup:Query({type: 'words, words: SplitString(text), indexPath: soupQuery.indexPath})):entry()) then (l2 <> 'deleted)) then begin
+						dataCursor:Goto(l2);
+						self:DoRetarget()
+					end;
+				nil
+			end)
+	end
+};

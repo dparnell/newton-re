@@ -1,6 +1,0 @@
-@@ 0x3c6495
-func(a1) begin
-	RemoveSlot(WeirdCardEventRegistry, a1);
-	nil
-end
-@@end

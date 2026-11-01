@@ -1,5 +1,0 @@
-@@ 0x54c115
-func(a1) begin
-	PressButton(Show.showBarText)
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x417729
-func() begin
-	return (if (if sounds then IsArray(sounds)) then (Length(sounds) > 0))
-end
-@@end

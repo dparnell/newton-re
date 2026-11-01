@@ -1,5 +1,0 @@
-@@ 0x4abe41
-func(a1) begin
-	self:AdoptEntryFromStationery(a1, nil, nil)
-end
-@@end

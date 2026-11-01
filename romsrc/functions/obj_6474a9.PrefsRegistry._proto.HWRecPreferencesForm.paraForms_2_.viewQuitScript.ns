@@ -1,5 +1,0 @@
-@@ 0x5ad389
-func() begin
-	saveLetterWeights()
-end
-@@end

@@ -1,9 +1,0 @@
-@@ 0x1043c91
-func(a1) begin
-	local l1;
-	l1 := fConnectionSlipCallback;
-	fConnectionSlipCallback := (fConnectionSlipView := nil);
-	self:MShutdownTimer();
-	self:MDoCallback(l1, [Array: a1])
-end
-@@end

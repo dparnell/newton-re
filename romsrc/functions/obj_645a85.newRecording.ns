@@ -1,6 +1,0 @@
-@@ 0x422e09
-func() begin
-	local l1;
-	(l1 := {_proto: self, direction: 'record})
-end
-@@end

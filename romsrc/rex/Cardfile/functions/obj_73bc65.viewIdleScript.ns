@@ -1,6 +1,0 @@
-@@ 0x73be3d
-func() begin
-	self:UpdateIndicator(initialSetup);
-	500
-end
-@@end

@@ -1,6 +1,0 @@
-@@ 0x3c68c1
-func(a1) begin
-	RemoveSlot(FolderChangedRegistry, a1);
-	nil
-end
-@@end

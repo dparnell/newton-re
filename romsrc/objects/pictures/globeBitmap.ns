@@ -1,0 +1,33 @@
+// The Extras drawer icon of Time Zones (a globe). A 2.x icon frame: an unhilited and a
+// hilited image, each with bounds, a mask and colordata (a 4-bit grey and a 1-bit version).
+// Magic pointer @330. Used by extrasRomIcons.
+
+globeBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_14,
+		mask: unhilitedMask_4,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/53ea91.png", "00000000001000000000000000190020", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_14, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 32, bottom: 25},
+		mask: unhilitedMask_4,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/53e7f5.png", "00000000001000000000000000190020", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/53e775.png", "00000000000400000000000000190020", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};
+
+unhilitedMask_4 := bitmap('mask, "resources/mask/53e6f5.png", "00000000000400000000000000190020", 1);

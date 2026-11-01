@@ -1,8 +1,0 @@
-@@ 0x104b079
-func() begin
-	if fAbort then begin
-			return self:DoEvent('Abort, nil)
-		end;
-	self:DoEvent('ActivateCCE, nil)
-end
-@@end

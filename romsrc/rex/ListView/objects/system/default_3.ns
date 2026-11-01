@@ -1,0 +1,66 @@
+// default_3: the To Do viewer view def - one task (an item's body) shown read-only, as in
+// the In/Out Box. The file holds it and what only it reaches.
+
+default_3 := {
+	_proto: export145Proto,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewFlags: vVisible + vReadOnly,
+	version: 1,
+	type: 'viewer,
+	symbol: 'default,
+	name: toDo,
+	todoSlip: nil,
+	selectedDates: nil,
+	// viewSetupFormScript: the task's day.
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			selectedDates := [Array: fields.body.date];
+			inherited:viewSetupFormScript()
+		end),
+	// CalculateScrollRects(): nothing (no scrolling).
+	CalculateScrollRects: compile(
+		options: "names",
+		func() begin
+			nil
+		end),
+	// GetTarget(oldTarget): the one task.
+	GetTarget: compile(
+		options: "names",
+		func(oldTarget) begin
+			topics := [Array: fields.body];
+			nTopics := 1;
+			(target := fields.body)
+		end),
+	// StartFlush(): nothing (read-only).
+	StartFlush: compile(
+		options: "names",
+		func() begin
+			nil
+		end),
+	// EndFlush(): nothing.
+	EndFlush: compile(
+		options: "names",
+		func() begin
+			nil
+		end),
+	// _keyDaughterScript, _keySisterScript, _keyAuntScript: the new-topic keys do nothing here.
+	_keyDaughterScript: compile(
+		options: "names",
+		func(keyView) begin
+			nil
+		end),
+	// _keySisterScript: nothing.
+	_keySisterScript: compile(
+		options: "names",
+		func(keyView) begin
+			nil
+		end),
+	// _keyAuntScript: nothing.
+	_keyAuntScript: compile(
+		options: "names",
+		func(keyView) begin
+			nil
+		end)
+};

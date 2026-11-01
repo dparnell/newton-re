@@ -1,5 +1,0 @@
-@@ 0x4f2d15
-func(a1) begin
-	((a1 + self:GetFirstDay()) mod 7)
-end
-@@end

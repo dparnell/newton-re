@@ -213,8 +213,8 @@ probably keeps it (to be seen on the device).  **Closing**: AppLoad's drag
 down from the top centre closes the socket; newton ends the run as a closed
 window does.
 
-**Settings while it runs**: Prefs' Host page (`docs/host-settings.md`)
-switches the ink's pen waveform (`NEWTON_RM_INK_MODE=ufast`'s), a finger as
+**Settings while it runs**: Prefs' Screen page (`docs/host-settings.md`;
+beaming over the network on the Host page) switches the ink's pen waveform (`NEWTON_RM_INK_MODE=ufast`'s), a finger as
 the pen (`NEWTON_RM_TOUCH`'s) and beaming over the network, and has a Clear
 ghosts button; the environment variables still set where newton starts.
 

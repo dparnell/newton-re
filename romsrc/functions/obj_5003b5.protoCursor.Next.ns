@@ -1,5 +1,0 @@
-@@ 0x50e799
-func() begin
-	self:move(1)
-end
-@@end

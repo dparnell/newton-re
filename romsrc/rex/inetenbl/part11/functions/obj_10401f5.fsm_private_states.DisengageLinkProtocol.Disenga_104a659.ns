@@ -1,6 +1,0 @@
-@@ 0x104a659
-func() begin
-	self:MUpdateProgressSlip('Update, "Disconnecting your internet link...", 40);
-	fLinkLayerServiceFSM:DoEvent('DisengageLinkProtocol, [Array: self, 'MDisengageLinkCallback])
-end
-@@end

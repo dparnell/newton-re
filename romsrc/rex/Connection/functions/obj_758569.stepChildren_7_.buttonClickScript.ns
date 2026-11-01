@@ -1,5 +1,0 @@
-@@ 0x7592c9
-func() begin
-	AddDeferredSend(protoContext, 'ToggleKeyboardPassthrough, [Array: nil])
-end
-@@end

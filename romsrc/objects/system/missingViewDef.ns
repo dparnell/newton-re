@@ -1,0 +1,17 @@
+// missingViewDef (@590): the stand-in editor view definition GetDataView
+// (builtinFunctions) clones when an entry's data definition has no view
+// definition (its stationery is missing); GetDataView sets its text to say
+// that the stationery is not installed.
+
+missingViewDef := {
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	viewBounds: {left: 10, top: 10, right: -10, bottom: 0},
+	viewJustify: vjCenterH + vjParentFullH + vjParentFullV,
+	text: nil,
+	missingStationery: true,
+	symbol: 'default,
+	version: 1,
+	type: 'editor,
+	name: "Missing Stationery",
+	_proto: @protoStaticText
+};

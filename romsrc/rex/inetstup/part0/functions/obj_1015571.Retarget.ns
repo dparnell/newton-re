@@ -1,8 +1,0 @@
-@@ 0x10159b9
-func(a1) begin
-	a1 := true;
-	dataCursor:Reset();
-	inherited:Retarget(a1);
-	(target := dataCursor:entry())
-end
-@@end

@@ -1,0 +1,38 @@
+// newtCheckbox: the NewtApp slot view for a check box (the NPR's newtCheckBox): checked
+// when target.(path) equals assert; checking stores assert, unchecking negate.
+//
+// This file holds newtCheckbox and what only it reaches.
+
+newtCheckbox := {
+	viewJustify: 0,
+	path: nil,
+	// the value of the slot when checked; negate the one when not
+	assert: true,
+	negate: nil,
+	jamSlot: nil,
+	viewChildren: nil,
+	// checked if the slot holds assert
+	viewSetupFormScript: func() begin
+		(viewValue := (if target then (target.(path) = assert)))
+	end,
+	// the entry view moved to another entry
+	Retarget: func() begin
+		self:SetCheck((if target then (target.(path) = assert)))
+	end,
+	// the user (un)checked it: store assert or negate
+	valueChanged: func() begin
+		(if target then (target.(path) := (if viewValue then assert else negate)))
+	end,
+	// the label text, right of the box (16 pixels in)
+	viewDrawScript: func() begin
+		local box;
+		(box := self:LocalBox()).left := 16;
+		TextBox(text, {font: viewFont, justification: 'left}, box)
+	end,
+	// "true" or "false", for routing
+	TextScript: func() begin
+		(if viewValue then "true" else "false")
+	end,
+	jamFromEntry: jamFromEntry,
+	_proto: @protoCheckbox
+};

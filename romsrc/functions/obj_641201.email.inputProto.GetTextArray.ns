@@ -1,5 +1,0 @@
-@@ 0x455e49
-func() begin
-	GetGlobals().EmailSystems.emailText
-end
-@@end

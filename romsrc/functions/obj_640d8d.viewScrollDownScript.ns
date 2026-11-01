@@ -1,5 +1,0 @@
-@@ 0x4397a5
-func() begin
-	self:doscrollscript(lineHeight)
-end
-@@end

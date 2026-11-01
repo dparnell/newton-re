@@ -1,0 +1,4 @@
+// charsVersion: magic pointer @48, an empty frame.  Nothing in the ROM's
+// NewtonScript refers to it; what reads it, if anything, is not known.
+
+charsVersion := {};

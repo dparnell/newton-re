@@ -1,5 +1,0 @@
-@@ 0x76756d
-func() begin
-	self:StoreCurrentFaxPage()
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x7ad099
-func() begin
-	SetKeyView(vInputLocalNum, 0)
-end
-@@end

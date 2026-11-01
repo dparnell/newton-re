@@ -1,0 +1,13 @@
+// protoDefaultStatusButton: a status-bar button that makes itself its
+// application's default button, the one Return or Enter presses (see
+// protoContainerView's viewKeyDownScript).
+
+protoDefaultStatusButton := {
+	_proto: @protoStatusButton,
+	// at setup: records this button as base's _defaultButton, then sets up as
+	// a status button does
+	viewSetupFormScript: func() begin
+		base._defaultButton := self;
+		inherited:?viewSetupFormScript()
+	end
+};

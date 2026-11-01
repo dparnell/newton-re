@@ -1,8 +1,0 @@
-@@ 0x104b3b9
-func() begin
-	self:MUpdateProgressSlip('Update, nil, 10);
-	fPhysicalLayerServiceFSM:DoEvent('SetCCE, [Array: fCCE]);
-	fPhysicalLayerServiceFSM:DoEvent('SetLinkEntry, [Array: fLinkEntry]);
-	fPhysicalLayerServiceFSM:DoEvent('LoadDriverProtocol, [Array: self, 'MLoadDriverProtocolCallback])
-end
-@@end

@@ -1,0 +1,51 @@
+// The Notes view of a card (@8225): its notes in an edit view of lined paper.
+
+notes_2 := {
+	viewBounds: {left: 0, top: 15, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewFont: tsHWFont + tsSize(18),
+	viewFormat: vfLinesGray,
+	path: 'notes,
+	optionFlags: 1,
+	name: notes,
+	protection: 'public,
+	symbol: 'notes,
+	type: 'viewer,
+	// Outside the Names application the notes cannot be edited: a click is taken
+	// and ignored.
+	viewSetupFormScript: compile(
+		constants: {
+			// a test every child passes
+			kFunction_72faa1: func(a1) begin
+				true
+			end
+		},
+		func() begin
+			local l1, l2, l3, l4, l5;
+			l3 := 0;
+			l4 := 0;
+			if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then begin
+					self.viewFlags := vVisible + vClickable;
+					self.viewClickScript := kFunction_72faa1
+				end;
+			inherited:?viewSetupFormScript()
+		end),
+	// Scrolls to the end of the notes when asked (scrollToBottom), and puts the
+	// caret in when the view can be written in.
+	viewSetupDoneScript: func() begin
+		local least;
+		if scrollToBottom then begin
+				if ((least := min((initialDataRect.bottom - 30), (scrollerView.scrollRect.bottom - (scrollerView.viewRect.bottom - scrollerView.viewRect.top)))) > 0) then begin
+						self:SetOrigin(viewOriginX, least);
+						scrollerView.yPos := least
+					end
+			end;
+		scrollerView:AdjustArrows();
+		if (BAnd(self.viewFlags, vReadOnly + vWriteProtected) = 0) then begin
+				self:PositionCaret(10, (viewOriginY + 10), nil)
+			end;
+		inherited:?viewSetupDoneScript()
+	end,
+	scrollToBottom: nil,
+	_proto: @newtEditView
+};

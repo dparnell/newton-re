@@ -1,5 +1,0 @@
-@@ 0x7a0de5 names
-func(unit) begin
-	(if savedDone then self:NotifyCompleted() else inherited:viewClickScript(unit))
-end
-@@end

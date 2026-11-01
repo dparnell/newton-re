@@ -1,5 +1,0 @@
-@@ 0x5b9b19
-func() begin
-	return buffer
-end
-@@end

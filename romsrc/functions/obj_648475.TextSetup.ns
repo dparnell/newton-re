@@ -1,5 +1,0 @@
-@@ 0x45abe1
-func() begin
-	(if longFormat then LongDateStr(Date, @66.(longFormat)) else ShortDateStr(Date, @66.(shortFormat)))
-end
-@@end

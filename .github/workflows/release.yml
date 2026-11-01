@@ -47,6 +47,9 @@ jobs:
       - name: Smoke test
         shell: bash
         run: tools/ci/smoke.sh build/host
+      - name: Baseline x86-64 only
+        shell: bash
+        run: pip install capstone && for exe in newton newtonscript; do python tools/ci/cpuscan.py build/host/$exe.exe || exit 1; done
       - name: Package
         shell: bash
         run: tools/ci/package.sh build newton-windows-x86_64 zip

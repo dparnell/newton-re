@@ -1,0 +1,7 @@
+// canonicalFakeContext, and what only it reaches
+//
+// The frame the interpreter makes a function's variables into when it sets
+// a variable that neither they nor the receiver have, and no receiver
+// takes it (src/frames/Interpreter.cpp): its _parent is the receiver.
+
+canonicalFakeContext := {_nextArgFrame: nil, _parent: nil, _implementor: nil};

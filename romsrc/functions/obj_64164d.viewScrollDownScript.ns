@@ -1,5 +1,0 @@
-@@ 0x4fcd7d
-func(a1) begin
-	DayTable:viewScrollDownScript(a1)
-end
-@@end

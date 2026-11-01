@@ -1,0 +1,21 @@
+// handwritingFont: the ROM's "Casual" font family, the screen font whose family
+// number is tsHWFont (the last of romFontList's families, @571). A family frame:
+// its bitmap sfnt data, the sizes the font menus offer (userSizes) and what
+// printing uses in its place (PostScript Times-Roman, scaled by psScale).
+
+handwritingFont := {
+	name: "Casual",
+	encoding: 0,
+	macFontID: 5,
+	screenSym: 'handwritingFont,
+	psName: 'timesroman,
+	psScale: 75366, // 16.16 fixed, about 1.15: the PostScript size for a screen size
+	badFontMap: 1, // present: the sfnt's cmap is read with MapFormat4Patched (docs/qd/fonts-sfnt.md)
+	plainData: sfnt('sfnt, "resources/sfnt/408ee5"),
+	boldData: nil,
+	italicData: nil,
+	boldItalicData: nil,
+	userSizes: [|Array|: 10, 12, 18],
+	usable: true,
+	tsID: tsHWFont
+};

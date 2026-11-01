@@ -1,5 +1,0 @@
-@@ 0x4274dd
-func() begin
-	(elapsedTime := (TimeInSeconds() - startSeconds))
-end
-@@end

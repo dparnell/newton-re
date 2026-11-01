@@ -1,0 +1,32 @@
+// protoFindItem: one item found by Find, as the finders make them (soupFinder,
+// compatibleFinder, the Calendar's): its finder, its index among the finder's
+// items, its title (the soup excerpt) and what identifies the entry. Tapping
+// it shows the item in its application.
+
+protoFindItem := {
+	_proto: @protoRollItem,
+	viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	// CloseFindAll(): closes the list of found items
+	CloseFindAll: func() begin
+		findOverview:Close()
+	end,
+	// click(): hides the other applications, closes the found-items list
+	// (deferred) and has the Find slip show this item through its finder
+	click: func() begin
+		findDrawer:HideOtherApps(self.finder.owner);
+		AddDeferredSend(self, 'CloseFindAll, nil);
+		findDrawer:ShowItem(self.finder, self)
+	end,
+	viewChildren: [|Array|:
+		{
+			_proto: @protoStaticText,
+			viewJustify: vjParentFullH + oneLineOnly,
+			viewFont: @fontSystem9,
+			viewBounds: {left: 15, top: 0, right: 0, bottom: 15},
+			// viewSetupFormScript: shows the item's title
+			viewSetupFormScript: func() begin
+				(self.text := title)
+			end
+		}
+	]
+};

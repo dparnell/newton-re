@@ -1,5 +1,0 @@
-@@ 0x100df69
-func() begin
-	(if curLinkSym then self:Show() else self:Hide())
-end
-@@end

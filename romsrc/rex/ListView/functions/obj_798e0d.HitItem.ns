@@ -1,5 +1,0 @@
-@@ 0x798dbd names
-func(aHitFrame, anX, aY) begin
-	self:ToggleTopic(aHitFrame.index)
-end
-@@end

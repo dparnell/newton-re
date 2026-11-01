@@ -1,0 +1,106 @@
+// protoTransportPopup: the transport name at the top of a routing slip; when
+// other transports of the same group can send the item's data types it shows
+// a pop-up diamond and lets the user switch transport (and the slip is made
+// anew for the chosen one, which is remembered as the group's choice).
+
+protoTransportPopup := {
+	_proto: @protoPopInPlace,
+	viewBounds: nil,
+	viewFormat: 0,
+	viewJustify: vjCenterV,
+	text: nil,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	// whether there is another transport to switch to
+	showit: nil,
+	// the data types the item's formats can be sent as
+	routingTypes: nil,
+	// viewSetupFormScript(): collects the formats' data types; when not
+	// editing and the transport has a group, looks for another transport of
+	// that group that handles one of them; sets the text (with the diamond
+	// if so) and places the view centred on y = 23 near the envelope's right
+	viewSetupFormScript: func() begin
+		showit := nil;
+		routingTypes := [Array: ];
+		if IsArray(formats) then begin
+				(foreach l1 in formats do begin
+						if (if (l1.title or l1:?GetTitle(target)) then IsArray(l1.dataTypes)) then begin
+								(foreach l3 in l1.dataTypes do begin
+										SetAdd(routingTypes, l3, true)
+									end)
+							end
+					end)
+			end;
+		if (if transport.group then (not Editing)) then begin
+				(foreach l5 in transports do begin
+						local l7, l8, l9, l10;
+						if (if (if (if (l7 := GetRoot().(l5)) then (l7.group = transport.group)) then (l7.appSymbol <> transport.appSymbol)) then SetOverlaps(routingTypes, l7.dataTypes)) then begin
+								showit := true;
+								break
+							end
+					end)
+			end;
+		if (not text) then begin
+				text := transport.title
+			end;
+		if (not text) then begin
+				text := ""
+			end;
+		if showit then begin
+				text := Stringer([Array: $\uFC01, text])
+			end;
+		// l8: the view's right edge; l9, l10: its width and height
+		l8 := ((envelopeWidth - 31) - 10);
+		l9 := (StrFontWidth(text, viewFont) + 8);
+		l10 := FontHeight(viewFont);
+		(viewBounds := RelBounds((l8 - l9), (23 - (l10 div 2)), l9, l10))
+	end,
+	// PadText(text): the text as it is (protoPopInPlace would pad it)
+	PadText: func(text) begin
+		text
+	end,
+	// viewDrawScript(): draws nothing more than the text
+	viewDrawScript: func() begin
+		nil
+	end,
+	// viewClickScript(unit): pops up only when there is a choice
+	viewClickScript: func(unit) begin
+		(if showit then inherited:viewClickScript(unit))
+	end,
+	// ButtonClickScript(): fills the popup with the group's transports that
+	// handle the item's data types, then pops it up
+	buttonClickScript: func() begin
+		popup := [Array: ];
+		local l1;
+		(foreach item in transports do begin
+				local l4;
+				if (if (if (l4 := GetRoot().(item)) then (l4.group = transport.group)) then SetOverlaps(routingTypes, l4.dataTypes)) then begin
+						AddArraySlot(popup, {item: l4.title, transportSym: l4.appSymbol})
+					end
+			end);
+		inherited:buttonClickScript()
+	end,
+	// pickActionScript(index): a transport chosen - unless the slip's
+	// TransportChanged refuses it, records it as the group's transport in the
+	// user configuration (transportGroups) and, if it is another transport,
+	// opens a routing slip for a new item of it and closes this one
+	pickActionScript: func(index) begin
+		local ensureInternal2, transportGroups, l3, item;
+		if self:?TransportChanged((ensureInternal2 := EnsureInternal(popup[index].transportSym))) then begin
+				return inherited:pickCancelledScript()
+			end;
+		if ((transportGroups := GetUserConfig('transportGroups)) = nil) then begin
+				transportGroups := {}
+			end;
+		transportGroups.(EnsureInternal(transport.group)) := ensureInternal2;
+		SetUserConfig('transportGroups, transportGroups);
+		inherited:pickActionScript(index);
+		(if (transport.appSymbol <> ensureInternal2) then (if (l3 := GetRoot().(ensureInternal2)) then begin
+					OpenRoutingSlip((item := l3:NewItem(targetView)), base);
+					base:Close()
+				end))
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewClickScript_code := same("protoTransportPopup.viewClickScript.instructions");

@@ -1,6 +1,0 @@
-@@ 0x10178dd
-func() begin
-	self:?DoErrorCallback("Abort", -16005);
-	self:DoEvent('Dispose, nil)
-end
-@@end

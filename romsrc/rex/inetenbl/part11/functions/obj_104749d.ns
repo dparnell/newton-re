@@ -1,5 +1,0 @@
-@@ 0x104749d
-func(a1) begin
-	AddArraySlot(fLinkClients_GrabPending, a1)
-end
-@@end

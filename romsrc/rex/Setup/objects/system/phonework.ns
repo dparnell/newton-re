@@ -1,0 +1,157 @@
+// phonework: Setup's "Enter your Work Phone Numbers" page - work voice and fax numbers,
+// stored in the owner card's phones as 'workPhone and 'faxPhone; the area code also goes
+// to the work worksite (whose city SetUp's viewQuitScript finds by it). The file holds
+// the page and what only it reaches.
+
+phonework := {
+	description: tapOnALine,
+	// TearDown: when the page is left, replaces the owner's 'workPhone and 'faxPhone with the
+	// two numbers, or adds them when there were none (an empty number is not added).
+	TearDown: func() begin
+		count := Length((phones := fPersona.phones));
+		l3 := nil;
+		l4 := nil;
+		text := "";
+		text2 := "";
+		fReviewDone := true;
+		fWorkworksite.AreaCode := vVoice:GetTextArea();
+		SetClass((text := MakePhone({AreaCode: vVoice:GetTextArea(), phone: vVoice:GetTextLocal()})), 'workPhone);
+		if (count > 0) then begin
+				local phones;
+				local count;
+				local l3;
+				local l4;
+				local i;
+				local text;
+				local text2;
+				(for i := 0 to (count - 1) do begin
+						if (ClassOf(phones[i]) = 'workPhone) then begin
+								phones[i] := text;
+								l3 := true
+							end
+					end)
+			end;
+		if ((l3 = nil) or (count = 0)) then begin
+				if (not StrEqual(text, "")) then begin
+						AddArraySlot(fPersona.phones, text)
+					end
+			end;
+		SetClass((text2 := MakePhone({AreaCode: vFax:GetTextArea(), phone: vFax:GetTextLocal()})), 'faxPhone);
+		if (count > 0) then begin
+				(for i := 0 to (count - 1) do begin
+						if (ClassOf(phones[i]) = 'faxPhone) then begin
+								phones[i] := text2;
+								l4 := true
+							end
+					end)
+			end;
+		if ((l4 = nil) or (count = 0)) then begin
+				if (not StrEqual(text2, "")) then begin
+						AddArraySlot(fPersona.phones, text2)
+					end
+			end;
+		(fWorkworksite.place := "Work")
+	end,
+	titleTExt: "Enter your Work \u000dPhone Numbers",
+	stepChildren: [stepChildren:
+		nameItem,
+		workVoice,
+		workFax,
+		{
+			viewBounds: {left: 1, top: 162, right: 237, bottom: 212},
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewJustify: vjCenterH + vjParentCenterH,
+			viewClass: clPictureView,
+			icon: picture('picture, "resources/picture/7ad4e5")
+		},
+		{_proto: @8352}
+	],
+	declareSelf: 'PageBase,
+	// viewSetupDoneScript: marks the work-phone step done (SetUp then saves the work worksite);
+	// the caret in the voice number's area code.
+	viewSetupDoneScript: func() begin
+		fCompleted.PhoneWork := true;
+		SetKeyView(vVoice.vInputCityCode, 0);
+		inherited:?viewSetupDoneScript()
+	end,
+	debug: "phonework",
+	_proto: @8353,
+	vVoice: nil,
+	stepAllocateContext: [|Array|:
+		'_defaultButton,
+		nameItem_2,
+		'vGoBackButton,
+		nameItem_3,
+		'vCloser,
+		nameItem_4,
+		'vFeedback,
+		nameItem_5,
+		'vVoice,
+		workVoice,
+		'vFax,
+		workFax
+	],
+	vFax: nil,
+	preAllocatedContext: 'PhoneWork
+};
+
+workVoice := {
+	entryFlags: vVisible + vClickable,
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	// viewSetupFormScript: fills the fields from the owner's 'workPhone.
+	viewSetupFormScript: func() begin
+		local phones;
+		local count;
+		local item;
+		local parsePhone2;
+		(if ((count := Length((phones := fPersona.phones))) > 0) then (foreach item in phones do begin
+					if (ClassOf(item) = 'workPhone) then begin
+							if (if ((parsePhone2 := ParsePhone(item)).AreaCode <> nil) then (not StrEqual(parsePhone2.AreaCode, ""))) then begin
+									vVoice:SetTextArea(parsePhone2.AreaCode)
+								end;
+							if (if (parsePhone2.phone <> nil) then (not StrEqual(parsePhone2.phone, ""))) then begin
+									vVoice:SetTextLocal(parsePhone2.phone)
+								end
+						end
+				end))
+	end,
+	label: "Work Voice",
+	_proto: @8351,
+	preAllocatedContext: 'vVoice
+};
+
+workFax := {
+	label: "Work Fax",
+	// textChanged: nothing to do on a change.
+	textChanged: func() begin
+		nil
+	end,
+	entryFlags: vVisible + vClickable,
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	// viewSetupFormScript: fills the fields from the owner's 'faxPhone.
+	viewSetupFormScript: func() begin
+		local phones;
+		local count;
+		local item;
+		local parsePhone2;
+		(if ((count := Length((phones := fPersona.phones))) > 0) then (foreach item in phones do begin
+					if (ClassOf(item) = 'faxPhone) then begin
+							if (if ((parsePhone2 := ParsePhone(item)).AreaCode <> nil) then (not StrEqual(parsePhone2.AreaCode, ""))) then begin
+									vFax:SetTextArea(parsePhone2.AreaCode)
+								end;
+							if (if (parsePhone2.phone <> nil) then (not StrEqual(parsePhone2.phone, ""))) then begin
+									vFax:SetTextLocal(parsePhone2.phone)
+								end
+						end
+				end))
+	end,
+	_proto: @8351,
+	preAllocatedContext: 'vFax
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TearDown_literal10 := same("phonework.TearDown.literals[10]");
+
+viewSetupFormScript_code_4 := same("workVoice.viewSetupFormScript.instructions");

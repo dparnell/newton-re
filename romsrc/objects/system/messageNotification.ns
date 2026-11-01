@@ -1,0 +1,15 @@
+// messageNotification (@127): the item proto of a notification in the
+// notification roll (notification, @135) - an overview line, the time stamp and
+// the message; BHNotify protos a notice on it (snoozeNotification for a
+// snoozable alarm).
+
+messageNotification := {
+	viewFormat: 0,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	height: 114,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 114},
+	viewChildren: [viewChildren: snoozeNotificationItem, timeStampField, snoozeNotificationItem_2],
+	timeStampField: nil,
+	allocateContext: [|Array|: 'timeStampField, timeStampField],
+	_proto: @protoRollItem
+};

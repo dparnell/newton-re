@@ -1,0 +1,31 @@
+// newtEntryLockedIcon: the NewtApp lock icon (NPR 2.0): shows lockedIcon when the
+// current entry's store is write-protected (locked, or in ROM), nothing otherwise.
+//
+// This file holds newtEntryLockedIcon and what only it reaches.
+
+newtEntryLockedIcon := {
+	viewClass: clPictureView,
+	viewFlags: vVisible,
+	viewBounds: {left: 0, top: 0, right: 12, bottom: 12},
+	viewFormat: vfFillWhite,
+	icon: nil,
+	lockedIcon: lockedIcon,
+	// choose the icon when the view opens
+	viewSetupFormScript: func() begin
+		self:SetIcon()
+	end,
+	// the entry view moved to another entry: choose again and redraw
+	Retarget: func() begin
+		self:SetIcon();
+		self:Dirty()
+	end,
+	// CheckWriteProtect throws (an |evt.ex.fr.store| exception) when the store is locked
+	SetIcon: func() begin
+		(if target then (try begin
+					EntryStore(target):CheckWriteProtect();
+					(icon := nil)
+				end onexception |evt.ex.fr.store| do begin
+					(icon := lockedIcon)
+				end))
+	end
+};

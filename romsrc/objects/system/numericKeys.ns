@@ -1,0 +1,137 @@
+// numericKeys (@376): the keypad of the numeric keyboard (numericKeyboard,
+// viewRoot) - digits, arithmetic keys, parentheses, delete, tab, space and the
+// arrows; the decimal point key follows the current locale.
+
+numericKeys := {
+	viewBounds: {left: 0, top: 0, right: 148, bottom: 121},
+	keyResultsAreKeycodes: nil,
+	keyDefinitions: keyDefinitions,
+	// viewSetupFormScript: when the locale's decimal point is not ".", uses a copy
+	// of the keys whose decimal point key (row 3's second key: legend and result)
+	// is the locale's.
+	viewSetupFormScript: func() begin
+		local decimalpoint;
+		inherited:viewSetupFormScript();
+		(if ((decimalpoint := international.currentlocalebundle.numberformat.decimalpoint)[0] <> $.) then begin
+				self.keyDefinitions := Clone(keyDefinitionsOrig);
+				self.keyDefinitions[3] := Clone(self.keyDefinitions[3]);
+				self.keyDefinitions[3][5] := decimalpoint[0];
+				(self.keyDefinitions[3][6] := decimalpoint[0])
+			end)
+	end,
+	debug: 71773,
+	// the ROM's keys, kept to copy from
+	keyDefinitionsOrig: keyDefinitions,
+	_proto: @protoKeypad
+};
+
+// the keys, a row per array: [rowHeight, rowMaxKeyHeight, then legend, result
+// and descriptor per key]. Descriptors: 288360456 (0x11300808) is
+// keyAutoHilite + keyFramed * 2 + keyRoundingUnit * 3 + keyHUnit + keyVUnit;
+// 288362504 the same two units wide; -536870392 is keySpacer + keyHQuarter +
+// keyVUnit (a quarter-unit gap, keySpacer being negative as a 30-bit
+// integer); the last rows: a spacer row and keys three quarters high.
+keyDefinitions := [|Array|:
+	[|Array|:
+		8,
+		8,
+		$7,
+		$7,
+		288360456,
+		$8,
+		$8,
+		288360456,
+		$9,
+		$9,
+		288360456,
+		nil,
+		nil,
+		-536870392,
+		@keyslashBitmap,
+		$/,
+		288360456,
+		del,
+		$\u0008,
+		288360456
+	],
+	[|Array|:
+		8,
+		8,
+		$4,
+		$4,
+		288360456,
+		$5,
+		$5,
+		288360456,
+		$6,
+		$6,
+		288360456,
+		nil,
+		nil,
+		-536870392,
+		@keyTimesBitmap,
+		$*,
+		288360456,
+		@keyEqualsBitmap,
+		$=,
+		288360456
+	],
+	[|Array|:
+		8,
+		8,
+		$1,
+		$1,
+		288360456,
+		$2,
+		$2,
+		288360456,
+		$3,
+		$3,
+		288360456,
+		nil,
+		nil,
+		-536870392,
+		@keyMinusBitmap,
+		$-,
+		288360456,
+		@keyLeftParenBitmap,
+		$(,
+		288360456
+	],
+	[|Array|:
+		8,
+		8,
+		$0,
+		$0,
+		288362504,
+		@keyPeriodBitmap,
+		$.,
+		288360456,
+		nil,
+		nil,
+		-536870392,
+		@keyPlusBitmap,
+		$+,
+		288360456,
+		@keyRightParenBitmap,
+		$),
+		288360456
+	],
+	[|Array|: 2, 2, nil, nil, -536868862],
+	[|Array|:
+		6,
+		6,
+		@kbdTabBitmap,
+		$\u0009,
+		288360454,
+		$\u0020,
+		$\u0020,
+		288360966,
+		@kbdLeftBitmap,
+		$\u001c,
+		288360454,
+		@kbdRightBitmap,
+		$\u001d,
+		288360454
+	]
+];

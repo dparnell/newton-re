@@ -1,6 +1,0 @@
-@@ 0x42608d
-func() begin
-	inherited:?Done();
-	UnRegUserConfigChange(userConfigChangeSym)
-end
-@@end

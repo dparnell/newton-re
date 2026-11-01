@@ -1,0 +1,160 @@
+// The Currency Exchange panel (@8309): an amount in one country's currency, the
+// exchange rate, and the amount in another's - any two give the third.  The
+// rate comes from GetExchangeRate (the user's or the built-in table); a rate the
+// user writes in is kept with SetExchangeRate.  The two countries (U.S. and
+// Japan to start) are kept with the panel's values.
+
+export117 := {
+	stepChildren: [stepChildren:
+		clear,
+		export111Item,
+		{
+			title: currencyExchange,
+			viewBounds: {left: 14, top: 0, right: 102, bottom: 16},
+			_proto: @protoTitle
+		},
+		export117Item,
+		export117Item_2,
+		export117Item_3
+	],
+	viewBounds: {left: 0, top: 0, right: 224, bottom: 193},
+	// The panel's lines, in the order the solver's list has them; then the rate.
+	viewSetupDoneScript: func() begin
+		AddArraySlot((FSViews := [Array: ]), Country1Field);
+		AddArraySlot(FSViews, ExchangeRateField);
+		AddArraySlot(FSViews, Country2Field);
+		inherited:?viewSetupDoneScript();
+		self:ComputeExchangeRate()
+	end,
+	// Puts the rate between the two countries in its line: 1, with an alert, for
+	// the same country twice; the lines cleared, with an alert, when it is unknown.
+	ComputeExchangeRate: compile(
+		constants: {
+			kLiteral_771cbd: "Currency Exchange"
+		},
+		func() begin
+			local exchangeRate;
+			exchangeRate := GetExchangeRate(Country1Field.country, Country2Field.country);
+			if (Country1Field.country = Country2Field.country) then begin
+					exchangeRate := 1;
+					self:Notify(kNotifyAlert, kLiteral_771cbd, "Choose two different countries to calculate exchange rates.")
+				end;
+			if (exchangeRate = nil) then begin
+					self:ClearAllFields();
+					self:Notify(kNotifyAlert, kLiteral_771cbd, ParamStr("The exchange rate between ^0 and ^1 is unknown.", [Array: GetCountryEntry(Country1Field.country)[0].name, GetCountryEntry(Country2Field.country)[0].name]))
+				end;
+			ExchangeRateField:SetNumericValue(exchangeRate)
+		end),
+	formulaSymbol: 'CurrencyExchange,
+	// Keeps the two countries with the panel's values.
+	viewQuitScript: func() begin
+		local formulaValues;
+		(formulaValues := self:GetFormulaValues()).(formulaSymbol).country1 := Country1Field.country;
+		formulaValues.(formulaSymbol).country2 := Country2Field.country;
+		inherited:?viewQuitScript()
+	end,
+	// Starts on the countries kept, or the U.S. and Japan, and puts the current
+	// rate between them into the values kept (so the rate line shows it).
+	viewSetupFormScript: func() begin
+		local formulaValues, l2, l3;
+		inherited:?viewSetupFormScript();
+		if ((formulaValues := self:GetFormulaValues()).(formulaSymbol).country1 = nil) then begin
+				l2 := 'USA
+			end else begin
+				l2 := formulaValues.(formulaSymbol).country1
+			end;
+		SetValue(Country1Field, 'country, l2);
+		if (formulaValues.(formulaSymbol).country2 = nil) then begin
+				l3 := 'Japan
+			end else begin
+				l3 := formulaValues.(formulaSymbol).country2
+			end;
+		SetValue(Country2Field, 'country, l3);
+		(if (formulaValues.(formulaSymbol) <> nil) then begin
+				formulaValues.(formulaSymbol).values[1] := GetExchangeRate(l2, l3);
+				EntryChange(formulaValues)
+			end)
+	end,
+	overview: currencyExchange,
+	// Solves as any panel does; a rate the user wrote (line 1) is kept as the
+	// rate between the two countries.
+	SolveFormula: func(lineNumber) begin
+		inherited:SolveFormula(lineNumber);
+		(if (lineNumber = 1) then SetExchangeRate(Country1Field.country, Country2Field.country, ExchangeRateField:GetNumericValue()))
+	end,
+	// Clears the two amounts but keeps the rate.
+	ClearAllFields: func() begin
+		solvingFormula := true;
+		Country1Field:SetNumericValue(nil);
+		Country2Field:SetNumericValue(nil);
+		solvingFormula := nil;
+		(solvedFor := nil)
+	end,
+	_proto: @8303,
+	Country1Field: nil,
+	stepAllocateContext: [|Array|:
+		'Country1Field,
+		export117Item,
+		'ExchangeRateField,
+		export117Item_2,
+		'Country2Field,
+		export117Item_3
+	],
+	ExchangeRateField: nil,
+	Country2Field: nil
+};
+
+currencyExchange := "Currency Exchange";
+
+// The first country's amount (line 0).
+export117Item := {
+	// The first amount: the second divided by the rate.
+	ComputeValue: func(list) begin
+		local listItem, listItem2, listItem3;
+		listItem := list[0];
+		listItem2 := list[1];
+		return ((listItem3 := list[2]) / listItem2)
+	end,
+	country: 'USA,
+	lineNumber: 0,
+	// Puts the caret at the end of the line's field.
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		SetKeyView(self.value.value, 9999)
+	end,
+	_proto: @8301,
+	preAllocatedContext: 'Country1Field
+};
+
+// The exchange rate (line 1): the second currency to one of the first.
+export117Item_2 := {
+	calcLineLabel: "Exchange Rate",
+	// The rate: the second amount divided by the first.
+	ComputeValue: func(list) begin
+		local listItem, listItem2, listItem3;
+		listItem := list[0];
+		listItem2 := list[1];
+		return ((listItem3 := list[2]) / listItem)
+	end,
+	integerField: nil,
+	lineNumber: 1,
+	decimalPlaces: 4,
+	_proto: @8296,
+	preAllocatedContext: 'ExchangeRateField
+};
+
+// The second country's amount (line 2).
+export117Item_3 := {
+	// The second amount: the first times the rate.
+	ComputeValue: func(list) begin
+		local listItem, listItem2, listItem3;
+		listItem := list[0];
+		listItem2 := list[1];
+		listItem3 := list[2];
+		return (listItem * listItem2)
+	end,
+	country: 'Japan,
+	lineNumber: 2,
+	_proto: @8301,
+	preAllocatedContext: 'Country2Field
+};

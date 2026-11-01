@@ -1,0 +1,41 @@
+// protoGlance: a text view (a lightweight paragraph) that, once opened, closes
+// itself after a few seconds, or at once on a tap or a key.
+
+protoGlance := {
+	viewClass: clTextView,
+	viewFlags: vReadOnly + vClickable,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfInset(1),
+	viewFont: @fontSystem9Bold,
+	viewEffect: fxRevealLine + fxMoveH,
+	viewJustify: vjCenterV,
+	viewBounds: nil,
+	// text flags 0x8400, undocumented (0x4000, a view taking keys, is not set)
+	textFlags: 33792,
+	// shown for 3 seconds
+	viewIdleFrequency: 3000,
+	// viewSetupDoneScript: closes on a tap outside (SetPopup), starts the timer
+	// and takes the keyboard focus, so a key closes it too
+	viewSetupDoneScript: func() begin
+		self:SetPopup();
+		self:SetupIdle(viewIdleFrequency);
+		SetKeyView(self, 0)
+	end,
+	// viewIdleScript: time is up - closes
+	viewIdleScript: func() begin
+		self:Close()
+	end,
+	// viewKeyDownScript(char, flags): any real key clicks and closes; returns
+	// true then
+	viewKeyDownScript: func(char2, flags) begin
+		(if (char2 <> $\00) then begin
+				clicker();
+				self:Close();
+				true
+			end)
+	end,
+	// viewClickScript: a tap closes it
+	viewClickScript: func(unit) begin
+		self:Close()
+	end,
+	debug: 90867
+};

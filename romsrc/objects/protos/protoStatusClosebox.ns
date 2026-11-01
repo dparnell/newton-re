@@ -1,0 +1,46 @@
+// protoStatusCloseBox: the close box of a status slip
+// (protoStatusTemplate). The closeBox slot of the values given to
+// ViewSet/UpdateIndicator controls it: a function to call when it is tapped
+// shows it, nil hides it; without the slot it closes the slip.
+
+protoStatusClosebox := {
+	debug: 8790,
+	// the slot of the values frame this component goes with
+	name: 'closeBox,
+	// ButtonClickScript(): the default closes the status slip (base)
+	buttonClickScript: func() begin
+		base:Close()
+	end,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	// 'makeVisible or 'makeInvisible, decided at setup and done once the view
+	// exists (nil: leave it as it is)
+	visibleAction: nil,
+	// viewSetupFormScript(): when the values have a closeBox slot, a non-nil
+	// value becomes the ButtonClickScript and shows the box, nil hides it
+	viewSetupFormScript: func() begin
+		local path, l2;
+		inherited:?viewSetupFormScript();
+		path := self:path();
+		visibleAction := nil;
+		(if (if path then HasSlot(path, name)) then begin
+				if (l2 := path.(name)) then begin
+						buttonClickScript := l2
+					end;
+				(if l2 then (visibleAction := 'makeVisible) else (visibleAction := 'makeInvisible))
+			end)
+	end,
+	// viewSetupDoneScript(): shows or hides the box as decided
+	viewSetupDoneScript: func() begin
+		(if visibleAction then (if (visibleAction = 'makeVisible) then self:Show() else self:Hide()))
+	end,
+	// viewUpdateFormScript(): sent by UpdateIndicator; does both again
+	viewUpdateFormScript: func() begin
+		self:viewSetupFormScript();
+		self:viewSetupDoneScript()
+	end,
+	_proto: @protoCancelButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code_2 := same("protoStatusClosebox.viewSetupDoneScript.instructions");

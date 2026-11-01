@@ -1,5 +1,0 @@
-@@ 0x4b77d9
-func() begin
-	parentView:EndFlush()
-end
-@@end

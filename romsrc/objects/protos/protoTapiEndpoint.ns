@@ -1,0 +1,338 @@
+// protoTapiEndpoint: an endpoint (protoBasicEndpoint) on a telephony
+// (TAPI) service: dialing, answering, hanging up, holding, forwarding and
+// transferring calls, each a TAPI option sent to the service (SendOption)
+// whose completion calls the client's <Command>Done method, and the
+// service's events turned into Event<Name> messages. With no service
+// (serviceId nil) dialing is done through the speaker with DTMF tones.
+// The 4-character option labels: "outg" make outgoing call, "sdgt" send
+// digits, "answ" answer, "disc" hang up, "hold"/"unho" hold and unhold,
+// "forw"/"focr" forward and clear forwarding, "tran" transfer, "tasp" the
+// speaker.
+
+protoTapiEndpoint := {
+	// the service the endpoint is open on (nil: closed, or none)
+	currentDevice: nil,
+	// UnHold(async): takes the call off hold (async: complete with a Done
+	// message instead of waiting)
+	UnHold: func(a1) begin
+		self:SendOption("unho", 'ignore, a1)
+	end,
+	// the options set after connecting (the service, and "cpst"), and those
+	// claimed with the endpoint (passiveClaim, below)
+	passiveState: [|Array|:
+		{
+			label: ctso,
+			type: 'option,
+			opCode: opSetRequired,
+			data: {arglist: [|Array|: nil], typelist: [|Array|: 10, [|Array|: 11, 13, 4]]}
+		},
+		{
+			label: cpst,
+			type: 'option,
+			opCode: opSetRequired,
+			data: {arglist: [|Array|: true], typelist: [|Array|: 10, 5]}
+		}
+	],
+	// the TAPI service to open (its comm config's symbol)
+	serviceId: nil,
+	// SetSpeaker(on, async): the speaker on or off
+	SetSpeaker: func(a1, a2) begin
+		self:SendOption("tasp", a1, a2)
+	end,
+	// AnswerIncoming(async): answers a ringing call
+	AnswerIncoming: func(a1) begin
+		self:SendOption("answ", 'ignore, a1)
+	end,
+	// Open(passive): opens the endpoint on serviceId with the service's
+	// options, configOptions (an array, or a function returning one) and
+	// the passiveClaim options (the second unset when passive), binds and
+	// connects within openTimeout, then sets the passiveState options. Does
+	// nothing without a service
+	Open: func(a1) begin
+		if ((currentDevice := serviceId) = nil) then begin
+				return nil
+			end;
+		list := [Array: {label: currentDevice, type: 'service, opCode: opSetRequired}];
+		if configOptions then begin
+				configOptions2 := configOptions;
+				if IsFunction(configOptions) then begin
+						configOptions2 := Apply(configOptions, '[Array: ])
+					end;
+				if (if configOptions2 then IsArray(configOptions2)) then begin
+						local list;
+						local configOptions2;
+						(foreach key, value in configOptions2 do begin
+								AddArraySlot(list, value)
+							end)
+					end
+			end;
+		count := Length(list);
+		(foreach key, value in passiveClaim do begin
+				local count, list2;
+				AddArraySlot(list, DeepClone(value))
+			end);
+		list[count].data.arglist := [Array: currentDevice];
+		if a1 then begin
+				list[(count + 1)].data.arglist := [Array: nil]
+			end;
+		self:Instantiate(self, list);
+		self:Bind(nil, {reqTimeout: openTimeout});
+		self:Connect(serviceOption, {reqTimeout: openTimeout});
+		(list2 := [Array: DeepClone(passiveState[0]), passiveState[1]])[0].data.arglist := [Array: currentDevice];
+		self:option(list2, nil)
+	end,
+	// Close(): disconnects, unbinds and disposes of the endpoint, ignoring
+	// errors
+	Close: func() begin
+		(if (currentDevice <> nil) then begin
+				try begin
+						self:Disconnect(true, nil)
+					end onexception |evt.ex| do begin end;
+				try begin
+						self:Unbind(nil)
+					end onexception |evt.ex| do begin end;
+				try begin
+						self:Dispose()
+					end onexception |evt.ex| do begin end;
+				(currentDevice := nil)
+			end)
+	end,
+	// SendDigit(digits, async): sends DTMF digits (a string or a character)
+	SendDigit: func(char2, a2) begin
+		self:SendOption("sdgt", char2, a2)
+	end,
+	// SpeakerOptionDone(command, error, async): the end of speaker dialing;
+	// asynchronously, reports to MakeOutgoingDone or SendDigitDone, else
+	// throws the error, if any
+	SpeakerOptionDone: func(command, error, symbol2) begin
+		Sleep(10);
+		(if symbol2 then (if (command = "outg") then self:?MakeOutgoingDone(error) else (if (command = "sdgt") then self:?SendDigitDone(error))) else (if error then Throw('|evt.ex.comm|, error)))
+	end,
+	// the option connected with ("taps")
+	serviceOption: {
+		label: "taps",
+		type: 'option,
+		opCode: opSetRequired,
+		data: {arglist: [|Array|: true, true, nil, nil], typelist: [|Array|: 10, 5, 5, 5, 5]}
+	},
+	// ForwardClear(number, async): clears call forwarding
+	ForwardClear: func(a1, a2) begin
+		self:SendOption("focr", a1, a2)
+	end,
+	// Hold(async): puts the call on hold
+	Hold: func(a1) begin
+		self:SendOption("hold", 'ignore, a1)
+	end,
+	// more options for Open: an array, or a function that returns one
+	configOptions: nil,
+	passiveClaim: [|Array|:
+		{
+			label: ctso,
+			type: 'option,
+			opCode: opSetRequired,
+			data: {arglist: [|Array|: nil], typelist: [|Array|: 10, [|Array|: 11, 13, 4]]}
+		},
+		{
+			label: cpcm,
+			type: 'option,
+			opCode: opSetRequired,
+			data: {arglist: [|Array|: true], typelist: [|Array|: 10, 5]}
+		}
+	],
+	_proto: @protoBasicEndpoint,
+	// Forward(number, async): forwards calls to a number
+	Forward: func(a1, a2) begin
+		self:SendOption("forw", a1, a2)
+	end,
+	// SpeakerOptionContinue(ok): the answer to the "second dial tone"
+	// confirmation - continues dialing where it stopped (confirmStore), or
+	// ends it as cancelled
+	SpeakerOptionContinue: func(a1) begin
+		(if a1 then self:SpeakerOption(confirmStore.command, confirmStore.phone, confirmStore.idx, true) else self:SpeakerOptionDone(confirmStore.command, kCommErrRequestCanceled, true))
+	end,
+	// GetCallerId(): asks the service for the caller's number (the "rout"
+	// address option, with room for 100 characters); throws the option's
+	// error if it fails
+	GetCallerId: func() begin
+		local frame2, address;
+		(if ((address := self:option((frame2 := {label: "rout", type: 'address, opCode: opGetCurrent, data: {arglist: [Array: 3, 100, "Caller ID not available                                                                             "], typelist: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}), nil)).result = nil) then return address.data.arglist[2] else Throw('|evt.ex.comm|, address.result))
+	end,
+	// where speaker dialing stopped for a "w" (wait for dial tone):
+	// {command, phone, idx}
+	confirmStore: nil,
+	// SendOption(command, value, async): sends the TAPI option command,
+	// with value - 'ignore for none, a boolean, or a phone number (a string
+	// or character, sent as a phone option too). With no service open, a
+	// number is dialed through the speaker instead (later, by a deferred
+	// call, when async). Asynchronously, ReturnOption reports the result;
+	// otherwise an error result is thrown
+	SendOption: compile(
+		constants: {
+			// the option call's completion: the endpoint's ReturnOption with the option
+			// and the result
+			kFunction_52e295: func(a1, a2, a3) begin
+				a1:ReturnOption(a2, a3)
+			end
+		},
+		func(command, stringOrBool, symbol2) begin
+			local l1, frame2, frame3, option, checkOptionResult;
+			if (if (l1 := (if (stringOrBool <> 'ignore) then ((if (not IsImmediate(stringOrBool)) then StrFilled(stringOrBool)) or (ClassOf(stringOrBool) = 'char)))) then (ClassOf(stringOrBool) = 'char)) then begin
+					stringOrBool := Stringer([Array: "", stringOrBool])
+				end;
+			(if (currentDevice = nil) then (if l1 then (if (not symbol2) then self:SpeakerOption(command, stringOrBool, 0, nil) else AddDeferredCall(func() begin
+							self:SpeakerOption(command, stringOrBool, 0, true)
+						end, nil)) else self:SpeakerOptionDone(command, nil, symbol2)) else (if (currentDevice <> nil) then begin
+						frame2 := {label: command, type: 'option, opCode: opSetRequired};
+						if (if (stringOrBool <> 'ignore) then IsImmediate(stringOrBool)) then begin
+								frame2.data := {arglist: [Array: stringOrBool], typelist: [Array: 'struct, 'boolean]}
+							end;
+						frame3 := nil;
+						if symbol2 then begin
+								frame3 := {async: true, completionscript: kFunction_52e295}
+							end;
+						if l1 then begin
+								frame2 := [Array: frame2, MakePhoneOption(stringOrBool)]
+							end;
+						option := self:option(frame2, frame3);
+						(if (if (not symbol2) then ((checkOptionResult := self:CheckOptionResult(option)) <> nil)) then Throw('|evt.ex.comm|, checkOptionResult.result))
+					end))
+		end),
+	// SpeakerOption(command, phone, idx, async): dials phone from index idx
+	// through the speaker: digits, * and # as DTMF tones, "," and "p" a
+	// pause of userConfiguration.commaDelay seconds (Sleep counts ticks of
+	// 1/60 s), and "w" stops to ask the user to wait for a second dial tone
+	// (SpeakerOptionContinue goes on). toneIndex and nextIndex are not
+	// locals: they are set as variables found by inheritance (or globals)
+	SpeakerOption: func(command, stringOrBool, idx, a4) begin
+		error := nil;
+		l2 := nil;
+		try begin
+				local error;
+				local l2;
+				local i;
+				local stringOrBoolItem;
+				(for i := idx to (StrLen(stringOrBool) - 1) do begin
+						local convertToSoundFrame2;
+						stringOrBoolItem := stringOrBool[i];
+						toneIndex := -1;
+						if (if (stringOrBoolItem >= $0) then (stringOrBoolItem <= $9)) then begin
+								toneIndex := (ORD(stringOrBoolItem) - ORD($0))
+							end else begin
+								if (stringOrBoolItem = $*) then begin
+										toneIndex := 10
+									end else begin
+										if (stringOrBoolItem = $#) then begin
+												toneIndex := 11
+											end else begin
+												if ((stringOrBoolItem = $,) or (stringOrBoolItem = $p)) then begin
+														Sleep((userConfiguration.commaDelay * 60))
+													end else begin
+														if (stringOrBoolItem = $w) then begin
+																l2 := true;
+																confirmStore := {command: command, phone: stringOrBool, idx: (i + 1)};
+																GetRoot():Confirm("", "Waiting for a second dial tone. Tap \u201C\uOK\u201D\u to continue dialing.", self, 'SpeakerOptionContinue);
+																break
+															end
+													end
+											end
+									end
+							end;
+						if (toneIndex >= 0) then begin
+								(convertToSoundFrame2 := ConvertToSoundFrame(@dialTones[toneIndex])).volume := 4;
+								PlaySoundSync(convertToSoundFrame2)
+							end
+					end)
+			end onexception |evt.ex| do begin
+				nextIndex := 0;
+				error := CurrentException().error
+			end;
+		(if (not l2) then self:SpeakerOptionDone(command, error, a4))
+	end,
+	// the time-out for binding and connecting, in milliseconds
+	openTimeout: 15000,
+	// CheckOptionResult(option): the first option (of one or an array) whose
+	// result is an error, or nil
+	CheckOptionResult: func(option) begin
+		item2 := nil;
+		item := nil;
+		if IsArray(option) then begin
+				local item2;
+				(foreach item in option do begin
+						if (item.result <> nil) then begin
+								item2 := item;
+								break
+							end
+					end)
+			end else begin
+				if (option.result <> nil) then begin
+						item2 := option
+					end
+			end;
+		item2
+	end,
+	declareSelf: 'tapiEndpoint,
+	// HangUp(async): ends the call
+	hangup: func(symbol2) begin
+		self:SendOption("disc", 'ignore, symbol2)
+	end,
+	// EventHandler(event): the service's events. Event code 7 is a call
+	// progress event whose data says what happened: 1 incoming call, 2
+	// ringing, 4 clear display, 5 off hook, 6 on hook, 8 conversation, 9
+	// dial tone, 10 ringback, 11 busy, 12 reorder; each is sent to the client
+	// as Event<Name>, anything else as EventUnknown(code, data)
+	eventHandler: func(a1) begin
+		(if (a1.eventCode = 7) then (if (a1.data = 1) then self:?EventIncoming() else (if (a1.data = 2) then self:?EventRinger() else (if (a1.data = 4) then self:?EventClearDisplay() else (if (a1.data = 5) then self:?EventOffHook() else (if (a1.data = 6) then self:?EventOnHook() else (if (a1.data = 8) then self:?EventConversation() else (if (a1.data = 9) then self:?EventDialTone() else (if (a1.data = 10) then self:?EventRingbackTone() else (if (a1.data = 11) then self:?EventBusyTone() else (if (a1.data = 12) then self:?EventReorder() else self:?EventUnknown(a1.eventCode, a1.data))))))))))) else self:?EventUnknown(a1.eventCode, a1.data))
+	end,
+	// Transfer(number, async): transfers the call
+	Transfer: func(a1, a2) begin
+		self:SendOption("tran", a1, a2)
+	end,
+	// MakeOutgoing(number, async): dials a call
+	MakeOutgoing: func(a1, a2) begin
+		self:SendOption("outg", a1, a2)
+	end,
+	// ReturnOption(option, error): an asynchronous option completed; sends
+	// the client the Done message for its command with the error (or the
+	// option's own error result). "answ" is tested twice; the second test
+	// can never match
+	ReturnOption: func(a1, a2) begin
+		local label, checkOptionResult;
+		if IsArray(a1) then begin
+				label := a1[0].label
+			end else begin
+				label := a1.label
+			end;
+		if (not a2) then begin
+				if (checkOptionResult := self:CheckOptionResult(a1)) then begin
+						a2 := checkOptionResult.result
+					end
+			end else nil;
+		(if StrEqual(label, "outg") then self:?MakeOutgoingDone(a2) else (if StrEqual(label, "sdgt") then self:?SendDigitDone(a2) else (if StrEqual(label, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(label, "disc") then self:?HangUpDone(a2) else (if StrEqual(label, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(label, "hold") then self:?HoldDone(a2) else (if StrEqual(label, "unho") then self:?UnHoldDone(a2) else (if StrEqual(label, "forw") then self:?ForwardDone(a2) else (if StrEqual(label, "focr") then self:?ForwardClearDone(a2) else (if StrEqual(label, "tran") then self:?TransferDone(a2) else (if StrEqual(label, "tasp") then self:?SetSpeakerDone(a2) else self:?UnknownDone(a1, a2))))))))))))
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Open_literal16 := same("protoTapiEndpoint.Open.literals[16]");
+
+SpeakerOptionDone_literal1 := same("protoTapiEndpoint.SpeakerOptionDone.literals[1]");
+
+SendDigit_literal0 := same("protoTapiEndpoint.SendDigit.literals[0]");
+
+AnswerIncoming_literal0 := same("protoTapiEndpoint.AnswerIncoming.literals[0]");
+
+UnHold_literal0 := same("protoTapiEndpoint.UnHold.literals[0]");
+
+Forward_literal0 := same("protoTapiEndpoint.Forward.literals[0]");
+
+ForwardClear_literal0 := same("protoTapiEndpoint.ForwardClear.literals[0]");
+
+Hold_literal0 := same("protoTapiEndpoint.Hold.literals[0]");
+
+Transfer_literal0 := same("protoTapiEndpoint.Transfer.literals[0]");
+
+SetSpeaker_literal0 := same("protoTapiEndpoint.SetSpeaker.literals[0]");
+
+UnHold_code := same("protoTapiEndpoint.UnHold.instructions");
+
+SetSpeaker_code := same("protoTapiEndpoint.SetSpeaker.instructions");

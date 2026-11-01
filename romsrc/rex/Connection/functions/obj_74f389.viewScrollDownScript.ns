@@ -1,5 +1,0 @@
-@@ 0x74fcbd
-func() begin
-	folderList:viewScrollDownScript()
-end
-@@end

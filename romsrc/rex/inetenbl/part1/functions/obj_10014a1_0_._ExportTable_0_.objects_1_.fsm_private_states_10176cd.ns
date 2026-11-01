@@ -1,8 +1,0 @@
-@@ 0x10176cd
-func() begin
-	if self:GetAbort() then begin
-			return self:DoEvent('Abort, nil)
-		end;
-	self:DoEvent('Bind, nil)
-end
-@@end

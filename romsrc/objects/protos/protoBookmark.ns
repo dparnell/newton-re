@@ -1,0 +1,27 @@
+// protoBookmark: a button standing for a bookmark in a book (protoBook); its
+// text child shows the bookmark's title, and tapping it closes the bookmark
+// list and turns to the bookmarked page.
+
+protoBookmark := {
+	_proto: @protoPictureButton,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1),
+	viewJustify: vjCenterH,
+	viewLineSpacing: 0,
+	// on a tap: closes base (the list holding the bookmarks) and turns to
+	// pageNumber
+	buttonClickScript: func() begin
+		base:Close();
+		self:TurnToPage(pageNumber)
+	end,
+	viewChildren: [|Array|:
+		{
+			viewClass: clParagraphView,
+			viewFlags: vVisible + vReadOnly,
+			viewFormat: 0,
+			viewTransferMode: modeOr,
+			viewBounds: {left: 0, top: -11, right: 0, bottom: 0},
+			viewJustify: vjCenterH + vjParentFullH + vjParentBottomV + oneLineOnly
+		}
+	],
+	debug: 362739
+};

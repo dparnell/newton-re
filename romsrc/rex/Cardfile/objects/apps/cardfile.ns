@@ -1,0 +1,2552 @@
+// The Names application (its app symbol is 'cardfile, the name it had on the
+// first Newtons): the base view of the Cardfile package, which the package's
+// install script builds and puts in place of the built-in Names with
+// OverrideBuiltinApp.  A newtApplication over the Names soup holding cards of
+// the classes person, owner, company, group and worksite, each with its data
+// definition (allDataDefs), its info views and business-card layouts
+// (allViewDefs, the package's exports @8193-@8253), and the code the rest of
+// the system calls on it: birthdays into the Date Book, owner (persona) cards,
+// business-card data for the card layouts (bc...), custom fields and the
+// paths of a card's data (GetInfoFrame, MakeDataPaths, GetNewPath).
+
+cardfile := {
+	// Sent to fit the application to the screen: new justification, bounds and
+	// format, then the children rebuilt (syncing keeps the change from saving state).
+	Resize: func(a1, a2, a3) begin
+		viewJustify := a1;
+		viewBounds := a2;
+		syncing := true;
+		SetValue(self, 'viewFormat, a3);
+		syncing := nil;
+		self:RedoChildren()
+	end,
+	prefsView: @8222,
+	// The view definitions registered for each card class, by the view's symbol:
+	// info views (address, phone, ...), business-card layouts (bizCard...), print
+	// and route formats.
+	allViewDefs: {
+		cardfileOverviewPrint: {
+			allCards: cfCardsFormat,
+			allCardsNotes: @8194,
+			summary: @8252,
+			phoneBook: @8232,
+			cardfileOverFrameFormat: {
+				_proto: @targetFrameFormat,
+				// Routing several names: a frame format whose title is "Selected Names".
+				symbol: 'cardfileOverFrameFormat,
+				title: "Selected Names",
+				// The item's title is "Selected Names".
+				SetupItem: func(fields, frame2) begin
+					fields.title := title;
+					inherited:SetupItem(fields, frame2)
+				end
+			}
+		},
+		person: {
+			cfPhoneListFormat: @8232,
+			bizCardDottedLine: @8202,
+			address: @8193,
+			bizCardSquiggle: @8207,
+			cfSingleFormat: @8250,
+			personal: @8230,
+			cardfileRouteFormat: cardfileRouteFormat,
+			bizCardCross: @8201,
+			email: @8220,
+			allinfo: @8195,
+			default: @8231,
+			cfAllFieldsFormat: @8252,
+			custom: @8217,
+			bizCardBulletLine: @8200,
+			inboxCard: @8208,
+			name: @8224,
+			phone: @8233,
+			company: @8213,
+			cfCardsFormat: cfCardsFormat,
+			bizCardPlain: @8205,
+			bizCardSeparate: @8206,
+			cfCardsNNotesFormat: @8194,
+			pager: @8228,
+			style: @8251,
+			bizCardBulletHoles: @8199,
+			notes: @8225
+		},
+		owner: {
+			cfPhoneListFormat: @8232,
+			creditCard: @8216,
+			address: @8193,
+			cfSingleFormat: @8250,
+			personal: @8230,
+			cardfileRouteFormat: cardfileRouteFormat,
+			signature: @8249,
+			email: @8220,
+			allinfo: @8195,
+			default: @8231,
+			cfAllFieldsFormat: @8252,
+			custom: @8217,
+			inboxCard: @8208,
+			name: @8224,
+			phone: @8233,
+			company: @8213,
+			cfCardsFormat: cfCardsFormat,
+			cfCardsNNotesFormat: @8194,
+			pager: @8228,
+			style: @8251,
+			notes: @8225,
+			bizCardOwner: @8204,
+			bankAccount: @8197
+		},
+		company: {
+			cfPhoneListFormat: @8232,
+			bizCardDottedLine: @8202,
+			address: @8193,
+			bizCardSquiggle: @8207,
+			cfSingleFormat: @8250,
+			cardfileRouteFormat: cardfileRouteFormat,
+			bizCardCross: @8201,
+			email: @8220,
+			allinfo: @8195,
+			default: @8214,
+			cfAllFieldsFormat: @8252,
+			custom: @8217,
+			bizCardBulletLine: @8200,
+			inboxCard: @8208,
+			name: {
+				_proto: @8224,
+				infoFrame: {
+					checkPrefix: [|Array|: [pathExpr: 'name], [pathExpr: 'names]],
+					checkPaths: [|Array|: 'honorific, 'first, 'last, 'title],
+					format: format
+				}
+			},
+			phone: @8233,
+			cfCardsFormat: cfCardsFormat,
+			bizCardPlain: @8205,
+			bizCardSeparate: @8206,
+			cfCardsNNotesFormat: @8194,
+			style: @8251,
+			bizCardBulletHoles: @8199,
+			notes: @8225
+		},
+		group: {
+			default: @8221,
+			allinfo: @8195,
+			notes: @8225,
+			custom: @8217,
+			cfSingleFormat: @8250,
+			cfCardsFormat: cfCardsFormat,
+			cfCardsNNotesFormat: @8194,
+			cfAllFieldsFormat: @8252,
+			cfPhoneListFormat: @8232,
+			inboxCard: @8208,
+			bizCardGroup: @8203,
+			cardfileRouteFormat: cardfileRouteFormat
+		},
+		worksite: {
+			default: @8253,
+			allinfo: @8195,
+			Connection: @8215,
+			accessNumbers: @8223,
+			notes: @8225,
+			custom: @8217,
+			cfSingleFormat: @8250,
+			cfCardsFormat: cfCardsFormat,
+			cfCardsNNotesFormat: @8194,
+			cfAllFieldsFormat: @8252,
+			cfPhoneListFormat: @8232,
+			inboxCard: @8208,
+			bizCardWorksite: @8209,
+			cardfileRouteFormat: cardfileRouteFormat
+		}
+	},
+	// The business-card layout for a card (target): the class's bizcard view whose
+	// bizCardNum is the card's cardType, else the first bizcard view, else the
+	// 'noBizCard view.  Returns {slot: its symbol, layout: the view}.
+	GetBCLayout: func(target) begin
+		key2 := nil;
+		if target.class then begin
+				class2 := target.class
+			end else begin
+				class2 := 'person
+			end;
+		if (viewDefs := GetViewDefs(class2)) then begin
+				local key;
+				local value;
+				local key2;
+				local class2;
+				local noBizCard;
+				local viewDefs;
+				(foreach key, value in GetViewDefs(class2) do begin
+						if (if (not key2) then (value.type = 'bizcard)) then begin
+								key2 := key
+							end;
+						if (if (value.type = 'bizcard) then (value.bizCardNum = target.cardType)) then begin
+								key2 := key;
+								break
+							end
+					end)
+			end;
+		(if (not key2) then begin
+				(noBizCard := GetDataView(class2, 'noBizCard)).type := 'bizcard;
+				{slot: 'noBizCard, layout: noBizCard}
+			end else {slot: key2, layout: viewDefs.(key2)})
+	end,
+	superSymbol: 'names,
+	// After the view opens: offers to put new birthdays into the Date Book.
+	viewSetupDoneScript: func() begin
+		if (if (if newBdays then (superSymbol = 'names)) then ((newBdays = true) or (Length(newBdays) > 0))) then begin
+				GetRoot():Confirm(@cardfileSoupName, "There are new birthdays in Names.  Do you want to add them to the Date Book?", self, 'AddNewBdays)
+			end;
+		inherited:?viewSetupDoneScript()
+	end,
+	// Collects data for a business card: from card a1 (the current owner when nil;
+	// a group's members each in turn), the values of the slots named in a3 (arrays,
+	// such as phones or addresses) whose class is one of a2 - or, when a4 names
+	// slots, those sub-frames whose a4[0] slot has such a class (and the card's own
+	// a4 slots, cloned into a frame).  Returns an array, or nil when nothing is found.
+	bcHelper: func(a1, a2, a3, a4) begin
+		local v10_xxxxxxxxxxxwwwwwwww, v13_wwwvvvvvvvvvvvvvvvv, v14_uuuuuuuuuutt, v15_uttttttttttt, v16_ttttssssssss, v17_zzzzzzzzzzzzzzzzzzzzyy, v20_iiihh;
+		v10_xxxxxxxxxxxwwwwwwww := [Array: ];
+		v15_uttttttttttt := a1;
+		v13_wwwvvvvvvvvvvvvvvvv := a2;
+		if (not v15_uttttttttttt) then begin
+				v15_uttttttttttt := UserConfiguration.currentPersona
+			end;
+		if IsEntryAlias(v15_uttttttttttt) then begin
+				v15_uttttttttttt := ResolveEntryAlias(v15_uttttttttttt)
+			end;
+		if v15_uttttttttttt then begin
+				if (v15_uttttttttttt.class = 'group) then begin
+						(foreach v22_yyyyyyyyyyyyxxx in v15_uttttttttttt.members do begin
+								if (v16_ttttssssssss := self:bcHelper(v22_yyyyyyyyyyyyxxx._alias, v13_wwwvvvvvvvvvvvvvvvv, a3, a4)) then begin
+										ArrayMunger(v10_xxxxxxxxxxxwwwwwwww, Length(v10_xxxxxxxxxxxwwwwwwww), 0, v16_ttttssssssss, 0, nil)
+									end
+							end)
+					end else begin
+						if (not IsArray(v13_wwwvvvvvvvvvvvvvvvv)) then begin
+								v13_wwwvvvvvvvvvvvvvvvv := [Array: v13_wwwvvvvvvvvvvvvvvvv]
+							end;
+						if a4 then begin
+								if v15_uttttttttttt.(a4[0]) then begin
+										v17_zzzzzzzzzzzzzzzzzzzzyy := (foreach v12_wwwwwwwwwwwwvvvvvvv in v13_wwwvvvvvvvvvvvvvvvv do begin
+												if IsInstance(v15_uttttttttttt.(a4[0]), v12_wwwwwwwwwwwwvvvvvvv) then begin
+														break true
+													end
+											end);
+										if v17_zzzzzzzzzzzzzzzzzzzzyy then begin
+												v20_iiihh := {};
+												(foreach v7_xxwwwwwwwwwwwwwwwwwwww in a4 do begin
+														if v15_uttttttttttt.(v7_xxwwwwwwwwwwwwwwwwwwww) then begin
+																v20_iiihh.(v7_xxwwwwwwwwwwwwwwwwwwww) := Clone(v15_uttttttttttt.(v7_xxwwwwwwwwwwwwwwwwwwww))
+															end
+													end);
+												AddArraySlot(v10_xxxxxxxxxxxwwwwwwww, v20_iiihh)
+											end
+									end
+							end;
+						(foreach v9_qqqqqpppp in a3 do begin
+								if v15_uttttttttttt.(v9_qqqqqpppp) then begin
+										(foreach v19_iiihh in v15_uttttttttttt.(v9_qqqqqpppp) do begin
+												if (v14_uuuuuuuuuutt := (if a4 then v19_iiihh.(a4[0]) else v19_iiihh)) then begin
+														v17_zzzzzzzzzzzzzzzzzzzzyy := (foreach v12_wwwwwwwwwwwwvvvvvvv in v13_wwwvvvvvvvvvvvvvvvv do begin
+																if IsInstance(v14_uuuuuuuuuutt, v12_wwwwwwwwwwwwvvvvvvv) then begin
+																		break true
+																	end
+															end);
+														if v17_zzzzzzzzzzzzzzzzzzzzyy then begin
+																AddArraySlot(v10_xxxxxxxxxxxwwwwwwww, Clone(v19_iiihh))
+															end
+													end
+											end)
+									end
+							end)
+					end
+			end;
+		(if (Length(v10_xxxxxxxxxxxwwwwwwww) > 0) then v10_xxxxxxxxxxxwwwwwwww)
+	end,
+	// The card's custom fields as {value, label} frames: those named in a2 (all the
+	// soup's 'customFields when nil), for card a1 (the owner when nil; a group's
+	// members each in turn).
+	bcCustomFields: func(a1, a2) begin
+		l1 := [Array: ];
+		l2 := a1;
+		l3 := a2;
+		if (not l2) then begin
+				l2 := UserConfiguration.currentPersona
+			end;
+		if IsEntryAlias(l2) then begin
+				l2 := ResolveEntryAlias(l2)
+			end;
+		if l2 then begin
+				if (l2.class = 'group) then begin
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						(foreach l5 in l2.members do begin
+								if (l7 := self:bcCustomFields(l5, l3)) then begin
+										ArrayMunger(l1, Length(l1), 0, l7, 0, nil)
+									end
+							end)
+					end else begin
+						if ((l8 := GetStores()[0]:GetSoup(@cardfileSoupName):GetInfo('customFields)) = nil) then begin
+								return l1
+							end;
+						if (not l3) then begin
+								local l7;
+								local l8;
+								l3 := (foreach l9, l10 in l8 collect l9)
+							end else begin
+								if (not IsArray(l3)) then begin
+										l3 := [Array: l3]
+									end
+							end;
+						(foreach l14 in l3 do begin
+								if HasPath(l2, l14) then begin
+										AddArraySlot(l1, {value: l2.(l14), label: l8.(l14).label})
+									end
+							end)
+					end
+			end;
+		l1
+	end,
+	// The mail access entries of a worksite (currentEmporium) whose mailNetwork is
+	// one of id (a symbol or an array of them), or nil when none.
+	bcEmailNetwork: func(currentEmporium, id) begin
+		list := [Array: ];
+		if (not IsArray(id)) then begin
+				id := [Array: id]
+			end;
+		if currentEmporium.mailAccess then begin
+				local list;
+				(foreach item in currentEmporium.mailAccess do begin
+						if SetContains(id, item.mailNetwork) then begin
+								AddArraySlot(list, Clone(item))
+							end
+					end)
+			end;
+		(if (Length(list) > 0) then list)
+	end,
+	// Where new data of the info view slot should go in card target: the view's
+	// first path when it is empty there, else a path into its array (checkPrefix[1])
+	// at the first element with no data, a new element being added when all have
+	// some; nil when the view has no array.  (Called by AddCardData.)
+	GetNewPath: func(target, slot) begin
+		local dataPaths, checkPrefixItem2, infoFrame, l4, count, l6, checkPrefixItem;
+		l4 := 0;
+		l6 := nil;
+		if (infoFrame := self:GetInfoFrame(slot, target.class)) then begin
+				if (if (dataPaths := self:MakeDataPaths(infoFrame.checkPrefix[0], infoFrame.checkPaths, infoFrame.stringData)) then (not self:HasPathData(target, dataPaths, infoFrame.stringData))) then begin
+						checkPrefixItem := infoFrame.checkPrefix[0]
+					end else begin
+						if (checkPrefixItem2 := infoFrame.checkPrefix[1]) then begin
+								l4 := 0;
+								if (not target.(checkPrefixItem2)) then begin
+										target.(checkPrefixItem2) := [Array: ]
+									end;
+								count := Length(target.(checkPrefixItem2));
+								(while (l4 < count) do begin
+										AddArraySlot((newPath := Clone(infoFrame.checkPrefix[1])), l4);
+										if (if (dataPaths := self:MakeDataPaths(newPath, infoFrame.checkPaths, infoFrame.stringData)) then (not self:HasPathData(target, dataPaths, infoFrame.stringData))) then begin
+												break (l6 := true)
+											end;
+										(l4 := (l4 + 1))
+									end);
+								if (not l6) then begin
+										if infoFrame.stringData then begin
+												AddArraySlot(target.(infoFrame.checkPrefix[1]), "")
+											end else begin
+												AddArraySlot(target.(infoFrame.checkPrefix[1]), {})
+											end
+									end;
+								AddArraySlot((checkPrefixItem := Clone(infoFrame.checkPrefix[1])), l4)
+							end else begin
+								checkPrefixItem := nil
+							end
+					end
+			end;
+		checkPrefixItem
+	end,
+	// Opens the application on the owner cards (ownerNames) at full size.
+	DoOwnerOpen: func() begin
+		superSymbol := 'ownerNames;
+		RemoveSlot(self, 'viewBounds);
+		RemoveSlot(self, 'viewJustify);
+		self:Open()
+	end,
+	// The info views to show for a card: its data definition's viewsToDisplay plus
+	// any other editor views registered for its class.
+	kViewsToDisplay: func(a1) begin
+		if (dataDefs := GetDataDefs(a1.class)) then begin
+				copy := Clone(dataDefs.viewsToDisplay);
+				local viewDefs;
+				local copy;
+				local dataDefs;
+				(foreach key, value in (viewDefs := GetViewDefs(a1.class)) do begin
+						if (if (value.type = 'editor) then (key <> 'default)) then begin
+								SetAdd(copy, key, true)
+							end
+					end)
+			end;
+		copy
+	end,
+	// Undo of adding data: puts back the entry a2 (in a1's store) in place of a1.
+	UndoAddData: func(a1, a2) begin
+		local store;
+		store := EntryStore(a1);
+		layout:KillEntry(a1);
+		layout:newEntry(a2, true, store);
+		true
+	end,
+	// Opens the editor of the custom fields' labels (customEditor).
+	EditCustomLabels: func() begin
+		local context;
+		(context := BuildContext(customEditor)).appBase := (context.newtAppBase := newtAppBase);
+		context.customInfo := self:GetCustomInfo();
+		newtAppBase:RememberedOpen(context)
+	end,
+	// True while Resize changes the view (so that changes are not saved).
+	syncing: nil,
+	// Adds to text a4 a line of card a1's data at path prefix a3, as the info
+	// frame a2 formats it (its formatFunc or format string); a4 unchanged when the
+	// data is empty.
+	kTextDumper: func(a1, a2, a3, a4) begin
+		if (dataPaths := GetRoot().cardfile:MakeDataPaths(a3, a2.checkPaths, a2.stringData)) then begin
+				local dataPaths;
+				local formatFunc;
+				local l3;
+				l3 := (foreach item in dataPaths collect a1.(item));
+				if a2.formatFunc then begin
+						formatFunc := a2:formatFunc(l3)
+					end else begin
+						formatFunc := ParamStr(a2.format, l3)
+					end;
+				TrimString(formatFunc)
+			end;
+		if (if formatFunc then StrFilled(formatFunc)) then begin
+				if a4 then begin
+						a4 := Stringer([Array: a4, "\n", formatFunc])
+					end else begin
+						a4 := formatFunc
+					end
+			end;
+		a4
+	end,
+	// The answer to the new-birthdays Confirm slip (a1 true for yes): adds every
+	// card's birthday (newBdays true) or the new ones' to the Date Book.
+	AddNewBdays: func(a1) begin
+		local newCursor, progressData;
+		progressData := {barber: true, statusText: "Adding new birthdays to the Date Book.", primary: nil, closeBox: nil};
+		if a1 then begin
+				if (newBdays = true) then begin
+						newCursor := self:GetBdayCursor();
+						DoProgress('vBarber, progressData, func(a1) begin
+							local entry;
+							entry := newCursor:entry();
+							(while entry do begin
+									self:AddBdayToCalendar(entry, 'bday, 'bdayEvent, "Bday: ^0");
+									entry := newCursor:Next();
+									a1:UpdateIndicator(progressData)
+								end)
+						end)
+					end else begin
+						local resolveEntryAlias2;
+						local l2;
+						(foreach item in newBdays do begin
+								if (resolveEntryAlias2 := ResolveEntryAlias(item.entry)) then begin
+										self:AddBdayToCalendar(resolveEntryAlias2, 'bday, 'bdayEvent, "Bday: ^0")
+									end
+							end)
+					end
+			end;
+		(newBdays := nil)
+	end,
+	// The slots of a card that are not its data.
+	kDatalessSlots: {
+		class: true,
+		version: true,
+		cardType: true,
+		sorton: true,
+		_uniqueID: true,
+		_modTime: true,
+		labels: true
+	},
+	// Sent when the application's button (or the Names icon) is tapped: puts the
+	// template back to the package's form (dropping the scripts an owner-cards
+	// open added) and closes or reopens the application; true when handled.
+	buttonToggleScript: compile(
+		constants: {
+			kROM_8192: @8192
+		},
+		func(childViewFrame) begin
+			(foreach item in '[Array: viewSetupFormScript, viewSetupChildrenScript, viewSetupDoneScript, viewQuitScript, viewShowScript, viewHideScript] do begin
+					RemoveSlot(self, item)
+				end);
+			self._proto := kROM_8192;
+			(if self.viewCObject then (if (self.superSymbol = 'ownerNames) then begin
+						AddDeferredSend(self, 'Close, '[Array: ]);
+						AddDeferredSend(self, 'Open, '[Array: ]);
+						true
+					end else (if (childViewFrame.appBase = self) then begin
+							self:Toggle();
+							true
+						end else begin
+							self:RememberedCloseAll();
+							nil
+						end)))
+		end),
+	// Takes the card's birthday (a meeting "Bday: <name>") out of the Date Book.
+	RemoveBdayFromCalendar: func(target) begin
+		local calendar, text, appointment;
+		calendar := GetRoot().calendar;
+		(if (appointment := calendar:FindAppointment((text := ParamStr("Bday: ^0", [Array: GetRoot():PrimaryName(target)])), nil, nil, '[Array: RepeatingMeeting, RepeatingEvent], 1)) then calendar:DeleteRepeatingEntry(text, appointment[0].mtgStartDate, true))
+	end,
+	// Puts the application back to the ordinary Names when it closes (an owner
+	// open changed its symbol, title and help topic).
+	viewQuitScript: func() begin
+		local l1;
+		inherited:?viewQuitScript();
+		superSymbol := 'names;
+		RemoveSlot(self, 'title);
+		RemoveSlot(self, 'viewHelpTopic);
+		'postQuit
+	end,
+	// The folder tab's text for all the cards.
+	appAll: "All Names",
+	// What the system's import and export (the custom fields) asks of the soup.
+	CustomMetaData: {
+		// The custom fields' definitions, by path, for import and export, with
+		// CustomValidation to check them.
+		GetExtensionFrame: func() begin
+			(if (customInfo := GetRoot().cardfile:GetCustomInfo()) then begin
+					frame2 := {};
+					list := [Array: ];
+					local customInfo;
+					local frame2;
+					local list;
+					(foreach key, value in customInfo do begin
+							frame2.(key) := Clone(value);
+							frame2.(key).path := key;
+							AddArraySlot(list, key)
+						end);
+					{FieldDefinitionsFrame: frame2, ImportExportArray: list, FunctionsFrame: {ValidateCustom: CustomValidation}, ValidateEntry: [Array: 'ValidateCustom]}
+				end)
+		end,
+		// Makes each custom field of entry a1 a string of class string.custom.  Looks
+		// like a ROM bug: a field that is not a string is removed by its index in the
+		// list (RemoveSlot(a1, key)) rather than its name, and then made a string.
+		CustomValidation: func(a1) begin
+			local l1;
+			local l2;
+			(foreach key, value in (l2 := '[Array: custom1, custom2, custom3, custom4, custom5, custom6, custom7, custom8, custom9, custom10]) do begin
+					if (l1 := a1.(value)) then begin
+							if (not IsInstance(l1, 'string)) then begin
+									RemoveSlot(a1, key)
+								end;
+							SetClass(l1, '|string.custom|)
+						end
+				end)
+		end
+	},
+	hideSound: @drawerClose,
+	// The info frame (checkPrefix, checkPaths, format...) of the view layout for a
+	// card of class class2: the view's own infoFrame, else layoutDataMap's.
+	GetInfoFrame: func(layout, class2) begin
+		local infoFrame, l2;
+		if ((not (l2 := GetViewDefs(class2).(layout))) or (not (infoFrame := l2.infoFrame))) then begin
+				infoFrame := GetRoot().cardfile.layoutDataMap.(layout)
+			end;
+		infoFrame
+	end,
+	// A card's data as text (Find, routing): each of its views' data, a line each.
+	// Looks like a ROM bug: the loop over an array runs to Length inclusive, one
+	// past its last element (that path finds no data, so no harm is done).
+	kGenericTextFunc: func(a1) begin
+		local infoFrame;
+		local copy;
+		local l3;
+		local l4;
+		(foreach item in call GetRoot().cardfile.kViewsToDisplay with (a1) do begin
+				infoFrame := GetRoot().cardfile:GetInfoFrame(item, a1.class);
+				l3 := call GetRoot().cardfile.kTextDumper with (a1, infoFrame, infoFrame.checkPrefix[0], l3);
+				if (if infoFrame.checkPrefix[1] then (l4 := a1.(infoFrame.checkPrefix[1]))) then begin
+						(for i := 0 to Length(l4) do begin
+								AddArraySlot((copy := Clone(infoFrame.checkPrefix[1])), i);
+								l3 := call GetRoot().cardfile.kTextDumper with (a1, infoFrame, copy, l3)
+							end)
+					end
+			end);
+		l3
+	end,
+	// The key commands: + adds a card (_addKeyScript).
+	allKeyCommands: [|Array|:
+		[|Array|:
+			{
+				char: $=,
+				showChar: $+,
+				modifiers: 100663296,
+				keyMessage: '_addKeyScript,
+				name: "Add",
+				category: "Creating"
+			},
+			_addKeyScript
+		]
+	],
+	// Sets an old card's class from its sorton's class: a name means a person,
+	// anything else a company.
+	kUpdateClass: func(a1) begin
+		(if (ClassOf(a1.sorton) = 'name) then (a1.class := 'person) else (a1.class := 'company))
+	end,
+	closingEditSlip: nil,
+	// Puts card a1's birthday or anniversary (the date in slot path) into the Date
+	// Book as a yearly event titled text2 ("Bday: ^0" with the card's name),
+	// replacing the one before and keeping an alias to it in slot eventPath.
+	AddBdayToCalendar: func(a1, path, eventPath, text2) begin
+		local yearly, text;
+		text := ParamStr(text2, [Array: GetRoot():PrimaryName(a1)]);
+		if a1.(eventPath) then begin
+				self:RemoveBdayFromCalendar(a1);
+				a1.(eventPath) := nil;
+				EntryChange(a1)
+			end;
+		(if (if (if a1.(path) then (not IsInstance(a1.(path), 'string))) then (not StrEqual("Untitled Person", text))) then (if (yearly := GetRoot().calendar:AddEvent(text, a1.(path), 'yearly, nil)) then begin
+					yearly.mtgIconType := 'annualEvent;
+					EntryChangeXmit(yearly, 'cardfile);
+					a1.(eventPath) := MakeEntryAlias(yearly);
+					EntryChange(a1)
+				end))
+	end,
+	// The phone numbers for a business card: the card's phones of the classes in
+	// preferredRouting (phone and string.phone taken as one), and its pagers made
+	// phone numbers, the PIN after the number.
+	bcPhoneNumber: func(currentPersona, preferredRouting) begin
+		if (not IsArray(preferredRouting)) then begin
+				preferredRouting := [Array: preferredRouting]
+			end;
+		phone := SetContains(preferredRouting, 'phone);
+		setContains2 := SetContains(preferredRouting, '|string.phone|);
+		if ((if phone then (not setContains2)) or (if setContains2 then (not phone))) then begin
+				if IsReadOnly(preferredRouting) then begin
+						preferredRouting := Clone(preferredRouting)
+					end;
+				AddArraySlot(preferredRouting, (if phone then '|string.phone| else 'phone))
+			end;
+		bcHelper := self:bcHelper(currentPersona, preferredRouting, '[Array: phones], nil);
+		if (bcHelper2 := self:bcHelper(currentPersona, preferredRouting, '[Array: pagers], '[Array: pagerNum, pagerPin])) then begin
+				if (not bcHelper) then begin
+						bcHelper := [Array: ]
+					end;
+				local bcHelper;
+				local bcHelper2;
+				local phone2;
+				local pagerNum2;
+				local parsePhone2;
+				local phone;
+				local setContains2;
+				(for i := 0 to (Length(bcHelper2) - 1) do begin
+						(parsePhone2 := ParsePhone((pagerNum2 := bcHelper2[i].pagerNum))).extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: parsePhone2.extension, bcHelper2[i].pagerPin]);
+						SetClass((phone2 := MakePhone(parsePhone2)), ClassOf(pagerNum2));
+						AddArraySlot(bcHelper, phone2)
+					end)
+			end;
+		bcHelper
+	end,
+	// Keeps the birthdays still to be offered (newBdays) in the preferences, and
+	// the rest of the state, but only for the ordinary Names (not owner cards).
+	SaveAppState: func() begin
+		local appPreferences;
+		(if (superSymbol = 'names) then begin
+				(appPreferences := self:GetAppPreferences()).newBdays := newBdays;
+				EntryChange(appPreferences);
+				(if self.viewCObject then inherited:SaveAppState())
+			end)
+	end,
+	// True when sorting by sortBy keeps the cards in the order a1 does (both sort
+	// on the same slot).
+	SortPathMatches: compile(
+		constants: {
+			kLiteral_736fd5: '{name: {first: first}, sorton: sorton, company: company, postal_code: postal_code, cardType: class}
+		},
+		func(a1, sortBy) begin
+			(kLiteral_736fd5.(a1) = kLiteral_736fd5.(sortBy))
+		end),
+	showSound: @drawerOpen,
+	// True when card target has data at any of dataPaths (a string must be filled
+	// in; stringData says the data is text).
+	HasPathData: func(target, dataPaths, stringData) begin
+		(foreach item in dataPaths do begin
+				if target.(item) then begin
+						if (stringData or IsInstance(target.(item), 'string)) then begin
+								return StrFilled(target.(item))
+							end else begin
+								return true
+							end
+					end
+			end);
+		nil
+	end,
+	// Gives a card's name and sorton the classes the system's data types use
+	// (person/name for people, company otherwise), cloning read-only values first.
+	SetIAClass: func(target) begin
+		if (if target.sorton then IsReadOnly(target.sorton)) then begin
+				target.sorton := Clone(target.sorton)
+			end;
+		(if ((target.class = 'person) or (target.class = 'owner)) then begin
+				if target.name then begin
+						if IsReadOnly(target.name) then begin
+								target.name := Clone(target.name)
+							end;
+						SetClass(target.name, 'person)
+					end;
+				(if target.sorton then SetClass(target.sorton, 'name))
+			end else (if target.sorton then SetClass(target.sorton, 'company)))
+	end,
+	_notesRecogSettings: nil,
+	// The sort order picked in the folder tab (clusterValue: 'sorton, 'class,
+	// 'company, 'postal_code...): adds a soup index on [that slot, sorton], drops
+	// the previous one, keeps the choice and re-sorts.  An index cannot be added on
+	// a locked card (kSError_WriteProtected).
+	SortByChange: func(clusterValue) begin
+		local l1, l2, names, l4, appPreferences, l6;
+		l4 := (names := allSoups.names).theSoup;
+		l6 := (appPreferences := self:GetAppPreferences()).sortBy;
+		if (clusterValue <> 'sorton) then begin
+				if (clusterValue = 'class) then begin
+						l1 := 'symbol
+					end else begin
+						l1 := 'string
+					end;
+				try begin
+						l4:AddIndex({structure: 'multiSlot, path: [Array: clusterValue, 'sorton], type: [Array: l1, 'string]})
+					end onexception |evt.ex.fr.store| do begin
+						if (CurrentException().error = kSError_WriteProtected) then begin
+								self:Notify(kNotifyAlert, title, "You cannot change the sort order on a locked card.  Please unlock the card, reinsert it, and try again.")
+							end else begin
+								self:Notify(kNotifyAlert, title, ParamStr("The sort order was not changed because an error occurred. \n(^0)", [Array: self:TranslateError(CurrentException().error)]))
+							end;
+						return nil
+					end
+			end;
+		if (l6 <> 'sorton) then begin
+				try begin
+						names.theSoup:RemoveIndex([Array: l6, 'sorton])
+					end onexception |evt.ex| do begin end
+			end;
+		appPreferences.sortBy := clusterValue;
+		EntryChange(appPreferences);
+		if IsReadOnly(names.soupQuery) then begin
+				names.soupQuery := Clone(names.soupQuery)
+			end;
+		if (clusterValue = 'sorton) then begin
+				names.soupQuery.IndexPath := 'sorton
+			end else begin
+				names.soupQuery.IndexPath := [Array: clusterValue, 'sorton]
+			end;
+		names:SetupCursor();
+		layout:SetupCursor();
+		layout:Retarget(true)
+	end,
+	// Reopens the application for the new screen orientation, as it was opened.
+	ReorientToScreen: func() begin
+		local l1;
+		l1 := (superSymbol = 'ownerNames);
+		self:_Close();
+		(if l1 then self:OpenAsOwner(true) else self:Open())
+	end,
+	// Takes layout a1 out of the layouts (a package going away), showing the
+	// default layout instead where it was in use.
+	SafeRemoveLayout: func(a1) begin
+		local appPreferences;
+		if (if self.viewCObject then (currentLayout = a1)) then begin
+				self:ShowLayout('default)
+			end;
+		if ((appPreferences := self:GetAppPreferences()).currentLayout = a1) then begin
+				appPreferences.currentLayout := 'default
+			end;
+		if (appPreferences.previousLayout = a1) then begin
+				appPreferences.previousLayout := 'default
+			end;
+		EntryChange(appPreferences);
+		(if allLayouts.(a1) then begin
+				if IsReadOnly(allLayouts) then begin
+						allLayouts := Clone(allLayouts)
+					end;
+				RemoveSlot(allLayouts, a1)
+			end)
+	end,
+	overviewTargetClass: 'cardfileOverviewPrint,
+	// Converting older Names soups (the conversion the newtApplication does).
+	conversion: {
+		// Adds the tags index (the folders' labels) to a soup that has none.
+		ConvertSoup: func(a1, a2, a3) begin
+			(if (not a1:HasTags()) then a1:AddIndex('{structure: slot, path: labels, type: tags}))
+		end,
+		// Converts entry a1 from soup version a2 to a3 ('oneO, 'twoO): for 2.0, gives
+		// it a class, makes its phones' and pagers' classes the 2.0 ones (pager phones
+		// become pager entries, home fax a fax), sets its sort fields and strips the
+		// ink from its text; for 1.0 (going back), the reverse.  Returns the new entry
+		// or nil.
+		Convert: func(a1, a2, a3, a4) begin
+			local v8_zzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyy, v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v10_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyy, v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v12_xxxxxxxxxxxxwww, v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyy, v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v17_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v18_xxxxxxxxxxxxxxxxxxxxxxxxxxwwwwwwwwwwww, v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyy, v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v26_yyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v28_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v29_xxxxxxxxxxxxxxxwwwwwwwwww, v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy, v32_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v33_yxxxxxxxxxxxxxxxxxx;
+			v17_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := a1.class;
+			if a1.notes then begin
+					if (v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := ConvertChildTemplates((v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := Clone(a1)).notes, a2, a3)) then begin
+							ArrayMunger(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.notes, Length(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.notes), 0, v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, 0, nil)
+						end
+				end;
+			if (a3 = 'twoO) then begin
+					if ((a2 = 'oneO) or (not v17_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy)) then begin
+							if (not v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) then begin
+									v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := Clone(a1)
+								end;
+							if a4 then begin
+									v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.labels := |Ensure1.XFolderExists|(a1.labels, 'cardfile)
+								end;
+							if (a1.bday or (if (if (ClassOf(a1.sorton) = 'name) then a1.name) then (StrFilled(a1.name.first) or StrFilled(a1.name.last)))) then begin
+									v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.class := 'person;
+									if (v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.title := v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.name.title) then begin
+											v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.name.title := nil
+										end
+								end else begin
+									if StrFilled(a1.company) then begin
+											v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.class := 'company
+										end else begin
+											v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.class := 'person
+										end
+								end;
+							if (ClassOf(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.email) = 'string) then begin
+									SetClass(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.email, '|string.email|)
+								end;
+							if (ClassOf(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.country) = 'string) then begin
+									SetCountryClass(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.country)
+								end;
+							GetRoot().cardfile:SetCardfileStuff(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, nil);
+							if ((if ((not (v8_zzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyy := v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.country)) or (not StrFilled(v8_zzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyy))) then (UserConfiguration.currentCountry = 'USA)) or (if IsInstance(v8_zzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyy, 'string) then StrEqual(v8_zzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyy, "USA"))) then begin
+									v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyy := (if (v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.phones) then Length(v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) else 0);
+									v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := 0;
+									(while (v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy < v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyy) do begin
+											if (v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy := v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy]) then begin
+													if (if (v10_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyy := StrPosExact(v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy, "(", 0)) then (v10_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyy > 0)) then begin
+															v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy] := StringFilter(v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy, "()", 'rejectAll);
+															SetClass(v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy], ClassOf(v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy));
+															v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy := v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy]
+														end;
+													if (not (v33_yxxxxxxxxxxxxxxxxxx := ParsePhone(v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy)).areacode) then begin
+															if (StrLen((v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyy := StringFilter(v33_yxxxxxxxxxxxxxxxxxx.phone, "0123456789", 'passAll))) = 10) then begin
+																	v29_xxxxxxxxxxxxxxxwwwwwwwwww := ClassOf(v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy);
+																	v33_yxxxxxxxxxxxxxxxxxx.areacode := Substr(v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyy, 0, 3);
+																	v33_yxxxxxxxxxxxxxxxxxx.phone := StripDigits(v33_yxxxxxxxxxxxxxxxxxx.phone, 3, true);
+																	v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy] := MakePhone(v33_yxxxxxxxxxxxxxxxxxx);
+																	SetClass(v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy], v29_xxxxxxxxxxxxxxxwwwwwwwwww)
+																end
+														end;
+													if IsInstance(v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy, 'beeperPhone) then begin
+															SetClass(v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy, '|string.pager|);
+															RemoveSlot(v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy);
+															v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyy := (v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyy - 1);
+															if (not v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.pagers) then begin
+																	v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.pagers := [Array: ]
+																end;
+															AddArraySlot(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.pagers, {pagerNum: v31_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyy})
+														end
+												end;
+											(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := (v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy + 1))
+										end)
+								end
+						end
+				end else begin
+					if (a3 = 'oneO) then begin
+							if ((v17_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy = 'group) or (v17_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy = 'worksite)) then begin
+									return nil
+								end;
+							RemoveSlot((v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := Clone(a1)), 'class);
+							RemoveSlot(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, 'version);
+							if (if (v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.phones) then (Length(v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) > 0)) then begin
+									(for v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := 0 to (Length(v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) - 1) do begin
+											if (v26_yyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx := v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy]) then begin
+													v29_xxxxxxxxxxxxxxxwwwwwwwwww := ClassOf(v26_yyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx);
+													v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy] := StripInk(MakeDisplayPhone(v26_yyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx), $*);
+													if (v29_xxxxxxxxxxxxxxxwwwwwwwwww = 'homeFaxPhone) then begin
+															v29_xxxxxxxxxxxxxxxwwwwwwwwww := 'faxPhone
+														end;
+													SetClass(v9_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy], v29_xxxxxxxxxxxxxxxwwwwwwwwww)
+												end
+										end)
+								end;
+							if (if (v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.pagers) then (Length(v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) > 0)) then begin
+									if (not v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.phones) then begin
+											v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.phones := [Array: ]
+										end;
+									(for v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := 0 to (Length(v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) - 1) do begin
+											if (v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyy := v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy[v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy]) then begin
+													if (v28_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := GetRoot().cardfile:GetInfoFrame('pager, v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.class)) then begin
+															SetClass((v18_xxxxxxxxxxxxxxxxxxxxxxxxxxwwwwwwwwwwww := v28_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy:formatFunc([Array: v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyy.pagerNum, v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyy.pagerPin])), 'beeperPhone);
+															AddArraySlot(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.phones, v18_xxxxxxxxxxxxxxxxxxxxxxxxxxwwwwwwwwwwww)
+														end
+												end
+										end)
+								end;
+							if v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.title then begin
+									if (not v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.name) then begin
+											v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.name := {}
+										end;
+									v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.name.title := v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.title;
+									v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.title := nil
+								end;
+							if v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.email then begin
+									SetClass(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.email, 'string)
+								end;
+							if v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.country then begin
+									SetClass(v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.country, 'string)
+								end;
+							(foreach v7_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy in v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy do begin
+									if IsFrame(v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) then begin
+											(foreach v25_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v30_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyy in v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy do begin
+													if (if v30_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyy then IsInstance(v30_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyy, 'string)) then begin
+															StripInk(v30_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyy, $*)
+														end
+												end)
+										end else begin
+											if IsInstance(v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, 'string) then begin
+													StripInk(v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, $*)
+												end
+										end
+								end)
+						end
+				end;
+			if (v32_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := GetRoot():?__NamesConversionHook((v12_xxxxxxxxxxxxwww := (if v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy then v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy else a1)), a2, a3, a4, (not v11_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy))) then begin
+					v12_xxxxxxxxxxxxwww := v32_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+				end;
+			v12_xxxxxxxxxxxxwww
+		end
+	},
+	viewBounds: {top: -223, left: 0, right: 238, bottom: -8},
+	// The full paths of a view's data: prefix checkPrefixItem with each of
+	// checkPaths added; just the prefix for text data with no paths; nil when there
+	// is no prefix.
+	MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
+		local item;
+		local list;
+		(if (not checkPrefixItem) then nil else (if (Length(checkPaths) < 1) then (if stringData then (list := [Array: Clone(checkPrefixItem)])) else (if (checkPrefixItem = true) then (foreach item in checkPaths collect [pathExpr: item]) else (foreach item in checkPaths collect begin
+						list := Clone(checkPrefixItem);
+						if item then begin
+								AddArraySlot(list, item)
+							end;
+						list
+					end))))
+	end,
+	DateFind: nil,
+	appObject: [|Array|: "Name", names],
+	_proto: @newtApplication,
+	// The print or route format last used for category, or cfSingleFormat.
+	GetDefaultFormat: func(category, target) begin
+		local l1;
+		if (not (l1 := (if (if self.lastFormats then self.lastFormats.(category)) then self.lastFormats.(category)))) then begin
+				l1 := 'cfSingleFormat
+			end;
+		l1
+	end,
+	// Fills in the bookkeeping slots of card a1 (and saves it when a2): its
+	// cardType, version 2, the sort string (sorton: "Last First", the company, the
+	// place or the group's name - a blank when there is none), the classes, and
+	// empty name, company and postal code where missing.
+	SetCardfileStuff: func(a1, a2) begin
+		local class2, text;
+		class2 := a1.class;
+		if (not a1.cardType) then begin
+				if (if (class2 <> 'group) then (class2 <> 'worksite)) then begin
+						a1.cardType := allSoups.names.defaultCardType
+					end else begin
+						a1.cardType := 1
+					end
+			end;
+		a1.version := 2;
+		if ((class2 = 'person) or (class2 = 'owner)) then begin
+				if StrFilled(a1.name.last) then begin
+						text := ParamStr("^0 ^1", [Array: a1.name.last, a1.name.first])
+					end else begin
+						if a1.name.first then begin
+								text := a1.name.first
+							end
+					end
+			end else begin
+				if (if (class2 = 'company) then a1.company) then begin
+						text := a1.company
+					end else begin
+						if (if (class2 = 'worksite) then a1.place) then begin
+								text := a1.place
+							end else begin
+								if (if (class2 = 'group) then a1.group) then begin
+										text := a1.group
+									end
+							end
+					end
+			end;
+		if (if StrFilled(text) then (not IsRichString(text))) then begin
+				a1.sorton := text
+			end;
+		if (not StrFilled(a1.sorton)) then begin
+				a1.sorton := " "
+			end;
+		self:SetIAClass(a1);
+		if (not a1.name) then begin
+				a1.name := Clone('{honorific: nil, first: "", last: nil, title: nil})
+			end;
+		if (not a1.company) then begin
+				a1.company := Clone("")
+			end;
+		if (not a1.postal_code) then begin
+				a1.postal_code := Clone("")
+			end;
+		(if a2 then EntryChange(a1))
+	end,
+	// The custom fields' definitions: the 'customFields info of the Names soup on
+	// the internal store (labels by field), or nil.
+	GetCustomInfo: func() begin
+		local soup;
+		(if (soup := GetStores()[0]:GetSoup(allSoups.names.soupName)) then soup:GetInfo('customFields))
+	end,
+	_recogSettings: nil,
+	labelsFilter: nil,
+	// The addresses for a business card (address, city, region, postal code...).
+	bcStreetAddress: func(resolveEntryAlias, a2) begin
+		self:bcHelper(resolveEntryAlias, a2, '[Array: addresses], '[Array: address, address2, city, region, postal_code, country])
+	end,
+	// Reads the saved state; for the ordinary Names also the birthdays still to be
+	// offered.
+	GetAppState: func() begin
+		local appPreferences;
+		if (superSymbol = 'names) then begin
+				appPreferences := inherited:GetAppState()
+			end else begin
+				appPreferences := self:GetAppPreferences()
+			end;
+		newBdays := appPreferences.newBdays;
+		appPreferences
+	end,
+	// Adds card a1 to store and shows it.
+	AddEntryDirect: func(a1, store) begin
+		local masterSoup;
+		masterSoup := layout.masterSoup;
+		masterSoup:AddEntry(a1, store);
+		layout.dataCursor:Goto(a1);
+		layout:Retarget(nil);
+		(newtAppBase.target := a1)
+	end,
+	// The Soupervisor's hooks: moving and filing Names entries (only those whose
+	// data definition belongs to the ordinary Names, not owner cards).
+	soupervisor: {
+		type: 'all,
+		// Moves entry a1 to store a3 (a copy when its store is read-only).
+		moveEntry: func(a1, a2, a3) begin
+			if (if a1.class then (GetDataDefs(a1.class).superSymbol <> 'names)) then begin
+					return nil
+				end;
+			(if EntryStore(a1):IsReadOnly() then EntryCopy(a1, a3) else EntryMove(a1, a3))
+		end,
+		// Files entry a1 in folder a2 (its labels; nil for unfiled).
+		fileEntry: func(a1, a2) begin
+			if (if a1.class then (GetDataDefs(a1.class).superSymbol <> 'names)) then begin
+					return nil
+				end;
+			(if (not EntryStore(a1):IsReadOnly()) then (if (a1.labels <> a2) then begin
+						if a2 then begin
+								a1.labels := a2
+							end else begin
+								RemoveSlot(a1, 'labels)
+							end;
+						EntryChange(a1)
+					end))
+		end
+	},
+	// Undo of a new card: deletes card a1 and goes back to card a2.
+	UndoNewCard: func(a1, a2) begin
+		layout:KillEntry(a1);
+		if a2 then begin
+				layout.dataCursor:Goto(a2);
+				layout:NewTarget()
+			end;
+		true
+	end,
+	// Rebuilds the status bar when a button is added to it.
+	AddAuxButton: func(frame2) begin
+		statusBar:?RedoChildren()
+	end,
+	// Find's hook: shows the found card in a layout that shows what was found -
+	// the card itself for its name, the notes slip for its notes, else All Info.
+	ShowFoundItem: func(a1, a2) begin
+		local currentLayout2, text, l3;
+		if (if a2 then a2.findWords) then begin
+				if FindStringInFrame([Array: (text := Stringer([Array: GetRoot():PrimaryName(a1), " ", GetRoot():secondaryName(a1)]))], a2.findWords, nil) then begin
+						if (currentLayout = 'allinfo) then begin
+								currentLayout2 := 'allinfo
+							end else begin
+								currentLayout2 := 'default
+							end
+					end else begin
+						if FindStringInFrame([Array: a1.notes], a2.findWords, nil) then begin
+								currentLayout2 := currentLayout;
+								l3 := true
+							end else begin
+								currentLayout2 := 'allinfo
+							end
+					end
+			end;
+		if (if currentLayout2 then (currentLayout2 <> currentLayout)) then begin
+				self:ShowLayout(currentLayout2)
+			end;
+		if (if (if (not l3) then editSlipLayout) then editSlipLayout.viewCObject) then begin
+				self:RememberedClose(editSlipLayout);
+				editSlipLayout := nil
+			end;
+		inherited:ShowFoundItem(a1, a2);
+		(if l3 then self:ShowEditSlip('editNotes, true, nil, nil, nil))
+	end,
+	// The application's soups (newtApplication's allSoups).
+	allSoups: {
+		names: {
+			// The Names soup.
+			_proto: @newtSoup,
+			soupName: @cardfileSoupName,
+			soupIndices: @cardfileIndices,
+			soupQuery: soupQuery,
+			defaultDataType: 'person,
+			defaultCardType: 1,
+			// A blank card.
+			CreateBlankEntry: func() begin
+				{class: 'person, version: 2, sorton: ""}
+			end,
+			// Nothing to do when the application lets go of the soup.
+			DoneWithSoup: func(appSymbol) begin
+				nil
+			end,
+			// The cursor over the soup: for owner cards, the internal store's whole soup;
+			// otherwise the cards in the folder picked - with no folder, the unfiled ones;
+			// for "All", every card but the owner cards (whose folder is _ownerNames).
+			SetupCursor: compile(
+				constants: {
+					// the valid test: every card except the owner's
+					kFunction_73924d: func(a1) begin
+						(a1.labels <> '_ownerNames)
+					end
+				},
+				func() begin
+					local copy;
+					(if (GetRoot().cardfile.superSymbol = 'ownerNames) then begin
+							theSoup := GetStores()[0]:GetSoup(soupName);
+							(theCursor := theSoup:Query(soupQuery))
+						end else begin
+							if theSoup:HasTags() then begin
+									if (not soupFilter) then begin
+											(copy := Clone(soupQuery)).tagSpec := '{equal: [Array: ]}
+										end
+								end else begin
+									if (soupFilter = '_all) then begin
+											RemoveSlot((copy := Clone(soupQuery)), 'tagSpec);
+											copy.validTest := kFunction_73924d
+										end
+								end;
+							(if copy then (theCursor := theSoup:Query(copy)) else inherited:SetupCursor())
+						end)
+				end),
+			// Adds a card (owner and worksite cards in the hidden _ownerNames folder) and
+			// tells the soup's watchers; a new owner card is made a persona, a worksite an
+			// emporium (the system's lists of them).
+			AddEntry: func(adoptEntry, store) begin
+				local cardfile, class2;
+				if (((class2 := adoptEntry.class) = 'owner) or (class2 = 'worksite)) then begin
+						adoptEntry.labels := '_ownerNames
+					end;
+				if (ClassOf(theSoup) = 'PlainSoup) then begin
+						cardfile := theSoup:AddXmit(adoptEntry, 'cardfile)
+					end else begin
+						cardfile := inherited:AddEntry(adoptEntry, store);
+						XmitSoupChange(soupName, 'cardfile, 'entryAdded, adoptEntry)
+					end;
+				if (class2 = 'owner) then begin
+						AddPersona(adoptEntry)
+					end else begin
+						if (class2 = 'worksite) then begin
+								AddEmporium(adoptEntry)
+							end
+					end;
+				cardfile
+			end,
+			// Duplicates a card, without its link to its Date Book birthday.
+			DuplicateEntry: func(a1, store) begin
+				if a1.bdayEvent then begin
+						(a1 := Clone(a1)).bdayEvent := nil
+					end;
+				inherited:DuplicateEntry(a1, store)
+			end,
+			// Deletes a card: its birthday comes out of the Date Book, and the persona and
+			// emporium lists are brought up to date.
+			DeleteEntry: func(next) begin
+				local l1, l2;
+				EntryRemoveFromSoupXmit(next, 'cardfile);
+				if next.bdayEvent then begin
+						GetRoot().cardfile:RemoveBdayFromCalendar(next)
+					end;
+				if (next.class = 'owner) then begin
+						SyncPersonae()
+					end;
+				(if (next.class = 'worksite) then SyncEmporia())
+			end,
+			// Adds the sample cards a new Names soup starts with.
+			AddWalletEntries: compile(
+				constants: {
+					// run when this function is built: a binary of class cls from the hex
+					// string hex, for the literals below
+					kBinaryFromHex: func(hex, cls) begin
+						local b := MakeBinary(StrLen(hex) div 2, cls);
+						for i := 0 to Length(b) - 1 do begin
+							local h := Ord(hex[2 * i]);
+							local l := Ord(hex[2 * i + 1]);
+							StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+						end;
+						b
+					end,
+					kLiteral_7395c9: [Array: {address2: nil, addresses: '[Array: ], pagers: '[Array: ], address: "217 Crocker Lane", class: 'person, postal_code: "44704", cardType: 0, anniversary: nil, region: "OH", companyReading: nil, section: nil, city: "Hillsdale", email: nil, bdayEvent: nil, title: nil, country: nil, name: '{class: person, first: "Royce", last: "Walthrop", nameReading: ""}, company: nil, emailAddrs: '[Array: ], companies: '[Array: ], sorton: call kBinaryFromHex with ("00570061006c007400680072006f007000200052006f0079006300650000", 'name), notes: nil, anniversaryEvent: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280034003100390029003500350035002d00330035003400330000", 'homePhone)], version: 2, bday: nil, emailPassword: nil}, {address2: "37415 Park Place", addresses: '[Array: ], address: "The Crossroads", class: 'company, postal_code: "94804", cardType: 3, region: "CA", companyReading: "", section: nil, city: "Brisbane", email: nil, title: nil, country: nil, name: '{honorific: nil, first: "", last: nil, title: nil}, company: call kBinaryFromHex with ("0043006f006e0067006c006f006d00650072006100740065006400200043007200650064006900740000", 'company), emailAddrs: '[Array: ], sorton: call kBinaryFromHex with ("0043006f006e0067006c006f006d00650072006100740065006400200043007200650064006900740000", 'company), notes: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280038003000300029003500350035002d00310030003000300000", 'workPhone), call kBinaryFromHex with ("00280034003100350029003500350035002d00380031003200330000", 'faxPhone)], version: 2}, {address2: nil, addresses: '[Array: ], address: "241 Cappuccino Court", class: 'company, postal_code: "02168", cardType: 2, region: "MA", companyReading: nil, section: nil, city: "Newton", email: nil, title: nil, country: nil, name: '{honorific: nil, first: "", last: nil, title: nil}, company: call kBinaryFromHex with ("004e006500770074006f006e002000430061006600650000", 'company), emailAddrs: '[Array: ], sorton: call kBinaryFromHex with ("004e006500770074006f006e002000430061006600650000", 'company), notes: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280036003100370029003500350035002d00310030003000300000", 'phone), call kBinaryFromHex with ("00280036003100370029003500350035002d00380031003200330000", 'faxPhone)], version: 2}, {address2: nil, addresses: '[Array: ], pagers: '[Array: ], address: "51 Partlow Pond Road", class: 'person, postal_code: "13639", cardType: 1, anniversary: nil, region: "New York", companyReading: nil, section: nil, city: "Fine", email: nil, bdayEvent: nil, title: nil, country: nil, name: '{class: person, first: "Bob", last: "Anderson", nameReading: ""}, company: nil, emailAddrs: '[Array: ], companies: '[Array: ], sorton: call kBinaryFromHex with ("0041006e0064006500720073006f006e00200042006f00620000", 'name), notes: nil, anniversaryEvent: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280033003100350029003500350035002d00340034003700360000", 'homePhone)], version: 2, bday: nil, emailPassword: nil}, {address2: nil, addresses: '[Array: ], address: "100 Main St.", class: 'company, postal_code: "02165", cardType: 1, region: "MA", companyReading: "", section: nil, city: "Newton", email: nil, title: nil, country: nil, name: '{honorific: nil, first: "", last: nil, title: nil}, company: call kBinaryFromHex with ("0041006c00690063006500270073002000520065007300740061007500720061006e00740000", 'company), emailAddrs: '[Array: ], sorton: call kBinaryFromHex with ("0041006c00690063006500270073002000520065007300740061007500720061006e00740000", 'company), notes: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280036003100370029003500350035002d00320030003200300000", 'phone)], version: 2}]
+				},
+				func() begin
+					(foreach item in kLiteral_7395c9 do begin
+							theSoup:AddToDefaultStore(DeepClone(item))
+						end)
+				end)
+		}
+	},
+	// AddCard (the API other applications call): makes card of class a2 from data
+	// a1 with the stationery, making the soup first if need be, and tells the
+	// soup's watchers soon after (a procrastinated XmitSoupChange).
+	AddCard: func(a1, a2) begin
+		local names, copy, adoptEntryFromStationery;
+		if (not GetStores()[0]:HasSoup((names := allSoups.names).soupName)) then begin
+				copy := Clone(names);
+				copy:MakeSoup(appSymbol)
+			end;
+		adoptEntryFromStationery := self:AdoptEntryFromStationery(a2, a1, nil);
+		AddProcrastinatedCall('cardfileAddCard, functions.XmitSoupChange, [Array: names.soupName, 'cardfileAddCard, 'entryAdded, adoptEntryFromStationery], 0);
+		adoptEntryFromStationery
+	end,
+	editSlip: @8219,
+	// The application's size for the screen: 240 wide, a dragger border of 8 on a
+	// screen wider than 240 (none on a small one), 202 high for owner cards, 220
+	// for the default layout, else as high as the screen allows (at most 424).
+	kGetAppSize: func(a1, a2) begin
+		local l1, least, bounds, viewFormat;
+		if ((screenSize := GetAppParams()).appAreaWidth <= 240) then begin
+				l1 := 0
+			end else begin
+				l1 := 8
+			end;
+		if ((a1.superSymbol = 'ownerNames) or (a2 = 'default)) then begin
+				least := (if (a1.superSymbol = 'ownerNames) then 202 else 220)
+			end else begin
+				least := (screenSize.appAreaHeight - (l1 * 2));
+				if (l1 > 0) then begin
+						least := min(((220 - l1) * 2), least)
+					end
+			end;
+		bounds := SetBounds(0, ((-least) - l1), 240, (-l1));
+		if (l1 = 0) then begin
+				viewFormat := 0
+			end else begin
+				viewFormat := GetRoot().cardfile._proto.viewFormat
+			end;
+		{bounds: bounds, justify: vjParentCenterH + vjParentBottomV, viewFormat: viewFormat, draggerBorder: l1}
+	end,
+	appSymbol: 'cardfile,
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	cardExchangeLayout: @8211,
+	extraRouteScripts: [|Array|:
+		{
+			title: "Beam My Card",
+			icon: {
+				bits: bitmap('bits, "resources/bits/73c2e1.png", "0000000000040100010000ef01100105", 1),
+				bounds: {left: 0, top: 0, right: 22, bottom: 16}
+			},
+			routeScript: 'cardExchangeScript
+		}
+	],
+	// Opens the Call slip for card a2 from view a1: the number a3 (or the card's
+	// first), the card's other numbers as alternatives.  Only one at a time.
+	kDoCallSlip: func(a1, a2, a3) begin
+		a1:dirty();
+		(if ((not (callSlip := GetRoot().cardfile.callSlip)) or (not callSlip.viewCObject)) then begin
+				l1 := GetRoot().|phonehome:newton|:NewItem(a1);
+				nameRef := GetDataDefs('|nameRef.phone|):MakeNameRef(a2, '|nameRef.phone|);
+				if a3 then begin
+						nameRef.phone := a3
+					end else begin
+						l5 := true
+					end;
+				l1.toRef := [Array: nameRef];
+				if (bcPhoneNumber := GetRoot().cardfile:bcPhoneNumber(a2, '[Array: string])) then begin
+						l1.alternatives := [Array: ];
+						local l1;
+						local nameRef;
+						local callSlip;
+						local bcPhoneNumber;
+						local l5;
+						(foreach item in bcPhoneNumber do begin
+								local copy;
+								if item then begin
+										if l5 then begin
+												nameRef.phone := (a3 := item);
+												l5 := nil
+											end else begin
+												if (not StrEqual(item, a3)) then begin
+														(copy := Clone(nameRef)).suffix := (copy.phone := item);
+														AddArraySlot(l1.alternatives, copy)
+													end
+											end
+									end
+							end)
+					end;
+				(GetRoot().cardfile.callSlip := a1:OpenRoutingSlip(l1))
+			end)
+	end,
+	title: names,
+	// Nothing: worksites' email access numbers are not added here.
+	AddEmailAccessNums: func(a1, a2) begin
+		nil
+	end,
+	// The owner's credit cards for a business card.
+	bcCreditCards: func(a1, a2) begin
+		self:bcHelper(a1, a2, '[Array: [pathExpr: owner, creditCards]], '[Array: creditCardName, creditCardNum])
+	end,
+	draggerBorder: 0,
+	theChildren: [stepChildren: {_proto: @newtShowBar}, cardfileItem],
+	// The data definitions of the five classes of card (newtStationery).
+	allDataDefs: {
+		person: {
+			_proto: @newtStationery,
+			symbol: 'person,
+			name: person,
+			description: person,
+			superSymbol: 'names,
+			icon: {
+				bits: bitmap('bits, "resources/bits/73d261.png", "0000000000040169016900ae017900c4", 1),
+				bounds: {left: 0, top: 0, right: 22, bottom: 16}
+			},
+			overviewIcon: {
+				bits: bitmap('bits, "resources/bits/73d2ed.png", "00000000000401650165003801700045", 1),
+				bounds: {left: 0, top: 0, right: 13, bottom: 11}
+			},
+			viewsToDisplay: [|Array|:
+				'default,
+				'company,
+				'address,
+				'phone,
+				'email,
+				'pager,
+				'personal,
+				'name,
+				'custom,
+				'style,
+				'editNotes
+			],
+			// A blank person card.
+			MakeNewEntry: func() begin
+				local copy;
+				return (copy := TotalClone('{address2: nil, addresses: [Array: ], pagers: [Array: ], address: nil, class: person, postal_code: nil, cardType: nil, anniversary: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, bdayEvent: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], companies: [Array: ], sorton: "Untitled Person", notes: nil, anniversaryEvent: nil, names: [Array: ], phones: [Array: ], version: 2, bday: nil, emailPassword: nil}))
+			end,
+			textScript: textScript,
+			// The text the system shows for a person (In Box, overview): "Last, First" or
+			// "Untitled Person", and with a second line the card's first phone number.
+			StringExtract: func(entry, nLines) begin
+				text := "";
+				if (not StrFilled((text2 := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: entry.name.last, entry.name.first])))) then begin
+						text2 := "Untitled Person"
+					end;
+				if (nLines > 1) then begin
+						if (if (phones := entry.phones) then ((count := Length(phones)) > 0)) then begin
+								local text;
+								local count;
+								local phones;
+								local text2;
+								(for i := 0 to (count - 1) do begin
+										if StrFilled(phones[i]) then begin
+												break (text := Stringer([Array: " ", MakeDisplayPhone(phones[i])]))
+											end
+									end)
+							end;
+						text2 := Stringer([Array: text2, "\n", text])
+					end;
+				text2
+			end
+		},
+		owner: {
+			_proto: @newtStationery,
+			symbol: 'owner,
+			name: owner,
+			description: owner,
+			superSymbol: 'ownerNames,
+			icon: {
+				bits: bitmap('bits, "resources/bits/73d689.png", "00000000000401cb01cb00ff01db0115", 1),
+				bounds: {left: 0, top: 0, right: 22, bottom: 16}
+			},
+			overviewIcon: {
+				bits: bitmap('bits, "resources/bits/73d715.png", "00000000000400ca00ca004e00d40056", 1),
+				bounds: {left: 0, top: 0, right: 8, bottom: 10}
+			},
+			viewsToDisplay: [|Array|:
+				'default,
+				'company,
+				'address,
+				'phone,
+				'email,
+				'pager,
+				'name,
+				'personal,
+				'creditCard,
+				'bankAccount,
+				'signature,
+				'custom,
+				'editNotes
+			],
+			// A blank owner card: a person card of class owner in the _ownerNames folder.
+			MakeNewEntry: func() begin
+				local copy;
+				(copy := TotalClone('{address2: nil, addresses: [Array: ], pagers: [Array: ], address: nil, class: person, postal_code: nil, cardType: nil, anniversary: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, bdayEvent: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], companies: [Array: ], sorton: "Untitled Person", notes: nil, anniversaryEvent: nil, names: [Array: ], phones: [Array: ], version: 2, bday: nil, emailPassword: nil})).owner := {};
+				copy.class := 'owner;
+				copy.sorton := "Untitled Owner";
+				copy.labels := '_ownerNames;
+				return copy
+			end,
+			// An owner card's data as text, without its private 'owner data (credit cards,
+			// bank accounts).
+			textScript: compile(
+				constants: {
+					// the generic text of the card's data a2
+					kFunction_73d459: func(a1, a2) begin
+						call GetRoot().cardfile.kGenericTextFunc with (a2)
+					end
+				},
+				func(entry, target) begin
+					local copy;
+					RemoveSlot((copy := Clone(target)), 'owner);
+					call (kFunction_73d459) with (entry, copy)
+				end),
+			// The text the system shows for an owner card.
+			StringExtract: func(entry, nLines) begin
+				local text;
+				if (not StrFilled((text := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: entry.name.last, entry.name.first])))) then begin
+						text := "Untitled Owner"
+					end;
+				if (nLines > 1) then begin
+						text := Stringer([Array: text, "\n ", "Owner"])
+					end;
+				text
+			end
+		},
+		worksite: {
+			_proto: @newtStationery,
+			symbol: 'worksite,
+			name: worksite,
+			description: worksite,
+			superSymbol: 'ownerNames,
+			icon: {
+				bits: bitmap('bits, "resources/bits/73d9bd.png", "00000000000401ba01ba00ff01ca0115", 1),
+				bounds: {left: 0, top: 0, right: 22, bottom: 16}
+			},
+			overviewIcon: {
+				bits: bitmap('bits, "resources/bits/73da49.png", "000000000004011d011d00a5012800b0", 1),
+				bounds: {left: 0, top: 0, right: 11, bottom: 11}
+			},
+			viewsToDisplay: [|Array|: 'default, 'worksite, 'Connection, 'accessNumbers, 'custom, 'editNotes],
+			// A blank worksite card (a place the Newton is used: its dialing prefix, area
+			// code, city, printer...).
+			MakeNewEntry: func() begin
+				local copy;
+				(copy := TotalClone('{version: 2, class: worksite, cardType: nil, place: nil, dialingPrefix: nil, areacode: nil, cityAlias: nil, country: nil, countrySymbol: nil, printer: nil, mailAccess: nil, connectionPhone: nil, connectionNetwork: nil, notes: nil, sorton: "Untitled Worksite"})).labels := '_ownerNames;
+				return copy
+			end,
+			textScript: textScript,
+			// The text the system shows for a worksite.
+			StringExtract: func(entry, nLines) begin
+				local place;
+				if (not StrFilled((place := entry.place))) then begin
+						place := "Untitled Worksite"
+					end;
+				if (nLines > 1) then begin
+						place := Stringer([Array: place, "\n ", "Worksite"])
+					end;
+				place
+			end
+		},
+		company: {
+			_proto: @newtStationery,
+			symbol: 'company,
+			name: company,
+			description: company,
+			superSymbol: 'names,
+			icon: {
+				bits: bitmap('bits, "resources/bits/73dca5.png", "000000000004017e017e00ae018e00c4", 1),
+				bounds: {left: 0, top: 0, right: 22, bottom: 16}
+			},
+			overviewIcon: {
+				bits: bitmap('bits, "resources/bits/73dd31.png", "000000000004015101510036015c0046", 1),
+				bounds: {left: 0, top: 0, right: 16, bottom: 11}
+			},
+			viewsToDisplay: [|Array|: 'default, 'name, 'address, 'phone, 'email, 'custom, 'style, 'editNotes],
+			// A blank company card.
+			MakeNewEntry: func() begin
+				local copy;
+				return (copy := TotalClone('{address2: nil, addresses: [Array: ], address: nil, class: company, postal_code: nil, cardType: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], sorton: "Untitled Company", notes: nil, names: [Array: ], phones: [Array: ], version: 2}))
+			end,
+			textScript: textScript,
+			// The text the system shows for a company, with its first phone number on a
+			// second line.
+			StringExtract: func(entry, nLines) begin
+				text := "";
+				if (not StrFilled((company := entry.company))) then begin
+						company := "Untitled Company"
+					end;
+				if (nLines > 1) then begin
+						if (if (phones := entry.phones) then ((count := Length(phones)) > 0)) then begin
+								local text;
+								local count;
+								local phones;
+								local company;
+								(for i := 0 to (count - 1) do begin
+										if StrFilled(phones[i]) then begin
+												break (text := Stringer([Array: " ", MakeDisplayPhone(phones[i])]))
+											end
+									end)
+							end;
+						company := Stringer([Array: company, "\n", text])
+					end;
+				company
+			end
+		},
+		group: {
+			_proto: @newtStationery,
+			symbol: 'group,
+			name: group,
+			description: group,
+			superSymbol: 'names,
+			icon: {bits: groupBits, bounds: {left: 0, top: 0, right: 22, bottom: 16}},
+			overviewIcon: {
+				bits: bitmap('bits, "resources/bits/73e01d.png", "000000000004013e013e003501490046", 1),
+				bounds: {left: 0, top: 0, right: 17, bottom: 11}
+			},
+			viewsToDisplay: [|Array|: 'default, 'groupHeader, 'group, 'custom, 'editNotes],
+			// A blank group card (its members are aliases to other cards).
+			MakeNewEntry: func() begin
+				local copy;
+				return (copy := TotalClone('{version: 2, class: group, cardType: nil, group: nil, notes: nil, members: [Array: ], groupInfo: {}, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, postal_code: nil, sorton: "Untitled Group"}))
+			end,
+			textScript: textScript,
+			// The text the system shows for a group.
+			StringExtract: func(entry, nLines) begin
+				local group;
+				if (not StrFilled((group := entry.group))) then begin
+						group := "Untitled Group"
+					end;
+				group
+			end
+		}
+	},
+	// After the application closes: drops what it built while open.
+	viewPostQuitScript: func() begin
+		inherited:?viewPostQuitScript();
+		self.callSlip := nil;
+		self.editSlipLayout := nil;
+		RemoveSlot(self, 'viewBounds);
+		RemoveSlot(self, 'routeScripts);
+		self.retargetChain := nil;
+		self.lastFormats := nil;
+		(self.stepChildren := nil)
+	end,
+	// Adds a layout (popup frame with its symbol) to the Show button's layouts.
+	AddLayout: func(popup) begin
+		if IsReadOnly(allLayouts) then begin
+				allLayouts := Clone(allLayouts)
+			end;
+		(allLayouts.(EnsureInternal(popup.symbol)) := popup)
+	end,
+	// What the application shows with no cards: for owner cards, how to make one.
+	AppEmpty: compile(
+		constants: {
+			kLiteral_73e3bd: '{font: tsSystem + tsSize(10) + tsBold, justification: center}
+		},
+		func() begin
+			local box, shapeBounds2;
+			box := self:LocalBox();
+			if ((not appEmptyStr) or (if (shapeBounds2 := ShapeBounds(appEmptyStr)) then (box.right <> shapeBounds2.right))) then begin
+					box.top := 20;
+					box.bottom := 100;
+					if (superSymbol = 'ownerNames) then begin
+							appEmptyStr := [Array: kLiteral_73e3bd, MakeTextLines("There are no Owners or Worksites.\n Go through Setup in Extras, or \ntap the New button.", box, fontHeight(tsSystem + tsSize(10) + tsBold), tsSystem + tsSize(10) + tsBold)]
+						end else begin
+							box.top := 40;
+							appEmptyStr := [Array: kLiteral_73e3bd, MakeTextLines("There are no Names in this folder.", box, fontHeight(tsSystem + tsSize(10) + tsBold), tsSystem + tsSize(10) + tsBold)]
+						end
+				end;
+			appEmptyStr
+		end),
+	stepAllocateContext: [|Array|: 'statusBar, cardfileItem],
+	// Opens the application on the owner cards (a1 true: on their overview),
+	// behind the owner's PIN if one is set; refused while Names is the backdrop.
+	// Opening it as owner cards again closes it.
+	OpenAsOwner: compile(
+		constants: {
+			kLiteral_722c79: "Names"
+		},
+		func(a1) begin
+			local l1, l2, cardfile, l4, passwordKey;
+			if self.viewCObject then begin
+					l4 := (self.superSymbol = 'ownerNames);
+					if (if (self = GetRoot().(UserConfiguration.blessedApp)) then (not l4)) then begin
+							GetRoot():Notify(kNotifyAlert, kLiteral_722c79, "To see Owner Info, you must select a different backdrop application.");
+							return nil
+						end else begin
+							self:Close();
+							if l4 then begin
+									return nil
+								end
+						end
+				end;
+			if a1 then begin
+					(cardfile := GetRoot().cardfile).previousLayout := 'default;
+					cardfile.currentLayout := 'overview
+				end;
+			(if (if self:GetAppPreferences().usePassword then (passwordKey := GetUserConfig('passwordKey))) then (if ModalCheckPIN("Enter PIN", passwordKey) then self:DoOwnerOpen() else GetRoot():Notify(kNotifyAlert, kLiteral_722c79, "The PIN you entered is incorrect.  Owner Info cannot be opened.")) else self:DoOwnerOpen())
+		end),
+	// Notes, when any card has a birthday, that they should be offered to the Date
+	// Book (newBdays true).
+	CheckAllBdays: func() begin
+		local bdayCursor;
+		(if (bdayCursor := self:GetBdayCursor()):entry() then begin
+				newBdays := true;
+				prefsCache := nil;
+				self:SaveAppState()
+			end)
+	end,
+	declareSelf: 'base,
+	// Sets up the application: for owner cards, the title, help and a cursor over
+	// the internal store's owner and worksite cards; otherwise the sort order from
+	// the preferences (reset to sorton, with an alert, when a store lacks its
+	// index); then the size the layout wants.
+	viewSetupFormScript: compile(
+		constants: {
+			kLiteral_738f8d: '{type: index, IndexPath: sorton, tagSpec: {none: _ownerNames}}
+		},
+		func() begin
+			(if (not syncing) then begin
+					if (l1 := (superSymbol = 'ownerNames)) then begin
+							title := "Owner Info";
+							viewHelpTopic := "owners"
+						end;
+					appEmptyStr := nil;
+					if (not HasSlot(self, 'routeScripts)) then begin
+							ArrayMunger((copy := Clone(extraRouteScripts)), Length(copy), 0, routeScripts, 0, nil);
+							routeScripts := copy
+						end;
+					if IsReadOnly(allSoups) then begin
+							(allSoups := Clone(allSoups)).names := Clone(allSoups.names)
+						end;
+					if l1 then begin
+							self.labelsFilter := nil;
+							allSoups.names.soupQuery := Clone(kLiteral_738f8d);
+							allSoups.names.soupQuery.tagSpec := {equal: '_ownerNames};
+							allSoups.names.SetupCursor := func() begin
+								theSoup := GetStores()[0]:GetSoup(soupName);
+								(theCursor := theSoup:Query(soupQuery))
+							end
+						end else begin
+							if ((l6 := (appPreferences := self:GetAppPreferences()).sortBy) = 'sorton) then begin
+									allSoups.names.soupQuery := kLiteral_738f8d
+								end else begin
+									local l1;
+									local copy;
+									local l3;
+									local l4;
+									local l5;
+									local l6;
+									local appPreferences;
+									local soup;
+									local l9;
+									(foreach item in (l9 := (soup := GetUnionSoupAlways(allSoups.names.soupName)):GetSoupList()) do begin
+											if (not self:CheckSortBy(item, l6)) then begin
+													self:Notify(kNotifyAlert, title, "Your sorting prefs have been reset to the default sort order.");
+													try begin
+															soup:RemoveIndex([Array: l6, 'sorton])
+														end onexception |evt.ex| do begin end;
+													allSoups.names.soupQuery := kLiteral_738f8d;
+													appPreferences.sortBy := 'sorton;
+													EntryChange(appPreferences);
+													break
+												end
+										end);
+									if (appPreferences.sortBy <> 'sorton) then begin
+											allSoups.names.soupQuery := Clone(kLiteral_738f8d);
+											allSoups.names.soupQuery.IndexPath := [Array: l6, 'sorton]
+										end
+								end
+						end;
+					inherited:?viewSetupFormScript();
+					viewBounds := (l5 := call kGetAppSize with (self, currentLayout)).bounds;
+					viewJustify := l5.justify;
+					(viewFormat := l5.viewFormat)
+				end)
+		end),
+	// Beaming the owner's card is done: closes the barber pole slip a2 and tears
+	// down the beam's view a1.
+	kDoneWithBeaming: func(a1, a2) begin
+		if a2 then begin
+				a2:Close();
+				GetRoot().cardfile.barber := nil
+			end;
+		a1:TearDown()
+	end,
+	statusBar: nil,
+	customEditor: @8218,
+	// Adds data frame3 to card entryFromObj as the info view a2 takes it (only the
+	// view's paths; a string for text data), at the path GetNewPath gives; returns
+	// what was added, or nil.
+	AddCardData: func(entryFromObj, a2, frame3) begin
+		if (infoFrame := self:GetInfoFrame(a2, entryFromObj.class)) then begin
+				if infoFrame.stringData then begin
+						if IsInstance(frame3, 'string) then begin
+								frame2 := frame3
+							end
+					end else begin
+						frame2 := {};
+						local infoFrame;
+						local frame2;
+						local newPath;
+						(foreach item in infoFrame.checkPaths do begin
+								if frame3.(item) then begin
+										frame2.(item) := frame3.(item)
+									end
+							end);
+						if (Length(frame2) = 0) then begin
+								frame2 := nil
+							end
+					end;
+				if frame2 then begin
+						if (newPath := self:GetNewPath(entryFromObj, a2)) then begin
+								if (newPath = true) then begin
+										(foreach item, value in frame2 do begin
+												entryFromObj.(item) := value
+											end)
+									end else begin
+										entryFromObj.(newPath) := frame2
+									end;
+								self:SetCardfileStuff(entryFromObj, true)
+							end
+					end
+			end;
+		frame2
+	end,
+	_addKeyScript: _addKeyScript,
+	// The Names soup changed (RegSoupChange, a3 the kind of change, a4 the entry):
+	// keeps the sort index, closes the edit slip when its card went, brings the
+	// personae and emporia up to date, and notes birthdays on cards other
+	// applications add or change (all cards checked after a Connection sync).
+	NewtSoupChangedNotify: func(a1, a2, a3, a4) begin
+		local sortBy;
+		if (if ((sortBy := self:GetAppPreferences().sortBy) <> 'sorton) then (a3 = 'soupEnters)) then begin
+				if (not self:CheckSortBy(a4, sortBy)) then begin
+						self:Notify(kNotifyAlert, title, "Your sorting prefs have been reset to the default sort order.");
+						self:SortByChange('sorton)
+					end
+			end;
+		if self.viewCObject then begin
+				inherited:NewtSoupChangedNotify(a1, a2, a3, a4)
+			end;
+		if (if editSlipLayout then editSlipLayout.viewCObject) then begin
+				if '{soupLeaves: true, entryMoved: true, entryReplaced: true, entryRemoved: true}.(a3) then begin
+						AddDeferredSend(self, 'RememberedClose, [Array: editSlipLayout]);
+						editSlipLayout := nil
+					end
+			end;
+		if (a3 <> 'soupCreated) then begin
+				SyncPersonae();
+				SyncEmporia()
+			end;
+		(if (a2 <> appSymbol) then (if (newChangeInfo := '{entryAdded: {type: singleEntry}, entryChanged: {type: singleEntry}, entryMoved: {type: singleEntry, path: entry}, entryReplaced: {type: singleEntry, path: entry}, soupEnters: {type: multipleEntries}, soupCreated: {type: multipleEntries}, whatThe: {type: multipleEntries}}.(a3)) then (if (newChangeInfo.type = 'singleEntry) then begin
+						if newChangeInfo.path then begin
+								a4 := a4.(newChangeInfo.path)
+							end;
+						(if a4.bday then begin
+								if (not newBdays) then begin
+										newBdays := [Array: ]
+									end;
+								AddArraySlot(newBdays, {entry: MakeEntryAlias(a4), path: nil});
+								self:SaveAppState()
+							end)
+					end else (if (if (a2 = 'Connection) then (newChangeInfo.type = 'multipleEntries)) then self:CheckAllBdays()))))
+	end,
+	// Rebuilds the status bar when a button is taken out of it.
+	RemoveAuxButton: func(a1) begin
+		statusBar:?RedoChildren()
+	end,
+	// Shows layout a1 (nil: the previous one), sliding the application to the
+	// height the layout wants.
+	ShowLayout: func(a1) begin
+		local currentLayout2, box, l3, l4, l5;
+		currentLayout2 := currentLayout;
+		if (not a1) then begin
+				a1 := previousLayout
+			end;
+		if (if (a1 <> currentLayout) then (a1 <> 'overview)) then begin
+				previousLayout := a1
+			end;
+		currentLayout := a1;
+		box := self:LocalBox();
+		l5 := (l4 := call kGetAppSize with (self, a1)).draggerBorder;
+		if (superSymbol = 'ownerNames) then begin
+				l3 := (((box.bottom - box.top) - 202) - l5)
+			end else begin
+				if (a1 = 'default) then begin
+						l3 := (((box.bottom - box.top) - 220) - l5)
+					end else begin
+						l3 := (((box.bottom - box.top) + l4.bounds.top) + l5)
+					end
+			end;
+		(if (l3 <> 0) then self:SlideEffect(l3, (-l3), @flip, 'Resize, [Array: l4.justify, l4.bounds, l4.viewFormat]) else self:RedoChildren())
+	end,
+	viewEffect: 133120,
+	// Filing: resets the sort order when the card goes to a store whose Names soup
+	// lacks its index.
+	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
+		if (if (self:GetAppPreferences().sortBy <> 'sorton) then (not a5:GetSoup(@cardfileSoupName))) then begin
+				self:Notify(kNotifyAlert, title, "Your sorting prefs have been reset to the default sort order.");
+				self:SortByChange('sorton)
+			end;
+		inherited:FileThis(target, labelsChanged, a3, storeChanged, a5)
+	end,
+	// True when soup item2 has an index for sort order sortBy.
+	CheckSortBy: func(item2, sortBy) begin
+		local l1;
+		local indexes;
+		(foreach item in (indexes := item2:GetIndexes()) do begin
+				if (item.structure = 'multiSlot) then begin
+						if self:SortPathMatches(item.path[0], sortBy) then begin
+								break (l1 := true)
+							end
+					end
+			end);
+		l1
+	end,
+	// Find's excerpt for a found card: its text (StringExtract), one line.
+	FindSoupExcerpt: func(currentItem, repeatTemplate) begin
+		if (not currentItem.class) then begin
+				call GetRoot().cardfile.kUpdateClass with (currentItem)
+			end;
+		GetDataDefs(currentItem.class):StringExtract(currentItem, 1)
+	end,
+	allLayouts: {default: @8210, overview: @8227, allinfo: @8196},
+	// The email addresses for a business card.
+	bcEmailAddress: func(entryFromObj, preferredRouting) begin
+		self:bcHelper(entryFromObj, preferredRouting, '[Array: emailAddrs], '[Array: email, emailPassword])
+	end,
+	// Keeps the custom fields' definitions in the soup and registers them as the
+	// soup's metadata extension (for import and export).
+	SetCustomInfo: func(target) begin
+		local soup;
+		(if (soup := GetStores()[0]:GetSoup(allSoups.names.soupName)) then begin
+				soup:SetInfo('customFields, target);
+				UnregMetaDataExtension('cardfile, 'cardfile);
+				RegMetaDataExtension('cardfile, 'cardfile, 'cardfile.CustomMetaData)
+			end)
+	end,
+	// Owner cards have no folders to go back to.
+	RestoreFolderPosition: func(key, value, labelsFilter) begin
+		(if (superSymbol <> 'ownerNames) then inherited:RestoreFolderPosition(key, value, labelsFilter))
+	end,
+	stepChildren: nil,
+	// A cursor over the cards that have a birthday (not owner cards).
+	GetBdayCursor: compile(
+		constants: {
+			// the index key: the card's birthday
+			kFunction_741eb5: func(a1) begin
+				a1.bday
+			end
+		},
+		func() begin
+			local theSoup, copy, cursor;
+			if (not (theSoup := allSoups.names.theSoup)) then begin
+					theSoup := Clone(allSoups.names);
+					theSoup:MakeSoup(appSymbol);
+					theSoup := theSoup.theSoup
+				end;
+			copy := Clone('{type: index, IndexPath: sorton, tagSpec: {none: _ownerNames}});
+			if (not theSoup:HasTags()) then begin
+					RemoveSlot(copy, 'tagSpec)
+				end;
+			copy.validTest := kFunction_741eb5;
+			(cursor := theSoup:Query(copy))
+		end),
+	// Opens the application on card a1 (as owner cards when it is one) and shows
+	// it as Find found it (a2).
+	OpenTo: func(a1, a2) begin
+		local dataDefs;
+		if (dataDefs := GetDataDefs(a1.class)) then begin
+				newSuperSym := dataDefs.superSymbol
+			end else begin
+				newSuperSym := 'names
+			end;
+		if (newSuperSym <> superSymbol) then begin
+				if self.viewCObject then begin
+						self:Close()
+					end;
+				if (newSuperSym = 'ownerNames) then begin
+						self:OpenAsOwner(nil)
+					end else begin
+						self:Open()
+					end
+			end else begin
+				self:Open()
+			end;
+		(if self.viewCObject then self:ShowFoundItem(a1, a2))
+	end,
+	// A card put away from the In Box: converted from the 1.x format when it has
+	// no class or version, then added, telling the soup's watchers.
+	PutAwayScript: func(a1) begin
+		local body;
+		if ((not (body := a1.body).class) or (not body.version)) then begin
+				a1.body := self.conversion:Convert(body, 'oneO, 'twoO, nil)
+			end;
+		(if (body := inherited:PutAwayScript(a1)) then XmitSoupChange(@cardfileSoupName, '_routing, 'entryAdded, body))
+	end,
+	// The city of a worksite card (target2): its cityAlias resolved - an entry
+	// alias (then kept as [name, longitude, latitude] on a writable store), or such
+	// an array matched against the cities by name and place; nil when none.
+	GetCity: func(target2) begin
+		if IsEntryAlias((cityAlias := target2.cityAlias)) then begin
+				resolveEntryAlias2 := ResolveEntryAlias(cityAlias);
+				if (if EntryValid(target) then (not EntryStore(target):IsReadOnly())) then begin
+						target2.cityAlias := [Array: resolveEntryAlias2.name, resolveEntryAlias2.longitude, resolveEntryAlias2.latitude];
+						EntryChange(target2)
+					end
+			end else begin
+				if IsArray(cityAlias) then begin
+						if ((count := Length((cityEntry := GetCityEntry(cityAlias[0])))) > 1) then begin
+								local resolveEntryAlias2;
+								local cityAlias;
+								local cityEntry;
+								local count;
+								(foreach item in cityEntry do begin
+										if (if (item.longitude = cityAlias[1]) then (item.latitude = cityAlias[2])) then begin
+												break (resolveEntryAlias2 := item)
+											end
+									end)
+							end;
+						if (if (not resolveEntryAlias2) then (count > 0)) then begin
+								resolveEntryAlias2 := cityEntry[0]
+							end
+					end
+			end;
+		resolveEntryAlias2
+	end,
+	forceNewEntry: nil,
+	// A new user's state: sorted by name (sorton).
+	GetDefaultState: func() begin
+		local l1;
+		(l1 := inherited:GetDefaultState()).sortBy := 'sorton;
+		l1
+	end,
+	autoPutawayEnabled: true,
+	// How the layouts without an info frame of their own find and show their data
+	// (GetInfoFrame): checkPrefix the path prefix ([single, array]), checkPaths the
+	// slots, and the functions that format, draw or act on them.
+	layoutDataMap: {
+		// A group's header line: its member class and how many members.
+		groupHeader: {
+			checkPrefix: [|Array|: true, nil],
+			checkPaths: [|Array|: 'members],
+			// "Persons, # members: n" for the members array (in v20...[0]).
+			formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+				local text;
+				(text := ParamStr("^?0^0, ||# members: ^1", [Array: GetDataDefs(ClassOf(v20_wwwwwwwwwwvvvvvv[0])).name, Length(v20_wwwwwwwwwwvvvvvv[0])]))
+			end
+		},
+		// A group's members, a line each ("+name").
+		group: {
+			checkPrefix: [|Array|: true, nil],
+			checkPaths: [|Array|: 'members],
+			// Draws the members as lines of text in the box given, a line each.
+			shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
+				list := [Array: ];
+				fontAscent2 := FontAscent(a4.font);
+				fontHeight2 := fontHeight(a4.font);
+				left := v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.left;
+				right := v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.right;
+				dataDefs := GetDataDefs(ClassOf(v20_wwwwwwwwwwvvvvvv[0]));
+				local text;
+				local list;
+				local dataDefs;
+				local fontAscent2;
+				local fontHeight2;
+				local left;
+				local right;
+				(foreach item in v20_wwwwwwwwwwvvvvvv[0] do begin
+						entry := ResolveEntryAlias(item._alias);
+						text := Stringer([Array: "\n+", dataDefs:Get(item, 'name, 'text)]);
+						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + fontAscent2);
+						AddArraySlot(list, MakeText(text, left, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top, right, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom));
+						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + fontHeight2)
+					end);
+				{shape: list}
+			end,
+			// The members as text, a line each.
+			formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+				dataDefs := GetDataDefs(ClassOf(v20_wwwwwwwwwwvvvvvv[0]));
+				text := "";
+				local text;
+				local resolveEntryAlias2;
+				local dataDefs;
+				(foreach item in v20_wwwwwwwwwwvvvvvv[0] do begin
+						resolveEntryAlias2 := ResolveEntryAlias(item._alias);
+						text := Stringer([Array: text, "\n+", dataDefs:Get(item, 'name, 'text)])
+					end);
+				text
+			end,
+			// A tap on a member's line: hilites the line and opens the member's card (an
+			// alert when the card cannot be found).
+			actionFunc: func(a1, a2, a3, box, target, path, misc) begin
+				local l1, l2, fontHeight2, resolveEntryAlias2;
+				fontHeight2 := fontHeight(a3.viewFont);
+				l1 := (a2 div fontHeight2);
+				resolveEntryAlias2 := ResolveEntryAlias(target.members[l1]._alias);
+				box.top := (box.top + (l1 * fontHeight2));
+				box.bottom := (box.top + fontHeight2);
+				a3:DoDrawing('Hiliter, [Array: MakeShape(box)]);
+				a3:dirty();
+				if resolveEntryAlias2 then begin
+						GetRoot().cardfile:OpenTo(resolveEntryAlias2, nil)
+					end else begin
+						a3:Notify(kNotifyAlert, GetVariable(a3, 'title), "The group member cannot be found.")
+					end;
+				true
+			end
+		},
+		// A worksite's data: dialing prefix, area code, city, country and printer.
+		worksite: {
+			checkPrefix: [|Array|: true, nil],
+			checkPaths: [|Array|: 'dialingPrefix, 'areacode, 'cityAlias, 'country, 'printer],
+			showEmptyData: true,
+			// The worksite as text: "Dialing Prefix: ..." (None when empty), area code,
+			// city and country lines, and the printer ("No Printer" when none).
+			formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+				local text, l2, name, resolveEntryAlias2, countryEntry, v20_wwwwwwwwwwvvvvvvItem, text2;
+				l2 := (if (if v20_wwwwwwwwwwvvvvvv[0] then StrFilled(v20_wwwwwwwwwwvvvvvv[0])) then v20_wwwwwwwwwwvvvvvv[0] else "None");
+				if v20_wwwwwwwwwwvvvvvv[2] then begin
+						if IsEntryAlias(v20_wwwwwwwwwwvvvvvv[2]) then begin
+								if (resolveEntryAlias2 := ResolveEntryAlias(v20_wwwwwwwwwwvvvvvv[2])) then begin
+										name := resolveEntryAlias2.name
+									end
+							end else begin
+								name := v20_wwwwwwwwwwvvvvvv[2][0]
+							end
+					end;
+				text := ParamStr("^?0Dialing Prefix: ^0\n||^?1Area Code: ^1\n||^?2City: ^2\n||", [Array: l2, v20_wwwwwwwwwwvvvvvv[1], name]);
+				if (if (if v20_wwwwwwwwwwvvvvvv[3] then (countryEntry := GetCountryEntry(v20_wwwwwwwwwwvvvvvv[3]))) then (Length(countryEntry) > 0)) then begin
+						text := Stringer([Array: text, ParamStr("Country: ^0\n", [Array: countryEntry[0].name])])
+					end;
+				text2 := "No Printer";
+				if (v20_wwwwwwwwwwvvvvvvItem := v20_wwwwwwwwwwvvvvvv[4]) then begin
+						if (if (if v20_wwwwwwwwwwvvvvvvItem.printerName then v20_wwwwwwwwwwvvvvvvItem.name) then (not StrEqual(v20_wwwwwwwwwwvvvvvvItem.printerName, v20_wwwwwwwwwwvvvvvvItem.name))) then begin
+								text2 := ParamStr("^0 (^1)", [Array: GetNames(v20_wwwwwwwwwwvvvvvvItem.printerName), v20_wwwwwwwwwwvvvvvvItem.name])
+							end else begin
+								if v20_wwwwwwwwwwvvvvvvItem.name then begin
+										text2 := v20_wwwwwwwwwwvvvvvvItem.name
+									end
+							end
+					end;
+				TrimString((text := Stringer([Array: text, text2])));
+				text
+			end
+		}
+	},
+	newBdays: nil,
+	// Opens the edit slip for the current card on the info view layout (and the
+	// data path), closing the one open: a3 the entry to save, a4 adding data, a5 a
+	// new card.
+	ShowEditSlip: func(layout, path, a3, a4, a5) begin
+		local context;
+		(if target then begin
+				if (if editSlipLayout then editSlipLayout.viewCObject) then begin
+						editSlipLayout.closeBox:buttonClickScript()
+					end;
+				(context := BuildContext(editSlip)).appBase := (context.newtAppBase := newtAppBase);
+				context.title := title;
+				context.appSymbol := appSymbol;
+				context.allSoups := allSoups;
+				context.saveEntry := a3;
+				context.target := target;
+				context.targetView := self:GetTargetView();
+				context.addingData := a4;
+				context.makingNewCard := a5;
+				context.selectedLayout := layout;
+				context.selectedPath := path;
+				context._recogSettings := _recogSettings;
+				newtAppBase:RememberedOpen(context);
+				(newtAppBase.editSlipLayout := context)
+			end)
+	end,
+	// Builds the children: for owner cards an " Owner Info" title is put first,
+	// and the layout falls back to default when the one saved is gone.
+	viewSetupChildrenScript: compile(
+		constants: {
+			// The status bar label's setup and quit: it follows the current card.
+			kFunction_742d55: func() begin
+				self:ChainIn('retargetChain);
+				inherited:?viewSetupDoneScript()
+			end,
+			kFunction_742db9: func() begin
+				self:ChainOut('retargetChain);
+				inherited:?viewQuitScript()
+			end,
+			// Shows "Worksite" or "Owner" (the current card's class) at the right of the
+			// status bar.
+			kFunction_742e0d: func() begin
+				local text, targetInfo, class2;
+				(if (targetInfo := self:GetTargetInfo(nil)).target then begin
+						if ((class2 := targetInfo.target.class) = 'worksite) then begin
+								text := "Worksite"
+							end else begin
+								if (class2 = 'owner) then begin
+										text := "Owner"
+									end
+							end;
+						(if text then SetValue(self, 'text, Stringer([Array: text, " "])))
+					end)
+			end,
+			kLiteral_742cd5: {_proto: @protoStaticText, viewBounds: '{left: -54, top: 5, right: -3, bottom: 21}, viewJustify: vjRightH + vjCenterV + vjParentRightH + oneLineOnly, viewFont: tsSystem + tsSize(10) + tsBold, viewFormat: vfFillBlack, viewTransferMode: 3, viewSetupDoneScript: kFunction_742d55, viewQuitScript: kFunction_742db9, RetargetNotify: kFunction_742e0d}
+		},
+		func() begin
+			stepChildren := theChildren;
+			if (superSymbol = 'ownerNames) then begin
+					if IsReadOnly(stepChildren) then begin
+							stepChildren := Clone(stepChildren)
+						end;
+					ArrayMunger(stepChildren, 0, 1, [Array: '{_proto: @protoStaticText, text: " Owner Info", viewBounds: {left: 0, top: 5, right: 0, bottom: 21}, viewJustify: vjCenterV + vjParentFullH + oneLineOnly, viewFont: @fontSystem10Bold, viewFormat: vfFillBlack, viewTransferMode: 3}, kLiteral_742cd5], 0, nil)
+				end;
+			if (not allLayouts.(currentLayout)) then begin
+					currentLayout := (previousLayout := 'default)
+				end;
+			inherited:viewSetupChildrenScript()
+		end),
+	// Replaces the ink (a3) in card resolveEntryAlias's info view a2 with a5: finds
+	// the path (slot a4 of the view's single path, or of an element of its array)
+	// whose value is a3; returns a5, or nil when it is not found.
+	ReplaceInkData: func(resolveEntryAlias, a2, a3, a4, a5) begin
+		(if (infoFrame := self:GetInfoFrame(a2, resolveEntryAlias.class)) then begin
+				if a4 then begin
+						list := [Array: a4]
+					end else begin
+						list := '[Array: ]
+					end;
+				if (dataPaths := GetRoot().cardfile:MakeDataPaths(infoFrame.checkPrefix[0], list, infoFrame.stringData)) then begin
+						if (StrCompare(resolveEntryAlias.(dataPaths[0]), a3) = 0) then begin
+								dataPath := dataPaths[0]
+							end
+					end;
+				if (if (if (not dataPath) then (multiPath := infoFrame.checkPrefix[1])) then (multiArray := resolveEntryAlias.(multiPath))) then begin
+						local infoFrame;
+						local list;
+						local copy;
+						local dataPath;
+						(for i := 0 to (Length(multiArray) - 1) do begin
+								AddArraySlot((copy := Clone(infoFrame.checkPrefix[1])), i);
+								if (dataPaths := GetRoot().cardfile:MakeDataPaths(copy, list, infoFrame.stringData)) then begin
+										if (StrCompare(resolveEntryAlias.(dataPaths[0]), a3) = 0) then begin
+												break (dataPath := dataPaths[0])
+											end
+									end
+							end)
+					end;
+				(if dataPath then begin
+						resolveEntryAlias.(dataPath) := a5;
+						EntryChange(resolveEntryAlias);
+						a5
+					end)
+			end)
+	end,
+	viewHelpTopic: "names",
+	editSlipLayout: nil,
+	// Makes a card of class symbol2 from frame adoptEntry2 with the stationery:
+	// with the application closed, straight into the soup (owner and worksite
+	// cards always on the internal store); then fills in the bookkeeping slots
+	// and the sort slot.  Throws for an unknown class.
+	AdoptEntryFromStationery: func(adoptEntry2, symbol2, a3) begin
+		local adoptEntry, copy, l3, appPreferences, l5, viewCObject;
+		adoptEntry := nil;
+		l5 := (appPreferences := GetRoot().cardfile:GetAppPreferences()).sortBy;
+		if (not symbol2) then begin
+				if adoptEntry2.class then begin
+						symbol2 := adoptEntry2.class
+					end else begin
+						symbol2 := allSoups.names.defaultDataType
+					end
+			end;
+		if adoptEntry2 then begin
+				adoptEntry2.class := symbol2
+			end;
+		useInternal := ((symbol2 = 'owner) or (symbol2 = 'worksite));
+		if GetRoot().cardfile.viewCObject then begin
+				adoptEntry := inherited:AdoptEntryFromStationery(adoptEntry2, symbol2, nil)
+			end else begin
+				if GetDataDefs(symbol2) then begin
+						adoptEntry := allSoups.names:AdoptEntry(adoptEntry2, symbol2);
+						copy := Clone(allSoups.names);
+						copy:MakeSoup(appSymbol);
+						copy:AddEntry(adoptEntry, (if (useInternal or appPreferences.internalStore) then GetStores()[0] else GetDefaultStore()))
+					end else begin
+						Throw('|evt.ex.fr.intrp|, "Unknown datadef")
+					end
+			end;
+		if adoptEntry then begin
+				GetRoot().cardfile:SetCardfileStuff(adoptEntry, nil);
+				if (not adoptEntry.(l5)) then begin
+						adoptEntry.(l5) := "";
+						viewCObject := GetRoot().cardfile.viewCObject
+					end;
+				EntryChange(adoptEntry);
+				if viewCObject then begin
+						layout.dataCursor:Goto(adoptEntry)
+					end
+			end;
+		adoptEntry
+	end,
+	// Undo of a change to the custom fields: puts the old definitions back.
+	UndoCustomChange: func(a1) begin
+		self:SetCustomInfo(a1)
+	end,
+	// "Beam My Card": opens the card exchange slip with the current owner card, or
+	// an alert when there is none.
+	cardExchangeScript: func(a1, a2) begin
+		local context, l2;
+		(if (l2 := (if UserConfiguration.currentPersona then ResolveEntryAlias(UserConfiguration.currentPersona))) then begin
+				(context := BuildContext(cardExchangeLayout)).theEntry := l2;
+				context.appBase := (context.newtAppBase := newtAppBase);
+				newtAppBase:RememberedOpen(context)
+			end else self:Notify(kNotifyAlert, title, "There is no current owner card to send."))
+	end
+};
+
+names := "Names";
+
+// The "Cards" print format: a card's layout per printed card, 225 x 160.
+cfCardsFormat := {
+	routingType: 'Print,
+	type: 'printFormat,
+	name: cards,
+	title: cards,
+	symbol: 'cfCardsFormat,
+	usesCursors: true,
+	// Adds a card (target in layout) at a3, a4; returns its size.
+	AddPrintChild: func(layout, target, a3, a4) begin
+		AddArraySlot(stepChildren, {_proto: layout, target: target, viewBounds: RelBounds(a3, a4, 225, 160), viewJustify: 0});
+		{bottom: 160, right: 225}
+	end,
+	protection: 'private,
+	_proto: @8238
+};
+
+cards := "Cards";
+
+// The route format for a card (beaming, mail): sends a copy of the card
+// without its Date Book links, its notes (unless the preferences say to send
+// them), and for an owner card its private data and passwords, sent as a
+// person card.
+cardfileRouteFormat := {
+	_proto: @targetFrameFormat,
+	symbol: 'cardfileRouteFormat,
+	// The card as it is beamed or sent: without its birthday and anniversary
+	// events, its notes unless the preference says to send them, and an owner
+	// card as a plain person without its private data and e-mail passwords.
+	SetupSlip: func(a1, fields) begin
+		fields.body := DeepClone(a1.target);
+		RemoveSlot(fields.body, 'bdayEvent);
+		RemoveSlot(fields.body, 'anniversaryEvent);
+		if (not GetRoot().cardfile:GetAppPreferences().beamNotes) then begin
+				RemoveSlot(fields.body, 'notes)
+			end;
+		(if (a1.target.class = 'owner) then begin
+				RemoveSlot(fields.body, 'owner);
+				fields.body.labels := nil;
+				fields.body.class := 'person;
+				RemoveSlot(fields.body, 'emailPassword);
+				(if fields.body.emailAddrs then (foreach item in fields.body.emailAddrs do begin
+							if item.emailPassword then begin
+									RemoveSlot(item, 'emailPassword)
+								end
+						end))
+			end)
+	end
+};
+
+// The + key: as the Add button (_addKeyButton).
+_addKeyScript := func(a1) begin
+	newtAppBase:CommonKeyScript('_addKeyButton)
+end;
+
+// The cursor's query: by sort name, without the owner cards.
+soupQuery := {type: 'index, IndexPath: 'sorton, tagSpec: {none: '_ownerNames}};
+
+// The status bar (newtStatusBar): Info, New, Add, Show; Route and Close.
+cardfileItem := {
+	stepChildren: [stepChildren: ],
+	viewBounds: {top: -18, left: 0, right: 0, bottom: 0},
+	menuLeftButtons: [|Array|:
+		{DoInfoAbout: nil, _proto: @newtInfoButton},
+		{
+			// New: makes a card of the class picked and opens its edit slip.
+			pickActionScript: func(index) begin
+				local target2;
+				target2 := target;
+				(if inherited:pickActionScript(index) then newtAppBase:ShowEditSlip('default, nil, target2, true, true))
+			end,
+			debug: "New btn",
+			sorter: nil,
+			_proto: @newtStationerMenu
+		},
+		{
+			// Add: a popup of the info views the card can have data added to (its own
+			// views, then the class's other editor views), then the custom fields with a
+			// label.
+			buttonClickScript: func() begin
+				popup := [Array: ];
+				(if target then begin
+						l3 := GetViewDefs(target.class);
+						if (not (l10 := GetDataDefs(target.class))) then begin
+								self:hilite(nil);
+								return nil
+							end;
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						local l5;
+						local l6;
+						local l7;
+						local l8;
+						local l9;
+						local l10;
+						(foreach l1 in (l4 := l10.viewsToDisplay) do begin
+								if (l3.(l1).type = 'editor) then begin
+										self:AddLayout(popup, l3, l1)
+									end
+							end);
+						(foreach l1, l2 in l3 do begin
+								if (if (if (not SetContains(l4, l1)) then (l2.type = 'editor)) then (l1 <> 'default)) then begin
+										self:AddLayout(popup, l3, l1)
+									end
+							end);
+						l5 := Length(popup);
+						if (l9 := self:GetCustomInfo()) then begin
+								(foreach l1, l8 in l9 do begin
+										if StrFilled(l8.label) then begin
+												AddArraySlot(popup, {item: l8.label, slot: 'custom, custom: [pathExpr: l1]})
+											end
+									end)
+							end;
+						l6 := Length(popup);
+						if (Length(popup) > l5) then begin
+								ArrayInsert(popup, 'pickseparator, l5)
+							end;
+						// The custom field editor is offered while fewer than ten custom fields have
+						// labels.
+						if ((l6 - l5) < 10) then begin
+								if (Length(popup) > 0) then begin
+										AddArraySlot(popup, 'pickseparator)
+									end;
+								AddArraySlot(popup, {item: customEditor.name, slot: customEditor})
+							end;
+						inherited:buttonClickScript()
+					end else self:hilite(nil))
+			end,
+			popup: nil,
+			// A view picked: opens the edit slip on it at a new data path (the custom
+			// field's own path; the custom editor for that item).
+			pickActionScript: func(index) begin
+				local slot, custom;
+				if (popup[index].slot = customEditor) then begin
+						self:EditCustomLabels()
+					end else begin
+						if ((slot := popup[index].slot) = 'custom) then begin
+								custom := popup[index].custom
+							end else begin
+								custom := self:GetNewPath(target, slot)
+							end;
+						newtAppBase:ShowEditSlip(slot, custom, nil, true, nil)
+					end;
+				inherited:?pickActionScript(index)
+			end,
+			text: "  Add",
+			// Offers info view a3 (of view defs a2) when the card has room for its data:
+			// a view with an array always, else only when its data is empty.
+			AddLayout: func(popup, a2, a3) begin
+				local infoFrame, dataPaths, hasPathData, l4, l5;
+				if (if (infoFrame := self:GetInfoFrame(a3, target.class)) then (not infoFrame.checkPrefix[1])) then begin
+						if (dataPaths := self:MakeDataPaths(infoFrame.checkPrefix[0], infoFrame.checkPaths, infoFrame.stringData)) then begin
+								if infoFrame.hasDataFunc then begin
+										hasPathData := call infoFrame.hasDataFunc with (target, dataPaths)
+									end else begin
+										hasPathData := self:HasPathData(target, dataPaths, infoFrame.stringData)
+									end;
+								if (not hasPathData) then begin
+										l4 := true
+									end
+							end
+					end else begin
+						l4 := true
+					end;
+				(if l4 then begin
+						l5 := (if a2.(a3).nameByClass then a2.(a3).nameByClass.(target.class) else a2.(a3).name);
+						AddArraySlot(popup, {item: l5, slot: a3})
+					end)
+			end,
+			// Registers the button as the one the + key presses.
+			viewSetupDoneScript: func() begin
+				inherited:?viewSetupDoneScript();
+				(newtAppBase.(keyButton) := self)
+			end,
+			keyButton: '_addKeyButton,
+			// Unregisters it.
+			viewQuitScript: func() begin
+				RemoveSlot(newtAppBase, keyButton);
+				inherited:?viewQuitScript()
+			end,
+			_proto: @protoPopupButton
+		},
+		{debug: "Show btn", _proto: @newtShowMenu}
+	],
+	menuRightButtons: [|Array|: {_proto: @newtRoutingButton}, {_proto: @newtFilingButton}],
+	viewJustify: vjParentFullH + vjParentBottomV,
+	// Adjusts the buttons: no Add or Show in the overview (a Check All instead),
+	// the buttons other packages added (GetAuxButtons), and no filing button for
+	// owner cards; the template's arrays are put back afterwards.
+	viewSetupChildrenScript: compile(
+		constants: {
+			// the tests of the buttons to take out: the Add popup, the Show menu, the
+			// filing button
+			kFunction_73d01d: func(a1, a2) begin
+				(a2._proto = @protoPopupButton)
+			end,
+			kFunction_73d061: func(a1, a2) begin
+				(a2._proto = @newtShowMenu)
+			end,
+			kFunction_73d0dd: func(a1, a2) begin
+				(a2._proto = @newtFilingButton)
+			end
+		},
+		func() begin
+			menuLeftButtons2 := menuLeftButtons;
+			menuRightButtons2 := menuRightButtons;
+			if (currentLayout = 'overview) then begin
+					pos := ArrayPos((menuLeftButtons := Clone(menuLeftButtons)), nil, 0, kFunction_73d01d);
+					ArrayRemoveCount(menuLeftButtons, pos, 1);
+					pos2 := ArrayPos(menuLeftButtons, nil, 0, kFunction_73d061);
+					ArrayRemoveCount(menuLeftButtons, pos2, 1);
+					AddArraySlot((menuRightButtons := Clone(menuRightButtons)), {_proto: @newtCheckAllButton})
+				end;
+			if (Length((auxButtons := GetAuxButtons(appSymbol))) > 0) then begin
+					if IsReadOnly(menuLeftButtons) then begin
+							menuLeftButtons := Clone(menuLeftButtons)
+						end;
+					local menuRightButtons2;
+					local menuLeftButtons2;
+					local pos;
+					local pos3;
+					local l5;
+					local pos2;
+					local auxButtons;
+					local l8;
+					l8 := (foreach item deeply in auxButtons collect item.butt);
+					ArrayMunger(menuLeftButtons, Length(menuLeftButtons), nil, l8, 0, nil)
+				end;
+			if (superSymbol = 'ownerNames) then begin
+					if (pos3 := ArrayPos((menuRightButtons := Clone(menuRightButtons)), nil, 0, kFunction_73d0dd)) then begin
+							ArrayRemoveCount(menuRightButtons, pos3, 1)
+						end
+				end;
+			inherited:viewSetupChildrenScript();
+			menuLeftButtons := menuLeftButtons2;
+			(menuRightButtons := menuRightButtons2)
+		end),
+	_proto: @newtStatusBar,
+	preAllocatedContext: 'statusBar
+};
+
+person := "Person";
+
+// A card's data as text (the data definitions' textScript).
+textScript := func(a1, a2) begin
+	call GetRoot().cardfile.kGenericTextFunc with (a2)
+end;
+
+owner := "Owner";
+
+group := "Group";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+AddPrintChild_literal2 := same("cfCardsFormat.AddPrintChild.literals[2]");
+
+AddPrintChild_literal3 := same("cfCardsFormat.AddPrintChild.literals[3]");
+
+SetCardfileStuff_literal11 := same("cardfile.SetCardfileStuff.literals[11]");
+
+SetCardfileStuff_literal22 := same("cardfile.SetCardfileStuff.literals[22]");
+
+kTextDumper_literal11 := same("cardfile.kTextDumper.literals[11]");
+
+bcPhoneNumber_literal13 := same("cardfile.bcPhoneNumber.literals[13]");
+
+shapeFunc_literal17_2 := same("cardfile.layoutDataMap.group.shapeFunc.literals[17]");
+
+DoneWithSoup_code := same("cardfile.allSoups.names.DoneWithSoup.instructions");
+
+sorton_value := same("cardfile.allDataDefs.group.MakeNewEntry.literals[0].sorton");
+
+formatFunc_literal1 := same("cardfile.layoutDataMap.worksite.formatFunc.literals[1]");
+
+GetBCLayout_literal9 := same("cardfile.GetBCLayout.literals[9]");
+
+bcStreetAddress_code := same("cardfile.bcStreetAddress.instructions");
+
+AddAuxButton_code := same("cardfile.AddAuxButton.instructions");
+
+addresses_value := same("cardfile.allSoups.names.AddWalletEntries.literals[0][1].addresses");
+
+company_value := same("cardfile.allSoups.names.AddWalletEntries.literals[0][1].company");
+
+emailAddrs_value := same("cardfile.allSoups.names.AddWalletEntries.literals[0][1].emailAddrs");
+
+names_value := same("cardfile.allSoups.names.AddWalletEntries.literals[0][1].names");
+
+region_value := same("cardfile.allSoups.names.AddWalletEntries.literals[0][2].region");
+
+city_value := same("cardfile.allSoups.names.AddWalletEntries.literals[0][2].city");
+
+company_value_2 := same("cardfile.allSoups.names.AddWalletEntries.literals[0][2].company");
+
+company_value_3 := same("cardfile.allSoups.names.AddWalletEntries.literals[0][4].company");
+
+buttonClickScript_literal23 := same("cardfileItem.menuLeftButtons[2].buttonClickScript.literals[23]");
+
+MakeNewEntry_code := same("cardfile.allDataDefs.person.MakeNewEntry.instructions");
+
+MakeNewEntry_literal0 := same("cardfile.allDataDefs.person.MakeNewEntry.literals[0]");
+
+StringExtract_literal1 := same("cardfile.allDataDefs.person.StringExtract.literals[1]");
+
+MakeNewEntry_literal6 := same("cardfile.allDataDefs.owner.MakeNewEntry.literals[6]");
+
+StringExtract_literal7 := same("cardfile.allDataDefs.owner.StringExtract.literals[7]");
+
+sorton_value_2 := same("cardfile.allDataDefs.worksite.MakeNewEntry.literals[0].sorton");
+
+sorton_value_3 := same("cardfile.allDataDefs.company.MakeNewEntry.literals[0].sorton");
+
+viewSetupFormScript_literal31 := same("cardfile.viewSetupFormScript.literals[31]");
+
+shapeFunc_literal10 := same("cardfile.layoutDataMap.group.shapeFunc.literals[10]");
+
+viewSetupDoneScript_code_2 := same("cardfile.viewSetupChildrenScript.literals[6].viewSetupDoneScript.instructions");

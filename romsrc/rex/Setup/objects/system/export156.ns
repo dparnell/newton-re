@@ -1,0 +1,9 @@
+// export156: the alphabetic keyboard (protoAlphaKeys) at the bottom of Setup's name page.
+// The file holds it and what only it reaches.
+
+export156 := {
+	viewBounds: {top: -106, left: 0, right: 225, bottom: -25},
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	_proto: @alphaKeys
+};

@@ -1,8 +1,0 @@
-@@ 0x5b0585
-func() begin
-	if openPanel then begin
-			openPanel:Close()
-		end;
-	(openPanel := nil)
-end
-@@end

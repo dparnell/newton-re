@@ -1,5 +1,0 @@
-@@ 0x59d705
-func() begin
-	SetUserConfig('mailStripHeaders, viewValue)
-end
-@@end

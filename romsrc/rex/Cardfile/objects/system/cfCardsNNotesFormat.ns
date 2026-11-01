@@ -1,0 +1,23 @@
+// The "Cards and Notes" print format (@8194): each card's layout with its notes
+// beside it.
+
+cfCardsNNotesFormat := {
+	routingType: 'Print,
+	type: 'printFormat,
+	name: cardsAndNotes,
+	title: cardsAndNotes,
+	symbol: 'cfCardsNNotesFormat,
+	usesCursors: true,
+	// Adds a card (target in layout) at a3, a4 and its notes 20 pixels to its
+	// right; returns the size the two take.
+	AddPrintChild: func(layout, target, a3, a4) begin
+		AddArraySlot(stepChildren, {_proto: layout, target: target, viewBounds: RelBounds(a3, a4, 225, 160), viewJustify: 0});
+		AddArraySlot(stepChildren, {_proto: @newtFalseEntryView, viewBounds: RelBounds(((a3 + 225) + 20), a4, 225, 160), viewJustify: 0, stepChildren: [Array: {_proto: @newtEditView, viewBounds: SetBounds(0, 0, 0, 0), viewJustify: vjParentFullH + vjParentFullV, target: target, path: 'notes, viewFormat: notesViewFormat}]});
+		{bottom: 160, right: 470}
+	end,
+	notesViewFormat: vfFrameBlack + vfPen(1) + vfLinesLtGray,
+	protection: 'private,
+	_proto: @8238
+};
+
+cardsAndNotes := "Cards and Notes";

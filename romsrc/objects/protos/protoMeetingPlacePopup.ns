@@ -1,0 +1,64 @@
+// protoMeetingPlacePopup: a floating window that slides up from the bottom of
+// the screen with a list of places (protoMeetingPlacePicker over the Names
+// soup) to choose a meeting's place from. Made and opened by New; when it
+// closes, the place chosen is passed to the caller's pickActionScript.
+
+protoMeetingPlacePopup := {
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	viewBounds: {left: 0, top: -235, right: 238, bottom: 0},
+	viewFlags: vApplication + vFloating,
+	viewFormat: vfFillWhite + vfRound(2),
+	viewEffect: fxDrawerEffect,
+	// the picked entries (passed in, and given back to the caller)
+	selected: nil,
+	dataClass: nil,
+	// the view to call back (its pickActionScript) when the popup closes
+	context: nil,
+	ReOrientToScreen: @defRotateFunc,
+	// Makes a new instance of the popup, a view built from this template.
+	Init: func() begin
+		BuildContext({_proto: self})
+	end,
+	// protoMeetingPlacePopup:New(dataClass, selected, context, options) - makes,
+	// sets up and opens a popup; options is a frame of slots copied into the
+	// place list before it is set up. Returns the popup.
+	New: func(a1, a2, a3, a4) begin
+		local init;
+		(init := self:Init()).dataClass := a1;
+		init.context := a3;
+		init.selected := a2;
+		init.options := a4;
+		init:Open();
+		init
+	end,
+	stepChildren: [stepChildren: placeList],
+	placeList: nil,
+	stepallocatecontext: [|Array|: 'placeList, placeList],
+	_proto: @protoFloatNGo
+};
+
+// the list of places filling the popup
+placeList := {
+	_proto: @protoMeetingPlacePicker,
+	// Before opening: copy the popup's options into this view, then set up as a
+	// protoMeetingPlacePicker.
+	viewSetupFormScript: func() begin
+		if options then begin
+				(foreach key, value in options do begin
+						self.(key) := value
+					end)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	// On closing: returning 'postQuit asks for viewPostQuitScript to be called
+	// once the view is gone - only when there is someone to tell.
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript();
+		(if (if context then context.pickActionScript) then 'postQuit)
+	end,
+	// After closing: hand the selection to the caller.
+	viewPostQuitScript: func() begin
+		context:pickActionScript(selected)
+	end,
+	preallocatedContext: 'placeList
+};

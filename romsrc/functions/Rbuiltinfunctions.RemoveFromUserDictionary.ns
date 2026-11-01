@@ -1,5 +1,0 @@
-@@ 0x5b91c5
-func(a1) begin
-	DeleteWordFromDictionary(31, a1)
-end
-@@end

@@ -1,0 +1,6 @@
+// dsExceptions: magic pointer @113, the Assistant's date words that are also
+// people's names ("may", "june", "april", "jan").  The parser marks each one it
+// meets in the utterance (src/assist/Lexicon.cpp), and ScanForWackyName takes
+// one that was read as a date to be a name instead (src/assist/Heuristics.cpp).
+
+dsExceptions := [|Array|: "may", "june", "april", "jan"];
