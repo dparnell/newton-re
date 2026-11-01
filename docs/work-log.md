@@ -9,6 +9,15 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-01: Windows releases that run on any x86-64 CPU
+
+A user's Celeron laptop ran none of the Windows releases (001-004): newton
+opened and closed at once, leaving a crash dump.  zig with no target built for
+the runner's CPU, and the binary had AVX, AVX2, AVX-512, BMI2 and F16C
+instructions from start-up on.  `zig-toolchain.cmake` now gives a native build
+`-mcpu=baseline` (`ZIG_CPU`), and the `windows` job checks newton and
+newtonscript with the new `tools/ci/cpuscan.py` (`docs/releases.md`).
+
 ## 2026-10-31: romsrc/ commented, and its numbers named by hand
 
 The owner asked for the NewtonScript in romsrc/ to be commented and its
