@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Newton as an Android application (docs/host-android.md, tools/android/build_apk.py):
+     a NativeActivity whose library, libnewton.so, is newton itself.  targetSdk 30 on
+     purpose: the Viwoods AiPaper Mini's fast-ink path wants the untrusted_app_30 SELinux
+     context (docs/host-android.md); the app reads and writes only its own private directory. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.matthiasm.newtonre"
+    android:versionCode="1"
+    android:versionName="0.1">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="30" />
+    <application
+        android:label="Newton"
+        android:hasCode="false"
+        android:allowBackup="false">
+        <activity
+            android:name="android.app.NativeActivity"
+            android:label="Newton"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+            <meta-data android:name="android.app.lib_name" android:value="newton" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
