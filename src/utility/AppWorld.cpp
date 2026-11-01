@@ -643,6 +643,24 @@ TAppWorld::AEventLoop(TAppWorldState* state)
 		ReleaseMutex();
 		long err = state->fPort->Receive(&state->fSize, state->fEvent, TAppWorldState::kEventBufferSize, state->fReplyToken, &state->fMsgType, timeout, state->fFilter, state->fOnMsgAvail, state->fTokenOnly);
 		AcquireMutex();
+		// host: NEWTON_TRACE_IDLE - what woke each world's loop (a timer's
+		// timeout, or an event's class and id), what keeps the machine from
+		// waiting
+		static const Boolean traceIdle = getenv("NEWTON_TRACE_IDLE") != nil;
+		if (traceIdle)
+		{
+			if (err == kError_Message_Timed_Out)
+				fprintf(stderr, "[idle] world %p: timer (timeout %ld)\n", (void*) this, (long) timeout);
+			else if (state->fSize >= sizeof(TAEvent))
+			{
+				ULong c = state->fEvent->fAEventClass, id = state->fEvent->fAEventID;
+				fprintf(stderr, "[idle] world %p: event '%c%c%c%c' '%c%c%c%c' (timeout %ld)\n", (void*) this,
+						  (char) (c >> 24), (char) (c >> 16), (char) (c >> 8), (char) c,
+						  (char) (id >> 24), (char) (id >> 16), (char) (id >> 8), (char) id, (long) timeout);
+			}
+			else
+				fprintf(stderr, "[idle] world %p: message of %ld bytes, error %ld\n", (void*) this, (long) state->fSize, err);
+		}
 		if (err != kError_Message_Timed_Out)
 		{
 			state->fError = err;

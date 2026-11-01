@@ -2015,6 +2015,26 @@ TRootView::IdleViews(void)
 			delay = 0;
 		}
 		end_try;
+		// host: NEWTON_TRACE_IDLE prints each idler run and the delay it
+		// answered - what keeps the machine from waiting (a battery's worth)
+		static const Boolean traceIdle = getenv("NEWTON_TRACE_IDLE") != nil;
+		if (traceIdle)
+		{
+			char name[64] = "";
+			newton_try
+			{
+				RefVar debug(idling.fView->GetProto(RSSYMdebug));
+				if (IsSymbol(debug))
+					strncpy(name, SymbolName(debug), sizeof(name) - 1);
+				else if (NOTNIL(debug))
+					ConvertFromUnicode(GetCString(debug), name, kMacRomanEncoding, sizeof(name) - 1);
+				name[sizeof(name) - 1] = 0;
+			}
+			newton_catch(exRootException)
+			{ }
+			end_try;
+			fprintf(stderr, "[idle] view %p '%s': %ld ms\n", (void*) idling.fView, name, delay);
+		}
 		idler = (IdlerRecord*) fIdlers->SafeElementPtrAt(i);
 		if (GetIdlingView(idling.fView) == nil)
 			continue;
@@ -2036,7 +2056,12 @@ TRootView::IdleViews(void)
 	}
 	UnlinkIdleView(idling.fView);
 	if (!CaretValid(nil))
+	{
 		next = now;			// the caret must be drawn again at once
+		static const Boolean traceIdle = getenv("NEWTON_TRACE_IDLE") != nil;
+		if (traceIdle)
+			fprintf(stderr, "[idle] the caret is not valid: at once\n");
+	}
 	if (next.time.hi == 0x7fffffff && next.time.lo == 0)
 	{
 		next.time.hi = 0;

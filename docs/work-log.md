@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-01: the notebook idled every 6.5 ms for nothing
+
+Profiling the T-Deck Pro at rest (`tools/tdeck/profile.py`) found core 1
+waiting 0.5% of the time: the NewtonScript event loop ran without pause.
+`NEWTON_TRACE_IDLE` (new: each world's loop waking, each view idler, each
+notebook idle - `tools/host/README.md`) showed `TNotebook::Idle` running
+150 times a second with no view wanting an idle for 20 s and the recogniser
+wanting none.  The reconstruction's `TNotebook::Idle` passed `IdleViews`'s
+answer to `UpdateNextIdleTime`, which only ever brings the time forward;
+the ROM (0x00146478) has `IdleViews` answer straight into `fNextIdleTime`
+(`add r0, r4, #4` as the result's slot), forgetting the old time.  Once the
+next idle time had passed it stayed passed: `NeedsIdle` always true,
+`TNotebook::Run` doing its ten passes and the idle timer re-armed for a
+millisecond, forever.  Fixed as the ROM has it: an idle desktop `newton`
+went from 1.23 s of CPU in 20 s to 0.02 s, the board's Newton from 11% to
+93% idle, its draw on the cable from 129 to 110 mA.
+
 ## 2026-11-01: what the T-Deck Pro draws, measured
 
 The owner found the board's battery did not last.

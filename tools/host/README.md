@@ -108,6 +108,23 @@ one that is stuck:
     NEWTON_TRACE_UPDATE=1 build/host/host/newton ... 2> updates.log
     grep "\[update\]" updates.log | cut -d' ' -f2 | sort | uniq -c | sort -rn | head
 
+## NEWTON_TRACE_IDLE
+
+Set in the environment of a host program, it prints what keeps the machine
+from waiting: each application world's loop waking (`src/utility/AppWorld.cpp`:
+a timer's timeout, in ticks of 3.6864 MHz, or an event's class and id),
+each view idler run with the delay it answered (`src/views/RootView.cpp`),
+and each notebook idle with when the views and the recogniser want the next
+one (`src/newt/Notebook.cpp`, in milliseconds from now, -1 for never):
+
+    NEWTON_TRACE_IDLE=1 build/host/host/newton --headless 40 2> idle.log
+    grep "\[idle\] world" idle.log | sed 's/timeout [0-9-]*/timeout N/' | sort | uniq -c | sort -rn | head
+
+A machine at rest wakes a few times a second.  It found the notebook idling
+every 6.5 ms with nothing wanting it (`TNotebook::Idle` kept the stale next
+idle time - `docs/host-tdeck-pro.md`, "Battery life"): a sixtieth of a
+desktop core, but all of the T-Deck Pro's.
+
 ## NEWTON_TRACE_ARBITER
 
 Set in the environment of `newton`, it prints each arbitration the

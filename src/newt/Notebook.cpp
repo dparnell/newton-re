@@ -354,15 +354,29 @@ TNotebook::Run(void)
 
 // ROM 0x00146478 Idle__9TNotebookFv
 // The application idled, then the recognition system and the views; the
-// next idle time is the earlier of the views' and the recogniser's.
+// next idle time is the views' (IdleViews answers straight into
+// fNextIdleTime: what was there before is forgotten), brought forward to
+// the recogniser's when that is sooner.
 void
 TNotebook::Idle(void)
 {
 	TApplication::Idle();
 	gRecognition.Idle();
-	TTime next = gRootView->IdleViews();
-	UpdateNextIdleTime(next);
+	fNextIdleTime = gRootView->IdleViews();
+	TTime next = fNextIdleTime;
 	UpdateNextIdleTime(gRecognition.NextIdle());
+	// host: NEWTON_TRACE_IDLE - when the views and the recogniser want to
+	// idle next, in milliseconds from now (views/RootView.cpp prints each
+	// idler), what keeps the machine from waiting
+	static const Boolean traceIdle = getenv("NEWTON_TRACE_IDLE") != nil;
+	if (traceIdle)
+	{
+		TTime now = GetGlobalTime();
+		TTime recognition = gRecognition.NextIdle();
+		fprintf(stderr, "[idle] notebook: views %ld ms, recognition %ld ms\n",
+				  next.time.hi == 0 && next.time.lo == 0 ? -1L : (long) (next - now).ConvertTo(kMilliseconds),
+				  recognition.time.hi == 0 && recognition.time.lo == 0 ? -1L : (long) (recognition - now).ConvertTo(kMilliseconds));
+	}
 }
 
 
