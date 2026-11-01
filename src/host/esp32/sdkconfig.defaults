@@ -65,3 +65,6 @@ CONFIG_USJ_NO_AUTO_LS_ON_CONNECTION=y
 #  power switches of the GPS, the 4G module and the LoRa radio, the panel's
 #  and the radio's chip selects and the keyboard's light)
 CONFIG_ESP_SLEEP_GPIO_RESET_WORKAROUND=n
+# (each lock's time held and the time in each mode - light sleep among them -
+#  printed by the console's !pm: tdeck_power.cpp)
+CONFIG_PM_PROFILING=y

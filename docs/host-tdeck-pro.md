@@ -890,6 +890,51 @@ The LoRa radio still draws more switched off. The Newton still goes idle
 about 95 times a second, so something still wakes it every 10 ms; the
 input task's 10 ms poll of the touch panel and keyboard is another wake-up.
 
+### The 4G module's sleep, and the USB on the cable
+
+The 4G module now sleeps (`src/host/esp32/main/tdeck_modem.cpp`): the
+engine's setup ends with `AT+CSCLK=1` (`HostCellularLink`'s new `setup`,
+`hal/host/HostCellular.h`), after which the module sleeps while DTR (GPIO 8)
+is high. The board pulls DTR low and keeps the chip awake while the engine
+talks to the module, and lets both sleep after half a second with no byte
+either way (15 s while a command has had no answer). The module pulls RI
+(GPIO 7) low when it has something to say, a call or a message; RI is a
+GPIO wake-up from light sleep. Awake spells come to about 0.65 s in each
+15 s, the engine's status poll.
+
+With the USB away, the GPS off, everything else on:
+
+| State | mA |
+|---|---|
+| 4G module asleep | 88 |
+| 4G module off | 80 |
+
+(The first run of the same, before the fix below, gave 93 and 64 with the
+4G and everything else on, as found.) The module asleep costs 8 mA over
+having it off, where it cost about 30 awake.
+
+**The USB serial/JTAG did not survive light sleep on the cable**, and
+ESP-IDF's connection monitor (`USJ_NO_AUTO_LS_ON_CONNECTION`), which should
+hold light sleep off while a host is connected, did not reliably: its lock
+was let go 2,107 times in ten minutes (`!pm`, `CONFIG_PM_PROFILING`), and
+once the 4G no longer held the chip awake the board's USB went dead within
+minutes, the board otherwise running. So `tdeck_battery.cpp` now keeps the
+chip awake while the charger says the USB gives power (REG0B `PG_STAT`),
+unless its input was cut for measuring; on the cable the battery is no
+matter. Measuring cuts it, so after `--usb-away` gives the USB back the
+board stays awake until it is let go again (10 minutes at most): before
+that, it slept 2 s after coming back and the tool's next question never
+reached it.
+
+The console's `!pm` prints what keeps the chip awake (`keepers`, the
+`kAwake...` bits in `esp32host.h`) and ESP-IDF's lock and mode profile,
+with the number of light sleeps. A change to `sdkconfig.defaults` only
+reaches the build once `src/host/esp32/sdkconfig.tdeck-pro` is moved aside
+(a full rebuild).
+
+Not yet confirmed: a text or call arriving while the board is on its
+battery and asleep (RI's wake-up).
+
 ## Order of work
 
 The owner already has a T-Deck Pro (bought for another project), so the

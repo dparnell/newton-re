@@ -9,6 +9,20 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-01: the T-Deck Pro's 4G module sleeps
+
+`src/host/esp32/main/tdeck_modem.cpp`: `AT+CSCLK=1` at the end of the
+engine's setup (`HostCellularLink`'s new `setup`), DTR (GPIO 8) low while
+the engine talks to the module and high after half a second's quiet, RI
+(GPIO 7) a wake-up from light sleep. On battery with the GPS off, 88 mA
+with the module asleep against 80 with it off. On the way: the board's USB
+died on the cable once the 4G no longer kept the chip awake - ESP-IDF's
+connection monitor let light sleep happen (its lock let go 2,107 times in
+ten minutes) - so the chip is now kept awake while the USB gives power,
+and after `--usb-away` until the next let-go. The console's `!pm` shows
+the keepers and ESP-IDF's power profile. docs/host-tdeck-pro.md,
+"Battery life".
+
 ## 2026-11-01: power management on the T-Deck Pro
 
 `src/host/esp32/main/tdeck_power.cpp`: ESP-IDF's frequency scaling (80 MHz

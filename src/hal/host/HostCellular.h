@@ -96,6 +96,10 @@ struct HostCellularLink
 	// timeoutMs for the first: 0 none came, -1 the link is gone for good
 	long	(*read)(void* ref, unsigned char* bytes, long size, long timeoutMs);
 	void	(*write)(void* ref, const void* bytes, long size);
+	// a command sent after the engine's own configuration, each time the
+	// module is configured (nil: none) - the T-Deck Pro's AT+CSCLK=1, the
+	// module asleep while its DTR is high (src/host/esp32/main/tdeck_modem.cpp)
+	const char*	setup;
 };
 
 enum HostCellState

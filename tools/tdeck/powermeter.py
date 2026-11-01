@@ -222,7 +222,13 @@ def main(argv):
             if args.usb_away:
                 board.power()				# (the mean starts again)
                 span = int(args.settle + args.window)
-                if board.eval("DevicePowerSet('usbAway, %d)" % span) != "TRUE":
+                # (its answer can be lost - the USB let go as it is sent:
+                # then the board is taken to have let go all the same)
+                try:
+                    answer = board.eval("DevicePowerSet('usbAway, %d)" % span, seconds=4)
+                except SystemExit:
+                    answer = "TRUE"
+                if answer != "TRUE":
                     raise SystemExit("powermeter: the board would not let go of the USB")
                 board.away(span + 1)
             else:

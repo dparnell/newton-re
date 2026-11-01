@@ -213,9 +213,30 @@ HostDeviceBatteryRunOnBattery(bool on)
 }
 
 
+// The chip kept out of light sleep while the USB gives power (the charger's
+// PG_STAT), unless the input was cut to measure: the USB serial/JTAG does
+// not survive light sleep, and ESP-IDF's connection monitor, which should
+// have held it off, was seen to let it happen on the cable - the USB then
+// never answered again, the board otherwise running (2026-11-01).  On USB
+// power the battery is no matter.  Asked once a second; a charger that
+// does not answer keeps the chip awake.
+static void
+UsbPowerTask(void*)
+{
+	for (;;)
+	{
+		uint8_t charger;
+		bool powered = !ReadCharger(&charger) || ((charger & 0x04) != 0 && !gOnBattery);
+		HostDevicePowerKeepAwake(kAwakeUsbPower, powered);
+		vTaskDelay(pdMS_TO_TICKS(1000));
+	}
+}
+
+
 bool
 HostDeviceBatteryStart(void)
 {
+	xTaskCreatePinnedToCore(UsbPowerTask, "usbpower", 2560, NULL, 3, NULL, 0);
 	HostBatteryReading reading = { 100, kHostBatteryUnknown, kHostBatteryUnknown, kHostBatteryUnknown, -1, kHostBatteryDischarging };
 	uint16_t status;
 	if (!ReadWord(kGaugeStatus, &status))

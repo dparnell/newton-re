@@ -107,13 +107,15 @@ enum
 {
 	kAwakeGps = 1,							// its UART receiving
 	kAwakeCell = 2,							// the 4G module's
-	kAwakeUsb = 4							// the USB taken back, being enumerated
+	kAwakeUsb = 4,							// the USB taken back, being enumerated
+	kAwakeUsbPower = 8						// on USB power (tdeck_battery.cpp: the USB does not survive light sleep)
 };
 bool		HostDevicePowerStart(void);
 void		HostDevicePowerKeepAwake(unsigned who, bool on);
 bool		HostDevicePowerSetLightSleep(bool on);
 void		HostDevicePowerIdle(long* perMille, long* idles);
 bool		HostDevicePowerUsbAway(long seconds);
+void		HostDevicePowerDump(void);					// the console's !pm
 
 // the sampling profiler of core 1 (tdeck_profile.cpp): started with the
 // board, a phase's start marked, the samples printed (and the profiler

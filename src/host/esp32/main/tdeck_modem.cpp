@@ -16,9 +16,28 @@
 				  the module starts on a pulse - low, high for 50 ms, low;
 				- the module's TXD is the ESP32-S3's GPIO 11 (our RX), its
 				  RXD GPIO 10 (our TX);
-				- GPIO 7, 8 and 9 (its RI, DTR and RESET) are left alone -
-				  the other T-Deck Pro variant's I2S audio uses the same
-				  pins, which is why that variant has no modem.
+				- GPIO 7, 8 and 9 are its RI, DTR and RESET (the other
+				  T-Deck Pro variant's I2S audio uses the same pins, which
+				  is why that variant has no modem); RESET is left alone.
+
+				The module's sleep, so that the chip can sleep too
+				(tdeck_power.cpp: a UART stops in light sleep, so the
+				module powered kept the chip awake): the engine's setup
+				ends with AT+CSCLK=1 (HostCellularLink's setup), after
+				which the module sleeps while DTR is high.  DTR is pulled
+				low, and the chip kept awake, while the engine talks to
+				the module (a write, or bytes from it), with 100 ms for
+				its UART to wake; after half a second without a byte either
+				way (15 s while what was written has had no answer, and
+				never with bytes still in the UART's buffer) DTR goes high
+				and the chip may sleep - awake about 0.65 s in each 15 s,
+				the engine's status poll.  The module pulls RI low
+				for a call, a message or anything else it says by itself:
+				RI low wakes the chip from light sleep (a GPIO wake-up)
+				and the module's UART with it (DTR low), so that what it
+				says is heard.  Until the module has taken AT+CSCLK=1 (a
+				module just powered, or one that stopped answering) the
+				chip is kept awake while it is powered, as before.
 
 				The module can be switched off to save the battery (the
 				Host preferences panel's "The 4G module on":
@@ -44,6 +63,8 @@
 #include "nvs.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
+#include "esp_timer.h"
+#include "esp_sleep.h"
 
 #include "esp32host.h"
 #include "HostCellular.h"
@@ -52,15 +73,62 @@
 #define PIN_MODEM_PWRKEY	40
 #define PIN_MODEM_TX		10			// ours, to the module's RXD
 #define PIN_MODEM_RX		11			// ours, from the module's TXD
+#define PIN_MODEM_RI		7			// low: the module has something to say
+#define PIN_MODEM_DTR		8			// high: the module may sleep (after AT+CSCLK=1)
 
 static const uart_port_t	kPort = UART_NUM_1;
 static HostCellularLink		gLink;
 static QueueHandle_t		gPowerRequests;		// the switch's: on or off (a bool)
 
+static const char			kSleepSetup[] = "AT+CSCLK=1";
+const int64_t				kDrowseUs = 500000;		// no byte either way this long: the module let sleep
+const int64_t				kReplyDueUs = 15000000;	// (this long when nothing has come since the last write)
+static volatile bool		gPowered = false;		// the module's supply on
+static volatile bool		gSleepArmed = false;	// it has been told AT+CSCLK=1
+static volatile bool		gAwake = true;			// DTR low, the chip kept out of light sleep
+static int64_t				gLastTraffic = 0;
+static bool					gReplyDue = false;		// written to since the module last said anything
+
+
+// The module's UART woken (DTR low) and the chip kept awake, for a while
+static void
+Wake(void)
+{
+	gLastTraffic = esp_timer_get_time();
+	if (gAwake || !gPowered)
+		return;
+	HostDevicePowerKeepAwake(kAwakeCell, true);
+	gpio_set_level((gpio_num_t) PIN_MODEM_DTR, 0);
+	gAwake = true;
+	vTaskDelay(pdMS_TO_TICKS(100));			// (its UART back: SIMCom asks for some tens of ms)
+}
+
+
+// The module let sleep (DTR high), and the chip with it, after a quiet while
+static void
+Drowse(void)
+{
+	if (!gAwake || !gSleepArmed || !gPowered || esp_timer_get_time() - gLastTraffic < (gReplyDue ? kReplyDueUs : kDrowseUs))
+		return;
+	size_t buffered = 0;
+	uart_get_buffered_data_len(kPort, &buffered);
+	if (buffered != 0)
+		return;
+	gpio_set_level((gpio_num_t) PIN_MODEM_DTR, 1);
+	gAwake = false;
+	HostDevicePowerKeepAwake(kAwakeCell, false);
+}
+
 
 static long
 UartRead(void* /*ref*/, unsigned char* bytes, long size, long timeoutMs)
 {
+	// (RI low: the module is saying something - its UART, and the chip,
+	// woken to hear it)
+	if (gpio_get_level((gpio_num_t) PIN_MODEM_RI) == 0)
+		Wake();
+	else
+		Drowse();
 	// the first byte waited for, then whatever else has come
 	size_t buffered = 0;
 	uart_get_buffered_data_len(kPort, &buffered);
@@ -69,6 +137,8 @@ UartRead(void* /*ref*/, unsigned char* bytes, long size, long timeoutMs)
 		int n = uart_read_bytes(kPort, bytes, 1, pdMS_TO_TICKS(timeoutMs));
 		if (n <= 0)
 			return n < 0 ? -1 : 0;
+		gReplyDue = false;
+		Wake();
 		uart_get_buffered_data_len(kPort, &buffered);
 		if (buffered == 0 || size == 1)
 			return 1;
@@ -76,6 +146,8 @@ UartRead(void* /*ref*/, unsigned char* bytes, long size, long timeoutMs)
 		int m = uart_read_bytes(kPort, bytes + 1, more, 0);
 		return 1 + (m > 0 ? m : 0);
 	}
+	gReplyDue = false;
+	Wake();
 	long count = (long) buffered < size ? (long) buffered : size;
 	int n = uart_read_bytes(kPort, bytes, count, 0);
 	return n < 0 ? -1 : n;
@@ -85,7 +157,31 @@ UartRead(void* /*ref*/, unsigned char* bytes, long size, long timeoutMs)
 static void
 UartWrite(void* /*ref*/, const void* bytes, long size)
 {
+	Wake();
+	// (the setup's AT+CSCLK=1 going out: the module sleeps when let from
+	// now on)
+	if (size >= (long) sizeof(kSleepSetup) - 1 && memcmp(bytes, kSleepSetup, sizeof(kSleepSetup) - 1) == 0)
+		gSleepArmed = true;
+	gReplyDue = true;
 	uart_write_bytes(kPort, bytes, size);
+}
+
+
+// The module's supply switched: on, it starts awake and unarmed (it has
+// forgotten AT+CSCLK); off, the chip no longer kept awake for it, and its
+// RI (which may sink when it is unpowered) no longer a wake-up
+static void
+SetPowered(bool on)
+{
+	gPowered = on;
+	gSleepArmed = false;
+	gAwake = true;
+	gpio_set_level((gpio_num_t) PIN_MODEM_DTR, 0);
+	HostDevicePowerKeepAwake(kAwakeCell, on);
+	if (on)
+		gpio_wakeup_enable((gpio_num_t) PIN_MODEM_RI, GPIO_INTR_LOW_LEVEL);
+	else
+		gpio_wakeup_disable((gpio_num_t) PIN_MODEM_RI);
 }
 
 
@@ -189,7 +285,7 @@ PowerTask(void*)
 			gpio_set_level((gpio_num_t) PIN_MODEM_PWRKEY, 0);
 			gpio_set_level((gpio_num_t) PIN_MODEM_POWER, 0);
 		}
-		HostDevicePowerKeepAwake(kAwakeCell, on);	// (its UART stops in light sleep)
+		SetPowered(on);
 		KeepOff(!on);
 		printf("[cell] the module switched %s\n", on ? "on" : "off");
 	}
@@ -203,6 +299,7 @@ CellTask(void*)
 	{
 		// switched off before: left off, the engine waiting for it
 		gpio_set_level((gpio_num_t) PIN_MODEM_POWER, 0);
+		SetPowered(false);
 		printf("[cell] the module is switched off (the Host panel)\n");
 		HostCellularRun(&gLink);
 	}
@@ -210,7 +307,7 @@ CellTask(void*)
 	// A7682E_init) do: the supply on, a 50 ms press of the power key; and,
 	// as lilyphone1 does when that gets no answer, a longer press (a second)
 	gpio_set_level((gpio_num_t) PIN_MODEM_POWER, 1);
-	HostDevicePowerKeepAwake(kAwakeCell, true);
+	SetPowered(true);
 	vTaskDelay(pdMS_TO_TICKS(100));
 	printf("[cell] the module's supply (GPIO %d) reads %d\n", PIN_MODEM_POWER, gpio_get_level((gpio_num_t) PIN_MODEM_POWER));
 	PressPowerKey(50);
@@ -241,10 +338,17 @@ HostDeviceCellStart(void)
 	gpio_hold_dis((gpio_num_t) PIN_MODEM_PWRKEY);
 	gpio_deep_sleep_hold_dis();
 	gpio_config_t pins = {};
-	pins.pin_bit_mask = (1ULL << PIN_MODEM_POWER) | (1ULL << PIN_MODEM_PWRKEY);
+	pins.pin_bit_mask = (1ULL << PIN_MODEM_POWER) | (1ULL << PIN_MODEM_PWRKEY) | (1ULL << PIN_MODEM_DTR);
 	pins.mode = GPIO_MODE_INPUT_OUTPUT;			// (read back for the console)
 	gpio_config(&pins);
 	gpio_set_level((gpio_num_t) PIN_MODEM_PWRKEY, 0);
+	gpio_set_level((gpio_num_t) PIN_MODEM_DTR, 0);	// (awake until it has taken AT+CSCLK=1)
+	gpio_config_t ri = {};
+	ri.pin_bit_mask = 1ULL << PIN_MODEM_RI;
+	ri.mode = GPIO_MODE_INPUT;
+	ri.pull_up_en = GPIO_PULLUP_ENABLE;
+	gpio_config(&ri);
+	esp_sleep_enable_gpio_wakeup();				// (RI low wakes the chip: SetPowered)
 
 	uart_config_t config = {};
 	config.baud_rate = 115200;
@@ -263,6 +367,7 @@ HostDeviceCellStart(void)
 	gLink.ref = NULL;
 	gLink.read = UartRead;
 	gLink.write = UartWrite;
+	gLink.setup = kSleepSetup;
 	HostCellularSetClockHandler(NetworkTime);
 	gPowerRequests = xQueueCreate(4, sizeof(bool));
 	if (gPowerRequests != NULL && xTaskCreatePinnedToCore(PowerTask, "cellpower", 3072, NULL, 4, NULL, 0) == pdPASS)

@@ -126,9 +126,10 @@ Nothing at present.
 with light sleep added, 113 mA as found with the USB away (no gain yet: the
 4G module keeps the chip awake) and 63 mA with every radio off
 (docs/host-tdeck-pro.md, "Battery life"; `tools/tdeck/powermeter.py
---usb-away` measures each change). Next, largest first: the 4G module's own
-sleep (DTR on GPIO 8 with `AT+CSCLK=1`, its RI line waking the board) so the
-chip can sleep with it on; max-modem WiFi power save by default (15 mA);
+--usb-away` measures each change). The 4G module now sleeps between
+exchanges (88 mA with it on and the GPS off, 80 with it off); a message
+arriving while the board sleeps (RI's wake-up) is still to be tried. Next,
+largest first: max-modem WiFi power save by default (15 mA);
 what still wakes the Newton every 10 ms, and the touch panel's and
 keyboard's interrupts in place of the input task's 10 ms poll; a real
 sleep for the Newton's power-off on the board; the LoRa radio's lines

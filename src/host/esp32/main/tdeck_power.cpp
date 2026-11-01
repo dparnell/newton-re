@@ -14,10 +14,13 @@
 				sleep until the next tick that has work - unless something
 				keeps it awake: the USB console while a host is connected
 				(ESP-IDF's connection monitor, USJ_NO_AUTO_LS_ON_CONNECTION:
-				the USB serial/JTAG does not work across light sleep), and
-				here the GPS's and the 4G module's UARTs while they are
-				powered (a UART's receiver stops in light sleep, and what
-				they send meanwhile would be lost).  Light sleep can be
+				the USB serial/JTAG does not work across light sleep - and
+				since the monitor was seen to let it happen, the USB's power
+				as well, tdeck_battery.cpp), and here the GPS's UART while
+				it is powered and the 4G module's while it is awake (a
+				UART's receiver stops in light sleep, and what they send
+				meanwhile would be lost; tdeck_modem.cpp lets the module
+				sleep).  Light sleep can be
 				switched off (DevicePowerSet('sleep, nil)).
 
 				For measuring the board on its battery with light sleep
@@ -119,6 +122,8 @@ HostDevicePowerStart(void)
 		return false;
 	}
 	esp_pm_lock_acquire(gNewtonRuns);		// (the Newton is starting)
+	gKeepers = kAwakeUsbPower;				// (until tdeck_battery.cpp has asked the charger)
+	esp_pm_lock_acquire(gKeptAwake);
 	if (gUsbReturn[0] == kUsbReturnMagic)
 		printf("newton: the USB was not found again after it was let go - restarted (conf0 %08lx, RTC USB_CONF %08lx, PERIP_CLK_EN1 %08lx)\n",
 			   (unsigned long) gUsbReturn[1], (unsigned long) gUsbReturn[2], (unsigned long) gUsbReturn[3]);
@@ -176,9 +181,22 @@ HostDevicePowerIdle(long* perMille, long* idles)
 }
 
 
+// The console's !pm (esp32main.cpp): what keeps the chip awake, and ESP-IDF's
+// profile of its locks and of the time in each mode (PM_PROFILING)
+void
+HostDevicePowerDump(void)
+{
+	printf("newton: keepers %02x, USB %s, light sleep %s\n", gKeepers,
+		   usb_serial_jtag_is_connected() ? "connected" : "not connected", gLightSleep ? "allowed" : "off");
+	esp_pm_dump_locks(stdout);
+}
+
+
 /*------------------------------------------------------------------------------
 	The USB let go for a time
 ------------------------------------------------------------------------------*/
+
+static volatile unsigned	gUsbAwayGeneration = 0;		// one more each time the USB is let go
 
 static void
 UsbAwayTask(void* arg)
@@ -205,9 +223,15 @@ UsbAwayTask(void* arg)
 	if (!usb_serial_jtag_is_connected())
 		esp_restart();
 	gUsbReturn[0] = 0;
-	vTaskDelay(pdMS_TO_TICKS(2000));
-	HostDevicePowerKeepAwake(kAwakeUsb, false);
 	printf("newton: the USB back\n");
+	// kept awake now until the USB is let go again, for 10 minutes at most:
+	// the cable is in, but while the charger's input is cut for measuring
+	// tdeck_battery.cpp does not hold light sleep off, and the USB does not
+	// survive it (seen: a measurement's next question never answered)
+	unsigned generation = gUsbAwayGeneration;
+	for (int i = 0; i < 6000 && gUsbAwayGeneration == generation; i++)
+		vTaskDelay(pdMS_TO_TICKS(100));
+	HostDevicePowerKeepAwake(kAwakeUsb, false);
 	vTaskDelete(NULL);
 }
 
@@ -217,5 +241,6 @@ HostDevicePowerUsbAway(long seconds)
 {
 	if (seconds <= 0)
 		return false;
+	gUsbAwayGeneration++;
 	return xTaskCreate(UsbAwayTask, "usbaway", 3072, (void*) seconds, 5, NULL) == pdPASS;
 }

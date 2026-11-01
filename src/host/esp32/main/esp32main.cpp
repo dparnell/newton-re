@@ -183,6 +183,8 @@ ConsoleReader(void*)
 		// it, so a modal dialog can be answered from here), !reset a restart
 		else if (strncmp(line, "!prof", 5) == 0)
 			HostDeviceProfileDump();
+		else if (strncmp(line, "!pm", 3) == 0)
+			HostDevicePowerDump();
 		else if (strncmp(line, "!shot", 5) == 0)
 			HostDevicePanelDump();
 		else if (strncmp(line, "!time ", 6) == 0)

@@ -118,7 +118,9 @@ tests the parsing (UCS2, time stamps, +CMGR headers).
 (our TX GPIO 10, RX GPIO 11), the module's supply GPIO 41 (an SGM6609
 boost), its power key GPIO 40 - a button: a 50 ms press, as LilyGO's
 `examples/A7682E/test_AT` gives it, and a second's press when that gets no
-answer.  GPIO 7-9 (RI, DTR, RESET) are left alone.  The engine runs on a
+answer.  GPIO 9 (RESET) is left alone; GPIO 8 (DTR) and 7 (RI) put the
+module to sleep and wake it (`AT+CSCLK=1`, the engine's link's `setup`:
+`tdeck_modem.cpp` and docs/host-tdeck-pro.md, "Battery life").  The engine runs on a
 task of the board's own (8 KB internal stack, core 0); its large buffers
 are `HOST_LARGE_STATIC`.  The network's time sets the board's clock
 (`HostDeviceClockSetTo`), and the Newton's follows as it does after SNTP.

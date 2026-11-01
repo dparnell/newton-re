@@ -1130,6 +1130,8 @@ Configure(void)
 	Exec("AT+CTZU=1", nullptr, 0, 2000);
 	Exec("AT+CTZR=1", nullptr, 0, 2000);
 	Exec("AT+COPS=3,0", nullptr, 0, 2000);			// (the operator by name: the A7682E gives "50502" otherwise)
+	if (gLink->setup != nullptr)
+		Exec(gLink->setup, nullptr, 0, 2000);
 	gClockWanted = true;
 }
 

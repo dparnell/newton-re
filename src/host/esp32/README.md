@@ -104,7 +104,9 @@ Everything comes from PlatformIO (`~/.platformio`); on Linux and macOS
 40) and hands UART1 (TX 10, RX 11, 115200) to the portable engine,
 `hal/host/HostCellular.h`, on a task of its own; the network's time sets the
 board's clock.  **The module needs the battery fitted** - its supply runs
-from it; on USB alone it stays dark.  From the prompt:
+from it; on USB alone it stays dark.  It sleeps between exchanges
+(`AT+CSCLK=1`, DTR on GPIO 8, its RI on GPIO 7 waking the board), so the
+chip can light-sleep with it on (docs/host-tdeck-pro.md, "Battery life").  From the prompt:
 
     HostCellStatus();                  // {state: home, operator: ..., rssi: -77, ...}
     HostCellCommand("ATI");            // any AT command, its reply lines
@@ -179,8 +181,9 @@ doing: `!shot` prints what the panel shows (`tools/tdeck/panelshot.py`
 makes a PNG of it), `!prof` the profile, `!time <seconds since 1970,
 GMT>` sets the clock by hand (as a sync from the network does), `!tap <x>
 <y>` puts the finger on the display there for 100 ms (a modal dialog,
-which stops the NewtonScript console, answered from it), `!reset`
-restarts the board.
+which stops the NewtonScript console, answered from it), `!pm` what keeps
+the chip out of light sleep and ESP-IDF's profile of its power locks and
+modes (`PM_PROFILING`), `!reset` restarts the board.
 
 ## A faster start (2026-10-11)
 
