@@ -18,7 +18,9 @@ task's sleep is cut short by a host thread (`HostIdleWake`,
 `hal/host/HostIdleWait.h`) and the two tasks wait on a kick
 (`os600/user/host/HostKick.h`: an interrupt source that sends the task a word
 with `SendForInterrupt`). With a window open the desktop waits 2 times a
-second (94 before); the T-Deck Pro goes idle 11 times a second (95). Found on
+second (94 before); the T-Deck Pro goes idle 11 times a second (95); the
+reMarkable under AppLoad, 0.04 s of CPU in 20 s and ~14 switches a second
+(0.25 s and ~299). Found on
 the way: a source due "at once" must answer time nought - the clock read in
 its deadline is later than the now it is compared with, so the kick was never
 sent (the T-Deck's keys stopped until that was fixed; the power switch's

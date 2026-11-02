@@ -774,6 +774,7 @@ where most of the causes were found.
 | 2026-11-02, headless over SSH | 0.03 s | ~30 | - |
 | 2026-11-02, from AppLoad | 3.95 s (20% of a core) | ~324 | the window's: 3.66 s |
 | 2026-11-02, the window waiting, from AppLoad | 0.25 s (1%) | ~299 | the Newton's idle task: 190 a second |
+| 2026-11-02, the keyboard task waiting, from AppLoad | 0.04 s | ~14 | the window's: 6.5 a second |
 
 - **The Newton's idle spin** (`TNotebook::Idle`, fixed 2026-11-01 as the
   ROM has it; `docs/work-log.md`) was in every build before that: the
@@ -801,7 +802,8 @@ where most of the causes were found.
   `hrtimer_nanosleep` 190 times a second and the task it woke 95), 20 times
   headless: the host's keyboard task looked for keys every 10 ms.  Since
   2026-11-02 it waits for them (docs/host-runtime.md, "The idle task's
-  wait").
+  wait"): 0.04 s of CPU in 20 s under AppLoad, ~14 switches a second in
+  all.
 - **Sleep**: the panel keeps its picture for nothing, so the T-Deck Pro's
   arrangement fits (docs/host-lock-screen.md, "Sleep":
   `gHostScreenKeepsPicture`, the machine asleep while locked); today the

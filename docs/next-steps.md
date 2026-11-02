@@ -142,8 +142,7 @@ The Newton no longer looks every 10 ms on any host (docs/host-runtime.md,
 "The idle task's wait"). Next, largest first: the Newton's sleep on the reMarkable (its e-paper keeps the
 lock screen, as the T-Deck Pro's does); the Android window looking every
 4 ms; what the radios cost while locked
-(the WiFi off, the GPS off while nobody wants a fix); the Newton still goes idle
-about 95 times a second; the LoRa radio's lines
+(the WiFi off, the GPS off while nobody wants a fix); the LoRa radio's lines
 while it is unpowered (off draws 8-10 mA more than on); the keyboard light
 on a timeout; `POF` after each panel refresh.
 
