@@ -19,6 +19,7 @@
 #include "HostOrientation.h"
 #include "NewtonTime.h"
 #include "FunctionProfiler.h"
+#include "os600/user/host/HostKick.h"
 #include <atomic>
 
 // the key queue: a ring, one writer (the window), one reader (the task)
@@ -28,6 +29,28 @@ static HostKey			gHostKeys[kHostKeyQueueSize];
 static std::atomic<long>	gHostKeyHead(0);		// the next to send
 static std::atomic<long>	gHostKeyTail(0);		// the next to fill
 static std::atomic<bool>	gHostQuit(false);
+static THostKick			gHostKeyboardKick;		// the task woken: a key, a package, a turn, the quit
+
+
+void
+HostKeyboardKick(void)
+{
+	gHostKeyboardKick.Kick();
+}
+
+
+void
+HostKeyboardWaitInit(void)
+{
+	gHostKeyboardKick.Init();
+}
+
+
+Boolean
+HostKeyboardWait(ULong timeout)
+{
+	return gHostKeyboardKick.Wait(timeout);
+}
 
 
 void
@@ -41,6 +64,7 @@ HostKeyboardPush(long keyCode, Boolean down)
 	gHostKeys[tail].code = keyCode;
 	gHostKeys[tail].down = down;
 	gHostKeyTail.store(next);
+	HostKeyboardKick();
 }
 
 
@@ -48,6 +72,7 @@ void
 HostKeyboardQuit(void)
 {
 	gHostQuit.store(true);
+	HostKeyboardKick();
 }
 
 
@@ -139,10 +164,12 @@ HostKeyboardSendKeys(TUPort* newtPort)
 }
 
 
-// The task: the newt world's port found by name, then every ten
-// milliseconds the queued keys sent as 'keyb events
-// (each an RPC the world replies to with the repeat rates); the run ended
-// when the window says so.
+// The task: the newt world's port found by name, then the queued keys sent
+// as 'keyb events (each an RPC the world replies to with the repeat rates),
+// the dropped packages and the device's turning, each time something is
+// queued (gHostKeyboardKick: it waits rather than looking every 10 ms, which
+// woke the machine a hundred times a second - os600/user/host/HostKick.h);
+// the run ended when the window says so.
 void
 HostKeyboardToolTask(void)
 {
@@ -162,12 +189,13 @@ HostKeyboardToolTask(void)
 		//  until a key is pressed, and the first key connects the keyboard
 		//  just before it is sent - so a fresh note has no caret waiting
 		//  for typing, and writing goes where it is written)
+		gHostKeyboardKick.Init();
 		while (!HostTimeIsUp())
 		{
 			HostKeyboardSendKeys(&newtPort);
 			HostSendQueuedPackages();		// (a package dropped onto the window)
 			HostSendAskedOrientation();		// (the device turned: host/HostOrientation.h)
-			Sleep(10 * kMilliseconds);
+			gHostKeyboardKick.Wait(gHostTimeLimit != 0 ? 1 * kSeconds : kNoTimeout);	// (--limit: looked at once a second)
 		}
 	}
 	NSProfilerFinish();				// (NEWTON_NS_PROFILE's report, written while a task can still read the heap)

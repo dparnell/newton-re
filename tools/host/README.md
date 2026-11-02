@@ -114,13 +114,20 @@ Set in the environment of a host program, it prints what keeps the machine
 from waiting: each application world's loop waking (`src/utility/AppWorld.cpp`:
 a timer's timeout, in ticks of 3.6864 MHz, or an event's class and id),
 each view idler run with the delay it answered (`src/views/RootView.cpp`),
-and each notebook idle with when the views and the recogniser want the next
-one (`src/newt/Notebook.cpp`, in milliseconds from now, -1 for never):
+each notebook idle with when the views and the recogniser want the next
+one (`src/newt/Notebook.cpp`, in milliseconds from now, -1 for never), and
+each time the kernel's idle task waits, what for - a timer, the time slice,
+the real-time clock or a host interrupt source - and how long
+(`src/os600/kernel/host/TaskRuntime.cpp`, in microseconds):
 
     NEWTON_TRACE_IDLE=1 build/host/host/newton --headless 40 2> idle.log
     grep "\[idle\] world" idle.log | sed 's/timeout [0-9-]*/timeout N/' | sort | uniq -c | sort -rn | head
 
-A machine at rest wakes a few times a second.  It found the notebook idling
+    grep "\[idle\] kernel" idle.log | awk '{print $4,$5,$6}' | sort | uniq -c
+
+A machine at rest wakes a few times a second.  It found the host's keyboard
+task looking every 10 ms (a timer every 10 ms, a hundred waits a second:
+`docs/host-runtime.md`, "The idle task's wait"), and the notebook idling
 every 6.5 ms with nothing wanting it (`TNotebook::Idle` kept the stale next
 idle time - `docs/host-tdeck-pro.md`, "Battery life"): a sixtieth of a
 desktop core, but all of the T-Deck Pro's.

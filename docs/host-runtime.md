@@ -179,6 +179,38 @@ With no source registered nothing changes (`test_HostInterruptSources`
 checks that a source's deadline wakes the idle task at exactly its time and
 that its handler runs then; the os600 and newt tests run unchanged).
 
+A source due "at once" answers time nought, long past (`when->hi = 0`,
+`when->lo = 0`), not the clock read in `deadline`: `HostDeliverInterruptSources`
+reads its now *before* asking, so a clock read in `deadline` is later than
+it and never due there (found 2026-11-02: the kicks below were never sent).
+
+### The idle task's wait
+
+The idle task sleeps to the earliest deadline (`HostSleepUntil`), and a host
+thread can cut that short: `HostIdleWake()` (`hal/host/HostIdleWait.h`; a
+condition variable, and on Windows the high-resolution waitable timer with
+an event beside it).  Whatever a host thread leaves for the machine wakes
+it: the pen down and up (`HostTabletRawPenDownFine`, `HostTabletRawPenUp`),
+the power switch (`HostPowerSwitchPress`), and the kicks.
+
+A **kick** (`os600/user/host/HostKick.h`) is how a host task waits for a
+host thread rather than looking every few milliseconds: the task makes it
+(`Init`: a port of its own, and one interrupt source that serves every
+kick), then `Wait`s - a `Receive` on that port; a host thread `Kick`s it,
+which marks it and wakes the idle task; the source is then due at once, and
+its handler sends the task a word with `SendForInterrupt`.  The host's
+keyboard task waits on one for the window's keys, dropped packages, the
+device's turning and the quit (`host/HostKeyboard.cpp`); the T-Deck Pro's
+console task on the same one for keys, console lines, the quick sheet's
+pull and the clock set (`host/esp32/main/newtonmain.cpp`, `HostDeviceKick`).
+
+Before 2026-11-02 both tasks looked every 10 ms, and so did nothing else
+need to wake the idle task: a key or a tap waited at most for the next
+look.  That woke the machine a hundred times a second with nothing to do -
+on a desktop with a window open 94 times a second against 2 now, on the
+T-Deck Pro 95 against 11 (`NEWTON_TRACE_IDLE`'s `[idle] kernel waits for
+...` lines, `tools/host/README.md`).
+
 ## Threads that are none of the machine's
 
 A host program may have threads of its own that are not tasks at all: the

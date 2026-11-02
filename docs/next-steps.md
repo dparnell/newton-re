@@ -138,8 +138,8 @@ the screen is locked (46 mA locked: docs/host-lock-screen.md, "Sleep").
 Measure 150 s or more after a boot (the boot's profiler keeps the chip
 awake until then). The reMarkable's window waits for the Newton to draw
 (1% of a core idle, 20% before: docs/host-remarkable.md, "Battery life").
-Next, largest first: the Newton's idle task waking 100-190 times a second on
-every host; the Newton's sleep on the reMarkable (its e-paper keeps the
+The Newton no longer looks every 10 ms on any host (docs/host-runtime.md,
+"The idle task's wait"). Next, largest first: the Newton's sleep on the reMarkable (its e-paper keeps the
 lock screen, as the T-Deck Pro's does); the Android window looking every
 4 ms; what the radios cost while locked
 (the WiFi off, the GPS off while nobody wants a fix); the Newton still goes idle

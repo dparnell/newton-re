@@ -1036,6 +1036,13 @@ every 10 ms. With the USB away and everything on, **46 mA locked** against
 go, the console's `!tap` waking the Newton afterwards - asleep, it answers
 no NewtonScript).
 
+### The Newton no longer looks every 10 ms
+
+The Newton went idle about 95 times a second at rest: the board's console
+task looked for console lines and keys every 10 ms. It now waits on a kick
+(docs/host-runtime.md, "The idle task's wait"), woken by a key, a console
+line, the quick sheet's pull or the clock set: 11 times a second.
+
 **Measuring after a boot: wait 150 s.** The boot's profiler
 (`tdeck_profile.cpp`) samples core 1 every millisecond for the first 150
 s, which keeps the chip out of light sleep; two runs started sooner after

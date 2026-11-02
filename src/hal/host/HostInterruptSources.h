@@ -40,7 +40,7 @@
 typedef Boolean	(*HostInterruptDeadlineProc)(Int64* when);	// ==> true and the time, when one is due
 typedef void	(*HostInterruptDeliverProc)(void);
 
-// A source added; answers false when the table is full (eight sources).
+// A source added; answers false when the table is full (sixteen sources).
 // Registering the same pair twice adds it once.
 Boolean	HostRegisterInterruptSource(HostInterruptDeadlineProc deadline, HostInterruptDeliverProc deliver);
 void	HostUnregisterInterruptSource(HostInterruptDeadlineProc deadline, HostInterruptDeliverProc deliver);

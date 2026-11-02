@@ -17,6 +17,8 @@
 //      again, and the tap lands true again
 //   5. the machine put to sleep with the power switch and woken by a tap:
 //      the tablet driver shut down and woken, the calibration unchanged
+//      (the sleep locks the screen first - docs/host-lock-screen.md - so it
+//      is unlocked before the tap)
 // Run again on the same store (the .restart ctest) the machine comes up
 // with the calibration read back from the store: no calibration screen,
 // and the tap lands true.
@@ -80,6 +82,8 @@ sleepAndWake := func() begin
 	HostPowerSwitch();
 	call waitFor with ("alignpen: asleep", func() HostSleepCount() > before, func() begin
 		local slept := HostTabletShutDowns() > sleeps;
+		if GetGlobalFn('ScreenLockIsLocked) and ScreenLockIsLocked() then
+			GetGlobalVar('|QuickSheet:host|):Unlock();
 		call tapPanel with (200, 300, func(dx, dy) begin
 			local ok := slept and call near with (dx, dy);
 			call report with (if ok then "the tablet slept and woke, and reads true" else "FAILED after the sleep", dx, dy);

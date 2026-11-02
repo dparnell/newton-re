@@ -796,11 +796,12 @@ where most of the causes were found.
   timer (X11 comparing the screen, Windows and macOS redrawing it; their
   `HostWindowScreenChanged` does nothing), and the Android host's looks
   every 4 ms.
-- **The Newton still wakes 100-190 times a second** under AppLoad (its
-  idle task sleeping to the next timer, `HostSleepUntil`: a thread in
-  `hrtimer_nanosleep` 190 times a second and the task it wakes 95), 20
-  times headless - the T-Deck Pro's "goes idle about 95 times a second",
-  not yet explained.
+- **The Newton woke 100-190 times a second** under AppLoad (its idle task
+  sleeping to the next timer, `HostSleepUntil`: a thread in
+  `hrtimer_nanosleep` 190 times a second and the task it woke 95), 20 times
+  headless: the host's keyboard task looked for keys every 10 ms.  Since
+  2026-11-02 it waits for them (docs/host-runtime.md, "The idle task's
+  wait").
 - **Sleep**: the panel keeps its picture for nothing, so the T-Deck Pro's
   arrangement fits (docs/host-lock-screen.md, "Sleep":
   `gHostScreenKeepsPicture`, the machine asleep while locked); today the

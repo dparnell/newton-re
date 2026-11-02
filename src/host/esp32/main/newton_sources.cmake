@@ -152,6 +152,7 @@ set(NEWTON_SOURCES
     hal/host/HostFlash.cpp
     hal/host/HostGPS.cpp
     hal/host/HostIRChip.cpp
+    hal/host/HostIdleWait.cpp
     hal/host/HostInterruptSources.cpp
     hal/host/HostScreen.cpp
     hal/host/HostSerialChip.cpp
@@ -254,6 +255,7 @@ set(NEWTON_SOURCES
     os600/user/UserTasks.cpp
     os600/user/UserTime.cpp
     os600/user/host/GenericSWIStub.cpp
+    os600/user/host/HostKick.cpp
     os600/user/host/MonitorGlue.cpp
     os600/user/host/SWI.cpp
     os600/user/host/StackManager.cpp
@@ -1196,6 +1198,7 @@ set(NEWTON_GROUP_14_SOURCES
     hal/host/Atomic.cpp
     hal/host/Flash.cpp
     hal/host/HostFlash.cpp
+    hal/host/HostIdleWait.cpp
     hal/host/HostInterruptSources.cpp
     hal/host/Interrupts.cpp
     hal/host/MMU.cpp
@@ -1668,6 +1671,7 @@ set(NEWTON_GROUP_30_SOURCES
     os600/user/UserTasks.cpp
     os600/user/UserTime.cpp
     os600/user/host/GenericSWIStub.cpp
+    os600/user/host/HostKick.cpp
     os600/user/host/MonitorGlue.cpp
     os600/user/host/SWI.cpp
     os600/user/host/StackManager.cpp

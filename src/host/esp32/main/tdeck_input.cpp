@@ -201,6 +201,7 @@ TouchPoll(void)
 			{
 				state = kPulled;
 				gPulls++;
+				HostDeviceKick();
 			}
 			else if (labs(x - startX) >= kPullSideways || ((now - startAt) / 1000 >= kPullHoldMs && y - startY < 8))
 			{

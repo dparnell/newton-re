@@ -486,31 +486,48 @@ void
 HostIdleTask()
 {
 	TTask* self = gCurrentTask;
+	// (NEWTON_TRACE_IDLE, tools/host/README.md: what the machine waits for
+	// each time it waits, and how long)
+	static const bool trace = getenv("NEWTON_TRACE_IDLE") != nullptr;
 	for (;;)
 	{
 		Boolean haveDeadline = false;
 		Int64 deadline = { 0, 0 };
+		const char* what = "nothing";
 		if (gHostAlarmArmed)
 		{
 			deadline = gHostAlarmTime;
 			haveDeadline = true;
+			what = "a timer";
 		}
 		if (gHostTimeSliceArmed && gHostInterruptEnabled && (!haveDeadline || CompCompare(&gHostTimeSliceDeadline, &deadline) < 0))
 		{
 			deadline = gHostTimeSliceDeadline;
 			haveDeadline = true;
+			what = "the time slice";
 		}
 		Int64 rtc;
 		if (HostRTCAlarmDeadline(&rtc) && (!haveDeadline || CompCompare(&rtc, &deadline) < 0))
 		{
 			deadline = rtc;
 			haveDeadline = true;
+			what = "the real-time clock";
 		}
 		Int64 source;
 		if (HostInterruptSourcesDeadline(&source) && (!haveDeadline || CompCompare(&source, &deadline) < 0))
 		{
 			deadline = source;
 			haveDeadline = true;
+			what = "a host source";
+		}
+		if (trace)
+		{
+			Int64 now;
+			GetClock(&now);
+			Int64 left = deadline;
+			CompSub(&now, &left);
+			long long ticks = haveDeadline ? (long long) (((unsigned long long) (ULong) left.hi << 32) | left.lo) : -1;
+			fprintf(stderr, "[idle] kernel waits for %s in %lld us\n", what, ticks < 0 ? -1LL : ticks * 1250 / 4608);
 		}
 		if (haveDeadline)
 			HostSleepUntil(&deadline);

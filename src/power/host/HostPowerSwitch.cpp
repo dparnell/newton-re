@@ -10,6 +10,7 @@
 #include "power/host/HostBattery.h"
 #include "hal/host/HostPower.h"
 #include "hal/host/HostInterruptSources.h"
+#include "hal/host/HostIdleWait.h"
 #include "hal/Timer.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -20,13 +21,17 @@
 static std::atomic<ULong>	gHostPowerPress(0);		// the press not yet sent ('powr or 'bklt; 0 none)
 
 
-// A press waiting is due now.
+// A press waiting is due now: time nought, long past.  (It was the clock
+// read here, which can be later than the now HostDeliverInterruptSources
+// read before asking, and so not yet due there - the kicks of
+// os600/user/host/HostKick.cpp were never delivered that way.)
 static Boolean
 PowerSwitchDeadline(Int64* when)
 {
 	if (gHostPowerPress.load() == 0 || GetPowerPort() == nil)
 		return false;
-	GetClock(when);
+	when->hi = 0;
+	when->lo = 0;
 	return true;
 }
 
@@ -60,6 +65,7 @@ HostPowerSwitchPress(ULong type)
 		return;
 	}
 	gHostPowerPress.store(type);
+	HostIdleWake();
 }
 
 

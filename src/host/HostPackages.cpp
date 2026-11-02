@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "HostPackages.h"
+#include "HostKeyboard.h"
 #include "PackageManager.h"
 #include "NewtWorld.h"
 #include "Frames.h"
@@ -53,6 +54,8 @@ HostQueuePackageFile(const char* path)
 	gQueueLock.clear(std::memory_order_release);
 	if (path != nil)
 		fprintf(stderr, "[host] %s: too many packages waiting; not installed\n", path);
+	else
+		HostKeyboardKick();						// (the keyboard task sends it: HostSendQueuedPackages)
 }
 
 

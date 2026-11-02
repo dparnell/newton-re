@@ -28,6 +28,7 @@ add_library(os600_user STATIC
     host/MonitorGlue.cpp
     host/SWI.cpp
     host/GenericSWIStub.cpp
+    host/HostKick.cpp
 )
 # package_manager: InitialKSRVTask starts the package manager
 target_link_libraries(os600_user PUBLIC newton_config os600_kernel utility protocols package_manager)

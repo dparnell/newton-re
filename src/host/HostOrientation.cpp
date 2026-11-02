@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include "HostOrientation.h"
+#include "HostKeyboard.h"
 #include "HostViews.h"
 #include "hal/host/HostScreen.h"
 #include "NewtWorld.h"
@@ -29,7 +30,10 @@ void
 HostAskOrientation(long rotation)
 {
 	if (rotation >= kHostRotationUpright && rotation <= kHostRotationUpsideDown)
+	{
 		gAskedRotation.store(rotation);
+		HostKeyboardKick();						// (the keyboard task sends it: HostSendAskedOrientation)
+	}
 }
 
 

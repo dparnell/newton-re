@@ -43,6 +43,7 @@
 #include "TabletDriver.h"
 #include "Inker.h"
 #include "HostInterruptSources.h"
+#include "HostIdleWait.h"
 #include "hal/Timer.h"
 #include "NewtonTime.h"
 #include "OSErrors.h"
@@ -474,6 +475,7 @@ HostTabletRawPenDownFine(long x8, long y8)
 	gRawY.store(y8);
 	gRawDown.store(true);
 	gRawDowns.fetch_add(1);
+	HostIdleWake();					// (the machine waiting for its next timer told: the pen is to be sampled now)
 }
 
 
@@ -490,6 +492,7 @@ void
 HostTabletRawPenUp(void)
 {
 	gRawDown.store(false);
+	HostIdleWake();
 }
 
 

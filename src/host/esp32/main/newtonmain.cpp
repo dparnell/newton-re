@@ -300,6 +300,15 @@ public:
 static TDeviceEvalHandler*	gEvalHandler = nil;
 
 
+// the console task woken: a line typed, the quick sheet pulled, the clock
+// set (esp32host.h) - it waits on the keyboard's kick, as the keys do
+void
+HostDeviceKick(void)
+{
+	HostKeyboardKick();
+}
+
+
 // the machine asleep: waited for as tdeck_power.cpp waits (hal/host/Host.h's
 // gHostSleepWait)
 static void
@@ -443,6 +452,7 @@ DeviceServices(void)
 	TUPort newtPort(portId);
 	static char line[512];
 	unsigned long clockSyncs = 0;
+	HostKeyboardWaitInit();
 	for (;;)
 	{
 		if (HostDeviceClockSyncs() != clockSyncs)
@@ -470,7 +480,7 @@ DeviceServices(void)
 			newtPort.SendRPC(&replySize, &eval, sizeof(eval), &eval, sizeof(eval));
 		}
 		else
-			Sleep(10 * kMilliseconds);
+			HostKeyboardWait(kNoTimeout);	// (until a key, a line, a pull or a clock set - HostDeviceKick: it looked every 10 ms, which woke the board a hundred times a second)
 	}
 }
 

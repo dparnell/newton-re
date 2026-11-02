@@ -24,9 +24,15 @@
 void	HostKeyboardPush(long keyCode, Boolean down);		// from any thread: a key for the tool to send (dropped when the queue is full)
 long	HostKeyCodeForVirtualKey(long virtualKey);			// a Windows virtual key (or an ASCII letter/digit) as a Newton key code; -1 for none
 void	HostKeyboardQuit(void);								// from any thread: the run is to end
+void	HostKeyboardKick(void);								// from any thread: something else for the task to send (a package dropped, the device turned)
 void	HostKeyboardToolTask(void);							// the task: the keys sent to the newt world until the quit
 class TUPort;
 void	HostKeyboardSendKeys(TUPort* newtPort);				// the keys queued so far sent to the world's port (the task's step; a host with a loop of its own - src/host/esp32 - calls it)
+// a host with a loop of its own waits on the keyboard's kick too (os600/user/
+// host/HostKick.h): made on its task, then waited for - ==> true when
+// something was queued (a key, HostKeyboardKick), false when the time ran out
+void	HostKeyboardWaitInit(void);
+Boolean	HostKeyboardWait(ULong timeout);
 void	HostKeyboardSetTimeLimit(ULong seconds);				// the run ended after so long with the window open too (newton --limit; 0: none)
 
 #endif	/* __HOSTKEYBOARD_H */

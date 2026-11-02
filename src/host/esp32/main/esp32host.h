@@ -20,6 +20,7 @@ void		NewtonMainOnDevice(const void* image, size_t size);
 long long	HostDeviceMicroseconds(void);
 void		HostDeviceMemory(unsigned long* internalFree, unsigned long* psramFree);
 int			HostDeviceReadLine(char* line, size_t size);		// a line the console has typed, if one has come (never waits) ==> whether
+void		HostDeviceKick(void);			// the Newton's side told something has come for its console task (a line, the sheet pulled, the clock set): from any task
 
 // the panel (tdeck_panel.cpp): its task started (before the OS boots), then
 // given the display's grays to show (one byte a pixel, 0 white .. 255

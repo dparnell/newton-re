@@ -204,7 +204,10 @@ ConsoleReader(void*)
 		else if (strncmp(line, "!reset", 6) == 0)
 			esp_restart();
 		else
+		{
 			xQueueSend(gLines, line, portMAX_DELAY);
+			HostDeviceKick();
+		}
 	}
 }
 

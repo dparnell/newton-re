@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-02: the Newton no longer looks every 10 ms
+
+`NEWTON_TRACE_IDLE`'s new kernel line found a timer every 10 ms: the host's
+keyboard task (and on the T-Deck Pro its console task) looked for keys every
+10 ms, which was also all that bounded a key's or a tap's wait. Now the idle
+task's sleep is cut short by a host thread (`HostIdleWake`,
+`hal/host/HostIdleWait.h`) and the two tasks wait on a kick
+(`os600/user/host/HostKick.h`: an interrupt source that sends the task a word
+with `SendForInterrupt`). With a window open the desktop waits 2 times a
+second (94 before); the T-Deck Pro goes idle 11 times a second (95). Found on
+the way: a source due "at once" must answer time nought - the clock read in
+its deadline is later than the now it is compared with, so the kick was never
+sent (the T-Deck's keys stopped until that was fixed; the power switch's
+deadline changed the same way). And the machine's sleep now locking the
+screen broke `host.NewtonAlignPen`'s tap after its sleep: it unlocks first.
+docs/host-runtime.md, "The idle task's wait".
+
 ## 2026-11-02: the reMarkable's window waits for the Newton to draw
 
 Measured on the tablet (`tools/remarkable/rmthreads.sh`): its build of

@@ -361,6 +361,7 @@ static void
 OnClockSet(struct timeval*)
 {
 	gClockSyncs++;
+	HostDeviceKick();
 }
 
 
@@ -559,4 +560,5 @@ HostDeviceClockSetTo(long long seconds)
 	tv.tv_usec = 0;
 	settimeofday(&tv, NULL);
 	gClockSyncs++;
+	HostDeviceKick();
 }

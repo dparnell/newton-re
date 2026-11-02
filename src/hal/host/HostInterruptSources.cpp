@@ -14,7 +14,7 @@ struct HostInterruptSource
 	HostInterruptDeliverProc	fDeliver;
 };
 
-const int					kMaxSources = 8;
+const int					kMaxSources = 16;
 static HostInterruptSource	gSources[kMaxSources];
 static int					gSourceCount = 0;
 
