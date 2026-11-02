@@ -161,9 +161,8 @@
 
 	The lock screen (host/HostQuickSheet.h) is installed on every run:
 	applications leave notifications on it while it is locked
-	(docs/host-lock-screen.md), and the Host preferences panel's
-	"Auto-lock" locks it once the pen and the keys have been left alone
-	so long.  The T-Deck Pro's quick sheet, which locks it by hand, is
+	(docs/host-lock-screen.md), and the machine's sleep (the power
+	switch, Prefs' Sleep time) locks it first.  The T-Deck Pro's quick sheet, which locks it by hand, is
 	opened on the board by a finger pulled down from the screen's top
 	edge; here only a script opens it (GetGlobalVar('|QuickSheet:host|):
 	Pulled(), demo/quicksheet.ns).  --quick-sheet, which installed them
@@ -706,7 +705,7 @@ NewtonPreMain(void)
 	HostInstallPrinter();
 	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostWakeAfter(ms), ...)
 	HostInstallFonts();					// (the host's fonts, offered when asked for: before the Host panel, which may turn them on)
-	HostInstallQuickSheet();			// (host/HostQuickSheet.h: the lock screen and its notifications, the auto-lock, the T-Deck Pro's quick sheet - before the Host panel, which lists the auto-lock)
+	HostInstallQuickSheet();			// (host/HostQuickSheet.h: the lock screen and its notifications, its lock before a sleep, the T-Deck Pro's quick sheet)
 	HostInstallSettings();				// (the Host preferences panel, after Network Printers)
 	HostInstallDeveloper();				// (the Developer preferences panel, after it: the Prefs list's last)
 	HostInstallWordEngines();			// (the host's handwriting engines in the Handwriting Recognition slip)

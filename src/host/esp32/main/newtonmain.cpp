@@ -385,7 +385,7 @@ DevicePreMain(void)
 	gHostSleepWake = HostDevicePowerSleepWake;
 	HostPowerWindowOpened();
 	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostSleepCount(), ...)
-	HostInstallQuickSheet();			// (host/HostQuickSheet.h: the sheet pulled down from the top edge - tdeck_input.cpp - and the lock screen; before the Host panel, which lists its auto-lock)
+	HostInstallQuickSheet();			// (host/HostQuickSheet.h: the sheet pulled down from the top edge - tdeck_input.cpp - and the lock screen)
 	HostInstallSettings();				// (the Host preferences panel: the panel's quick updates and clean-ups)
 	HostInstallDeveloper();				// (the Developer preferences panel: the profile to the console)
 }

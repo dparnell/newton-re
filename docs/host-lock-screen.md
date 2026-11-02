@@ -1,4 +1,4 @@
-# The lock screen: auto-lock and notifications
+# The lock screen: notifications and sleep
 
 A host addition (the ROM has no lock screen): a screen that covers
 everything with the time, the date, the notifications applications have
@@ -11,9 +11,8 @@ locked and leave a notification on it** - the interface below.  Messages
 and Mesh use it.
 
 Sources: `src/host/HostQuickSheet.ns` (the lock screen, the notifications,
-the auto-lock's watch, the global functions), `src/host/HostQuickSheet.cpp`
-/ `.h` (the natives, `HostQuickSheetSetAutoLock`), the Host page's
-`autoLock` (`src/host/HostSettings.cpp`), the activity count
+the lock before a sleep, the global functions), `src/host/HostQuickSheet.cpp`
+/ `.h` (the natives, `HostQuickSheetSetLockSleeps`), the activity count
 (`HostNoteUserActivity`, `src/hal/host/HostPower.h`).  Ctest
 `host.NewtonLockScreen` (`src/host/demo/lockscreen.ns`); the
 applications' use in `host.NewtonMessages.*` and `host.NewtonMesh.*`.
@@ -24,10 +23,8 @@ applications' use in `host.NewtonMessages.*` and `host.NewtonMesh.*`.
 
 - **Locking.** By hand from the T-Deck Pro's quick sheet ("Lock screen"),
   from a script or an application (`ScreenLockNow()`), or by the
-  **auto-lock**: Extras, Prefs, Host, **Auto-lock** - Never (the default),
-  or after 1, 2, 5, 10 or 30 minutes in which nobody has touched the pen or
-  the keys.  The choice is kept in the System soup with the Host page's
-  other settings and put back at boot.
+  machine's own sleep - the power switch, or Prefs' **Sleep** time, which
+  is the auto-lock: the screen is locked before the machine sleeps.
 - **Unlocking.** The knob dragged from the slider's left end to its right.
   A press that does not start on the knob does nothing and a knob let go
   short of the end goes back, so a tap anywhere cannot unlock it.
@@ -138,24 +135,20 @@ application is open (open, it would otherwise only beep).  At the unlock:
 
 Opening the application some other way withdraws the notification.
 
-## The auto-lock
+## The lock before a sleep (the auto-lock)
 
-The host counts the user's activity - each pen sample from the window or
-the board's panel and each key (`HostNoteUserActivity`, called by
-`HostTabletRawPenDown`/`Move` (the window's pen), `HostTabletPenDown`/`Move`
-and the queued ones (a script's), the raw tap, and `HostKeyboardPush`) -
-and the lock screen's `Watch` looks at the count (`HostUserActivity()`)
-every few seconds (a quarter of the time set, between one and five
-seconds; every 30 seconds while the auto-lock is off).  The time left
-alone is counted again from any change of the count, from a change of the
-setting (`HostSetAutoLock` restarts the watch at once), and from the
-unlock; once it reaches the time set, `Lock` is sent.
+The machine's own sleep locks the screen first, on every host: the lock
+screen's power-off function (`RegPowerOff('|QuickSheet:host|, ...)`,
+`PowerOffAsked`) locks and draws it when the ROM asks `'okToPowerOff` -
+so the power switch and the **idle timer** (Extras, Prefs, **Sleep**: the
+ROM's own sleep time, which is the auto-lock; the host has no setting of
+its own since 2026-11-02) both leave the lock screen up, and the machine
+wakes to it.  (The ROM's idle timer sleeps only on a battery, or with
+"sleep on AC power" set.)
 
 | native | |
 |---|---|
-| `HostUserActivity()` | the count (an integer that wraps: only a change of it means anything) |
-| `HostAutoLockSeconds()` | the time set, in seconds (0: never) |
-| `HostSetAutoLock(seconds)` | sets it - the Host page's choice does, in minutes; a test sets a few seconds |
+| `HostUserActivity()` | the count of the user's pen samples and keys (an integer that wraps: only a change of it means anything) - `HostNoteUserActivity`, called by the tablet's and the keyboard's entry points; the locked machine's re-sleep watches it |
 
 On the T-Deck Pro the lock screen also tells the board
 (`HostScreenLocked` → `HostDeviceSetLocked`): the keyboard's presses are

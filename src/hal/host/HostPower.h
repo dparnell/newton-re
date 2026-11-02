@@ -35,8 +35,8 @@
 				window (or a script) gives the machine is counted
 				(HostNoteUserActivity, from the tablet's and the keyboard's
 				entry points), so that something can tell how long the user
-				has left it alone - the lock screen's auto-lock
-				(host/HostQuickSheet.h) watches the count change.
+				has left it alone - the lock screen, locked, watches the
+				count change before it sleeps again (host/HostQuickSheet.h).
 				DEVIATION (host addition): a MessagePad has no such count.
 */
 

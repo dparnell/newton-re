@@ -9,6 +9,16 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-02: the Host page's Auto-lock gone: Prefs' Sleep time locks
+
+The owner's call: Prefs already has a Sleep time, so the Host page's
+Auto-lock (and `HostSetAutoLock`, `HostAutoLockSeconds`, the lock screen's
+watch) is taken out, and the machine's own sleep locks the screen first on
+every host (the lock screen's power-off function), not only where the
+machine sleeps while locked. Ctest `host.NewtonLockScreen` now sleeps the
+machine by the idle timer and finds the screen locked; the Host settings
+test no longer keeps an auto-lock.
+
 ## 2026-11-02: the T-Deck Pro's Newton sleeps while the screen is locked
 
 The ROM's sleep, which never happened on the board (no window, so

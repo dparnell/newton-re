@@ -26,8 +26,8 @@ set afterwards; the floater's base (@132) takes `viewBounds` out at setup
 when its box is off the application area, which leaves the template's nil
 and the view is never made (-8505, `kViewErrNoViewBounds`: "exception in a
 unit handler" and nothing on the screen).  The T-Deck Pro's one page had
-grown to 292 pixels with its e-paper settings and 314 with Auto-lock, on a
-screen of 320: it did not open.  Ctest `host.NewtonHostPages` opens every
+grown to 292 pixels with its e-paper settings and 314 with Auto-lock (since
+taken out: Prefs' Sleep time locks the screen), on a screen of 320: it did not open.  Ctest `host.NewtonHostPages` opens every
 page at 240x320 and a page split from twenty pretend rows.
 
 ## What it offers
@@ -54,7 +54,6 @@ application's own Prefs, its "i" button: `docs/host-tdeck-pro-mesh.md`.)
 | A finger is the pen (`touch`) | one finger taps and drags as the pen, with the palm rejection of `docs/host-remarkable.md` | reMarkable | `NEWTON_RM_TOUCH=off` to turn off |
 | Screen (next start) (`screenScale`, a picker) | the Newton's screen the panel over 1, 2, 3 or 4 ("2x: 810 x 1080") when newton next starts - AppLoad fixes the framebuffer's size when it is asked for; kept beside the store (below), and the pen's calibration reset to the factory one when the size changes | reMarkable | `--display` |
 | Colour screen (next start) (`colourScreen`) | the screen eight bits whose values a palette's, so applications' colours are drawn in colour (`docs/qd/colour.md`) when newton next starts - the depth is fixed when the screen is made; kept beside the store.  Behind `--colour`: listed only once colour has been asked for (started with `--colour`, or the setting already kept), so it can be turned off here; nothing among the usual packages draws in colour | every host with a store file, once asked for | `--colour` |
-| Auto-lock (`autoLock`, a picker) | the lock screen shown once nobody has touched the pen or the keys for 1, 2, 5, 10 or 30 minutes; Never (the default) leaves it to the quick sheet or an application ([host-lock-screen.md](host-lock-screen.md)) | every host | - |
 | A new page drawn in full (`bigChange`) | a change of more than an eighth of the screen (a new page) drawn by a full refresh - clean, but 3 s and flashing; off (the default), every change is a quick partial one (0.65 s) | T-Deck Pro | `DevicePanelSet("bigChange", 12)` (100 off) |
 | Clean up (`cleanCount`, a picker) | after 10, 20, 30 (the default) or 50 quick updates, or never, the ghosts cleaned up by a full refresh at the first two-second pause | T-Deck Pro | `DevicePanelSet("cleanCount", n)` |
 | ... and when still (`cleanAfter`, a picker) | the ghosts cleaned up once the screen has been still 5 s, 10 s, 30 s (the default), a minute, or never | T-Deck Pro | `DevicePanelSet("cleanAfter", ms)` |

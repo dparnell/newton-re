@@ -15,11 +15,9 @@
 				ask whether the screen is locked and leave a notification on
 				it, through the global functions ScreenLockIsLocked,
 				ScreenLockNotify, ScreenLockWithdraw, ... (the interface:
-				docs/host-lock-screen.md).  It locks by itself once the user
-				has left the pen and the keys alone for the time chosen on
-				the Host preferences panel ("Auto-lock", HostSettings.h; off
-				unless chosen): HostUserActivity (hal/host/HostPower.h)
-				counts the pen's samples and the keys.
+				docs/host-lock-screen.md).  It locks before the machine
+				sleeps (a power-off function): the power switch, and the
+				idle timer - Prefs' Sleep time, which is its auto-lock.
 
 				A host with a touch screen and no other way to lock it (the
 				T-Deck Pro: host/esp32/main/tdeck_input.cpp sees the finger
@@ -50,11 +48,9 @@
 #define __HOSTQUICKSHEET_H
 
 void	HostQuickSheetSetLockHook(void (*locked)(bool on));	// before boot: told when the screen is locked and unlocked
-void	HostInstallQuickSheet(void);		// in the newt world, once its globals are built (before the Host panel's): HostScreenLocked, QuickSheet:host, the ScreenLock functions, the auto-lock's watch
+void	HostInstallQuickSheet(void);		// in the newt world, once its globals are built (before the Host panel's): HostScreenLocked, QuickSheet:host, the ScreenLock functions, its power-off function
 bool	HostQuickSheetInstalled(void);		// whether it was installed
 void	HostQuickSheetPulled(void);			// in the newt world's task: the sheet pulled down (opened, or closed if open)
-void	HostQuickSheetSetAutoLock(long seconds);	// the screen locked after the user has left it alone so long (0: never)
-long	HostQuickSheetAutoLock(void);		// ... as set
 void	HostQuickSheetSetLockSleeps(bool sleeps);	// before boot: the machine asleep while the screen is locked (HostLockSleeps)
 
 #endif	/* __HOSTQUICKSHEET_H */

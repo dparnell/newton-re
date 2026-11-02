@@ -1,4 +1,4 @@
-// The lock screen's notifications and the auto-lock (host/HostQuickSheet.h,
+// The lock screen's notifications and the sleep's lock (host/HostQuickSheet.h,
 // docs/host-lock-screen.md): ctest host.NewtonLockScreen.
 //
 // Setup walked through, then, as an application would: nothing is left on
@@ -9,10 +9,11 @@
 // more"; one tapped on the lock screen is chosen ("Unlock to open"), tapped
 // again it is left, tapped once more chosen.  At the unlock the chosen one
 // is Opened and the rest Unlocked, the list empties and the registered are
-// told.  Then the auto-lock: the Host panel's "Auto-lock" setting, and the
-// machine left alone for the seconds set (HostSetAutoLock - the panel's
-// choices are minutes) locks itself, while taps every second keep it
-// unlocked.  Pictures of the lock screen with its notifications:
+// told.  Then the machine's own sleep - the idle timer, Prefs' Sleep time,
+// a few seconds, the battery pinned off the mains (the ROM's idle timer
+// sleeps only on a battery) - locks the screen before it sleeps, a tap
+// (HostWakeAfter) waking it to the lock screen; the Host panel has no
+// Auto-lock of its own.  Pictures of the lock screen with its notifications:
 // tmp/lockscreen-notes.pgm, and with one chosen tmp/lockscreen-chosen.pgm.
 //
 //   build/host/host/newton --display 320x480 --headless 200 --erase \
@@ -154,42 +155,24 @@ lsSteps := [
 			call next with ();
 		end, 20);
 	end,
-	// the auto-lock: the Host panel's setting
+	// the machine's own sleep locks the screen (the Host panel has no
+	// auto-lock: Prefs' Sleep time is it)
 	func(next) begin
 		local item := nil;
 		foreach s in HostSettingsList() do
 			if s.setting = 'autoLock then item := s;
-		call lsCheck with ("the Host panel's Auto-lock, Never", item and item.kind = 'choice and item.value = 0
-			and StrEqual(item.choices[item.value], "Never"), "it is " & SPrintObject(item));
-		HostSetSetting('autoLock, 3);
-		call lsCheck with ("After 5 minutes set", HostAutoLockSeconds() = 300, "it is " & HostAutoLockSeconds());
-		HostSetSetting('autoLock, 0);
-		call lsCheck with ("and Never again", HostAutoLockSeconds() = 0, "it is " & HostAutoLockSeconds());
-		// taps every second for five seconds keep a 3-second auto-lock off
-		local activity := HostUserActivity();
-		HostSetAutoLock(3);
-		local taps := 0;
-		local tap;
-		tap := func() begin
-			call tapAt with (160, 300);
-			taps := taps + 1;
-			if taps < 6 then
-				AddDelayedCall(tap, nil, 1000)
-			else begin
-				call lsCheck with ("the pen counted", HostUserActivity() <> activity, "the count did not change");
-				call lsCheck with ("taps every second keep it unlocked", not ScreenLockIsLocked(), "it locked");
-				local start := Ticks();
-				call waitFor with ("lockscreen: the auto-lock", func() ScreenLockIsLocked(), func() begin
-					call lsCheck with ("left alone, it locked itself", ScreenLockIsLocked() and call lsSheet with ().autoLocked,
-						"not locked");
-					call lsCheck with ("after about three seconds", Ticks() - start >= 60, (Ticks() - start) & " ticks");
-					HostSetAutoLock(0);
-					call lsSheet with ():Unlock();
-					call next with ();
-				end, 20);
-			end;
-		end;
-		call tap with ();
+		call lsCheck with ("no Auto-lock on the Host panel", not item, "it is " & SPrintObject(item));
+		local before := HostSleepCount();
+		HostSetBattery({percent: 80, millivolts: 5600});
+		SetUserConfig('SleepTime, 5);				// seconds
+		HostWakeAfter(2000);						// a tap two seconds into the sleep
+		call waitFor with ("lockscreen: the sleep", func() HostSleepCount() > before, func() begin
+			SetUserConfig('SleepTime, 300);
+			HostSetBattery(nil);
+			call lsCheck with ("asleep, it locked itself", ScreenLockIsLocked(), "not locked");
+			call lsSheet with ():Unlock();
+			call next with ();
+		end, 90);
 	end,
 	func(next) begin
 		Print("lockscreen: done, " & lsFailures & " failed");

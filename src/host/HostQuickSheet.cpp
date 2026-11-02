@@ -18,7 +18,6 @@ extern const char gHostQuickSheetSource[];		// HostQuickSheet.ns (HostQuickSheet
 
 static void	(*gLockHook)(bool on) = nil;
 static bool	gInstalled = false;
-static long	gAutoLockSeconds = 0;				// (0: never)
 static bool	gLockSleeps = false;
 
 
@@ -55,35 +54,6 @@ FHostScreenLocked(RefArg /*rcvr*/, RefArg on)
 }
 
 
-void
-HostQuickSheetSetAutoLock(long seconds)
-{
-	gAutoLockSeconds = seconds > 0 ? seconds : 0;
-	// (the lock screen's watch, every 30 seconds while it was off, begun
-	//  again so that the new time counts from now)
-	if (!gInstalled)
-		return;
-	newton_try
-	{
-		RefVar sheet(GetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "QuickSheet:host"))));
-		if (NOTNIL(sheet))
-			NSSend(sheet, RefVar(Intern((char*) "Rewatch")));
-	}
-	newton_catch_all
-	{
-		fprintf(stderr, "[host] the auto-lock's watch was not begun again: %s\n", CurrentException()->name);
-	}
-	end_try;
-}
-
-
-long
-HostQuickSheetAutoLock(void)
-{
-	return gAutoLockSeconds;
-}
-
-
 // HostUserActivity(): the count of the user's pen samples and keys (only its
 // changes mean anything: an integer that wraps)
 static Ref
@@ -93,40 +63,19 @@ FHostUserActivity(RefArg /*rcvr*/)
 }
 
 
-// HostAutoLockSeconds(): how long the user may leave the machine alone
-// before the screen locks (0: never)
-static Ref
-FHostAutoLockSeconds(RefArg /*rcvr*/)
-{
-	return MAKEINT(gAutoLockSeconds);
-}
-
-
-// HostSetAutoLock(seconds): ... set (the Host panel's choice does it; a test
-// sets seconds of its own) ==> true
-static Ref
-FHostSetAutoLock(RefArg /*rcvr*/, RefArg seconds)
-{
-	HostQuickSheetSetAutoLock(ISINT(seconds) ? RINT(seconds) : 0);
-	return TRUEREF;
-}
-
-
 void
 HostInstallQuickSheet(void)
 {
 	RefVar functions(gFunctionFrame);
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostScreenLocked")), RefVar(MakeCFunction((void*) FHostScreenLocked, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostUserActivity")), RefVar(MakeCFunction((void*) FHostUserActivity, 0, nil)));
-	SetFrameSlot(functions, RefVar(Intern((char*) "HostAutoLockSeconds")), RefVar(MakeCFunction((void*) FHostAutoLockSeconds, 0, nil)));
-	SetFrameSlot(functions, RefVar(Intern((char*) "HostSetAutoLock")), RefVar(MakeCFunction((void*) FHostSetAutoLock, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostLockSleeps")), RefVar(MakeCFunction((void*) FHostLockSleeps, 0, nil)));
 	newton_try
 	{
 		RefVar fn(ParseString(RefVar(MakeString(gHostQuickSheetSource))));
 		RefVar sheet(InterpretBlock(fn, RefVar()));
 		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "QuickSheet:host")), sheet);
-		// (the ScreenLock functions defined, the auto-lock's watch begun)
+		// (the ScreenLock functions defined, the power-off function registered)
 		NSSend(sheet, RefVar(Intern((char*) "Start")));
 		gInstalled = true;
 	}

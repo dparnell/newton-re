@@ -36,23 +36,18 @@
 // locked.  Nothing is kept while the screen is not locked (Notify ==> nil:
 // the application shows its own slip).
 //
-// The auto-lock: once the user has left the pen and the keys alone for the
-// Host panel's "Auto-lock" (HostAutoLockSeconds; 0 never), the screen locks
-// itself.  Watch looks at the count of the user's pen samples and keys
-// (HostUserActivity) every few seconds - every 30 while the auto-lock is
-// off; a change of the setting starts it again at once, HostSetAutoLock
-// sending Rewatch - and the idle time is counted again from any change of
-// it, from a change of the setting, and from the unlock.
+// The machine's own sleep - the power switch, the idle timer (Prefs' Sleep
+// time, which is the lock screen's auto-lock: the host has none of its own)
+// - locks the screen first, on every host: a power-off function
+// (RegPowerOff) locks it and draws it, so that the machine wakes to it.
 //
-// Sleep (a host whose screen keeps its picture for nothing - the T-Deck
-// Pro's e-paper - says HostLockSleeps()): locked, the machine is put to
-// sleep (the root's GotoSleep, as the power switch does) a moment after the
-// lock screen is drawn, and the screen shows it meanwhile; the machine's own
-// sleep - the power switch, the idle timer - locks the screen first (a
-// power-off function, RegPowerOff); and woken while locked - a tap, a key,
-// a message (the root sleeps again 45 s after the serial line's wake
-// anyway) - it sleeps again once the user has left it alone kAwakeLocked
-// seconds.
+// Sleep while locked (a host whose screen keeps its picture for nothing -
+// the T-Deck Pro's e-paper - says HostLockSleeps()): locked, the machine is
+// put to sleep (the root's GotoSleep, as the power switch does) a moment
+// after the lock screen is drawn, and the screen shows it meanwhile; and
+// woken while locked - a tap, a key, a message (the root sleeps again 45 s
+// after the serial line's wake anyway) - it sleeps again once the user has
+// left it alone kAwakeLocked seconds.
 
 {
 	kFont: 10240,							// the system font, 10 point
@@ -68,14 +63,6 @@
 	lockView: nil,
 	notes: [],								// the notifications, newest first: {appSymbol, key, note, time, chosen}
 	watchers: nil,							// RegScreenLockChange's: {callbackID: fn}
-	autoLocked: nil,						// (the lock screen up by the auto-lock)
-
-	// the auto-lock's watch: the activity seen last, when (Ticks), the
-	// setting then
-	lastActivity: nil,
-	lastActive: 0,
-	lastSeconds: 0,
-	watchGen: 0,							// (a watch begun before the last Rewatch stops)
 
 	// the machine awake while locked: the activity and the sleeps seen
 	// last, and when (a wake counts as activity: the time asleep does not
@@ -98,17 +85,16 @@
 		DefGlobalFn('RegScreenLockChange, func(callbackID, fn) GetGlobalVar('|QuickSheet:host|):RegChange(callbackID, fn));
 		DefGlobalFn('UnRegScreenLockChange, func(callbackID) GetGlobalVar('|QuickSheet:host|):UnRegChange(callbackID));
 		RegPowerOff('|QuickSheet:host|, func(what, why) GetGlobalVar('|QuickSheet:host|):PowerOffAsked(what, why));
-		:Watch(watchGen);
 	end,
 
-	// the machine about to sleep (RegPowerOff): where it sleeps locked, the
-	// screen locked and drawn first, so that the screen shows it meanwhile
-	// and it wakes to it
+	// the machine about to sleep (RegPowerOff): the screen locked and drawn
+	// first, so that it wakes to it (and a screen that keeps its picture
+	// shows it meanwhile)
 	PowerOffAsked: func(what, why)
 	begin
 		if what <> 'okToPowerOff then return nil;
 		try
-			if HostLockSleeps() and not lockView then begin
+			if not lockView then begin
 				:Lock();
 				RefreshViews();
 			end
@@ -146,13 +132,6 @@
 			lockedSince := now;
 		end else if now - lockedSince >= kAwakeLocked * 60 then
 			:SleepLocked(nil);
-	end,
-
-	// the auto-lock set anew (HostSetAutoLock): watched from now
-	Rewatch: func()
-	begin
-		watchGen := watchGen + 1;
-		:Watch(watchGen);
 	end,
 
 	IsLocked: func() if lockView then true,
@@ -231,32 +210,6 @@
 		if lockView then
 			foreach c in lockView:ChildViewFrames() do
 				if c.lockRole = 'notes then c:Dirty();
-	end,
-
-	// the auto-lock's watch (again in a few seconds)
-	Watch: func(gen)
-	begin
-		if gen <> watchGen then return;
-		local seconds := 0;
-		try
-			begin
-				seconds := HostAutoLockSeconds();
-				local activity := HostUserActivity();
-				local now := Ticks();
-				if activity <> lastActivity or seconds <> lastSeconds or lockView or now < lastActive then begin
-					lastActivity := activity;
-					lastSeconds := seconds;
-					lastActive := now;
-				end else if seconds > 0 and now - lastActive >= seconds * 60 then begin
-					:Lock();
-					autoLocked := true;
-					lastActive := now;
-				end;
-			end
-		onexception |evt.ex| do
-			Print("[lock] the auto-lock's watch threw");
-		AddDelayedCall(func(gen) GetGlobalVar('|QuickSheet:host|):Watch(gen), [gen],
-			if seconds <= 0 then 30000 else Max(1000, Min(5000, seconds * 250)));
 	end,
 
 	Pulled: func()
@@ -405,7 +358,6 @@
 			end,
 			viewQuitScript: func() GetGlobalVar('|QuickSheet:host|).lockView := nil});
 		lockView:Open();
-		autoLocked := nil;
 		HostScreenLocked(true);
 		:TellWatchers(true);
 		if HostLockSleeps() then begin
@@ -423,8 +375,6 @@
 	begin
 		if lockView then lockView:Close();
 		lockView := nil;
-		autoLocked := nil;
-		lastActive := Ticks();
 		HostScreenLocked(nil);
 		local given := notes;
 		notes := [];

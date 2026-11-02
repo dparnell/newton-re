@@ -204,7 +204,8 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/HostWordEngines.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     VERBATIM)
 # host/HostQuickSheet.ns, the quick sheet and the lock screen (the T-Deck
-# Pro's, and the lock screen's notifications and auto-lock on every host),
+# Pro's, and the lock screen's notifications and its lock before a sleep on
+# every host),
 # compiled in the same way
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostQuickSheetSource.cpp
@@ -1216,17 +1217,17 @@ add_test(NAME host.NewtonQuickSheet COMMAND newton --display 320x480 --headless 
 set_tests_properties(host.NewtonQuickSheet PROPERTIES TIMEOUT 300
                      PASS_REGULAR_EXPRESSION "the sheet open, Lock screen.*pulled again, closed.*the close box closes it.*locked, the sheet closed.*pulled while locked, the sheet closed.*a tap at the slider's end leaves it locked.*half way and let go leaves it locked, the knob at 0.*dragged to the end, unlocked.*quicksheet: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|not installed")
-# the lock screen's notifications and the auto-lock (HostQuickSheet.h,
+# the lock screen's notifications and the sleep's lock (HostQuickSheet.h,
 # demo/lockscreen.ns, docs/host-lock-screen.md): the ScreenLock functions -
 # nothing kept unlocked, notifications left, replaced by key, withdrawn, more
 # than fit, one chosen by a tap, Opened and Unlocked at the unlock, the
-# registered told - and the Host panel's Auto-lock, the screen locking
-# itself once left alone and not while tapped
+# registered told - and the machine's own sleep (Prefs' Sleep time) locking
+# the screen before it sleeps
 add_test(NAME host.NewtonLockScreen COMMAND newton --display 320x480 --headless 200 --erase
          --store ${CMAKE_CURRENT_BINARY_DIR}/lockscreen.store
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/lockscreen.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonLockScreen PROPERTIES TIMEOUT 300
-                     PASS_REGULAR_EXPRESSION "the chosen one opened ok.*the rest unlocked ok.*left alone, it locked itself ok.*lockscreen: done, 0 failed"
+                     PASS_REGULAR_EXPRESSION "the chosen one opened ok.*the rest unlocked ok.*no Auto-lock on the Host panel ok.*asleep, it locked itself ok.*lockscreen: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|FAILED")
 # the Host preferences pages fit a small screen (HostSettings.ns,
 # demo/hostpages.ns): every page opens at 240x320 as Prefs opens it, and a
@@ -1253,11 +1254,11 @@ foreach(run set kept)
 endforeach()
 set_tests_properties(host.NewtonHostSettings.set PROPERTIES TIMEOUT 300
                      FIXTURES_REQUIRED hostsettingsclean FIXTURES_SETUP hostsettingsset
-                     PASS_REGULAR_EXPRESSION "beaming over the network off.*the panel shows Beam over the network.*beaming over the network on, kept on.*auto-lock After 5 minutes, kept 3.*hostsettings: done"
+                     PASS_REGULAR_EXPRESSION "beaming over the network off.*the panel shows Beam over the network.*beaming over the network on, kept on.*hostsettings: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception")
 set_tests_properties(host.NewtonHostSettings.kept PROPERTIES TIMEOUT 300
                      FIXTURES_REQUIRED hostsettingsset
-                     PASS_REGULAR_EXPRESSION "at boot beaming over the network on, kept on.*at boot auto-lock after 300 seconds.*turned off, kept off.*docking on.*docking turned off.*docking turned on.*hostsettings: done"
+                     PASS_REGULAR_EXPRESSION "at boot beaming over the network on, kept on.*turned off, kept off.*docking on.*docking turned off.*docking turned on.*hostsettings: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception")
 
 # the sums that turn the display onto the reMarkable's panel image
