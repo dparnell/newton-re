@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-02: the reMarkable's window waits for the Newton to draw
+
+Measured on the tablet (`tools/remarkable/rmthreads.sh`): its build of
+2026-10-14 spun on the idle bug fixed 2026-11-01, and under AppLoad the
+window's 30 Hz comparison of the whole display took 18% of a core with
+nothing changing. The window now waits: `HostWindowScreenChanged`
+(`host/HostWindow.h`, newton handing it the screen driver's
+`gHostScreenChanged`) wakes its poll through a pipe, and it looks at the
+display only once the Newton has drawn. Idle under AppLoad, 0.25 s of CPU
+in 20 s (3.95 s before); the rest is the Newton's own idle task, waking
+190 times a second. docs/host-remarkable.md, "Battery life".
+
 ## 2026-11-02: the Host page's Auto-lock gone: Prefs' Sleep time locks
 
 The owner's call: Prefs already has a Sleep time, so the Host page's

@@ -44,6 +44,9 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <signal.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <algorithm>
 #include <vector>
 
@@ -90,6 +93,38 @@ static std::atomic<int>		gDirectPenAsked(-1);	// -1 nothing asked, else 0/1 for 
 static long					gStartScale = 0;		// the scale asked for at start (the Host panel's Screen size, kept beside the store): the display the panel's size over it
 static std::atomic<bool>	gClearAsked(false);
 
+// The window waits rather than looks: the display is looked at for changes
+// only once the Newton has drawn (HostWindowScreenChanged sets gScreenDirty
+// and, the first time since the window last looked, writes a byte to the
+// wake pipe, which the panel's poll waits on beside the pen and AppLoad's
+// socket), and a setting, a signal or the stop wakes it too.  Looking every
+// frame whatever - a whole 810x1080 display compared thirty times a second
+// - kept a fifth of a core busy with nothing changing (docs/host-remarkable.md,
+// "Battery life").  With nothing to do it waits up to kIdleWaitMs.
+static std::atomic<bool>	gScreenDirty(true);
+static int					gWakePipe[2] = { -1, -1 };
+const long					kIdleWaitMs = 5000;
+
+// (from any thread, and from a signal handler: write is safe there)
+static void
+WakeWindow(void)
+{
+	if (gWakePipe[1] >= 0)
+	{
+		char c = 1;
+		ssize_t written = write(gWakePipe[1], &c, 1);
+		(void) written;						// (full: it is awake already)
+	}
+}
+
+
+void
+HostWindowScreenChanged(void)
+{
+	if (!gScreenDirty.exchange(true))
+		WakeWindow();
+}
+
 
 /*------------------------------------------------------------------------------
 	What the window can say about itself, for working on a tablet one cannot
@@ -109,6 +144,7 @@ static void
 SnapshotSignal(int)
 {
 	gSnapshotsAsked.fetch_add(1);
+	WakeWindow();
 }
 
 // AppLoad ends an application with SIGTERM: the run is ended as a closed
@@ -119,6 +155,7 @@ static void
 TerminateSignal(int)
 {
 	gTerminateAsked.store(true);
+	WakeWindow();
 }
 
 static void
@@ -528,6 +565,7 @@ WindowThread(void)
 	long inkL = 0, inkT = 0, inkR = 0, inkB = 0;		// what went out in the fast waveform since the last settle
 	double changedScreens = 0;							// how much has changed since the last full refresh
 	auto lastChange = std::chrono::steady_clock::now();
+	auto lastLook = started - std::chrono::hours(1);	// when the display was last looked at for changes
 	long touchId = -1;
 	bool closed = false;
 
@@ -606,8 +644,23 @@ WindowThread(void)
 			gSnapshotsAsked.fetch_sub(1);
 			WriteSnapshot(pixels);
 		}
+		// (looked for only once the Newton has drawn, and with the pen up
+		// at most once a frame - a change sooner left for the frame's end)
+		long paceLeft = 0;
+		bool dirty = gScreenDirty.exchange(false) || gWakePipe[0] < 0;
+		auto lookNow = std::chrono::steady_clock::now();
+		if (dirty && !gPenDown.load() && lookNow - lastLook < std::chrono::milliseconds(frameMs))
+		{
+			gScreenDirty.store(true);
+			dirty = false;
+			paceLeft = frameMs - (long) Ms(lookNow - lastLook);
+			if (paceLeft < 1)
+				paceLeft = 1;
+		}
+		if (dirty)
+			lastLook = lookNow;
 		ChangedRect changed[kChangedRectsSent];
-		long changes = pixels != nil ? FindChangedRects(pixels, shown, gWidth, gHeight, changed, kChangedRectsSent) : 0;
+		long changes = dirty && pixels != nil ? FindChangedRects(pixels, shown, gWidth, gHeight, changed, kChangedRectsSent) : 0;
 		if (changes > 0)
 		{
 			// each rectangle that changed painted (from shown, which now
@@ -656,7 +709,19 @@ WindowThread(void)
 		// the pen, the keys: one event, then whatever else is waiting
 		// (the wait is the refresh's pace, thirty times a second)
 		RemarkableEvent event;
-		long wait = gPenDown.load() ? inkFrameMs : frameMs;
+		// (the pen down: the ink's pace; a change waiting for the frame's
+		// end; the overlay to undo or the screen to settle: a frame; else
+		// nothing until the Newton draws, the pen, AppLoad or a setting)
+		long wait;
+		if (gPenDown.load())
+			wait = inkFrameMs;
+		else if (paceLeft > 0)
+			wait = paceLeft;
+		else if (ovPending || gWakePipe[0] < 0
+			  || std::chrono::steady_clock::now() - lastChange <= std::chrono::milliseconds(settleMs + frameMs))
+			wait = frameMs;
+		else
+			wait = kIdleWaitMs;
 		while (gPanel->Poll(&event, wait))
 		{
 			wait = 0;
@@ -857,6 +922,10 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 	if (width * gScale > panelWidth || height * gScale > panelHeight)
 		fprintf(stderr, "[host] reMarkable: %ld x %ld at %ld x is more than the panel's %ld x %ld\n",
 				width, height, gScale, panelWidth, panelHeight);
+	if (gWakePipe[0] < 0 && pipe2(gWakePipe, O_NONBLOCK | O_CLOEXEC) != 0)
+		gWakePipe[0] = gWakePipe[1] = -1;	// (none: the window looks every frame, as before)
+	gPanel->SetWakeFd(gWakePipe[0]);
+	gScreenDirty.store(true);
 	signal(SIGUSR2, SnapshotSignal);
 	gStopping.store(false);
 	gStarted.store(false);
@@ -964,6 +1033,7 @@ HostWindowSetOption(const char* name, long value)
 		gStartScale = value;					// (before the window starts: HostWindowPreferredDisplay)
 	else
 		return false;
+	WakeWindow();
 	return true;
 }
 
@@ -1009,6 +1079,7 @@ void
 HostWindowStop(void)
 {
 	gStopping.store(true);
+	WakeWindow();
 	if (gThread != nil)
 	{
 		gThread->join();

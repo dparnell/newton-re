@@ -102,7 +102,7 @@ VirtualKeyForQtKey(long key)
 class QTFBPanel : public RemarkablePanel
 {
 public:
-						QTFBPanel() : fSocket(-1), fShm(nil), fShmSize(0), fWidth(0), fHeight(0), fPanelWidth(0), fPanelHeight(0), fLeft(0), fTop(0),
+						QTFBPanel() : fSocket(-1), fWakeFd(-1), fShm(nil), fShmSize(0), fWidth(0), fHeight(0), fPanelWidth(0), fPanelHeight(0), fLeft(0), fTop(0),
 										 fMode(-1), fPenDown(false), fTouchId(-1), fPenFd(-1), fPenMaxX(1), fPenMaxY(1), fPenX(0), fPenY(0),
 										 fPenTouch(false), fPenWasDown(false), fPenMoved(false), fFlipX(false), fFlipY(false), fSwapXY(false),
 										 fGlassWidth(1620), fGlassHeight(2160), fRawDownU(0), fRawDownV(0), fRawUpU(0), fRawUpV(0),
@@ -123,6 +123,7 @@ public:
 	virtual bool		PenInk(void) { return fPenInk; }
 	virtual void		SetDirectPen(bool direct);
 	virtual bool		DirectPen(void) { return fPenFd >= 0; }
+	virtual void		SetWakeFd(int fd) { fWakeFd = fd; }
 
 private:
 	bool				Connect(void);
@@ -131,6 +132,7 @@ private:
 	bool				ReadPen(RemarkableEvent* event);
 
 	int					fSocket;
+	int					fWakeFd;			// the window's wake pipe (-1 none): readable, Poll's wait ends
 	unsigned char*		fShm;
 	size_t				fShmSize;
 	long				fWidth, fHeight;		// the image
@@ -386,10 +388,13 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 	fFolio.Look();
 	if (fFolio.Read(event))
 		return true;
-	struct pollfd p[3];
+	struct pollfd p[4];
 	p[0].fd = fSocket;
 	p[0].events = POLLIN;
 	p[0].revents = 0;
+	p[3].fd = fWakeFd;					// (-1: poll passes over it)
+	p[3].events = POLLIN;
+	p[3].revents = 0;
 	p[1].fd = fPenFd;					// (-1: poll passes over it)
 	p[1].events = POLLIN;
 	p[1].revents = 0;
@@ -398,8 +403,20 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 	p[2].revents = 0;
 	if (fFolio.Fd() < 0 && timeoutMs > 1000)
 		timeoutMs = 1000;				// (to look for the folio again)
-	if (poll(p, 3, (int) timeoutMs) <= 0)
+	if (poll(p, 4, (int) timeoutMs) <= 0)
 		return false;
+	if (p[3].fd >= 0 && (p[3].revents & POLLIN) != 0)
+	{
+		// (woken: the pipe emptied, and the window told nothing came - it
+		// looks at what woke it; an event that came with it waits for the
+		// next Poll)
+		char drained[64];
+		while (read(p[3].fd, drained, sizeof(drained)) > 0)
+			;
+		bool other = (p[0].revents | p[1].revents | p[2].revents) != 0;
+		if (!other)
+			return false;
+	}
 	if (fPenFd >= 0 && (p[1].revents & POLLIN) != 0 && ReadPen(event))
 		return true;
 	if (p[2].fd >= 0 && (p[2].revents & (POLLIN | POLLHUP | POLLERR)) != 0 && fFolio.Read(event))

@@ -57,7 +57,11 @@ public:
 	// [left, right) x [top, bottom) of the image to the glass
 	virtual void			Update(long left, long top, long right, long bottom, RemarkableRefresh how) = 0;
 	// one event, waiting at most that long for it: ==> whether there was one
+	// (false too when the wake descriptor became readable: it is emptied)
 	virtual bool			Poll(RemarkableEvent* event, long timeoutMs) = 0;
+	// a descriptor whose becoming readable ends Poll's wait (the window's
+	// wake pipe: HostWindow.cpp); -1 none
+	virtual void			SetWakeFd(int fd) { (void) fd; }
 	// the ink sent in the pen's own waveform (qtfb's ufast) rather than the
 	// fast one, from the next update on; a panel without one ignores it
 	// what the panel can do of the Host panel's settings (a panel that

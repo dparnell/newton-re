@@ -790,3 +790,10 @@ HostWindowOwnsProcess(void)
 {
 	return false;
 }
+
+
+// (the window looks at the display every frame: a change needs no telling)
+void
+HostWindowScreenChanged(void)
+{
+}

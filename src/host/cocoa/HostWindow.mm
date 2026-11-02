@@ -614,6 +614,13 @@ HostWindowOwnsProcess(void)
 }
 
 
+// (the window looks at the display every frame: a change needs no telling)
+void
+HostWindowScreenChanged(void)
+{
+}
+
+
 /*------------------------------------------------------------------------------
 	The window, opened and closed for the machine's thread
 ------------------------------------------------------------------------------*/

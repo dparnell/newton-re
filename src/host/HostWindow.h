@@ -29,6 +29,12 @@
 // display comes as its size and its bytes)
 bool	HostWindowStart(long width, long height, const unsigned char* pixels, const char* title, long scale);	// the window opened on its thread over the display's grays (0 white .. 255 black, width per row); ==> whether it could be
 void	HostWindowStop(void);								// the window closed and its thread joined
+// Told, on the drawing task, each time the display's grays change (newton
+// hands it to hal/host/HostScreen.h's gHostScreenChanged): a window that
+// waits for a change rather than looking for one every frame (the
+// reMarkable's, so that the tablet's processor rests) is woken; the others
+// do nothing with it.  It must be quick: it comes with every blit.
+void	HostWindowScreenChanged(void);
 // The display's values shown as 256 colours (red, green and blue, 0..255
 // each, an entry for each value) rather than as grays - the colour screen,
 // qd/Colour.h; nil puts the grays back.  Before HostWindowStart, or while

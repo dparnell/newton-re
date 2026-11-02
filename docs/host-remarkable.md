@@ -773,19 +773,29 @@ where most of the causes were found.
 | 2026-10-14, headless over SSH | 4.12 s (20% of a core) | 745 | the Newton's: idling every 6.5 ms for nothing |
 | 2026-11-02, headless over SSH | 0.03 s | ~30 | - |
 | 2026-11-02, from AppLoad | 3.95 s (20% of a core) | ~324 | the window's: 3.66 s |
+| 2026-11-02, the window waiting, from AppLoad | 0.25 s (1%) | ~299 | the Newton's idle task: 190 a second |
 
 - **The Newton's idle spin** (`TNotebook::Idle`, fixed 2026-11-01 as the
   ROM has it; `docs/work-log.md`) was in every build before that: the
   tablet's had it until the build of 2026-11-02 was put in its AppLoad
   directory (the one before kept beside it as `newton.2026-10-14`).
-- **The window looks for changes thirty times a second**
+- **The window looked for changes thirty times a second**
   (`src/host/remarkable/HostWindow.cpp`: `FindChangedRects` over the whole
   810x1080 display every 33 ms, whether anything was drawn or not) - 18% of
-  a core with nothing changing.  The T-Deck Pro's panel did the same and
-  now waits for `gHostScreenChanged` (`hal/host/HostScreen.h`); the window
-  could too, its `poll` woken by a pipe the hook writes.  Every desktop
-  window refreshes on a 30 Hz timer as well (X11 comparing the screen,
-  Windows and macOS redrawing it), and the Android host's looks every 4 ms.
+  a core with nothing changing.  Now it waits: newton hands the screen
+  driver's `gHostScreenChanged` (`hal/host/HostScreen.h`) to the window's
+  `HostWindowScreenChanged` (`host/HostWindow.h`), which marks the display
+  changed and, the first time since the window last looked, writes a byte
+  to a pipe the panel's `poll` waits on beside the pen and AppLoad's socket
+  (`Panel.h`'s `SetWakeFd`); a setting, a signal or the stop wakes it too.
+  The display is looked at only once the Newton has drawn - with the pen
+  up at most once a frame, as before - and with nothing to do the window
+  waits up to 5 s (1 s while there is no folio to look for).  The window's
+  thread is now 6.5 wakes a second and no measurable time; the pen and the
+  drawing felt the same.  Every desktop window still refreshes on a 30 Hz
+  timer (X11 comparing the screen, Windows and macOS redrawing it; their
+  `HostWindowScreenChanged` does nothing), and the Android host's looks
+  every 4 ms.
 - **The Newton still wakes 100-190 times a second** under AppLoad (its
   idle task sleeping to the next timer, `HostSleepUntil`: a thread in
   `hrtimer_nanosleep` 190 times a second and the task it wakes 95), 20

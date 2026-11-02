@@ -451,6 +451,8 @@ NewtonBoot(void)
 		HostWindowSetPalette(ColourPalette());		// (--colour: the display's values are the palette's)
 	if (gWindowed && !HostWindowStart(display->Width(), display->Height(), display->Pixels(), "Newton", gScale))
 		fprintf(stderr, "newton: no window on this host; running headless\n");
+	else if (gWindowed)
+		gHostScreenChanged = HostWindowScreenChanged;	// (a window that waits for the display to change is told: the reMarkable's)
 }
 
 
