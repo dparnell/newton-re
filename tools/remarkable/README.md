@@ -11,6 +11,7 @@ tablet, AppLoad's qtfb, the build, the device steps) is
 | `package.py` | an AppLoad application directory for newton (`--old-appload`: for an AppLoad before v0.6.0) | `python tools/remarkable/package.py --newton <newton> --objects <romsrc-objects.bin> -o tmp/rmpp-app/newton` |
 | `icon.py` | the launcher's icon: a MessagePad with handwriting and a stylus, 150 x 150 grays (what AppLoad shows), anti-aliased; `package.py` uses it | `python tools/remarkable/icon.py -o icon.png [--size 150]` |
 | `snap.ns` | the headless check: Setup's screen as `native-welcome.pgm` | see its header |
+| `rmthreads.sh` | each thread of a running process: its CPU time and context switches per second over a window, busiest first (BusyBox only) - what keeps the tablet awake | `scp tools/remarkable/rmthreads.sh root@10.11.99.1:/tmp/`, then `ssh root@10.11.99.1 'sh /tmp/rmthreads.sh $(pidof newton) 20'` |
 | `rmsample.c` (built by `build_probe.py`) | the sampling profiler's trigger: sends newton's sample signal (SIGRTMIN+3) to each running thread every interval; newton appends the stacks to its sample file | `rmsample <pid> [seconds] [interval-us]` - below |
 
 ## Profiling on the tablet

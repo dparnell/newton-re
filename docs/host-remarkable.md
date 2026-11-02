@@ -365,6 +365,7 @@ What the cross build found (all fixed on the branch):
 | `rmprobe.c`, `build_probe.py` | the probe: the system, C library, display devices, input devices (with ranges) and AppLoad; `--events S` prints raw input events, `--qtfb S` (from AppLoad) shows a gray ramp and a checkerboard and draws the pen as dots, printing each event and how soon the dot was sent. `build_probe.py -o OUT` builds `OUT/rmprobe` and the AppLoad app `OUT/rmprobe-app/` |
 | `qtfbserver.py` | a stand-in for AppLoad's qtfb server on any Linux, so the window can be tested without a tablet: runs a program with `QTFB_KEY`, counts updates by waveform, and carries out steps (`quiet:S`, `snap:FILE.png`, `tap:X,Y`, `stroke:...`, `key:CODE`, `gray:X,Y,W,H,MIN`) |
 | `fetch_rmkit.py` | rmkit at a pinned commit, okp from PyPI (no pip), `rmkit.h` made and patched for 64 bits, stb beside it |
+| `rmthreads.sh` | each thread of a running process, its CPU time and context switches per second over a window ("Battery life", below) |
 | `package.py` | the AppLoad application directory: `newton`, the object file, `run.sh`, `external.manifest.json`, `icon.png`; `--rmkit` for the rmkit variant (`LD_PRELOAD` the shim, as KOReader's manifest does) |
 
 ## What the spike showed
@@ -758,6 +759,43 @@ Not changed: the
 Newton side still blits one dirty rectangle into the gray buffer (that is
 the ROM's `UpdateHardwareScreen`, and only processor time); what reaches
 the glass is decided here.
+
+## Battery life (2026-11-02)
+
+What newton costs the tablet at rest, measured with
+`tools/remarkable/rmthreads.sh` (each thread's CPU time and context
+switches over 20 s, newton left alone at Setup's first screen); the
+T-Deck Pro's battery work (docs/host-tdeck-pro.md, "Battery life") is
+where most of the causes were found.
+
+| build, how run | CPU in 20 s | switches/s | the busiest thread |
+|---|---|---|---|
+| 2026-10-14, headless over SSH | 4.12 s (20% of a core) | 745 | the Newton's: idling every 6.5 ms for nothing |
+| 2026-11-02, headless over SSH | 0.03 s | ~30 | - |
+| 2026-11-02, from AppLoad | 3.95 s (20% of a core) | ~324 | the window's: 3.66 s |
+
+- **The Newton's idle spin** (`TNotebook::Idle`, fixed 2026-11-01 as the
+  ROM has it; `docs/work-log.md`) was in every build before that: the
+  tablet's had it until the build of 2026-11-02 was put in its AppLoad
+  directory (the one before kept beside it as `newton.2026-10-14`).
+- **The window looks for changes thirty times a second**
+  (`src/host/remarkable/HostWindow.cpp`: `FindChangedRects` over the whole
+  810x1080 display every 33 ms, whether anything was drawn or not) - 18% of
+  a core with nothing changing.  The T-Deck Pro's panel did the same and
+  now waits for `gHostScreenChanged` (`hal/host/HostScreen.h`); the window
+  could too, its `poll` woken by a pipe the hook writes.  Every desktop
+  window refreshes on a 30 Hz timer as well (X11 comparing the screen,
+  Windows and macOS redrawing it), and the Android host's looks every 4 ms.
+- **The Newton still wakes 100-190 times a second** under AppLoad (its
+  idle task sleeping to the next timer, `HostSleepUntil`: a thread in
+  `hrtimer_nanosleep` 190 times a second and the task it wakes 95), 20
+  times headless - the T-Deck Pro's "goes idle about 95 times a second",
+  not yet explained.
+- **Sleep**: the panel keeps its picture for nothing, so the T-Deck Pro's
+  arrangement fits (docs/host-lock-screen.md, "Sleep":
+  `gHostScreenKeepsPicture`, the machine asleep while locked); today the
+  Newton's sleep blanks the reMarkable's display to white and its wait
+  looks every 10 ms (`hal/host/Power.cpp`, no `gHostSleepWait`).
 
 ## Risks
 
