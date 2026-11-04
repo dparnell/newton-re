@@ -107,7 +107,8 @@ bool		HostDeviceCellStart(void);
 bool		HostDeviceBatteryStart(void);
 bool		HostDeviceBatteryCurrent(long* now, long* mean, long* samples, long* millivolts);	// mA (+ charging) now, and the mean of the 1 s samples since last asked (the sampler starts at the first call)
 bool		HostDeviceBatteryPowerOff(bool really);	// the Max switched off by its charger (on battery only); not really: ==> whether it could be; really: no return, or ==> false
-bool		HostDeviceCanPowerOff(void);			// whether this board can
+bool		HostDevicePowerOff(bool really);		// the board shut down: the Max by its charger, the Pro in deep sleep; as above (tdeck_board.cpp)
+const char*	HostDevicePowerOffHint(void);			// how to start it again, for the off screen
 bool		HostDeviceBatteryRunOnBattery(bool on);		// the charger's input cut (on) or back: the board on its battery while on USB
 
 // power management (tdeck_power.cpp): frequency scaling and automatic light

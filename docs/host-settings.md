@@ -38,6 +38,9 @@ its panel's settings as well, and those only when the panel can do them
 (a panel says what it can do - `HasPenInk`, `HasDirectPen`; a headless
 newton has no panel settings at all).
 
+Last on the Host page is a **Shut down** button, on every host: what it does on
+each is in `docs/host-lock-screen.md`, "Shutting down".
+
 (The LoRa mesh node's settings - its radio and its power - are the Mesh
 application's own Prefs, its "i" button: `docs/host-tdeck-pro-mesh.md`.)
 

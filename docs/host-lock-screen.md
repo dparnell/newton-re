@@ -194,6 +194,40 @@ On the T-Deck Pro, locked and asleep with every radio on, the board draws
 46 mA from its battery against 54 awake (docs/host-tdeck-pro.md, "Battery
 life"; `tools/tdeck/powermeter.py --usb-away --locked`).
 
+## Shutting down
+
+**Shut down** ends the machine on every host (2026-11-04, at the owner's
+request). It is the last button on the Host preferences page, which every host
+has, and it is beside Lock screen on the quick sheet, on the hosts that can open
+that. A MessagePad has no off but sleep, so this is a host addition (DEVIATION).
+
+`ShutDown` in `host/HostQuickSheet.ns` runs the ROM's own `PowerOff('user)`, so
+that a shut down is as careful as a sleep: every `RegPowerOff` function is asked
+`'okToPowerOff` and told `'powerOff`, and one can hold it with
+`'holdYourHorses`. The lock screen's own function stands aside. Where the ROM
+would sleep, `FPowerOff` calls the host's hook instead
+(`HostPowerInsteadOfSleep`, `hal/host/HostPower.h`):
+
+| host | the hook | started again by |
+|---|---|---|
+| Windows, Linux, macOS | newton's run ends and the window closes, as `HostQuit` ends it (no restart) | running newton |
+| reMarkable | the same; AppLoad takes the window away and xochitl is back | AppLoad's launcher |
+| Android | the same; the process ends (`AndroidMain.cpp`'s `_exit`) | the launcher |
+| T-Deck Max | the charger's BATFET opened (`docs/host-tdeck-max.md`); on USB it cannot, and says so | the side button, or USB |
+| T-Deck Pro | the chip in deep sleep (`docs/host-tdeck-pro.md`, "Shut down") | the side button |
+
+A headless newton ends the same way. Both T-Decks leave a screen saying the
+device is off and how to start it (`HostPowerOffHint`), since an e-paper looks
+the same off as on; both tell the 4G module first (`AT+CPOF`,
+`HostCellularPowerGoing`), which comes on again at the next start.
+
+`ShutDownLooked` watches the ROM's `PoweringOff`, every half second, until the
+power off is over. If the machine is still up then, the shut down is taken back
+and a slip says why: an application said no, or the board would not go.
+
+Ctests `host.NewtonShutDown` and `.window` (`demo/shutdown.ns`): the button on
+both, a function that refuses, one that holds it, and the run ending.
+
 ## Not yet
 
 - The lock screen keeps its layout if the screen is turned while it is up.

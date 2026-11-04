@@ -36,17 +36,26 @@ FHostLockSleeps(RefArg /*rcvr*/)
 }
 
 
-static bool	(*gPowerOff)(bool really) = nil;
+static bool			(*gPowerOff)(bool really) = nil;
+static const char*	gPowerOffHint = nil;
 
 
 void
-HostQuickSheetSetPowerOff(bool (*off)(bool really))
+HostQuickSheetSetPowerOff(bool (*off)(bool really), const char* hint)
 {
 	gPowerOff = off;
+	gPowerOffHint = hint;
 }
 
 
-// HostCanPowerOff(): whether the sheet has a Power off button
+bool
+HostQuickSheetCanPowerOff(void)
+{
+	return gInstalled && gPowerOff != nil;
+}
+
+
+// HostCanPowerOff(): whether this host can be shut down
 static Ref
 FHostCanPowerOff(RefArg /*rcvr*/)
 {
@@ -54,12 +63,46 @@ FHostCanPowerOff(RefArg /*rcvr*/)
 }
 
 
-// HostPowerOff(really): nil, whether the board could switch off now; true, the
-// board switched off, what the screen shows staying on it; ==> nil if it could not be
+// the machine going, where it would have slept (hal/host/HostPower.h)
+static bool
+PowerOffNow(void)
+{
+	return gPowerOff(true);
+}
+
+
+// HostPowerOff(really): nil, whether the machine could go now; true, it goes
+// the next time it would sleep ==> true
 static Ref
 FHostPowerOff(RefArg /*rcvr*/, RefArg really)
 {
-	return gPowerOff != nil && gPowerOff(NOTNIL(really)) ? TRUEREF : NILREF;
+	if (gPowerOff == nil)
+		return NILREF;
+	if (ISNIL(really))
+		return gPowerOff(false) ? TRUEREF : NILREF;
+	HostPowerInsteadOfSleep(PowerOffNow);
+	return TRUEREF;
+}
+
+
+// HostPowerOffStopped(): the power off over and the machine still here: the
+// shut down taken back ==> true; nil if the machine is on its way
+static Ref
+FHostPowerOffStopped(RefArg /*rcvr*/)
+{
+	if (HostPowerGoingOff())
+		return NILREF;
+	HostPowerInsteadOfSleep(nil);
+	return TRUEREF;
+}
+
+
+// HostPowerOffHint(): how to start this machine again, if its screen goes on
+// showing what it last drew; nil otherwise
+static Ref
+FHostPowerOffHint(RefArg /*rcvr*/)
+{
+	return gPowerOffHint != nil ? MakeString(gPowerOffHint) : NILREF;
 }
 
 
@@ -99,6 +142,8 @@ HostInstallQuickSheet(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostLockSleeps")), RefVar(MakeCFunction((void*) FHostLockSleeps, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostCanPowerOff")), RefVar(MakeCFunction((void*) FHostCanPowerOff, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostPowerOff")), RefVar(MakeCFunction((void*) FHostPowerOff, 1, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "HostPowerOffStopped")), RefVar(MakeCFunction((void*) FHostPowerOffStopped, 0, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "HostPowerOffHint")), RefVar(MakeCFunction((void*) FHostPowerOffHint, 0, nil)));
 	newton_try
 	{
 		RefVar fn(ParseString(RefVar(MakeString(gHostQuickSheetSource))));

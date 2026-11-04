@@ -547,6 +547,20 @@ FHostQuit(RefArg /*rcvr*/)
 }
 
 
+// Shut down (host/HostQuickSheet.h): the run ended, as HostQuit ends it -
+// the process is this machine's power
+static bool
+EndTheRun(bool really)
+{
+	if (really)
+	{
+		fprintf(stderr, "[host] shut down\n");
+		FHostQuit(RefVar());
+	}
+	return true;
+}
+
+
 // HostInclude(name): the NewtonScript file of that name in the --script
 // file's own directory run, as the script itself is - which is how the
 // demos share src/host/demo/common.ns (the pen and keys, the waits on a
@@ -707,6 +721,7 @@ NewtonPreMain(void)
 	HostInstallPrinter();
 	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostWakeAfter(ms), ...)
 	HostInstallFonts();					// (the host's fonts, offered when asked for: before the Host panel, which may turn them on)
+	HostQuickSheetSetPowerOff(EndTheRun, nil);
 	HostInstallQuickSheet();			// (host/HostQuickSheet.h: the lock screen and its notifications, its lock before a sleep, the T-Deck Pro's quick sheet)
 	HostInstallSettings();				// (the Host preferences panel, after Network Printers)
 	HostInstallDeveloper();				// (the Developer preferences panel, after it: the Prefs list's last)

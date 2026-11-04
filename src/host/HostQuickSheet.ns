@@ -48,12 +48,19 @@
 // woken while locked - a tap, a key, a message (the root sleeps again 45 s
 // after the serial line's wake anyway) - it sleeps again once the user has
 // left it alone kAwakeLocked seconds.
+//
+// Shutting down (ShutDown: the sheet's button, the Host preferences panel's):
+// the ROM's PowerOff, so that the applications are asked and told as for a
+// sleep, with the host's end in place of the sleep (HostPowerOff(true)).  An
+// application that says no, or a board that will not go, leaves the machine up
+// and the user told why.
 
 {
 	kFont: 10240,							// the system font, 10 point
 	kBold: 1058816,							// ... bold (face 1: 1 << 20)
 	kBig: 1062912,							// ... bold, 14 point
 	offView: nil,							// the off screen (ShowOff), while it is up
+	shuttingDown: nil,						// (ShutDown: on the way)
 	kBig: 1067008,							// ... 18 point, bold
 	kSmall: 9216,							// ... 9 point
 	kRowHeight: 22,
@@ -95,6 +102,7 @@
 	PowerOffAsked: func(what, why)
 	begin
 		if what <> 'okToPowerOff then return nil;
+		if shuttingDown then return true;
 		try
 			if not lockView then begin
 				:Lock();
@@ -220,28 +228,52 @@
 		if sheetView then :CloseSheet() else :OpenSheet();
 	end,
 
-	// The board switched off.  An e-paper keeps what it last drew for as long
-	// as it likes, so what is left on it says so and how to start it again:
-	// HostPowerOff(true) sees that drawn before it takes the power away.
-	PowerOff: func()
+	// The machine shut down.  An e-paper keeps what it last drew for as long
+	// as it likes, so what is left on it says so and how to start it again
+	// (HostPowerOffHint), drawn before the power goes.
+	ShutDown: func()
 	begin
+		if shuttingDown then return;
 		:CloseSheet();
 		if not HostPowerOff(nil) then return :CannotPowerOff();
-		:ShowOff();
-		RefreshViews();
-		AddDelayedCall(func() begin
-			if not HostPowerOff(true) then begin
-				GetGlobalVar('|QuickSheet:host|):HideOff();
-				GetGlobalVar('|QuickSheet:host|):CannotPowerOff();
-			end;
-		end, nil, 200);
+		shuttingDown := true;
+		local hint := HostPowerOffHint();
+		if hint then begin
+			:ShowOff(hint);
+			RefreshViews();
+		end;
+		AddDelayedCall(func() GetGlobalVar('|QuickSheet:host|):ShutDownNow(), nil, 200);
+	end,
+
+	ShutDownNow: func()
+	begin
+		HostPowerOff(true);
+		PowerOff('user);
+		:ShutDownWatch();
+	end,
+
+	// (the ROM's PoweringOff is set until its power off is over, however long
+	// an application's 'holdYourHorses holds it)
+	ShutDownWatch: func()
+		AddDelayedCall(func() GetGlobalVar('|QuickSheet:host|):ShutDownLooked(), nil, 500),
+
+	ShutDownLooked: func()
+	begin
+		if GetGlobalVar('PoweringOff) then return :ShutDownWatch();
+		if not HostPowerOffStopped() then return;						// (going)
+		shuttingDown := nil;
+		:HideOff();
+		if HostPowerOff(nil) then
+			GetRoot():Notify(3, "Shut down", "An application would not let the machine shut down.")
+		else
+			:CannotPowerOff();
 	end,
 
 	CannotPowerOff: func()
-		GetRoot():Notify(3, "Power off", "Unplug the USB cable first: the board cannot switch off while USB powers it."),
+		GetRoot():Notify(3, "Shut down", "Unplug the USB cable first: the board cannot switch off while USB powers it."),
 
 	// the whole screen, white, with the message in the middle of it
-	ShowOff: func()
+	ShowOff: func(hint)
 	begin
 		local root := GetRoot():LocalBox();
 		local width := root.right - root.left;
@@ -260,7 +292,7 @@
 				{_proto: @218, viewJustify: 2,
 				 viewBounds: {left: 16, top: middle - 12, right: width - 16, bottom: middle + 44},
 				 viewFont: kFont,
-				 text: "To turn it back on, press the button on the side of the device, or plug in USB."}],
+				 text: hint}],
 			viewQuitScript: func() GetGlobalVar('|QuickSheet:host|).offView := nil});
 		offView:Open();
 		offView;
@@ -343,9 +375,9 @@
 			AddArraySlot(children,
 				{_proto: @226,												// protoTextButton
 				 viewBounds: {left: 120, top: top + 4, right: 220, bottom: top + 22},
-				 text: "Power off",
-				 sheetRole: 'powerOff,
-				 buttonClickScript: func() GetGlobalVar('|QuickSheet:host|):PowerOff()});
+				 text: "Shut down",
+				 sheetRole: 'shutDown,
+				 buttonClickScript: func() GetGlobalVar('|QuickSheet:host|):ShutDown()});
 		AddArraySlot(children, {_proto: @166, sheetRole: 'close,				// protoClosebox, at the top right
 			viewBounds: {left: -20, top: 6, right: -6, bottom: 20}, viewJustify: 32});	// (vjParentRightH)
 		local height := top + 34;

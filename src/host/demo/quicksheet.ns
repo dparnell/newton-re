@@ -65,7 +65,7 @@ qsRun := func() begin
 		sheet:Pulled();
 		Print("quicksheet: pulled again, " & (if sheet.sheetView then "still open" else "closed"));
 		// (the screen a board that can switch off leaves on its e-paper)
-		sheet:ShowOff();
+		sheet:ShowOff("To turn it back on, press the button on the side of the device.");
 		RefreshViews();
 		ScreenSnapshot("tmp/quicksheet-off.pgm");
 		Print("quicksheet: the off screen " & (if sheet.offView and sheet.offView.viewCObject then "up" else "missing"));

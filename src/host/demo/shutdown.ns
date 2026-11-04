@@ -1,0 +1,57 @@
+// Shut down (host/HostQuickSheet.h, docs/host-lock-screen.md "Shutting down"):
+// ctests host.NewtonShutDown and .window.
+//
+// The button is on the Host page and the sheet.  A power-off function that says
+// no leaves the machine up and shut down taken back; then one answers
+// 'holdYourHorses and lets it go a moment later, and the run ends.  The script
+// has nothing to do after that: "done" is printed as the last power-off
+// function lets go, and the ctest's TIMEOUT, far short of the run's own limit,
+// fails a machine that does not end.
+//
+//   build/host/host/newton --display 320x480 --headless 600 \
+//       --store build/sd.store --erase --script src/host/demo/shutdown.ns
+
+HostInclude("common.ns");			// waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
+
+sdSheet := func() GetGlobalVar('|QuickSheet:host|);
+sdHeld := nil;
+
+sdLetGo := func() begin
+	Print("shutdown: done");
+	PowerOffResume('shutdownDemo);
+end;
+
+sdSecond := func() begin
+	UnRegPowerOff('shutdownDemo);
+	// (a second time, told: the sequence held, then let go)
+	RegPowerOff('shutdownDemo, func(what, why) begin
+		if what <> 'powerOff then return true;
+		if sdHeld then return nil;
+		sdHeld := true;
+		Print("shutdown: told, held, why " & SPrintObject(why));
+		AddDelayedCall(sdLetGo, nil, 1500);
+		'holdYourHorses;
+	end);
+	GetGlobalVar('|HostSettings:host|):ShutDown(nil);
+end;
+
+sdFirst := func() begin
+	local sheet := call sdSheet with ();
+	foreach item in HostSettingsList() do
+		if item.setting = 'shutDown then Print("shutdown: the Host page has " & item.label);
+	sheet:Pulled();
+	call waitFor with ("shutdown: the sheet", func() sheet.sheetView and sheet.sheetView.viewCObject, func() begin
+		local button := call findView with (sheet.sheetView, func(v) v.sheetRole = 'shutDown and v.viewCObject);
+		Print("shutdown: the sheet has " & button.text);
+		RegPowerOff('shutdownDemo, func(what, why) if what <> 'okToPowerOff then true);
+		sheet:ShutDown();
+		Print("shutdown: asked, the sheet " & (if sheet.sheetView then "open" else "closed"));
+		call waitFor with ("shutdown: refused", func() not sheet.shuttingDown, func() begin
+			Print("shutdown: refused, the machine still up");
+			call sdSecond with ();
+		end, 20);
+	end, 20);
+end;
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], sdFirst);	// ("Daniel" in ADB key codes)

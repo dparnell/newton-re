@@ -191,6 +191,10 @@ void	HostCellularSetPowerSwitch(bool (*powerSwitch)(bool on), bool on);
 bool	HostCellularPowerSwitchable(void);
 bool	HostCellularPowered(void);
 bool	HostCellularSetPower(bool on);
+// the power about to go (the machine shutting down): the module shut down in
+// order, if it answers, nothing else changed - it comes on at the next start
+// as it would have
+void	HostCellularPowerGoing(void);
 
 // What the Newton's side asks of it (any thread; none of them waits on the
 // module but HostCellularCommand)

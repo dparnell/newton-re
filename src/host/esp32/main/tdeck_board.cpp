@@ -26,6 +26,8 @@
 #include "driver/i2c.h"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
+#include "driver/rtc_io.h"
+#include "esp_sleep.h"
 #include "esp_timer.h"
 
 #include "esp32host.h"
@@ -37,6 +39,8 @@
 #define ADDR_EXPANDER	0x20
 #define ADDR_MOTOR		0x5A
 #define PIN_FRONTLIGHT	41
+#define PIN_BOOT_BUTTON	GPIO_NUM_0		// the Pro's side button (low while pressed)
+#define PIN_KEY_LED		GPIO_NUM_42
 
 bool	gBoardMax = false;
 
@@ -109,6 +113,12 @@ ExpanderStart(void)
 bool
 HostDeviceBoardStart(void)
 {
+	// (the Pro woken from its deep sleep: the pins as HostDevicePowerOff left
+	// them are let go - the side button out of the RTC's hands, or the
+	// Newton never sees it again)
+	gpio_deep_sleep_hold_dis();
+	gpio_hold_dis(PIN_KEY_LED);
+	rtc_gpio_deinit(PIN_BOOT_BUTTON);
 	i2c_config_t c;
 	memset(&c, 0, sizeof(c));
 	c.mode = I2C_MODE_MASTER;
@@ -170,10 +180,65 @@ HostDeviceBoardSet(BoardLine line, bool high)
 }
 
 
-bool
-HostDeviceCanPowerOff(void)
+// (esp_deep_sleep_start on a stack of its own: the Newton's tasks' are in
+// PSRAM)
+static void
+DeepSleepTask(void*)
 {
-	return gBoardMax;
+	esp_deep_sleep_start();
+}
+
+
+// The Pro shut down.  Its charger's QON is not the side button as the Max's
+// is, so cutting the battery off would leave only USB to start it; instead the
+// chip goes into deep sleep with everything it powers off, the side button
+// (GPIO 0, an RTC pin) waking it - which starts the program from the beginning,
+// as a reset does.  The lines are GPIOs here, and let go in deep sleep they
+// would float, so they are held where they are put.
+static void
+DeepSleep(void)
+{
+	printf("newton: switching off\n");
+	if (!HostDevicePanelFinish())
+		printf("newton: the panel did not finish\n");
+	const BoardLine off[] = { kLineModemKey, kLineModemPower, kLineLoraPower, kLineGpsPower, kLineTouchReset };
+	for (BoardLine line : off)
+	{
+		HostDeviceBoardSet(line, false);
+		gpio_hold_en((gpio_num_t) kLines[line].pro);
+	}
+	gpio_set_level(PIN_KEY_LED, 0);
+	gpio_hold_en(PIN_KEY_LED);
+	gpio_deep_sleep_hold_en();
+	while (gpio_get_level(PIN_BOOT_BUTTON) == 0)		// (a press still down would wake it at once)
+		vTaskDelay(pdMS_TO_TICKS(20));
+	// (only the button: the light sleep's GPIO wakes are low on the lines of
+	// chips that are now off)
+	esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+	rtc_gpio_pullup_en(PIN_BOOT_BUTTON);
+	rtc_gpio_pulldown_dis(PIN_BOOT_BUTTON);
+	esp_sleep_enable_ext0_wakeup(PIN_BOOT_BUTTON, 0);
+	xTaskCreatePinnedToCore(DeepSleepTask, "off", 4096, NULL, configMAX_PRIORITIES - 1, NULL, 0);
+	vTaskDelay(portMAX_DELAY);
+}
+
+
+bool
+HostDevicePowerOff(bool really)
+{
+	if (gBoardMax)
+		return HostDeviceBatteryPowerOff(really);
+	if (really)
+		DeepSleep();
+	return true;
+}
+
+
+const char*
+HostDevicePowerOffHint(void)
+{
+	return gBoardMax ? "To turn it back on, press the button on the side of the device, or plug in USB."
+					 : "To turn it back on, press the button on the side of the device.";
 }
 
 
