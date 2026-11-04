@@ -1215,7 +1215,7 @@ add_test(NAME host.NewtonQuickSheet COMMAND newton --display 320x480 --headless 
          --store ${CMAKE_CURRENT_BINARY_DIR}/quicksheet.store
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/quicksheet.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonQuickSheet PROPERTIES TIMEOUT 300
-                     PASS_REGULAR_EXPRESSION "the sheet open, Lock screen.*pulled again, closed.*the close box closes it.*locked, the sheet closed.*pulled while locked, the sheet closed.*a tap at the slider's end leaves it locked.*half way and let go leaves it locked, the knob at 0.*dragged to the end, unlocked.*quicksheet: done"
+                     PASS_REGULAR_EXPRESSION "the sheet open, Lock screen.*pulled again, closed.*the off screen up.*the off screen taken down.*the close box closes it.*locked, the sheet closed.*pulled while locked, the sheet closed.*a tap at the slider's end leaves it locked.*half way and let go leaves it locked, the knob at 0.*dragged to the end, unlocked.*quicksheet: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|not installed")
 # the lock screen's notifications and the sleep's lock (HostQuickSheet.h,
 # demo/lockscreen.ns, docs/host-lock-screen.md): the ScreenLock functions -

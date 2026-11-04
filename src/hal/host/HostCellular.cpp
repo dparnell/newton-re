@@ -149,7 +149,7 @@ PushEvent(HostCellEventKind kind, const char* number)		// (gLock held)
 // moving to active is the event connected, to idle the event ended (or
 // busy, or no answer - the reason when the module gave one)
 static void
-SetCall(HostCellCallState state, const char* number, HostCellEventKind ending = kHostCellEventEnded)
+SetCallState(HostCellCallState state, const char* number, HostCellEventKind ending)
 {
 	std::lock_guard<std::mutex> hold(gLock);
 	HostCellCallState was = gStatus.call;
@@ -171,6 +171,30 @@ SetCall(HostCellCallState state, const char* number, HostCellEventKind ending = 
 			PushEvent(ending, gStatus.number);
 		gStatus.number[0] = 0;
 	}
+}
+
+
+static void		(*gCallHandler)(bool voice) = nullptr;
+
+static void
+SetCall(HostCellCallState state, const char* number, HostCellEventKind ending = kHostCellEventEnded)
+{
+	static bool voice = false;
+	SetCallState(state, number, ending);
+	bool now = state == kHostCellCallActive || state == kHostCellCallDialing;
+	if (now != voice)
+	{
+		voice = now;
+		if (gCallHandler != nullptr)
+			gCallHandler(now);
+	}
+}
+
+
+void
+HostCellularSetCallHandler(void (*handler)(bool voice))
+{
+	gCallHandler = handler;
 }
 
 

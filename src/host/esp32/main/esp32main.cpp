@@ -27,6 +27,7 @@
 #include "esp_vfs_dev.h"
 
 #include "esp32host.h"
+#include "tdeck_board.h"
 
 static const void*	gImage = NULL;
 bool				gHostDeviceWifi = false;		// (newtonmain.cpp: the WiFi is the host's - HostWifi.h)
@@ -176,6 +177,7 @@ ConsoleReader(void*)
 		}
 		// the board's own commands, answered here whatever the Newton is
 		// doing (a Newton that is stuck cannot be asked through itself):
+		// !sound the Max's sound measured (tdeck_audio.cpp),
 		// !prof the profile so far (tdeck_profile.cpp), !pm the power
 		// management's state and !tasks each task's time since last asked
 		// (tdeck_power.cpp), !shot what the panel
@@ -185,6 +187,8 @@ ConsoleReader(void*)
 		// it, so a modal dialog can be answered from here), !reset a restart
 		else if (strncmp(line, "!prof", 5) == 0)
 			HostDeviceProfileDump();
+		else if (strncmp(line, "!sound", 6) == 0)
+			HostDeviceAudioTest();
 		else if (strncmp(line, "!pm", 3) == 0)
 			HostDevicePowerDump();
 		else if (strncmp(line, "!tasks", 6) == 0)
@@ -317,6 +321,7 @@ app_main(void)
 	_Unwind_SetEnableExceptionFdeSorting(1);
 	HostDeviceProfileStart();
 	HostDevicePowerStart();				// (before the others: their drivers take its locks)
+	HostDeviceBoardStart();				// (which board this is, before any driver takes a pin)
 	HostDeviceSpiBusStart();				// (the panel's and the radio's)
 	HostDevicePanelStart();
 	HostDeviceInputStart();

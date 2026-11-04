@@ -64,6 +64,13 @@ qsRun := func() begin
 		Print("quicksheet: the sheet open, " & lock.text);
 		sheet:Pulled();
 		Print("quicksheet: pulled again, " & (if sheet.sheetView then "still open" else "closed"));
+		// (the screen a board that can switch off leaves on its e-paper)
+		sheet:ShowOff();
+		RefreshViews();
+		ScreenSnapshot("tmp/quicksheet-off.pgm");
+		Print("quicksheet: the off screen " & (if sheet.offView and sheet.offView.viewCObject then "up" else "missing"));
+		sheet:HideOff();
+		Print("quicksheet: the off screen " & (if sheet.offView then "still up" else "taken down"));
 		sheet:Pulled();
 		call waitFor with ("quicksheet: the sheet again", func() sheet.sheetView and sheet.sheetView.viewCObject, func() begin
 		call tapCentre with (call findView with (sheet.sheetView, func(v) v.sheetRole = 'close and v.viewCObject));

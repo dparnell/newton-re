@@ -11,7 +11,7 @@ endforeach()
 list(APPEND sources ${NEWTON_FORWARDED})
 # (the DDK's own directory as -I too: three of its headers include others
 #  with <...>, and none of its file names is a system header's)
-idf_component_register(SRCS esp32main.cpp newtonmain.cpp tdeck_panel.cpp tdeck_input.cpp tdeck_store.cpp tdeck_profile.cpp tdeck_wifi.cpp tdeck_modem.cpp tdeck_lora.cpp tdeck_gps.cpp tdeck_battery.cpp tdeck_power.cpp ${sources}
+idf_component_register(SRCS esp32main.cpp newtonmain.cpp tdeck_board.cpp tdeck_audio.cpp tdeck_panel.cpp tdeck_input.cpp tdeck_store.cpp tdeck_profile.cpp tdeck_wifi.cpp tdeck_modem.cpp tdeck_lora.cpp tdeck_gps.cpp tdeck_battery.cpp tdeck_power.cpp ${sources}
                        INCLUDE_DIRS . ${NEWTON_SRC}/ddk
                        REQUIRES driver esp_partition spi_flash esp_timer esp_psram vfs freertos lwip nvs_flash esp_wifi esp_netif esp_event esp_pm)
 
@@ -57,6 +57,7 @@ set_source_files_properties(newtonmain.cpp PROPERTIES COMPILE_OPTIONS "${all_quo
 set_source_files_properties(tdeck_modem.cpp PROPERTIES COMPILE_OPTIONS "-iquote${NEWTON_SRC}/hal/host")
 # (and its battery's gauge is given to power/host/HostBattery.h, plain C++ too)
 set_source_files_properties(tdeck_battery.cpp PROPERTIES COMPILE_OPTIONS "-iquote${NEWTON_SRC}/power/host")
+set_source_files_properties(tdeck_audio.cpp PROPERTIES COMPILE_OPTIONS "-iquote${NEWTON_SRC}/host")
 
 # The LoRa mesh (docs/host-tdeck-pro-mesh.md): MeshCore and what it needs
 # (thirdparty/meshcore, as its CMakeLists.txt lists them for the desktops),

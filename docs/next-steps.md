@@ -120,6 +120,13 @@ Nothing at present.
 
 ## Open
 
+### The T-Deck Max (2026-11-04)
+
+Runs on the owner's board on the Pro's image; `docs/host-tdeck-max.md`, "State
+on the board", lists what is not tried. First: a run on a Pro (the shared code
+was restructured with none connected), a run on battery (light sleep, and
+whether the touch chip's interrupt wakes it) and a call with a SIM.
+
 ### The T-Deck Pro's battery life (2026-11-01)
 
 130 mA as found at first; the Newton's idle spin fixed and power management

@@ -10,6 +10,8 @@
 				firmware for this board, include/utilities.h and
 				src/main.cpp's A7682E_init):
 
+				(the T-Deck Pro's lines; on the Max the supply and the key are
+				the XL9555's - tdeck_board.h)
 				- GPIO 41 (BOARD_6609_EN) high powers the module (an SGM6609
 				  boost converter);
 				- GPIO 40 (BOARD_A7682E_PWRKEY) is a button, not a switch:
@@ -67,10 +69,9 @@
 #include "esp_sleep.h"
 
 #include "esp32host.h"
+#include "tdeck_board.h"
 #include "HostCellular.h"
 
-#define PIN_MODEM_POWER		41			// BOARD_6609_EN
-#define PIN_MODEM_PWRKEY	40
 #define PIN_MODEM_TX		10			// ours, to the module's RXD
 #define PIN_MODEM_RX		11			// ours, from the module's TXD
 #define PIN_MODEM_RI		7			// low: the module has something to say
@@ -219,14 +220,20 @@ Answers(void)
 }
 
 
+// (the Max's supply is a boost converter, and LilyGO's firmware for it lets
+// it settle for 1.5 s and holds the key 1.1 s; the Pro's starts on 50 ms)
+static int	SettleMs(void)	{ return gBoardMax ? 1500 : 100; }
+static int	PressMs(void)	{ return gBoardMax ? 1100 : 50; }
+
+
 static void
 PressPowerKey(int ms)
 {
-	gpio_set_level((gpio_num_t) PIN_MODEM_PWRKEY, 0);
+	HostDeviceBoardSet(kLineModemKey, false);
 	vTaskDelay(pdMS_TO_TICKS(10));
-	gpio_set_level((gpio_num_t) PIN_MODEM_PWRKEY, 1);
+	HostDeviceBoardSet(kLineModemKey, true);
 	vTaskDelay(pdMS_TO_TICKS(ms));
-	gpio_set_level((gpio_num_t) PIN_MODEM_PWRKEY, 0);
+	HostDeviceBoardSet(kLineModemKey, false);
 }
 
 
@@ -276,14 +283,14 @@ PowerTask(void*)
 			continue;
 		if (on)
 		{
-			gpio_set_level((gpio_num_t) PIN_MODEM_POWER, 1);
-			vTaskDelay(pdMS_TO_TICKS(100));
-			PressPowerKey(50);
+			HostDeviceBoardSet(kLineModemPower, true);
+			vTaskDelay(pdMS_TO_TICKS(SettleMs()));
+			PressPowerKey(PressMs());
 		}
 		else
 		{
-			gpio_set_level((gpio_num_t) PIN_MODEM_PWRKEY, 0);
-			gpio_set_level((gpio_num_t) PIN_MODEM_POWER, 0);
+			HostDeviceBoardSet(kLineModemKey, false);
+			HostDeviceBoardSet(kLineModemPower, false);
 		}
 		SetPowered(on);
 		KeepOff(!on);
@@ -298,7 +305,7 @@ CellTask(void*)
 	if (KeptOff())
 	{
 		// switched off before: left off, the engine waiting for it
-		gpio_set_level((gpio_num_t) PIN_MODEM_POWER, 0);
+		HostDeviceBoardSet(kLineModemPower, false);
 		SetPowered(false);
 		printf("[cell] the module is switched off (the Host panel)\n");
 		HostCellularRun(&gLink);
@@ -306,11 +313,10 @@ CellTask(void*)
 	// the module powered and started as LilyGO's example (and lilyphone1's
 	// A7682E_init) do: the supply on, a 50 ms press of the power key; and,
 	// as lilyphone1 does when that gets no answer, a longer press (a second)
-	gpio_set_level((gpio_num_t) PIN_MODEM_POWER, 1);
+	HostDeviceBoardSet(kLineModemPower, true);
 	SetPowered(true);
-	vTaskDelay(pdMS_TO_TICKS(100));
-	printf("[cell] the module's supply (GPIO %d) reads %d\n", PIN_MODEM_POWER, gpio_get_level((gpio_num_t) PIN_MODEM_POWER));
-	PressPowerKey(50);
+	vTaskDelay(pdMS_TO_TICKS(SettleMs()));
+	PressPowerKey(PressMs());
 	bool answered = false;
 	for (int tries = 0; tries < 2 && !answered; tries++)
 	{
@@ -334,14 +340,14 @@ HostDeviceCellStart(void)
 	// with GPIO hold - lilyphone1's does - which outlasts a reset and
 	// ignores every write until released: the module then never gets its
 	// supply)
-	gpio_hold_dis((gpio_num_t) PIN_MODEM_POWER);
-	gpio_hold_dis((gpio_num_t) PIN_MODEM_PWRKEY);
+	HostDeviceBoardLineStart(kLineModemPower);
+	HostDeviceBoardLineStart(kLineModemKey);
 	gpio_deep_sleep_hold_dis();
 	gpio_config_t pins = {};
-	pins.pin_bit_mask = (1ULL << PIN_MODEM_POWER) | (1ULL << PIN_MODEM_PWRKEY) | (1ULL << PIN_MODEM_DTR);
+	pins.pin_bit_mask = 1ULL << PIN_MODEM_DTR;
 	pins.mode = GPIO_MODE_INPUT_OUTPUT;			// (read back for the console)
 	gpio_config(&pins);
-	gpio_set_level((gpio_num_t) PIN_MODEM_PWRKEY, 0);
+	HostDeviceBoardSet(kLineModemKey, false);
 	gpio_set_level((gpio_num_t) PIN_MODEM_DTR, 0);	// (awake until it has taken AT+CSCLK=1)
 	gpio_config_t ri = {};
 	ri.pin_bit_mask = 1ULL << PIN_MODEM_RI;
@@ -369,6 +375,7 @@ HostDeviceCellStart(void)
 	gLink.write = UartWrite;
 	gLink.setup = kSleepSetup;
 	HostCellularSetClockHandler(NetworkTime);
+	HostCellularSetCallHandler(HostDeviceAudioCall);		// (the Max's loudspeaker: tdeck_audio.cpp)
 	gPowerRequests = xQueueCreate(4, sizeof(bool));
 	if (gPowerRequests != NULL && xTaskCreatePinnedToCore(PowerTask, "cellpower", 3072, NULL, 4, NULL, 0) == pdPASS)
 		HostCellularSetPowerSwitch(PowerSwitch, !KeptOff());

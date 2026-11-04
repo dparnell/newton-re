@@ -77,6 +77,7 @@
 #include "esp_heap_caps.h"
 
 #include "esp32host.h"
+#include "tdeck_board.h"
 
 // pins (LilyGO's schematic): the SPI bus is shared with the LoRa radio
 // (tdeck_lora.cpp) and the SD card, kept deselected
@@ -88,6 +89,7 @@
 #define PIN_BUSY	37		// low while busy
 #define PIN_LORA_CS	3
 #define PIN_SD_CS	48
+#define PIN_RESET	9		// (the Max's; the Pro's panel has no reset line)
 
 // UC8253 commands
 #define PSR		0x00
@@ -129,6 +131,7 @@ static volatile long	gInvertOld = 0;				// "invertOld": the picture before sent 
 static volatile long	gSwap = 0;					// "swap": the new picture to DTM1 and the one before to DTM2
 static volatile long	gWindow = 1;				// "window": a partial refresh only over the rectangle that changed
 static volatile long	gResetAsked = 0;			// "reset": the controller reset and set up again, once
+static volatile int		gFinishing = 0;				// 1 the last picture asked for, 2 drawn and the panel powered down
 static volatile long	gRedraw = 0;				// "redraw": 1 the screen sent again by partial refreshes (via white), 2 by full ones
 static volatile long	gTest = 0;					// "test": the test pattern (TestPattern; 3 its last step CleanArea, 2 a full refresh over a window), then the Newton's screen again
 const int64_t	kSettleMs = 60;					// a change unchanged this long is shown
@@ -260,6 +263,16 @@ PanelInit(void)
 	gpio_set_direction((gpio_num_t) PIN_DC, GPIO_MODE_OUTPUT);
 	gpio_set_direction((gpio_num_t) PIN_BUSY, GPIO_MODE_INPUT);
 	gpio_set_pull_mode((gpio_num_t) PIN_BUSY, GPIO_PULLUP_ONLY);
+	if (gBoardMax)
+	{
+		// (out of whatever the firmware before left the controller in, its
+		// deep sleep included)
+		gpio_set_direction((gpio_num_t) PIN_RESET, GPIO_MODE_OUTPUT);
+		gpio_set_level((gpio_num_t) PIN_RESET, 0);
+		vTaskDelay(pdMS_TO_TICKS(10));
+		gpio_set_level((gpio_num_t) PIN_RESET, 1);
+		vTaskDelay(pdMS_TO_TICKS(10));
+	}
 
 	gBounce = (uint8_t*) heap_caps_malloc(4000, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 	if (gBounce == NULL)
@@ -580,6 +593,25 @@ PanelTask(void*)
 			converted = changes;
 			Convert(now);
 		}
+		if (gFinishing == 1)
+		{
+			// the last picture before the power goes: the panel cleared, drawn
+			// in full, so that no ghost stays on it for as long as it is off,
+			// and its high voltages taken down as they should be
+			Convert(now);
+			Refresh(shown, white, false);
+			Refresh(white, now, false);
+			memcpy(shown, now, kFrameBytes);
+			memcpy(pending, now, kFrameBytes);
+			Send(POF, NULL, 0);
+			WaitBusy(2000);
+			gFinishing = 2;
+			while (gFinishing == 2)
+				vTaskDelay(pdMS_TO_TICKS(100));
+			if (!PanelReset())
+				printf("newton: the panel did not answer its reset\n");
+			continue;
+		}
 		int64_t t = esp_timer_get_time();
 		if (gTest != 0)
 		{
@@ -713,6 +745,26 @@ HostDevicePanelStart(void)
 }
 
 
+bool
+HostDevicePanelFinish(void)
+{
+	if (gPanelTask == NULL)
+		return false;
+	gFinishing = 1;
+	xTaskNotifyGive(gPanelTask);
+	for (int ms = 0; ms < 15000 && gFinishing != 2; ms += 50)
+		vTaskDelay(pdMS_TO_TICKS(50));
+	return gFinishing == 2;
+}
+
+
+void
+HostDevicePanelResume(void)
+{
+	gFinishing = 0;
+}
+
+
 void
 HostDevicePanelChanged(void)
 {
@@ -791,6 +843,8 @@ HostWindowOption(const char* name, long* value)
 		*value = gLocalCleanCount;
 	else if (strcmp(name, "clearGhosts") == 0)
 		*value = 0;
+	else if (strcmp(name, "frontlight") == 0 && gBoardMax)
+		*value = HostDeviceFrontlight();
 	else
 		return false;
 	return true;
@@ -802,6 +856,8 @@ HostWindowSetOption(const char* name, long value)
 {
 	if (strcmp(name, "clearGhosts") == 0)
 		return HostDevicePanelSet("redraw", 2);
+	if (strcmp(name, "frontlight") == 0)
+		return HostDeviceFrontlightSet(value);
 	long now;
 	return HostWindowOption(name, &now) && HostDevicePanelSet(name, value);
 }

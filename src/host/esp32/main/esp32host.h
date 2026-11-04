@@ -37,12 +37,16 @@ bool		HostWindowSetOption(const char* name, long value);
 // for it each time: the grays, their width and height now)
 void		HostDevicePanelFollow(void (*now)(const unsigned char** grays, long* width, long* height));
 bool		HostDeviceDisplayTurned(void);
+bool		HostDevicePanelFinish(void);		// what the display shows now drawn clean, the panel powered down, for the power going ==> whether it was
+void		HostDevicePanelResume(void);		// (the power did not go: the panel back)
 void		HostDevicePanelDump(void);			// what the panel shows, on the console (tools/tdeck/panelshot.py)		// the display wider than tall: drawn turned on the panel, the touch panel turned back	// a refresh setting changed (tdeck_panel.cpp lists them) ==> whether there is one so named
 // the touch panel and the keyboard (tdeck_input.cpp): read from the start,
 // handed to the window shims below
 void		HostDeviceInputStart(void);
 void		HostDeviceInputDump(void);			// the console's !pm: interrupts or polls, and how many
 bool		HostDeviceSheetPulled(void);		// the quick sheet pulled down from the top edge since last asked (once for each pull) ==> whether
+int			HostDeviceTouchKeyPressed(void);	// the Max: a touch key below the screen pressed since last asked ==> which (0-2, left to right), or -1
+void		HostDeviceTouchTrace(bool on);		// the Max: the touch chip's reports on the console
 void		HostDeviceSetLocked(bool locked);	// the lock screen up or down: the keyboard left out and its light off meanwhile
 void		HostDeviceSetKeyLight(bool on);		// the keyboard's light allowed (on, as at start) or kept off
 // the internal flash on the board's `store` partition (tdeck_store.cpp):
@@ -101,6 +105,8 @@ bool		HostDeviceCellStart(void);
 // source (started after the input; ==> whether there is a gauge)
 bool		HostDeviceBatteryStart(void);
 bool		HostDeviceBatteryCurrent(long* now, long* mean, long* samples, long* millivolts);	// mA (+ charging) now, and the mean of the 1 s samples since last asked (the sampler starts at the first call)
+bool		HostDeviceBatteryPowerOff(bool really);	// the Max switched off by its charger (on battery only); not really: ==> whether it could be; really: no return, or ==> false
+bool		HostDeviceCanPowerOff(void);			// whether this board can
 bool		HostDeviceBatteryRunOnBattery(bool on);		// the charger's input cut (on) or back: the board on its battery while on USB
 
 // power management (tdeck_power.cpp): frequency scaling and automatic light
@@ -112,7 +118,9 @@ enum
 	kAwakeGps = 1,							// its UART read by a Newton application (else its bursts wake the chip)
 	kAwakeCell = 2,							// the 4G module's
 	kAwakeUsb = 4,							// the USB taken back, being enumerated
-	kAwakeUsbPower = 8						// on USB power (tdeck_battery.cpp: the USB does not survive light sleep)
+	kAwakeUsbPower = 8,						// on USB power (tdeck_battery.cpp: the USB does not survive light sleep)
+	kAwakeSound = 16,						// the I2S clocks running (tdeck_audio.cpp)
+	kAwakeLight = 32						// the frontlight on (its PWM stops in light sleep)
 };
 bool		HostDevicePowerStart(void);
 void		HostDevicePowerKeepAwake(unsigned who, bool on);
@@ -125,6 +133,19 @@ void		HostDevicePowerTasks(void);					// the console's !tasks: each task's time 
 // task waits up to so long, or until woken - the chip sleeping meanwhile
 void		HostDevicePowerSleepWait(unsigned long milliseconds);
 void		HostDevicePowerSleepWake(void);
+
+// the Max's sound (tdeck_audio.cpp - host/HostAudio.h's calls are its main
+// business): the loudspeaker the modem's for the length of a call
+void		HostDeviceAudioCall(bool on);
+void		HostDeviceAudioDump(void);					// the console's !pm
+void		HostDeviceAudioTest(void);					// the console's !sound: the loudspeaker measured through the microphone
+
+// the Max's frontlight and vibration motor (tdeck_board.cpp): the light at a
+// level of 0 (off) to 100, kept off while the screen is locked; a short buzz
+bool		HostDeviceFrontlightSet(long level);		// ==> whether there is one
+long		HostDeviceFrontlight(void);					// the level asked for
+void		HostDeviceFrontlightLocked(bool locked);
+void		HostDeviceBuzz(int effect);					// the DRV2605's effect (1 strong click, 14 strong buzz, 47 buzz)
 
 // the sampling profiler of core 1 (tdeck_profile.cpp): started with the
 // board, a phase's start marked, the samples printed (and the profiler

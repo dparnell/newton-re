@@ -174,6 +174,9 @@ Choices(RefArg item, const char* const* choices, int count)
 // an e-paper panel's clean-ups: after so many quick updates, and after the
 // screen has been still so long (ms) - 0 never
 const int		kCleanChoices = 5;
+const long					kFrontlightChoices = 4;
+static const long			kFrontlights[kFrontlightChoices] = { 0, 10, 40, 100 };
+static const char* const	kFrontlightNames[kFrontlightChoices] = { "Off", "Low", "Medium", "High" };
 static const long			kCleanCounts[kCleanChoices] = { 10, 20, 30, 50, 0 };
 static const char* const	kCleanCountNames[kCleanChoices] = { "After 10 updates", "After 20 updates", "After 30 updates", "After 50 updates", "Never" };
 static const long			kCleanAfters[kCleanChoices] = { 5000, 10000, 30000, 60000, 0 };
@@ -306,6 +309,13 @@ FHostSettingsList(RefArg /*rcvr*/)
 		SetFrameSlot(chooser, RefVar(Intern((char*) "action")), RefVar(Intern((char*) "OpenFontChooser")));
 		AddArraySlot(list, chooser);
 	}
+	// a frontlight (the T-Deck Max's: host/esp32/main/tdeck_board.cpp)
+	if (HostWindowOption("frontlight", &value))
+	{
+		RefVar item(Item("frontlight", "Frontlight", kChoice, ChoiceIndex(kFrontlights, kFrontlightChoices, value)));
+		Choices(item, kFrontlightNames, kFrontlightChoices);
+		AddArraySlot(list, item);
+	}
 	// an e-paper panel's quick (partial) updates and the full ones that
 	// clean up their ghosts (the T-Deck Pro's: host/esp32/main/tdeck_panel.cpp)
 	if (HostWindowOption("bigChange", &value))
@@ -437,6 +447,12 @@ FHostSetSetting(RefArg /*rcvr*/, RefArg setting, RefArg value)
 			fprintf(stderr, "[host] the host's font families taken out\n");
 		}
 		return TRUEREF;
+	}
+	if (strcmp(name, "frontlight") == 0)
+	{
+		if (!ISINT(value) || RINT(value) < 0 || RINT(value) >= kFrontlightChoices)
+			return NILREF;
+		return MAKEBOOLEAN(HostWindowSetOption(name, kFrontlights[RINT(value)]));
 	}
 	if (strcmp(name, "bigChange") == 0)
 		return MAKEBOOLEAN(HostWindowSetOption(name, on ? 12 : 100));

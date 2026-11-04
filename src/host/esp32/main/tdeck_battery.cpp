@@ -41,11 +41,11 @@
 #include "driver/i2c.h"
 
 #include "esp32host.h"
+#include "tdeck_board.h"
 #include "HostBattery.h"
 
 #define I2C_PORT		I2C_NUM_0
 #define ADDR_GAUGE		0x55
-#define ADDR_CHARGER	0x6B
 
 enum
 {
@@ -66,6 +66,7 @@ enum
 const uint8_t	kChargerStatus = 0x0B;	// REG0B
 const uint8_t	kChargerInput = 0x00;	// REG00: EN_HIZ, bit 7
 const uint8_t	kChargerTimer = 0x07;	// REG07: WATCHDOG, bits 5-4
+const uint8_t	kChargerBatteryFet = 0x09;	// REG09: BATFET_DIS, bit 5
 
 
 // (asleep, the gauge stretches the clock while it wakes - longer than the
@@ -83,17 +84,23 @@ ReadWord(uint8_t command, uint16_t* value)
 }
 
 
+// The charger: a BQ25896 at 0x6B on the Pro and the first Max boards, an
+// SY6970 at 0x6A on later ones - the same registers, for all this file asks
+// of them.  Found by HostDeviceBatteryStart.
+static uint8_t	gChargerAddress = 0x6B;
+
+
 static bool
 ReadCharger(uint8_t* status)
 {
-	return i2c_master_write_read_device(I2C_PORT, ADDR_CHARGER, &kChargerStatus, 1, status, 1, pdMS_TO_TICKS(20)) == ESP_OK;
+	return i2c_master_write_read_device(I2C_PORT, gChargerAddress, &kChargerStatus, 1, status, 1, pdMS_TO_TICKS(20)) == ESP_OK;
 }
 
 
 static bool
 ReadChargerRegister(uint8_t reg, uint8_t* value)
 {
-	return i2c_master_write_read_device(I2C_PORT, ADDR_CHARGER, &reg, 1, value, 1, pdMS_TO_TICKS(20)) == ESP_OK;
+	return i2c_master_write_read_device(I2C_PORT, gChargerAddress, &reg, 1, value, 1, pdMS_TO_TICKS(20)) == ESP_OK;
 }
 
 
@@ -101,7 +108,7 @@ static bool
 WriteChargerRegister(uint8_t reg, uint8_t value)
 {
 	uint8_t b[2] = { reg, value };
-	return i2c_master_write_to_device(I2C_PORT, ADDR_CHARGER, b, 2, pdMS_TO_TICKS(20)) == ESP_OK;
+	return i2c_master_write_to_device(I2C_PORT, gChargerAddress, b, 2, pdMS_TO_TICKS(20)) == ESP_OK;
 }
 
 
@@ -213,6 +220,39 @@ HostDeviceBatteryRunOnBattery(bool on)
 }
 
 
+// The Max switched off (the quick sheet's Power off): the charger's BATFET
+// opened, which takes the battery off everything until the charger's QON pin
+// is pressed or USB comes (LilyGO's bq25896_shutdown example).  On USB the
+// board stays up, so that is refused.  The touch chip held in reset first, as
+// LilyGO's firmware does: cut off running, it can come back half awake.
+// The panel keeps what it shows: it is finished first (the Newton has drawn
+// the off screen by now), which takes the 6 s of two full refreshes.
+// Not really: ==> whether it could be done.  Really: ==> false if it could
+// not; if it could, this does not return.
+bool
+HostDeviceBatteryPowerOff(bool really)
+{
+	uint8_t charger, fet;
+	if (!ReadCharger(&charger) || ((charger & 0x04) != 0 && !gOnBattery) || !ReadChargerRegister(kChargerBatteryFet, &fet))
+		return false;
+	if (!really)
+		return true;
+	printf("newton: switching off\n");
+	if (!HostDevicePanelFinish())
+		printf("newton: the panel did not finish\n");
+	HostDeviceBoardSet(kLineTouchReset, false);
+	vTaskDelay(pdMS_TO_TICKS(20));
+	WriteChargerRegister(kChargerBatteryFet, fet | 0x20);
+	vTaskDelay(pdMS_TO_TICKS(2000));
+	// (still here: it did not take)
+	WriteChargerRegister(kChargerBatteryFet, fet);
+	HostDeviceBoardSet(kLineTouchReset, true);
+	HostDevicePanelResume();
+	printf("newton: still on after the charger was told to switch off\n");
+	return false;
+}
+
+
 // The chip kept out of light sleep while the USB gives power (the charger's
 // PG_STAT), unless the input was cut to measure: the USB serial/JTAG does
 // not survive light sleep, and ESP-IDF's connection monitor, which should
@@ -236,6 +276,9 @@ UsbPowerTask(void*)
 bool
 HostDeviceBatteryStart(void)
 {
+	uint8_t probe;
+	if (!ReadCharger(&probe))
+		gChargerAddress = 0x6A;
 	xTaskCreatePinnedToCore(UsbPowerTask, "usbpower", 2560, NULL, 3, NULL, 0);
 	HostBatteryReading reading = { 100, kHostBatteryUnknown, kHostBatteryUnknown, kHostBatteryUnknown, -1, kHostBatteryDischarging };
 	uint16_t status;

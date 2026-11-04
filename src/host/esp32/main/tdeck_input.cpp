@@ -10,6 +10,11 @@
 				tablet, HostWindowKey into the keyboard tool's queue - all
 				callable from any thread).
 
+				On the T-Deck Max the touch panel is another chip with
+				another protocol and three touch keys below the screen
+				(TouchReadMax; docs/host-tdeck-max.md); everything after the
+				report is read is the same.
+
 				Touch: the CST328 (as the device spike read it,
 				docs/host-tdeck-pro.md) reports in the panel's own pixels,
 				which are the display's; the Newton's own pen calibration
@@ -69,12 +74,10 @@
 #include "esp_sleep.h"
 
 #include "esp32host.h"
+#include "tdeck_board.h"
 
 #define I2C_PORT		I2C_NUM_0
-#define PIN_SDA			13
-#define PIN_SCL			14
 #define PIN_TOUCH_INT	12
-#define PIN_TOUCH_RST	45
 #define PIN_KEY_INT		15
 #define PIN_BOOT_BUTTON	0				// (lilyphone1's BOARD_BOOT_PIN: low while pressed)
 #define PIN_KEY_LED		42
@@ -92,6 +95,7 @@ const int64_t	kPullHoldMs = 300;		// ... held this long without coming down: the
 static std::atomic<unsigned>	gPulls(0);			// the sheet pulled down, not yet asked for
 static std::atomic<bool>		gLocked(false);		// the lock screen up
 static std::atomic<bool>		gKeyLight(true);	// the keyboard's light allowed (HostDeviceSetKeyLight)
+static bool						gTouchTrace = false;	// the Max's reports on the console (HostDeviceTouchTrace)
 
 // Windows virtual key codes (host/HostKeyboard.cpp maps them to the Newton's)
 enum
@@ -121,25 +125,170 @@ ReadRegister(uint8_t address, const uint8_t* reg, size_t regLength, uint8_t* dat
 	Touch
 ------------------------------------------------------------------------------*/
 
+// The Max's touch panel (a Hynitron part of the CST66xx family by its
+// protocol and its chip type, 0xCACA220E; LilyGO's README says CST3530, its
+// pin map still CST328) speaks another protocol to the Pro's CST328.  Every
+// command is a four-byte register number; the report is at 0xD0070000:
+//
+//		0-1		the sum of the blocks that follow, plus 0x55, low byte first
+//		2		0xFF for touches (0xF0 a gesture, 0xE0 proximity)
+//		3		fingers in the low nibble, keys in the high
+//		4...	five bytes each, keys first:
+//					a key:		byte 4 its number in the low nibble, and
+//								down in the high
+//					a finger:	x low, y low, pressure, x and y high (the
+//								low nibble x's), id low and down high
+//
+// and is taken with 0xD00002AB.  Read off LilyGO's
+// lib/HynTouch/src/hyn_cst66xx.c and tried on the board.
+static esp_err_t
+TouchMaxCommand(uint32_t command)
+{
+	uint8_t b[4] = { (uint8_t) (command >> 24), (uint8_t) (command >> 16), (uint8_t) (command >> 8), (uint8_t) command };
+	return Write(ADDR_TOUCH, b, 4);
+}
+
+
+static void
+TouchMaxStart(void)
+{
+	// (twice: the first wakes the chip's I2C from low power)
+	TouchMaxCommand(0xD0000400);
+	vTaskDelay(pdMS_TO_TICKS(1));
+	TouchMaxCommand(0xD0000400);
+	uint8_t reg[4] = { 0xD0, 0x03, 0x00, 0x00 }, info[50];
+	if (ReadRegister(ADDR_TOUCH, reg, 4, info, sizeof(info)) == ESP_OK)
+		printf("newton: touch chip %02X%02X%02X%02X, firmware %02X%02X%02X%02X, %d x %d, %d keys\n",
+			   info[3], info[2], info[1], info[0], info[35], info[34], info[33], info[32],
+			   info[28] | (info[29] << 8), info[30] | (info[31] << 8), info[27]);
+	else
+		printf("newton: the touch chip does not answer\n");
+	TouchMaxCommand(0xD0000000);		// (LilyGO's normal mode: the three of them)
+	TouchMaxCommand(0xD0000C00);
+	TouchMaxCommand(0xD0000100);
+}
+
+
 static void
 TouchStart(void)
 {
-	gpio_set_direction((gpio_num_t) PIN_TOUCH_RST, GPIO_MODE_OUTPUT);
-	gpio_set_level((gpio_num_t) PIN_TOUCH_RST, 0);
+	HostDeviceBoardLineStart(kLineTouchReset);
+	HostDeviceBoardSet(kLineTouchReset, false);
 	vTaskDelay(pdMS_TO_TICKS(10));
-	gpio_set_level((gpio_num_t) PIN_TOUCH_RST, 1);
+	HostDeviceBoardSet(kLineTouchReset, true);
 	vTaskDelay(pdMS_TO_TICKS(100));
 	gpio_set_direction((gpio_num_t) PIN_TOUCH_INT, GPIO_MODE_INPUT);
 	gpio_set_pull_mode((gpio_num_t) PIN_TOUCH_INT, GPIO_PULLUP_ONLY);
+	if (gBoardMax)
+	{
+		TouchMaxStart();
+		return;
+	}
 	static const uint8_t normal[2] = { 0xD1, 0x09 };		// normal mode
 	Write(ADDR_TOUCH, normal, 2);
 }
 
 
-// a report (register 0xD000, seven bytes): valid when byte 6 is 0xAB;
+// The Pro's report (register 0xD000, seven bytes): valid when byte 6 is 0xAB;
 // the fingers in byte 5's low bits; the first finger's state in byte 0's
 // low nibble (6: down), its x and y's high bits in bytes 1 and 2, their
-// low nibbles in byte 3 ==> whether a finger is still down (or held back)
+// low nibbles in byte 3 ==> whether there was a report
+static bool
+TouchReadPro(bool* fingerDown, long* x, long* y)
+{
+	static const uint8_t reg[2] = { 0xD0, 0x00 };
+	uint8_t b[7];
+	if (ReadRegister(ADDR_TOUCH, reg, 2, b, 7) != ESP_OK)
+		return false;
+	static const uint8_t sync[3] = { 0xD0, 0x00, 0xAB };
+	Write(ADDR_TOUCH, sync, 3);
+	if (b[6] != 0xAB || b[0] == 0xAB)
+		return false;
+	*fingerDown = (b[5] & 0x7F) > 0 && (b[0] & 0x0F) == 0x06;
+	*x = (b[1] << 4) | (b[3] >> 4);
+	*y = (b[2] << 4) | (b[3] & 0x0F);
+	return true;
+}
+
+
+static const int	kTouchKeys = 3;
+static std::atomic<unsigned>	gTouchKeyPresses[kTouchKeys];	// not yet asked for
+
+
+// a touch key pressed: its action for the Newton's side to take (locked or
+// asleep, it only wakes the machine, as a key does)
+static void
+TouchKey(int key)
+{
+	if (gLocked)
+	{
+		HostWindowKey(kVKNone, 1);
+		HostWindowKey(kVKNone, 0);
+		return;
+	}
+	HostDeviceBuzz(1);
+	gTouchKeyPresses[key]++;
+	HostDeviceKick();
+}
+
+
+// The Max's report (above) ==> whether there was one
+static bool
+TouchReadMax(bool* fingerDown, long* x, long* y)
+{
+	static const uint8_t reg[4] = { 0xD0, 0x07, 0x00, 0x00 };
+	const int kBlock = 5, kMost = 5;
+	uint8_t b[4 + kMost * kBlock];
+	if (ReadRegister(ADDR_TOUCH, reg, 4, b, 4 + kBlock) != ESP_OK)
+		return false;
+	int fingers = b[3] & 0x0F, keys = b[3] >> 4;
+	bool good = b[2] == 0xFF && fingers + keys <= kMost;
+	if (good && fingers + keys > 1)
+		good = i2c_master_read_from_device(I2C_PORT, ADDR_TOUCH, b + 4 + kBlock, (fingers + keys - 1) * kBlock, pdMS_TO_TICKS(20)) == ESP_OK;
+	if (good)
+	{
+		uint16_t sum = 0x55;
+		for (int k = 0; k < (fingers + keys) * kBlock; k++)
+			sum += b[4 + k];
+		good = sum == (uint16_t) (b[0] | (b[1] << 8));
+	}
+	TouchMaxCommand(0xD00002AB);
+	// (the chip goes on answering with its last report: shown once)
+	static uint8_t shown[4 + kBlock];
+	if (gTouchTrace && (!good || fingers + keys != 0) && memcmp(shown + 2, b + 2, 2 + kBlock) != 0)
+	{
+		memcpy(shown, b, sizeof(shown));
+		printf("[touch] %s %02X, %d fingers %d keys:", good ? "report" : "BAD", b[2], fingers, keys);
+		for (int k = 0; k < (good ? (fingers + keys) * kBlock : kBlock); k++)
+			printf(" %02X", b[4 + k]);
+		printf("\n");
+	}
+	if (!good)
+		return false;
+	if (keys != 0)
+	{
+		static bool down[kTouchKeys];
+		int key = b[8] & 0x0F;
+		bool press = (b[8] >> 4) != 0;
+		if (key < kTouchKeys && press != down[key])
+		{
+			down[key] = press;
+			if (press)
+				TouchKey(key);
+		}
+	}
+	if (fingers != 0)
+	{
+		const uint8_t* f = b + 4 + keys * kBlock;
+		*fingerDown = (f[4] >> 4) != 0;
+		*x = f[0] | ((f[3] & 0x0F) << 8);
+		*y = f[1] | ((f[3] & 0xF0) << 4);
+	}
+	return true;
+}
+
+
+// ==> whether a finger is still down (or held back)
 static bool
 TouchPoll(void)
 {
@@ -150,24 +299,14 @@ TouchPoll(void)
 	static long lastX = -1, lastY = -1;
 	static long startX = 0, startY = 0;
 	static int64_t lastSeen = 0, startAt = 0;
-	static const uint8_t reg[2] = { 0xD0, 0x00 };
-	uint8_t b[7];
 	int64_t now = esp_timer_get_time();
-	bool valid = false, fingerDown = false;
+	bool fingerDown = false;
 	long x = 0, y = 0;
-	if (ReadRegister(ADDR_TOUCH, reg, 2, b, 7) == ESP_OK)
+	bool valid = gBoardMax ? TouchReadMax(&fingerDown, &x, &y) : TouchReadPro(&fingerDown, &x, &y);
+	if (valid && fingerDown)
 	{
-		static const uint8_t sync[3] = { 0xD0, 0x00, 0xAB };
-		Write(ADDR_TOUCH, sync, 3);
-		if (b[6] == 0xAB && b[0] != 0xAB)
-		{
-			valid = true;
-			fingerDown = (b[5] & 0x7F) > 0 && (b[0] & 0x0F) == 0x06;
-			x = (b[1] << 4) | (b[3] >> 4);
-			y = (b[2] << 4) | (b[3] & 0x0F);
-			if (x >= kPanelWidth) x = kPanelWidth - 1;
-			if (y >= kPanelHeight) y = kPanelHeight - 1;
-		}
+		if (x >= kPanelWidth) x = kPanelWidth - 1;
+		if (y >= kPanelHeight) y = kPanelHeight - 1;
 	}
 	if (valid && fingerDown && HostDeviceDisplayTurned())
 	{
@@ -232,6 +371,27 @@ TouchPoll(void)
 }
 
 
+int
+HostDeviceTouchKeyPressed(void)
+{
+	for (int key = 0; key < kTouchKeys; key++)
+	{
+		unsigned presses = gTouchKeyPresses[key].load();
+		while (presses != 0)
+			if (gTouchKeyPresses[key].compare_exchange_weak(presses, presses - 1))
+				return key;
+	}
+	return -1;
+}
+
+
+void
+HostDeviceTouchTrace(bool on)
+{
+	gTouchTrace = on;
+}
+
+
 bool
 HostDeviceSheetPulled(void)
 {
@@ -247,6 +407,7 @@ HostDeviceSetLocked(bool locked)
 {
 	gLocked = locked;
 	gpio_set_level((gpio_num_t) PIN_KEY_LED, locked || !gKeyLight ? 0 : 1);
+	HostDeviceFrontlightLocked(locked);
 }
 
 
@@ -344,6 +505,8 @@ static bool		gShift = false, gSym = false, gAlt = false;
 static void
 KeyEvent(int key, bool press)
 {
+	if (gTouchTrace)
+		printf("[key] %d %s\n", key, press ? "down" : "up");
 	if (key == kKeyLeftShift || key == kKeyRightShift)
 	{
 		gShift = press;
@@ -414,6 +577,13 @@ KeyboardStart(void)
 {
 	for (int k = 0; k < 40; k++)
 		gSent[k].virtualKey = -1;
+	if (gBoardMax)
+	{
+		HostDeviceBoardSet(kLineKeyboardReset, false);
+		vTaskDelay(pdMS_TO_TICKS(10));
+		HostDeviceBoardSet(kLineKeyboardReset, true);
+		vTaskDelay(pdMS_TO_TICKS(10));
+	}
 	static const uint8_t setup[][2] = {
 		{ 0x1D, 0x0F },		// KP_GPIO1: rows 0-3
 		{ 0x1E, 0xFF },		// KP_GPIO2: columns 0-7
@@ -511,6 +681,13 @@ HostDeviceInputDump(void)
 {
 	printf("newton: input %s, interrupts: touch %lu, keyboard %lu, BOOT button %lu\n", gInterrupts ? "waits for interrupts" : "polled",
 		   (unsigned long) gTouchInterrupts, (unsigned long) gKeyInterrupts, (unsigned long) gButtonPresses);
+	uint8_t reg, config = 0, status = 0, events = 0;
+	reg = 0x01; ReadRegister(ADDR_KEYBOARD, &reg, 1, &config, 1);
+	reg = 0x02; ReadRegister(ADDR_KEYBOARD, &reg, 1, &status, 1);
+	reg = 0x03; ReadRegister(ADDR_KEYBOARD, &reg, 1, &events, 1);
+	printf("newton: lines: touch INT %d, keyboard INT %d, BOOT %d; keyboard CFG %02X INT_STAT %02X events %02X\n",
+		   gpio_get_level((gpio_num_t) PIN_TOUCH_INT), gpio_get_level((gpio_num_t) PIN_KEY_INT), gpio_get_level((gpio_num_t) PIN_BOOT_BUTTON),
+		   config, status, events);
 }
 
 
@@ -558,7 +735,9 @@ InputTask(void*)
 			gpio_intr_enable((gpio_num_t) PIN_TOUCH_INT);
 		if (!button)
 			gpio_intr_enable((gpio_num_t) PIN_BOOT_BUTTON);
-		ulTaskNotifyTake(pdTRUE, touching ? pdMS_TO_TICKS(10) : button ? pdMS_TO_TICKS(50) : portMAX_DELAY);
+		// (traced, the chips are looked at whether they say so or not, so
+		// that a report that comes with no interrupt shows)
+		ulTaskNotifyTake(pdTRUE, touching ? pdMS_TO_TICKS(10) : gTouchTrace ? pdMS_TO_TICKS(20) : button ? pdMS_TO_TICKS(50) : portMAX_DELAY);
 	}
 }
 
@@ -566,23 +745,6 @@ InputTask(void*)
 void
 HostDeviceInputStart(void)
 {
-	i2c_config_t c;
-	memset(&c, 0, sizeof(c));
-	c.mode = I2C_MODE_MASTER;
-	c.sda_io_num = PIN_SDA;
-	c.scl_io_num = PIN_SCL;
-	c.sda_pullup_en = GPIO_PULLUP_ENABLE;
-	c.scl_pullup_en = GPIO_PULLUP_ENABLE;
-	c.master.clk_speed = 400000;
-	if (i2c_param_config(I2C_PORT, &c) != ESP_OK || i2c_driver_install(I2C_PORT, I2C_MODE_MASTER, 0, 0, 0) != ESP_OK)
-	{
-		printf("newton: no I2C - no touch panel or keyboard\n");
-		return;
-	}
-	// the fuel gauge (tdeck_battery.cpp) stretches the clock while it wakes,
-	// far longer than the bus's own timeout (2^10 cycles of its 40 MHz
-	// clock, 26 us): 2^19 cycles, 13 ms
-	i2c_set_timeout(I2C_PORT, 19);
 	const size_t kStack = 4 * 1024;
 	StackType_t* stack = (StackType_t*) heap_caps_malloc(kStack, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 	StaticTask_t* control = (StaticTask_t*) heap_caps_malloc(sizeof(StaticTask_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
