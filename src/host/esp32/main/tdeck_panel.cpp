@@ -131,6 +131,7 @@ static volatile long	gInvertOld = 0;				// "invertOld": the picture before sent 
 static volatile long	gSwap = 0;					// "swap": the new picture to DTM1 and the one before to DTM2
 static volatile long	gWindow = 1;				// "window": a partial refresh only over the rectangle that changed
 static volatile long	gResetAsked = 0;			// "reset": the controller reset and set up again, once
+static volatile int		gFinishing = 0;				// 1 the last picture asked for, 2 drawn and the panel powered down
 static volatile long	gRedraw = 0;				// "redraw": 1 the screen sent again by partial refreshes (via white), 2 by full ones
 static volatile long	gTest = 0;					// "test": the test pattern (TestPattern; 3 its last step CleanArea, 2 a full refresh over a window), then the Newton's screen again
 const int64_t	kSettleMs = 60;					// a change unchanged this long is shown
@@ -592,6 +593,25 @@ PanelTask(void*)
 			converted = changes;
 			Convert(now);
 		}
+		if (gFinishing == 1)
+		{
+			// the last picture before the power goes: the panel cleared, drawn
+			// in full, so that no ghost stays on it for as long as it is off,
+			// and its high voltages taken down as they should be
+			Convert(now);
+			Refresh(shown, white, false);
+			Refresh(white, now, false);
+			memcpy(shown, now, kFrameBytes);
+			memcpy(pending, now, kFrameBytes);
+			Send(POF, NULL, 0);
+			WaitBusy(2000);
+			gFinishing = 2;
+			while (gFinishing == 2)
+				vTaskDelay(pdMS_TO_TICKS(100));
+			if (!PanelReset())
+				printf("newton: the panel did not answer its reset\n");
+			continue;
+		}
 		int64_t t = esp_timer_get_time();
 		if (gTest != 0)
 		{
@@ -722,6 +742,26 @@ HostDevicePanelStart(void)
 	if (stack == NULL || control == NULL
 	|| (gPanelTask = xTaskCreateStaticPinnedToCore(PanelTask, "panel", kStack, NULL, 3, stack, control, 0)) == NULL)
 		printf("newton: no room for the panel's task\n");
+}
+
+
+bool
+HostDevicePanelFinish(void)
+{
+	if (gPanelTask == NULL)
+		return false;
+	gFinishing = 1;
+	xTaskNotifyGive(gPanelTask);
+	for (int ms = 0; ms < 15000 && gFinishing != 2; ms += 50)
+		vTaskDelay(pdMS_TO_TICKS(50));
+	return gFinishing == 2;
+}
+
+
+void
+HostDevicePanelResume(void)
+{
+	gFinishing = 0;
 }
 
 

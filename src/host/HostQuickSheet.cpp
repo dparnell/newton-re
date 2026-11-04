@@ -36,11 +36,11 @@ FHostLockSleeps(RefArg /*rcvr*/)
 }
 
 
-static bool	(*gPowerOff)(void) = nil;
+static bool	(*gPowerOff)(bool really) = nil;
 
 
 void
-HostQuickSheetSetPowerOff(bool (*off)(void))
+HostQuickSheetSetPowerOff(bool (*off)(bool really))
 {
 	gPowerOff = off;
 }
@@ -54,11 +54,12 @@ FHostCanPowerOff(RefArg /*rcvr*/)
 }
 
 
-// HostPowerOff(): the board switched off; ==> nil if it could not be
+// HostPowerOff(really): nil, whether the board could switch off now; true, the
+// board switched off, what the screen shows staying on it; ==> nil if it could not be
 static Ref
-FHostPowerOff(RefArg /*rcvr*/)
+FHostPowerOff(RefArg /*rcvr*/, RefArg really)
 {
-	return gPowerOff != nil && gPowerOff() ? TRUEREF : NILREF;
+	return gPowerOff != nil && gPowerOff(NOTNIL(really)) ? TRUEREF : NILREF;
 }
 
 
@@ -97,7 +98,7 @@ HostInstallQuickSheet(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostUserActivity")), RefVar(MakeCFunction((void*) FHostUserActivity, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostLockSleeps")), RefVar(MakeCFunction((void*) FHostLockSleeps, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostCanPowerOff")), RefVar(MakeCFunction((void*) FHostCanPowerOff, 0, nil)));
-	SetFrameSlot(functions, RefVar(Intern((char*) "HostPowerOff")), RefVar(MakeCFunction((void*) FHostPowerOff, 0, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "HostPowerOff")), RefVar(MakeCFunction((void*) FHostPowerOff, 1, nil)));
 	newton_try
 	{
 		RefVar fn(ParseString(RefVar(MakeString(gHostQuickSheetSource))));

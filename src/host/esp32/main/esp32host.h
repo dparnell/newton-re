@@ -37,6 +37,8 @@ bool		HostWindowSetOption(const char* name, long value);
 // for it each time: the grays, their width and height now)
 void		HostDevicePanelFollow(void (*now)(const unsigned char** grays, long* width, long* height));
 bool		HostDeviceDisplayTurned(void);
+bool		HostDevicePanelFinish(void);		// what the display shows now drawn clean, the panel powered down, for the power going ==> whether it was
+void		HostDevicePanelResume(void);		// (the power did not go: the panel back)
 void		HostDevicePanelDump(void);			// what the panel shows, on the console (tools/tdeck/panelshot.py)		// the display wider than tall: drawn turned on the panel, the touch panel turned back	// a refresh setting changed (tdeck_panel.cpp lists them) ==> whether there is one so named
 // the touch panel and the keyboard (tdeck_input.cpp): read from the start,
 // handed to the window shims below
@@ -103,7 +105,7 @@ bool		HostDeviceCellStart(void);
 // source (started after the input; ==> whether there is a gauge)
 bool		HostDeviceBatteryStart(void);
 bool		HostDeviceBatteryCurrent(long* now, long* mean, long* samples, long* millivolts);	// mA (+ charging) now, and the mean of the 1 s samples since last asked (the sampler starts at the first call)
-bool		HostDeviceBatteryPowerOff(void);		// the Max switched off by its charger (on battery only) ==> false if not; else no return
+bool		HostDeviceBatteryPowerOff(bool really);	// the Max switched off by its charger (on battery only); not really: ==> whether it could be; really: no return, or ==> false
 bool		HostDeviceCanPowerOff(void);			// whether this board can
 bool		HostDeviceBatteryRunOnBattery(bool on);		// the charger's input cut (on) or back: the board on its battery while on USB
 

@@ -52,6 +52,8 @@
 {
 	kFont: 10240,							// the system font, 10 point
 	kBold: 1058816,							// ... bold (face 1: 1 << 20)
+	kBig: 1062912,							// ... bold, 14 point
+	offView: nil,							// the off screen (ShowOff), while it is up
 	kBig: 1067008,							// ... 18 point, bold
 	kSmall: 9216,							// ... 9 point
 	kRowHeight: 22,
@@ -218,15 +220,56 @@
 		if sheetView then :CloseSheet() else :OpenSheet();
 	end,
 
-	// The board switched off: the sheet closed first and the panel given time
-	// to show it, since an e-paper keeps what it last drew
+	// The board switched off.  An e-paper keeps what it last drew for as long
+	// as it likes, so what is left on it says so and how to start it again:
+	// HostPowerOff(true) sees that drawn before it takes the power away.
 	PowerOff: func()
 	begin
 		:CloseSheet();
+		if not HostPowerOff(nil) then return :CannotPowerOff();
+		:ShowOff();
+		RefreshViews();
 		AddDelayedCall(func() begin
-			if not HostPowerOff() then
-				GetRoot():Notify(3, "Power off", "Unplug the USB cable first: the board cannot switch off while USB powers it.");
-		end, nil, 2000);
+			if not HostPowerOff(true) then begin
+				GetGlobalVar('|QuickSheet:host|):HideOff();
+				GetGlobalVar('|QuickSheet:host|):CannotPowerOff();
+			end;
+		end, nil, 200);
+	end,
+
+	CannotPowerOff: func()
+		GetRoot():Notify(3, "Power off", "Unplug the USB cable first: the board cannot switch off while USB powers it."),
+
+	// the whole screen, white, with the message in the middle of it
+	ShowOff: func()
+	begin
+		local root := GetRoot():LocalBox();
+		local width := root.right - root.left;
+		local middle := (root.bottom - root.top) div 2;
+		offView := BuildContext({
+			viewClass: 74,													// clView
+			viewFlags: 580,													// vApplication, vFloating, vClickable (not vVisible: Open shows it)
+			viewFormat: 1,													// white
+			viewBounds: {left: 0, top: 0, right: width, bottom: root.bottom - root.top},
+			viewFont: kFont,
+			offScreen: true,
+			stepChildren: [
+				{_proto: @218, viewJustify: 2,								// protoStaticText, vjCenterH
+				 viewBounds: {left: 10, top: middle - 44, right: width - 10, bottom: middle - 22},
+				 viewFont: kBig, text: "This device is off"},
+				{_proto: @218, viewJustify: 2,
+				 viewBounds: {left: 16, top: middle - 12, right: width - 16, bottom: middle + 44},
+				 viewFont: kFont,
+				 text: "To turn it back on, press the button on the side of the device, or plug in USB."}],
+			viewQuitScript: func() GetGlobalVar('|QuickSheet:host|).offView := nil});
+		offView:Open();
+		offView;
+	end,
+
+	HideOff: func()
+	begin
+		if offView then offView:Close();
+		offView := nil;
 	end,
 
 	// one of the Host preferences panel's settings as a switch: {label, Get,

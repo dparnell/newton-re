@@ -101,12 +101,21 @@ is what QON does.
 
 So the Newton switches the board off and the side button switches it on.
 **Power off** is on the quick sheet, beside Lock screen (the finger pulled down
-from the top edge), on the Max only (`HostQuickSheetSetPowerOff`). It closes the
-sheet, waits 2 s for the e-paper to show that, holds the touch chip in reset as
-LilyGO's firmware does, and sets BATFET_DIS (REG09 bit 5) in the charger
-(`HostDeviceBatteryPowerOff`). The keyboard's light goes out and the panel keeps
-its picture. Tried on the owner's board on battery: it went off, and one press
-of the side button started it again. USB also starts it, by LilyGO's example.
+from the top edge), on the Max only (`HostQuickSheetSetPowerOff`).
+
+An e-paper keeps its last picture with no power, so a board that is off looks
+like one that is on. Power off therefore leaves a message: the sheet closes, a
+white view fills the screen saying "This device is off" and how to start it
+(`ShowOff` in `host/HostQuickSheet.ns`), and `HostDevicePanelFinish` clears the
+panel, draws that with a full refresh and takes the panel's high voltages down
+(POF). That is about 6 s. Only then does `HostDeviceBatteryPowerOff` hold the
+touch chip in reset, as LilyGO's firmware does, and set BATFET_DIS (REG09 bit 5)
+in the charger. The next start clears the panel anyway.
+
+Tried on the owner's board on battery: the screen cleared, the message stayed
+clean, and both the side button and plugging in USB started the board again.
+Should the charger not take it, the panel comes back, the off screen is taken
+down and the sheet's message about USB is shown.
 
 **On USB it cannot switch off**, the charger keeping the board up, so the sheet
 says to unplug the cable instead.

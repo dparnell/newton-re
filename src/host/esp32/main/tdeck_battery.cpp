@@ -225,14 +225,21 @@ HostDeviceBatteryRunOnBattery(bool on)
 // is pressed or USB comes (LilyGO's bq25896_shutdown example).  On USB the
 // board stays up, so that is refused.  The touch chip held in reset first, as
 // LilyGO's firmware does: cut off running, it can come back half awake.
-// ==> false if it could not; if it could, this does not return.
+// The panel keeps what it shows: it is finished first (the Newton has drawn
+// the off screen by now), which takes the 6 s of two full refreshes.
+// Not really: ==> whether it could be done.  Really: ==> false if it could
+// not; if it could, this does not return.
 bool
-HostDeviceBatteryPowerOff(void)
+HostDeviceBatteryPowerOff(bool really)
 {
 	uint8_t charger, fet;
 	if (!ReadCharger(&charger) || ((charger & 0x04) != 0 && !gOnBattery) || !ReadChargerRegister(kChargerBatteryFet, &fet))
 		return false;
+	if (!really)
+		return true;
 	printf("newton: switching off\n");
+	if (!HostDevicePanelFinish())
+		printf("newton: the panel did not finish\n");
 	HostDeviceBoardSet(kLineTouchReset, false);
 	vTaskDelay(pdMS_TO_TICKS(20));
 	WriteChargerRegister(kChargerBatteryFet, fet | 0x20);
@@ -240,6 +247,7 @@ HostDeviceBatteryPowerOff(void)
 	// (still here: it did not take)
 	WriteChargerRegister(kChargerBatteryFet, fet);
 	HostDeviceBoardSet(kLineTouchReset, true);
+	HostDevicePanelResume();
 	printf("newton: still on after the charger was told to switch off\n");
 	return false;
 }
