@@ -10,6 +10,8 @@
 				firmware for this board, include/utilities.h and
 				src/main.cpp's A7682E_init):
 
+				(the T-Deck Pro's lines; on the Max the supply and the key are
+				the XL9555's - tdeck_board.h)
 				- GPIO 41 (BOARD_6609_EN) high powers the module (an SGM6609
 				  boost converter);
 				- GPIO 40 (BOARD_A7682E_PWRKEY) is a button, not a switch:

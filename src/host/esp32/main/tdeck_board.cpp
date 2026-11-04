@@ -266,7 +266,7 @@ MotorRest(void*)
 
 
 void
-HostDeviceBuzz(void)
+HostDeviceBuzz(int effect)
 {
 	static bool started = false;
 	static esp_timer_handle_t rest = NULL;
@@ -275,7 +275,7 @@ HostDeviceBuzz(void)
 	if (!started)
 	{
 		HostDeviceBoardSet(kLineMotorPower, true);
-		vTaskDelay(pdMS_TO_TICKS(2));
+		vTaskDelay(pdMS_TO_TICKS(10));
 		esp_timer_create_args_t timer = {};
 		timer.callback = MotorRest;
 		timer.name = "motor";
@@ -287,12 +287,16 @@ HostDeviceBuzz(void)
 		i2c_master_write_read_device(I2C_PORT, ADDR_MOTOR, &reg, 1, &control, 1, pdMS_TO_TICKS(20));
 		MotorWrite(0x1D, control | 0x20);
 		MotorWrite(0x03, 1);							// LIBRARY: A
+		uint8_t status = 0;
+		reg = 0x00;
+		bool found = i2c_master_write_read_device(I2C_PORT, ADDR_MOTOR, &reg, 1, &status, 1, pdMS_TO_TICKS(20)) == ESP_OK;
+		printf("newton: the DRV2605 %s, status %02X, feedback %02X, control %02X\n", found ? "answers" : "does not answer", status, feedback, control);
 		started = true;
 	}
 	MotorWrite(0x01, 0x00);				// MODE: out of standby, internal trigger
-	MotorWrite(0x04, 24);				// the first effect: sharp tick
+	MotorWrite(0x04, (uint8_t) effect);	// the effect (the DRV2605's own numbers)
 	MotorWrite(0x05, 0);				// and the end
 	MotorWrite(0x0C, 1);				// GO
 	esp_timer_stop(rest);
-	esp_timer_start_once(rest, 200 * 1000);
+	esp_timer_start_once(rest, 1000 * 1000);
 }

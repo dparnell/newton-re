@@ -10,6 +10,11 @@
 				tablet, HostWindowKey into the keyboard tool's queue - all
 				callable from any thread).
 
+				On the T-Deck Max the touch panel is another chip with
+				another protocol and three touch keys below the screen
+				(TouchReadMax; docs/host-tdeck-max.md); everything after the
+				report is read is the same.
+
 				Touch: the CST328 (as the device spike read it,
 				docs/host-tdeck-pro.md) reports in the panel's own pixels,
 				which are the display's; the Newton's own pen calibration
@@ -221,7 +226,7 @@ TouchKey(int key)
 		HostWindowKey(kVKNone, 0);
 		return;
 	}
-	HostDeviceBuzz();
+	HostDeviceBuzz(1);
 	gTouchKeyPresses[key]++;
 	HostDeviceKick();
 }
@@ -248,8 +253,11 @@ TouchReadMax(bool* fingerDown, long* x, long* y)
 		good = sum == (uint16_t) (b[0] | (b[1] << 8));
 	}
 	TouchMaxCommand(0xD00002AB);
-	if (gTouchTrace)
+	// (the chip goes on answering with its last report: shown once)
+	static uint8_t shown[4 + kBlock];
+	if (gTouchTrace && (!good || fingers + keys != 0) && memcmp(shown + 2, b + 2, 2 + kBlock) != 0)
 	{
+		memcpy(shown, b, sizeof(shown));
 		printf("[touch] %s %02X, %d fingers %d keys:", good ? "report" : "BAD", b[2], fingers, keys);
 		for (int k = 0; k < (good ? (fingers + keys) * kBlock : kBlock); k++)
 			printf(" %02X", b[4 + k]);
@@ -497,6 +505,8 @@ static bool		gShift = false, gSym = false, gAlt = false;
 static void
 KeyEvent(int key, bool press)
 {
+	if (gTouchTrace)
+		printf("[key] %d %s\n", key, press ? "down" : "up");
 	if (key == kKeyLeftShift || key == kKeyRightShift)
 	{
 		gShift = press;
@@ -671,6 +681,13 @@ HostDeviceInputDump(void)
 {
 	printf("newton: input %s, interrupts: touch %lu, keyboard %lu, BOOT button %lu\n", gInterrupts ? "waits for interrupts" : "polled",
 		   (unsigned long) gTouchInterrupts, (unsigned long) gKeyInterrupts, (unsigned long) gButtonPresses);
+	uint8_t reg, config = 0, status = 0, events = 0;
+	reg = 0x01; ReadRegister(ADDR_KEYBOARD, &reg, 1, &config, 1);
+	reg = 0x02; ReadRegister(ADDR_KEYBOARD, &reg, 1, &status, 1);
+	reg = 0x03; ReadRegister(ADDR_KEYBOARD, &reg, 1, &events, 1);
+	printf("newton: lines: touch INT %d, keyboard INT %d, BOOT %d; keyboard CFG %02X INT_STAT %02X events %02X\n",
+		   gpio_get_level((gpio_num_t) PIN_TOUCH_INT), gpio_get_level((gpio_num_t) PIN_KEY_INT), gpio_get_level((gpio_num_t) PIN_BOOT_BUTTON),
+		   config, status, events);
 }
 
 
@@ -718,7 +735,9 @@ InputTask(void*)
 			gpio_intr_enable((gpio_num_t) PIN_TOUCH_INT);
 		if (!button)
 			gpio_intr_enable((gpio_num_t) PIN_BOOT_BUTTON);
-		ulTaskNotifyTake(pdTRUE, touching ? pdMS_TO_TICKS(10) : button ? pdMS_TO_TICKS(50) : portMAX_DELAY);
+		// (traced, the chips are looked at whether they say so or not, so
+		// that a report that comes with no interrupt shows)
+		ulTaskNotifyTake(pdTRUE, touching ? pdMS_TO_TICKS(10) : gTouchTrace ? pdMS_TO_TICKS(20) : button ? pdMS_TO_TICKS(50) : portMAX_DELAY);
 	}
 }
 

@@ -141,7 +141,7 @@ void		HostDeviceAudioTest(void);					// the console's !sound: the loudspeaker me
 bool		HostDeviceFrontlightSet(long level);		// ==> whether there is one
 long		HostDeviceFrontlight(void);					// the level asked for
 void		HostDeviceFrontlightLocked(bool locked);
-void		HostDeviceBuzz(void);
+void		HostDeviceBuzz(int effect);					// the DRV2605's effect (1 strong click, 14 strong buzz, 47 buzz)
 
 // the sampling profiler of core 1 (tdeck_profile.cpp): started with the
 // board, a phase's start marked, the samples printed (and the profiler

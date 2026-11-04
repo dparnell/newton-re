@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-04: the T-Deck Max
+
+The owner's new board, on one image with the Pro's: `tdeck_board.cpp` finds
+which it is by the XL9555 at 0x20, and the drivers take the lines that differ
+from it. It booted on the first flash. New on the board: its touch chip's
+protocol, the three touch keys as the ROM's scroll and Overview buttons, sound
+through the ES8311 (the first ESP32 sound driver: `tdeck_audio.cpp`), frontlight
+and motor. `!sound` measures the sound path with nobody listening, and found
+what no listener would have until they recorded something: ESP-IDF's receive
+channel delivering 43200 samples a second, both slots of each frame. LilyGO's
+pin map has the I2S data pins backwards. The side button is not visible to the
+ESP32-S3. All of it, and what is not tried: `docs/host-tdeck-max.md`.
+
 ## 2026-11-02: the Newton no longer looks every 10 ms
 
 `NEWTON_TRACE_IDLE`'s new kernel line found a timer every 10 ms: the host's

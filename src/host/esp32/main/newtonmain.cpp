@@ -215,7 +215,8 @@ FDevicePower(RefArg /*rcvr*/)
 // power save, 0 none, 1 min modem (ESP-IDF's default), 2 max modem (ours); 'sleep -
 // automatic light sleep allowed; 'usbAway - the USB let go for that many
 // seconds (light sleep can then happen; the console comes back after);
-// 'touchTrace - the Max's touch chip's reports on the console
+// 'touchTrace - the Max's touch chip's reports on the console; 'buzz - its
+// motor's effect of that number
 // ==> true when taken
 static Ref
 FDevicePowerSet(RefArg /*rcvr*/, RefArg name, RefArg on)
@@ -238,6 +239,11 @@ FDevicePowerSet(RefArg /*rcvr*/, RefArg name, RefArg on)
 		return HostDevicePowerSetLightSleep(NOTNIL(on)) ? TRUEREF : NILREF;
 	if (strcasecmp(what, "usbAway") == 0)
 		return ISINT(on) && HostDevicePowerUsbAway(RINT(on)) ? TRUEREF : NILREF;
+	if (strcasecmp(what, "buzz") == 0 && ISINT(on))
+	{
+		HostDeviceBuzz((int) RINT(on));
+		return TRUEREF;
+	}
 	if (strcasecmp(what, "touchTrace") == 0)
 	{
 		HostDeviceTouchTrace(NOTNIL(on));

@@ -177,6 +177,7 @@ ConsoleReader(void*)
 		}
 		// the board's own commands, answered here whatever the Newton is
 		// doing (a Newton that is stuck cannot be asked through itself):
+		// !sound the Max's sound measured (tdeck_audio.cpp),
 		// !prof the profile so far (tdeck_profile.cpp), !pm the power
 		// management's state and !tasks each task's time since last asked
 		// (tdeck_power.cpp), !shot what the panel
