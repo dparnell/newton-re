@@ -136,7 +136,8 @@ The timers' and the real-time clock's interrupts are wired into
 `HostDeliverInterrupts` and `HostIdleTask` by name.  Any other hardware a
 host driver stands in for (the sound hardware's "this DMA buffer is
 played" is the first) registers an *interrupt source* instead
-(`hal/host/HostInterruptSources.h`): two functions, `deadline` - whether an
+(`hal/host/HostInterruptSources.h`, whose rules include answering a time
+already past when due, never the clock read afresh): two functions, `deadline` - whether an
 interrupt is due at all and, if so, the system-clock time it falls due -
 and `deliver`, the interrupt handler.
 

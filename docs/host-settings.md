@@ -43,7 +43,7 @@ application's own Prefs, its "i" button: `docs/host-tdeck-pro-mesh.md`.)
 
 | setting | what it does | where | before the panel |
 |---|---|---|---|
-| Beam over the network (`lanBeam`) | the built-in IR port's medium the LAN group (239.255.78.119:3681): beam to any newton on the network with it on - off, the port has nobody in front of it (or the `--ir-peer` newton was started with) | every host | `--ir-lan` |
+| Beam over the network (`lanBeam`) | the built-in IR port's medium the LAN group (239.255.78.119:3681): beam to any newton on the network with it on - off, the port has nobody in front of it (or the `--ir-peer` newton was started with) | every host (on from the start on a board, which has no other IR: `src/host/esp32`) | `--ir-lan` |
 | Dock over the network (`docking`) | the serial port's TCP listener (3679, or `--serial-port`'s) open: a desktop docks with it; off, a desktop connected is cut off as by a cable pulled out | every host | `--serial-port none` |
 | GPS receiver on (`gps`, a picker) | the port the GPS receiver newton was given (`--gps`, `hal/host/HostGPS.h`) is plugged into: Not plugged in; Serial port 2 (`'mdem'`, a port of its own - GPS Map's "Serial Port 2", GPS Monitor's "Internal Modem"); or Serial port, the external one, for GPS View, which never asks - there it is the port's cable and Dock over the network takes nobody ([comms/gps.md](comms/gps.md)) | a host started with `--gps` | `--gps-port 1`; serial port 2 by default |
 | GPS receiver (`gpsKind`, a picker) | the receiver an NMEA one (sentences all the time) or a DeLorme Tripmate (ASTRAL first: GPS View) | a host started with `--gps` | `--gps-kind tripmate` |

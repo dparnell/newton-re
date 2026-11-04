@@ -26,6 +26,14 @@
 				audio device's callback) must never call either; it can only
 				leave something for them to read.
 
+				A source already due answers a time already past (0 will
+				do), never the clock read afresh: delivery compares it with
+				a now read before the source was asked, so a fresh read is
+				always a little later on a machine where GetClock takes
+				longer than a tick - the source is never delivered, and the
+				idle task spins on a deadline that is always just ahead (the
+				T-Deck's; a desktop's two reads share a tick).
+
 				The ROM has no such registry: each interrupt is wired to its
 				handler by the interrupt controller.  This is the host's
 				stand-in for that wiring, as the RTC's alarm check in

@@ -530,6 +530,14 @@ Sharp IR, IrDA and the sniffer run exactly as over `--ir-peer`
   and sent on every IPv4 interface that is up and can multicast (loopback
   included); `--ir-lan-interface ADDRESS` keeps it to one (127.0.0.1:
   this machine only - what the tests use).
+- **When.** The group is joined when a tool first claims the port (the
+  Beam transport's endpoint, or the sniffer), not when the medium is
+  chosen: a network may come after the OS, as a board's Wi-Fi does, and
+  with none a claim tries again each second.  It is looked at only while a
+  tool has the port (or what one sent has still to go): nothing else can
+  hear it, and a machine on a battery must not wake every 5 ms for
+  nothing.  What the socket kept meanwhile is let go at the next claim -
+  light is not stored.
 - **Why multicast, not broadcast.** A limited broadcast
   (255.255.255.255) leaves by one interface only, the one the routing
   table picks - on a machine with a VPN, Hyper-V's switches for WSL,
@@ -629,10 +637,45 @@ receiving, `demo/beam-lan-bystander.ns`),
 `hal.HostIRChip` checks the medium itself (three chips: heard by the
 others and not by itself, facing, the modulation, five seconds' silence).
 
-A Prefs toggle is not worth having yet: like `--ir-peer`, the medium is
-the host machine's IR window, chosen when newton starts; a panel would
-want the socket opened and closed while the OS runs, and nothing asks
-for that.
+The Host preferences' "Beam over the network" switches the medium while
+newton runs (`docs/host-settings.md`).
+
+**Between machines**, by hand: `demo/beam-lan-partner.ns` is a desktop's
+side (receives automatically, stays up for the sender to finish, beams a
+note back), and `tools/host/irlanwatch.py` is a bystander printing every
+datagram of the group, which tells a sender that reaches nobody from a
+receiver that hears nothing.
+
+**On a board** (`src/host/esp32`) the medium is the only IR there is, so it
+is on from the start; `newtonmain.cpp` installs the chip and
+`RegisterIRCommServices`.  Three things only a real board showed:
+
+- *An interrupt that is due must not answer the clock afresh.*  The chip
+  sent nothing and the idle task spun at 80% of a core: `Due()` answered
+  `GetClock`, which `HostDeliverInterruptSources` compares with a now read
+  earlier.  Where GetClock takes longer than a tick the deadline is always
+  just ahead, so a source with work is never delivered.  A desktop's two
+  reads share a tick, which is why every ctest passed.  The serial chip and
+  the fast timers did the same; the rule is now in
+  `hal/host/HostInterruptSources.h`, and `hal.HostIRChip` tests it.
+- *Wi-Fi power save.*  Asleep between beacons, the radio hears a multicast
+  only at the next DTIM.  A note beamed to the Max with power save at max
+  modem never arrived, the two facing each other and giving up; sent from
+  it, 16.6 s against 4.5 s with power save off.  `gHostIRBeaming` turns it
+  off while a tool has the port and back to what was chosen afterwards.
+  So "Receive beams automatically" on a board keeps the sniffer on the port
+  and the radio awake, and the chip polled, for as long as it is on.
+- *Two boards draw alike.*  `rand()`'s seed was the clock's seconds and the
+  process id; a board has one process and, until the network sets it, the
+  same clock as any other, so a Pro and a Max would take one IrDA device
+  address.  `GetMachineRandomSeed` mixes in `esp_random()` there.
+
+Measured between the Max and a desktop on the same network, by how long the
+radio's power save stayed off: a note out in 6 s, a note in 5 s, no datagram
+missed by `irlanwatch.py`.  Pro and Max, by the two consoles (one's
+`ReceiveRequest`, then the other's `SendRequest`): each note in the other's
+In Box as `Received`, the send taking 6.7 s from the Pro and 3.9 s from the
+Max.
 
 ## The web browsers
 

@@ -49,7 +49,10 @@
 				datagram lost is light lost (the protocols retransmit); one
 				overtaken by a later one is dropped as lost, never heard
 				out of order (docs/comms/README.md, "Beaming over the
-				network").
+				network").  The group is joined when a tool first claims
+				the port, and looked at only while one has it: nothing
+				else can hear it, a network may come after the OS, and a
+				board on a battery sleeps meanwhile.
 */
 
 #ifndef __HOSTIRCHIP_H
@@ -66,9 +69,10 @@ class TSerialChip;
 // to connect; "HOST:PORT" connects to it (again and again until it
 // answers, since the other may start later); "lan", "lan:PORT" or either
 // with "@ADDRESS" is the LAN medium - the multicast group 239.255.78.119
-// on PORT (3681 by default) joined on every IPv4 interface that can
-// multicast, or only the one whose address is ADDRESS (127.0.0.1 keeps
-// it to the machine).  NEWTON_IR_LAN_LOSS=N loses N per cent of the
+// on PORT (3681 by default) joined, when a tool claims the port, on every
+// IPv4 interface that can multicast, or only the one whose address is
+// ADDRESS (127.0.0.1 keeps it to the machine); with no network then it is
+// tried again each second.  NEWTON_IR_LAN_LOSS=N loses N per cent of the
 // datagrams heard.  Not registered.
 // ==> noErr and the chip, or why not.
 NewtonErr		HostIRChipMake(const char* peer, TSerialChip** chip);
@@ -91,5 +95,11 @@ TSerialChip*	HostIRChipInstalled(void);
 // meet.  ==> noErr, or why not (the chip then has no medium).
 NewtonErr		HostIRChipSetPeer(const char* peer);
 Boolean			HostIRChipOnLan(void);				// the installed chip is on the LAN medium
+
+// Told when a tool takes the port on the LAN medium (true) and when it lets
+// it go (false): IrDA and Sharp IR answer within a fraction of a second, and
+// a board's Wi-Fi asleep between beacons hears the group too late (its
+// power save is off meanwhile - src/host/esp32).  Called with the baton held.
+extern void		(*gHostIRBeaming)(Boolean beaming);
 
 #endif

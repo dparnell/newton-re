@@ -16,6 +16,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_debug_helpers.h"
+#include "esp_random.h"
 #else
 #include <pthread.h>
 #include <unistd.h>
@@ -92,7 +93,10 @@ GetCPUClockSpeed(void)
 // started together on one host (two receivers in a test, say) are each a
 // process of their own.  NEWTON_RANDOM_SEED gives the seed outright, so
 // that a run can be repeated (a test that depends on what the random
-// numbers make - a game's dungeon - sets it).
+// numbers make - a game's dungeon - sets it).  A board has one process and,
+// until the network sets it, a clock that starts where every board's does,
+// so two would draw the same numbers - and take the same IrDA device
+// address: the radio's random number stands in for the process id there.
 extern "C" ULong
 GetMachineRandomSeed(ULong clockSeconds)
 {
@@ -101,6 +105,8 @@ GetMachineRandomSeed(ULong clockSeconds)
 		return (ULong) strtoul(seed, nil, 0);
 #ifdef _WIN32
 	return clockSeconds ^ (ULong) GetCurrentProcessId();
+#elif defined(ESP_PLATFORM)
+	return clockSeconds ^ (ULong) esp_random();
 #else
 	return clockSeconds ^ (ULong) getpid();
 #endif

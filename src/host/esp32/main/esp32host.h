@@ -76,6 +76,7 @@ bool		HostDeviceWifiRemember(const char* ssid, const char* password);
 bool		HostDeviceWifiForget(const char* ssid);
 bool		HostDeviceWifiSetRadio(bool on);			// the radio switched off (nothing joined) or on again (for measuring: DevicePowerSet)
 bool		HostDeviceWifiSetPowerSave(int mode);		// ESP-IDF's wifi_ps_type_t: 0 none, 1 min modem (its default), 2 max modem
+void		HostDeviceWifiBeaming(bool beaming);		// a beam under way: power save off, then back as it was (hal/host/HostIRChip.h's gHostIRBeaming)
 void		HostDeviceWifiStatus(int* state, char* ssid, unsigned long* address, long* rssi);
 unsigned long	HostDeviceClockSyncs(void);		// how many times the board's clock has been set (from the network, or by hand)
 void		HostDeviceClockSetTo(long long seconds);	// the board's clock set by hand, in seconds from 1970 (GMT)

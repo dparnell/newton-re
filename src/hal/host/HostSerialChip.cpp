@@ -360,7 +360,7 @@ THostSerialChip::Due(Int64* when)
 	if (fTool == nil || !fIntEnabled)
 		return false;
 	if (fTxIntPending || fRxReady > 0 || fStatusChanged)
-		GetClock(when);
+		when->hi = 0, when->lo = 0;		// (due: HostInterruptSources.h)
 	else
 		*when = fNextPoll;
 	return true;

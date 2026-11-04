@@ -664,3 +664,16 @@ with `.iconset`), and the `.icns` made from it by Apple's `iconutil`
 (macOS only; `--no-icns` stops at the iconset).  Standard library only.
 The build runs it for `Newton.app` (`src/host/CMakeLists.txt`); about eight
 seconds.
+
+## irlanwatch.py - what is being beamed on the network
+
+    python tools/host/irlanwatch.py [seconds] [--interface ADDRESS]... [--port N] [--bytes N] [--send-test]
+
+A bystander on the LAN medium's multicast group (`newton --ir-lan`, and any
+T-Deck): one line for each datagram - when, from which address, the sender's
+instance and sequence number, whom it is pointed at, its first bytes with their
+modulation - then how many each sender sent and how many this machine missed.
+Joins on the interface with the default route unless told; a machine with
+several networks names the one the other newton is on.  It takes no part, so
+it tells a sender whose datagrams reach nobody from a receiver that hears
+nothing.  Python 3 only.

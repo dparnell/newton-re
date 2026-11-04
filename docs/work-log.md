@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-04: beaming on the T-Deck boards
+
+Beam on a Pro or Max said "Error -26005 encountered": the fix of 2026-09-30
+(the IR port always there) went into `newton.cpp`, and the board boots through
+`newtonmain.cpp`, so it had no IR services and no chip.  With those in, "Looking
+for receiver..." and nothing on the network, the idle task spinning: a source
+due answered a fresh `GetClock`, later than the now it is compared with on any
+machine where the clock takes longer than a tick to read, so it was never
+delivered (the IR chip, the serial chip, the fast timers; a desktop's reads
+share a tick).  Then Wi-Fi power save, which lost a beam coming in and made one
+going out four times slower, and IrDA addresses alike on two boards.  The LAN
+medium now joins its group when a tool claims the port and is polled only while
+one has it.  `docs/comms/README.md`, "Beaming over the network";
+`tools/host/irlanwatch.py`, `demo/beam-lan-partner.ns`.  Checked both ways
+between the Max and a desktop and between the Max and the Pro, from the consoles
+(the transport's requests); the owner beamed a note from the Pro to the Max by
+hand.
+
 ## 2026-11-04: the T-Deck Max
 
 The owner's new board, on one image with the Pro's: `tdeck_board.cpp` finds
