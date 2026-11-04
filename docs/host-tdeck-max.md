@@ -69,8 +69,8 @@ V0.1. Found on the way:
 The report is at register `0xD0070000` and is taken with `0xD00002AB`; every
 command is four bytes (`TouchReadMax`'s comment has the layout). Positions are
 the panel's own pixels, with no rotation or mirroring: the four corners were
-tapped and came back as (0,0), (239,0), (239,319), (0,319) within a few
-pixels. A finger's state is the high nibble of its last byte: 1 landed, 2 held,
+tapped with a finger and came back as (0,6), (235,4), (238,315) and (9,309).
+A finger's state is the high nibble of its last byte: 1 landed, 2 held,
 0 lifted. The chip goes on answering with its last report if it is asked
 between reports, which does no harm: it reads as nothing changed.
 

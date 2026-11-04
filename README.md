@@ -70,7 +70,7 @@ build without the ROM image simply skips the few that compare against it).
 | Linux (x86-64) | the system's clang; X11 and ALSA; every ctest passes (checked under WSL 2) | [docs/host-lp64.md](docs/host-lp64.md) |
 | 32-bit x86 Linux | built and tested under WSL by `tools/host/wsl32.sh`; the proof that the tree is correct at 32 bits | [docs/host-lp64.md](docs/host-lp64.md) |
 | reMarkable Paper Pro | runs from AppLoad on the tablet's e-paper, written on with the Marker | [docs/host-remarkable.md](docs/host-remarkable.md) |
-| LilyGO T-Deck Max | **boots and runs on the board**, the same image as the Pro's, with sound, three touch keys, frontlight and motor - [docs/host-tdeck-max.md](docs/host-tdeck-max.md) |
+| LilyGO T-Deck Max | **boots and runs on the board**, the same image as the Pro's, with sound, three touch keys, frontlight and motor | [docs/host-tdeck-max.md](docs/host-tdeck-max.md) |
 | LilyGO T-Deck Pro | **boots and runs on the board** (ESP32-S3, e-paper, touch, keyboard) - below | [docs/host-tdeck-pro.md](docs/host-tdeck-pro.md) |
 | macOS (Apple silicon, Intel) | `Newton.app`: the system clang, an AppKit window, audio queues; one binary for both with `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"`, signed ad hoc; every ctest passes but the two flaky on every host | [docs/host-macos.md](docs/host-macos.md) |
 
