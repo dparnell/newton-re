@@ -51,6 +51,8 @@
 #include "comms/host/HostMeshApp.h"
 #include "host/HostSettings.h"
 #include "host/HostQuickSheet.h"
+#include "HostSoundDriver.h"
+#include "HostAudio.h"
 #include "host/HostDeveloper.h"
 #include "print/host/HostIPP.h"
 #include "host/HostFontProvider.h"
@@ -212,7 +214,8 @@ FDevicePower(RefArg /*rcvr*/)
 // the keyboard's light allowed; 'wifi - the WiFi radio on; 'wifiSave - its
 // power save, 0 none, 1 min modem (ESP-IDF's default), 2 max modem (ours); 'sleep -
 // automatic light sleep allowed; 'usbAway - the USB let go for that many
-// seconds (light sleep can then happen; the console comes back after)
+// seconds (light sleep can then happen; the console comes back after);
+// 'touchTrace - the Max's touch chip's reports on the console
 // ==> true when taken
 static Ref
 FDevicePowerSet(RefArg /*rcvr*/, RefArg name, RefArg on)
@@ -235,6 +238,11 @@ FDevicePowerSet(RefArg /*rcvr*/, RefArg name, RefArg on)
 		return HostDevicePowerSetLightSleep(NOTNIL(on)) ? TRUEREF : NILREF;
 	if (strcasecmp(what, "usbAway") == 0)
 		return ISINT(on) && HostDevicePowerUsbAway(RINT(on)) ? TRUEREF : NILREF;
+	if (strcasecmp(what, "touchTrace") == 0)
+	{
+		HostDeviceTouchTrace(NOTNIL(on));
+		return TRUEREF;
+	}
 	return NILREF;
 }
 
@@ -259,6 +267,7 @@ FDeviceMemory(RefArg /*rcvr*/)
 struct TDeviceEvalEvent : public TAEvent
 {
 	const char*	fSource;		// (nil: the quick sheet pulled down - HostQuickSheetPulled, nothing printed)
+	bool		fQuiet;			// the result not printed (the board's own: a touch key)
 };
 
 class TDeviceEvalHandler : public TAEventHandler
@@ -282,7 +291,8 @@ public:
 			if ((Ref) fn != NILREF)
 			{
 				RefVar result(InterpretBlock(fn, RefVar(gVarFrame)));
-				PrintObject(result, 0);
+				if (!eval->fQuiet)
+					PrintObject(result, 0);
 			}
 		}
 		newton_catch_all
@@ -467,8 +477,28 @@ DeviceServices(void)
 			pulled.fAEventClass = 'host';
 			pulled.fAEventID = 'eval';
 			pulled.fSource = nil;
+			pulled.fQuiet = true;
 			ULong replySize = 0;
 			newtPort.SendRPC(&replySize, &pulled, sizeof(pulled), &pulled, sizeof(pulled));
+		}
+		// the Max's touch keys: the ROM's scroll and Overview buttons'
+		// commands (romsrc/objects/shared/frames.ns: upButton, ovButton,
+		// downButton), left to right up, Overview, down - aeScrollUp 0x2d,
+		// aeOverview 0x33, aeScrollDown 0x2e (views/Commands.h)
+		for (int key; (key = HostDeviceTouchKeyPressed()) >= 0; )
+		{
+			static const char* const kTouchKeyCommands[3] = {
+				"PostCommand('viewfrontmost, 0x2d); RefreshViews();",
+				"PostCommand('viewfrontmost, 0x33);",
+				"PostCommand('viewfrontmost, 0x2e); RefreshViews();"
+			};
+			TDeviceEvalEvent command;
+			command.fAEventClass = 'host';
+			command.fAEventID = 'eval';
+			command.fSource = kTouchKeyCommands[key];
+			command.fQuiet = true;
+			ULong replySize = 0;
+			newtPort.SendRPC(&replySize, &command, sizeof(command), &command, sizeof(command));
 		}
 		if (HostDeviceReadLine(line, sizeof(line)))
 		{
@@ -476,6 +506,7 @@ DeviceServices(void)
 			eval.fAEventClass = 'host';
 			eval.fAEventID = 'eval';
 			eval.fSource = line;
+			eval.fQuiet = false;
 			ULong replySize = 0;
 			newtPort.SendRPC(&replySize, &eval, sizeof(eval), &eval, sizeof(eval));
 		}
@@ -531,6 +562,10 @@ NewtonMainOnDevice(const void* image, size_t size)
 	gNewtHostPreMain = DevicePreMain;
 	NewtInstallUserMain();
 	gHostKernelServicesTask = DeviceServices;
+	// the sound hardware: the Max's codec (tdeck_audio.cpp); a Pro has none (before the OS boots: the sound server looks for it there)
+	static const HostSoundBackend kCodec = { HostAudioPlay, HostMicrophoneRecord };
+	if (HostAudioOpen(kHostSoundRate) && HostMicrophoneOpen(kHostSoundRate))
+		HostInstallSoundDriver(&kCodec);
 	Step("the OS booting");
 	OsBoot();
 }

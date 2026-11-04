@@ -43,6 +43,8 @@ void		HostDevicePanelDump(void);			// what the panel shows, on the console (tool
 void		HostDeviceInputStart(void);
 void		HostDeviceInputDump(void);			// the console's !pm: interrupts or polls, and how many
 bool		HostDeviceSheetPulled(void);		// the quick sheet pulled down from the top edge since last asked (once for each pull) ==> whether
+int			HostDeviceTouchKeyPressed(void);	// the Max: a touch key below the screen pressed since last asked ==> which (0-2, left to right), or -1
+void		HostDeviceTouchTrace(bool on);		// the Max: the touch chip's reports on the console
 void		HostDeviceSetLocked(bool locked);	// the lock screen up or down: the keyboard left out and its light off meanwhile
 void		HostDeviceSetKeyLight(bool on);		// the keyboard's light allowed (on, as at start) or kept off
 // the internal flash on the board's `store` partition (tdeck_store.cpp):
@@ -112,7 +114,9 @@ enum
 	kAwakeGps = 1,							// its UART read by a Newton application (else its bursts wake the chip)
 	kAwakeCell = 2,							// the 4G module's
 	kAwakeUsb = 4,							// the USB taken back, being enumerated
-	kAwakeUsbPower = 8						// on USB power (tdeck_battery.cpp: the USB does not survive light sleep)
+	kAwakeUsbPower = 8,						// on USB power (tdeck_battery.cpp: the USB does not survive light sleep)
+	kAwakeSound = 16,						// the I2S clocks running (tdeck_audio.cpp)
+	kAwakeLight = 32						// the frontlight on (its PWM stops in light sleep)
 };
 bool		HostDevicePowerStart(void);
 void		HostDevicePowerKeepAwake(unsigned who, bool on);
@@ -125,6 +129,19 @@ void		HostDevicePowerTasks(void);					// the console's !tasks: each task's time 
 // task waits up to so long, or until woken - the chip sleeping meanwhile
 void		HostDevicePowerSleepWait(unsigned long milliseconds);
 void		HostDevicePowerSleepWake(void);
+
+// the Max's sound (tdeck_audio.cpp - host/HostAudio.h's calls are its main
+// business): the loudspeaker the modem's for the length of a call
+void		HostDeviceAudioCall(bool on);
+void		HostDeviceAudioDump(void);					// the console's !pm
+void		HostDeviceAudioTest(void);					// the console's !sound: the loudspeaker measured through the microphone
+
+// the Max's frontlight and vibration motor (tdeck_board.cpp): the light at a
+// level of 0 (off) to 100, kept off while the screen is locked; a short buzz
+bool		HostDeviceFrontlightSet(long level);		// ==> whether there is one
+long		HostDeviceFrontlight(void);					// the level asked for
+void		HostDeviceFrontlightLocked(bool locked);
+void		HostDeviceBuzz(void);
 
 // the sampling profiler of core 1 (tdeck_profile.cpp): started with the
 // board, a phase's start marked, the samples printed (and the profiler

@@ -217,6 +217,7 @@ HostDevicePowerDump(void)
 		   usb_serial_jtag_is_connected() ? "connected" : "not connected", gLightSleep ? "allowed" : "off");
 	HostDeviceGpsDump();
 	HostDeviceInputDump();
+	HostDeviceAudioDump();
 	esp_pm_dump_locks(stdout);
 }
 

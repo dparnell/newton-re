@@ -66,11 +66,9 @@
 #include "esp_sleep.h"
 
 #include "esp32host.h"
+#include "tdeck_board.h"
 #include "HostGPS.h"
 
-#define PIN_GPS_POWER	39				// BOARD_GPS_EN
-#define PIN_GPS_TX		43				// ours, to the module's RXD
-#define PIN_GPS_RX		44				// ours, from the module's TXD
 
 static const uart_port_t	kPort = UART_NUM_2;
 static QueueHandle_t		gPowerRequests;		// the switch's: on or off (a bool)
@@ -226,7 +224,7 @@ PowerTask(void*)
 		bool on;
 		if (xQueueReceive(gPowerRequests, &on, portMAX_DELAY) != pdTRUE)
 			continue;
-		gpio_set_level((gpio_num_t) PIN_GPS_POWER, on ? 1 : 0);
+		HostDeviceBoardSet(kLineGpsPower, on);
 		gPoweredAt = esp_timer_get_time();
 		gSentencesSet = kSentencesUnknown;		// (its defaults again)
 		gPowered = on;
@@ -367,13 +365,9 @@ Hears(long ms)
 bool
 HostDeviceGpsStart(void)
 {
-	gpio_hold_dis((gpio_num_t) PIN_GPS_POWER);
-	gpio_config_t pins = {};
-	pins.pin_bit_mask = 1ULL << PIN_GPS_POWER;
-	pins.mode = GPIO_MODE_INPUT_OUTPUT;
-	gpio_config(&pins);
+	HostDeviceBoardLineStart(kLineGpsPower);
 	bool on = !KeptOff();
-	gpio_set_level((gpio_num_t) PIN_GPS_POWER, on ? 1 : 0);
+	HostDeviceBoardSet(kLineGpsPower, on);
 	gPowered = on;
 
 	uart_config_t config = {};

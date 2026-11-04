@@ -77,6 +77,7 @@
 #include "esp_heap_caps.h"
 
 #include "esp32host.h"
+#include "tdeck_board.h"
 
 // pins (LilyGO's schematic): the SPI bus is shared with the LoRa radio
 // (tdeck_lora.cpp) and the SD card, kept deselected
@@ -88,6 +89,7 @@
 #define PIN_BUSY	37		// low while busy
 #define PIN_LORA_CS	3
 #define PIN_SD_CS	48
+#define PIN_RESET	9		// (the Max's; the Pro's panel has no reset line)
 
 // UC8253 commands
 #define PSR		0x00
@@ -260,6 +262,16 @@ PanelInit(void)
 	gpio_set_direction((gpio_num_t) PIN_DC, GPIO_MODE_OUTPUT);
 	gpio_set_direction((gpio_num_t) PIN_BUSY, GPIO_MODE_INPUT);
 	gpio_set_pull_mode((gpio_num_t) PIN_BUSY, GPIO_PULLUP_ONLY);
+	if (gBoardMax)
+	{
+		// (out of whatever the firmware before left the controller in, its
+		// deep sleep included)
+		gpio_set_direction((gpio_num_t) PIN_RESET, GPIO_MODE_OUTPUT);
+		gpio_set_level((gpio_num_t) PIN_RESET, 0);
+		vTaskDelay(pdMS_TO_TICKS(10));
+		gpio_set_level((gpio_num_t) PIN_RESET, 1);
+		vTaskDelay(pdMS_TO_TICKS(10));
+	}
 
 	gBounce = (uint8_t*) heap_caps_malloc(4000, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 	if (gBounce == NULL)
@@ -791,6 +803,8 @@ HostWindowOption(const char* name, long* value)
 		*value = gLocalCleanCount;
 	else if (strcmp(name, "clearGhosts") == 0)
 		*value = 0;
+	else if (strcmp(name, "frontlight") == 0 && gBoardMax)
+		*value = HostDeviceFrontlight();
 	else
 		return false;
 	return true;
@@ -802,6 +816,8 @@ HostWindowSetOption(const char* name, long value)
 {
 	if (strcmp(name, "clearGhosts") == 0)
 		return HostDevicePanelSet("redraw", 2);
+	if (strcmp(name, "frontlight") == 0)
+		return HostDeviceFrontlightSet(value);
 	long now;
 	return HostWindowOption(name, &now) && HostDevicePanelSet(name, value);
 }

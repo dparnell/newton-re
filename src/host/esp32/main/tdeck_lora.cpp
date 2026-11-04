@@ -59,6 +59,7 @@
 #include "rom/ets_sys.h"
 
 #include "esp32host.h"
+#include "tdeck_board.h"
 #include "HostMesh.h"
 
 #include <helpers/radiolib/CustomSX1262Wrapper.h>
@@ -67,7 +68,6 @@
 #define PIN_LORA_RESET	4
 #define PIN_LORA_DIO1	5
 #define PIN_LORA_BUSY	6
-#define PIN_LORA_POWER	46			// BOARD_LORA_EN
 
 // (MeshCore's RadioLib wrappers ask Arduino's clock: compat/Arduino.h)
 unsigned long
@@ -408,7 +408,7 @@ KeeperTask(void*)
 			heap_caps_free(r.size);
 			break;
 		case kKeeperPower:
-			gpio_set_level((gpio_num_t) PIN_LORA_POWER, r.on ? 1 : 0);
+			HostDeviceBoardSet(kLineLoraPower, r.on);
 			if (nvs_open("newton", NVS_READWRITE, &nvs) == ESP_OK)
 			{
 				nvs_set_u8(nvs, "loraOff", r.on ? 0 : 1);
@@ -607,15 +607,9 @@ MeshTask(void*)
 bool
 HostDeviceLoraStart(void)
 {
-	// (lilyphone1 latches its power pins with GPIO hold for deep sleep, which
-	// outlasts a reset)
-	gpio_hold_dis((gpio_num_t) PIN_LORA_POWER);
-	gpio_config_t pins = {};
-	pins.pin_bit_mask = 1ULL << PIN_LORA_POWER;
-	pins.mode = GPIO_MODE_INPUT_OUTPUT;
-	gpio_config(&pins);
+	HostDeviceBoardLineStart(kLineLoraPower);
 	bool on = !KeptOff();
-	gpio_set_level((gpio_num_t) PIN_LORA_POWER, on ? 1 : 0);
+	HostDeviceBoardSet(kLineLoraPower, on);
 	if (!on)
 		printf("[mesh] the radio is switched off (the Host panel)\n");
 	vTaskDelay(pdMS_TO_TICKS(10));

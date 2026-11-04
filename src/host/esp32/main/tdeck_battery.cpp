@@ -45,7 +45,6 @@
 
 #define I2C_PORT		I2C_NUM_0
 #define ADDR_GAUGE		0x55
-#define ADDR_CHARGER	0x6B
 
 enum
 {
@@ -83,17 +82,23 @@ ReadWord(uint8_t command, uint16_t* value)
 }
 
 
+// The charger: a BQ25896 at 0x6B on the Pro and the first Max boards, an
+// SY6970 at 0x6A on later ones - the same registers, for all this file asks
+// of them.  Found by HostDeviceBatteryStart.
+static uint8_t	gChargerAddress = 0x6B;
+
+
 static bool
 ReadCharger(uint8_t* status)
 {
-	return i2c_master_write_read_device(I2C_PORT, ADDR_CHARGER, &kChargerStatus, 1, status, 1, pdMS_TO_TICKS(20)) == ESP_OK;
+	return i2c_master_write_read_device(I2C_PORT, gChargerAddress, &kChargerStatus, 1, status, 1, pdMS_TO_TICKS(20)) == ESP_OK;
 }
 
 
 static bool
 ReadChargerRegister(uint8_t reg, uint8_t* value)
 {
-	return i2c_master_write_read_device(I2C_PORT, ADDR_CHARGER, &reg, 1, value, 1, pdMS_TO_TICKS(20)) == ESP_OK;
+	return i2c_master_write_read_device(I2C_PORT, gChargerAddress, &reg, 1, value, 1, pdMS_TO_TICKS(20)) == ESP_OK;
 }
 
 
@@ -101,7 +106,7 @@ static bool
 WriteChargerRegister(uint8_t reg, uint8_t value)
 {
 	uint8_t b[2] = { reg, value };
-	return i2c_master_write_to_device(I2C_PORT, ADDR_CHARGER, b, 2, pdMS_TO_TICKS(20)) == ESP_OK;
+	return i2c_master_write_to_device(I2C_PORT, gChargerAddress, b, 2, pdMS_TO_TICKS(20)) == ESP_OK;
 }
 
 
@@ -236,6 +241,9 @@ UsbPowerTask(void*)
 bool
 HostDeviceBatteryStart(void)
 {
+	uint8_t probe;
+	if (!ReadCharger(&probe))
+		gChargerAddress = 0x6A;
 	xTaskCreatePinnedToCore(UsbPowerTask, "usbpower", 2560, NULL, 3, NULL, 0);
 	HostBatteryReading reading = { 100, kHostBatteryUnknown, kHostBatteryUnknown, kHostBatteryUnknown, -1, kHostBatteryDischarging };
 	uint16_t status;
