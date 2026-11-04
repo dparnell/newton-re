@@ -399,6 +399,8 @@ DevicePreMain(void)
 	HostMeshAppStart();					// (the LoRa radio's mesh node, for the Mesh application: comms/host/HostMeshApp.h)
 	HostInstallIPPPrinters();			// (print/host/HostIPP.h: the network's IPP printers, in the Print slip and the Network Printers panel; no PNG host printer on the board)
 	HostQuickSheetSetLockHook(HostDeviceSetLocked);
+	if (HostDeviceCanPowerOff())
+		HostQuickSheetSetPowerOff(HostDeviceBatteryPowerOff);
 	// the Newton's sleep (docs/host-lock-screen.md, "Sleep"): the e-paper
 	// keeps the lock screen meanwhile, the machine sleeps while it is
 	// locked, a key, the touch panel, the BOOT button (tdeck_input.cpp: the

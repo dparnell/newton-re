@@ -89,19 +89,30 @@ The keyboard is the Pro's: the same TCA8418 matrix and numbering (q 9, a 19,
 z 28, Alt 29, Sym 31), so the owner's layout in `tdeck_input.cpp` stands. Both
 chips interrupt on the Pro's pins, 12 and 15.
 
-## The side button
+## The side button, and Power off
 
-**It is not connected to anything the ESP32-S3 can see.** Pressed, or held for
-3 seconds, it did nothing and GPIO 0 never moved (`!pm`'s BOOT count stayed 0),
-where the Pro's side button is GPIO 0 and is the Newton's power switch here.
-The schematic has only two switches, S1 on RST and S2 on IO0 (BOOT), and leaves
-the charger's QON pin unconnected, but it is V0.1 and wrong elsewhere. LilyGO's
-`bq25896_shutdown` example says a board shut down by its charger comes back
-when "the PPM/QON button" is pressed or USB is connected, so the side button is
-most likely QON: a hardware power-on, not an input. **That is inferred, not
-measured**: nothing here has yet put the board into the charger's ship mode
-(REG09 bit 5, BATFET_DIS) and pressed it. The Newton's power switch on the Max
-is therefore the BOOT button on the back, if it can be reached with the case on.
+**The side button is a hardware power-on, not an input.** With the board running
+it does nothing and the ESP32-S3 cannot see it: pressed, or held for 3 seconds,
+GPIO 0 never moved (`!pm`'s BOOT count stayed 0), where the Pro's side button is
+GPIO 0 and is the Newton's power switch. The V0.1 schematic shows only S1 on RST
+and S2 on IO0 (BOOT) and leaves the charger's QON pin unconnected, but it is
+wrong there: the side button wakes the board from the charger's shutdown, which
+is what QON does.
+
+So the Newton switches the board off and the side button switches it on.
+**Power off** is on the quick sheet, beside Lock screen (the finger pulled down
+from the top edge), on the Max only (`HostQuickSheetSetPowerOff`). It closes the
+sheet, waits 2 s for the e-paper to show that, holds the touch chip in reset as
+LilyGO's firmware does, and sets BATFET_DIS (REG09 bit 5) in the charger
+(`HostDeviceBatteryPowerOff`). The keyboard's light goes out and the panel keeps
+its picture. Tried on the owner's board on battery: it went off, and one press
+of the side button started it again. USB also starts it, by LilyGO's example.
+
+**On USB it cannot switch off**, the charger keeping the board up, so the sheet
+says to unplug the cable instead.
+
+The Newton's sleep, as against off, has no button on the Max but the BOOT button
+on the back: the quick sheet's Lock screen does the same job.
 
 ## Sound
 
@@ -157,7 +168,6 @@ the LoRa radio's start and the mesh node, the GPS answering (no fix tried), the
 
 Not done or not tried:
 
-- the side button as above, and any way to power off from the Newton;
 - a call or SMS (no SIM), so the speaker's switch to the modem;
 - a GPS fix, a LoRa exchange with another node, a WiFi join;
 - on battery: everything so far ran on USB, where the chip does not light-sleep.

@@ -103,6 +103,8 @@ bool		HostDeviceCellStart(void);
 // source (started after the input; ==> whether there is a gauge)
 bool		HostDeviceBatteryStart(void);
 bool		HostDeviceBatteryCurrent(long* now, long* mean, long* samples, long* millivolts);	// mA (+ charging) now, and the mean of the 1 s samples since last asked (the sampler starts at the first call)
+bool		HostDeviceBatteryPowerOff(void);		// the Max switched off by its charger (on battery only) ==> false if not; else no return
+bool		HostDeviceCanPowerOff(void);			// whether this board can
 bool		HostDeviceBatteryRunOnBattery(bool on);		// the charger's input cut (on) or back: the board on its battery while on USB
 
 // power management (tdeck_power.cpp): frequency scaling and automatic light

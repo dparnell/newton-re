@@ -20,7 +20,9 @@ and motor. `!sound` measures the sound path with nobody listening, and found
 what no listener would have until they recorded something: ESP-IDF's receive
 channel delivering 43200 samples a second, both slots of each frame. LilyGO's
 pin map has the I2S data pins backwards. The side button is not visible to the
-ESP32-S3. All of it, and what is not tried: `docs/host-tdeck-max.md`.
+ESP32-S3: it is the charger's power-on, so the quick sheet gained Power off,
+tried on battery, and the side button starts the board again. All of it, and
+what is not tried: `docs/host-tdeck-max.md`.
 
 ## 2026-11-02: the Newton no longer looks every 10 ms
 

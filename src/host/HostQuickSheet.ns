@@ -218,6 +218,17 @@
 		if sheetView then :CloseSheet() else :OpenSheet();
 	end,
 
+	// The board switched off: the sheet closed first and the panel given time
+	// to show it, since an e-paper keeps what it last drew
+	PowerOff: func()
+	begin
+		:CloseSheet();
+		AddDelayedCall(func() begin
+			if not HostPowerOff() then
+				GetRoot():Notify(3, "Power off", "Unplug the USB cable first: the board cannot switch off while USB powers it.");
+		end, nil, 2000);
+	end,
+
 	// one of the Host preferences panel's settings as a switch: {label, Get,
 	// Set} - changed through the panel's frame, so that it keeps it
 	SettingSwitch: func(label, setting)
@@ -285,6 +296,13 @@
 			 text: "Lock screen",
 			 sheetRole: 'lock,
 			 buttonClickScript: func() GetGlobalVar('|QuickSheet:host|):Lock()});
+		if HostCanPowerOff() then
+			AddArraySlot(children,
+				{_proto: @226,												// protoTextButton
+				 viewBounds: {left: 120, top: top + 4, right: 220, bottom: top + 22},
+				 text: "Power off",
+				 sheetRole: 'powerOff,
+				 buttonClickScript: func() GetGlobalVar('|QuickSheet:host|):PowerOff()});
 		AddArraySlot(children, {_proto: @166, sheetRole: 'close,				// protoClosebox, at the top right
 			viewBounds: {left: -20, top: 6, right: -6, bottom: 20}, viewJustify: 32});	// (vjParentRightH)
 		local height := top + 34;

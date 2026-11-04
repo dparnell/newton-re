@@ -11,7 +11,8 @@ between starts** - with a NewtonScript prompt on the USB serial port, each
 line evaluated in the newt world.
 
 The same program runs on the **T-Deck Max**: it finds which board it is on at
-the start (`docs/host-tdeck-max.md`).
+the start (`docs/host-tdeck-max.md`).  There the quick sheet also has Power off,
+and the side button starts the board again.
 
 ## What is here
 

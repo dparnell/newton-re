@@ -51,6 +51,7 @@ void	HostQuickSheetSetLockHook(void (*locked)(bool on));	// before boot: told wh
 void	HostInstallQuickSheet(void);		// in the newt world, once its globals are built (before the Host panel's): HostScreenLocked, QuickSheet:host, the ScreenLock functions, its power-off function
 bool	HostQuickSheetInstalled(void);		// whether it was installed
 void	HostQuickSheetPulled(void);			// in the newt world's task: the sheet pulled down (opened, or closed if open)
+void	HostQuickSheetSetPowerOff(bool (*off)(void));		// before boot: a board that can switch itself off (the sheet then has Power off); the hook ==> false if it could not, and does not return if it could
 void	HostQuickSheetSetLockSleeps(bool sleeps);	// before boot: the machine asleep while the screen is locked (HostLockSleeps)
 
 #endif	/* __HOSTQUICKSHEET_H */

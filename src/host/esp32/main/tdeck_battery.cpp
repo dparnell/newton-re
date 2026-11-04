@@ -41,6 +41,7 @@
 #include "driver/i2c.h"
 
 #include "esp32host.h"
+#include "tdeck_board.h"
 #include "HostBattery.h"
 
 #define I2C_PORT		I2C_NUM_0
@@ -65,6 +66,7 @@ enum
 const uint8_t	kChargerStatus = 0x0B;	// REG0B
 const uint8_t	kChargerInput = 0x00;	// REG00: EN_HIZ, bit 7
 const uint8_t	kChargerTimer = 0x07;	// REG07: WATCHDOG, bits 5-4
+const uint8_t	kChargerBatteryFet = 0x09;	// REG09: BATFET_DIS, bit 5
 
 
 // (asleep, the gauge stretches the clock while it wakes - longer than the
@@ -215,6 +217,31 @@ HostDeviceBatteryRunOnBattery(bool on)
 	gOnBattery = on;
 	printf("newton: the charger's input %s\n", on ? "cut - the board on its battery" : "back - the board on USB");
 	return true;
+}
+
+
+// The Max switched off (the quick sheet's Power off): the charger's BATFET
+// opened, which takes the battery off everything until the charger's QON pin
+// is pressed or USB comes (LilyGO's bq25896_shutdown example).  On USB the
+// board stays up, so that is refused.  The touch chip held in reset first, as
+// LilyGO's firmware does: cut off running, it can come back half awake.
+// ==> false if it could not; if it could, this does not return.
+bool
+HostDeviceBatteryPowerOff(void)
+{
+	uint8_t charger, fet;
+	if (!ReadCharger(&charger) || ((charger & 0x04) != 0 && !gOnBattery) || !ReadChargerRegister(kChargerBatteryFet, &fet))
+		return false;
+	printf("newton: switching off\n");
+	HostDeviceBoardSet(kLineTouchReset, false);
+	vTaskDelay(pdMS_TO_TICKS(20));
+	WriteChargerRegister(kChargerBatteryFet, fet | 0x20);
+	vTaskDelay(pdMS_TO_TICKS(2000));
+	// (still here: it did not take)
+	WriteChargerRegister(kChargerBatteryFet, fet);
+	HostDeviceBoardSet(kLineTouchReset, true);
+	printf("newton: still on after the charger was told to switch off\n");
+	return false;
 }
 
 

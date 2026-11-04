@@ -171,6 +171,13 @@ HostDeviceBoardSet(BoardLine line, bool high)
 
 
 bool
+HostDeviceCanPowerOff(void)
+{
+	return gBoardMax;
+}
+
+
+bool
 HostDeviceBoardGet(BoardLine line)
 {
 	return gLineLevels[line];
