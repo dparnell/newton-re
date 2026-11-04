@@ -1217,6 +1217,24 @@ add_test(NAME host.NewtonQuickSheet COMMAND newton --display 320x480 --headless 
 set_tests_properties(host.NewtonQuickSheet PROPERTIES TIMEOUT 300
                      PASS_REGULAR_EXPRESSION "the sheet open, Lock screen.*pulled again, closed.*the off screen up.*the off screen taken down.*the close box closes it.*locked, the sheet closed.*pulled while locked, the sheet closed.*a tap at the slider's end leaves it locked.*half way and let go leaves it locked, the knob at 0.*dragged to the end, unlocked.*quicksheet: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|not installed")
+# Shut down (HostQuickSheet.h, demo/shutdown.ns): an application refuses, then
+# one holds it and lets it go, and the run ends - well before --headless runs
+# out, which is what the TIMEOUT is for
+add_test(NAME host.NewtonShutDown COMMAND newton --display 320x480 --headless 600 --erase
+         --store ${CMAKE_CURRENT_BINARY_DIR}/shutdown.store
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/shutdown.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonShutDown PROPERTIES TIMEOUT 240
+                     PASS_REGULAR_EXPRESSION "shutdown: the Host page has Shut down.*shutdown: the sheet has Shut down.*shutdown: refused, the machine still up.*shutdown: told, held.*shutdown: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|FAILED")
+
+# the same with a window, which closes (no window on a host without a display)
+add_test(NAME host.NewtonShutDown.window COMMAND newton --display 320x480 --limit 600 --erase
+         --store ${CMAKE_CURRENT_BINARY_DIR}/shutdownwindow.store
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/shutdown.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonShutDown.window PROPERTIES TIMEOUT 240
+                     PASS_REGULAR_EXPRESSION "shutdown: told, held.*shutdown: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|FAILED")
+
 # the lock screen's notifications and the sleep's lock (HostQuickSheet.h,
 # demo/lockscreen.ns, docs/host-lock-screen.md): the ScreenLock functions -
 # nothing kept unlocked, notifications left, replaced by key, withdrawn, more

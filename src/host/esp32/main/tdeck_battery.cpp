@@ -220,7 +220,7 @@ HostDeviceBatteryRunOnBattery(bool on)
 }
 
 
-// The Max switched off (the quick sheet's Power off): the charger's BATFET
+// The Max switched off (Shut down): the charger's BATFET
 // opened, which takes the battery off everything until the charger's QON pin
 // is pressed or USB comes (LilyGO's bq25896_shutdown example).  On USB the
 // board stays up, so that is refused.  The touch chip held in reset first, as

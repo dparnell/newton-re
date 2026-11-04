@@ -77,7 +77,8 @@ This is the ROM's own and runs as it is.
      `'okToPowerOff`.
   2. `PowerOffYobiKaiGi` calls them with `'powerOff`. A function answering
      `'holdYourHorses` holds the sequence until it calls `PowerOffResume`.
-  3. `PowerOffRingiSho` sleeps.
+  3. `PowerOffRingiSho` sleeps (`FPowerOff`) - or, on a host shutting down,
+     ends there instead (`docs/host-lock-screen.md`, "Shutting down").
   4. `PowerOnSequence` calls the `RegPowerOn` functions with the reason.
 
 ## The host

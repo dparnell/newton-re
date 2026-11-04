@@ -60,4 +60,13 @@ void	HostPowerWakeAfter(ULong milliseconds);	// a test's wake: the next sleep en
 void	HostNoteUserActivity(void);				// a pen sample or a key from the user (any thread)
 ULong	HostUserActivity(void);					// how many there have been (it only grows, and wraps)
 
+// A shut down (host/HostQuickSheet.h): the ROM's whole power off, the
+// applications asked and told, and where the machine would go to sleep
+// (FPowerOff) this is called instead: ==> whether the machine is going, or
+// false if it stays up after all.  Asked for once, for the next sleep; nil
+// takes it back.  DEVIATION (host addition): a MessagePad has no off but sleep.
+void	HostPowerInsteadOfSleep(bool (*instead)(void));
+Boolean	HostPowerDoneInsteadOfSleep(void);		// FPowerOff: ==> whether it was called, the machine not to sleep
+Boolean	HostPowerGoingOff(void);				// it was, and the machine is going
+
 #endif	/* __HAL_HOST_POWER_H */

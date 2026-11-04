@@ -51,6 +51,7 @@
 #include "comms/SharpIRTool.h"
 #include "comms/host/HostLink.h"
 #include "comms/host/HostCellProvider.h"
+#include "hal/host/HostCellular.h"
 #include "comms/host/HostMeshApp.h"
 #include "host/HostSettings.h"
 #include "host/HostQuickSheet.h"
@@ -406,6 +407,17 @@ DeviceBoot(void)
 }
 
 
+// Shut down (host/HostQuickSheet.h): the 4G module told first, which the
+// board's side cannot do
+static bool
+DevicePowerOff(bool really)
+{
+	if (really && HostDevicePowerOff(false))
+		HostCellularPowerGoing();
+	return HostDevicePowerOff(really);
+}
+
+
 // the world's PreMain (gNewtHostPreMain), as the desktop's NewtonPreMain
 // (host/newton.cpp) does it, of what the board has: the host's link for the
 // Newton Internet Enabler (comms/host/HostLink.h), which puts the "Host
@@ -419,8 +431,7 @@ DevicePreMain(void)
 	HostMeshAppStart();					// (the LoRa radio's mesh node, for the Mesh application: comms/host/HostMeshApp.h)
 	HostInstallIPPPrinters();			// (print/host/HostIPP.h: the network's IPP printers, in the Print slip and the Network Printers panel; no PNG host printer on the board)
 	HostQuickSheetSetLockHook(HostDeviceSetLocked);
-	if (HostDeviceCanPowerOff())
-		HostQuickSheetSetPowerOff(HostDeviceBatteryPowerOff);
+	HostQuickSheetSetPowerOff(DevicePowerOff, HostDevicePowerOffHint());
 	// the Newton's sleep (docs/host-lock-screen.md, "Sleep"): the e-paper
 	// keeps the lock screen meanwhile, the machine sleeps while it is
 	// locked, a key, the touch panel, the BOOT button (tdeck_input.cpp: the

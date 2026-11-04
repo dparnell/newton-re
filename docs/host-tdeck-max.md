@@ -89,7 +89,7 @@ The keyboard is the Pro's: the same TCA8418 matrix and numbering (q 9, a 19,
 z 28, Alt 29, Sym 31), so the owner's layout in `tdeck_input.cpp` stands. Both
 chips interrupt on the Pro's pins, 12 and 15.
 
-## The side button, and Power off
+## The side button, and Shut down
 
 **The side button is a hardware power-on, not an input.** With the board running
 it does nothing and the ESP32-S3 cannot see it: pressed, or held for 3 seconds,
@@ -100,11 +100,12 @@ wrong there: the side button wakes the board from the charger's shutdown, which
 is what QON does.
 
 So the Newton switches the board off and the side button switches it on.
-**Power off** is on the quick sheet, beside Lock screen (the finger pulled down
-from the top edge), on the Max only (`HostQuickSheetSetPowerOff`).
+**Shut down** is on the quick sheet, beside Lock screen (the finger pulled down
+from the top edge), and on the Host preferences page. It goes through the ROM's
+power off first, as on every host (`docs/host-lock-screen.md`, "Shutting down").
 
 An e-paper keeps its last picture with no power, so a board that is off looks
-like one that is on. Power off therefore leaves a message: the sheet closes, a
+like one that is on. Shut down therefore leaves a message: the sheet closes, a
 white view fills the screen saying "This device is off" and how to start it
 (`ShowOff` in `host/HostQuickSheet.ns`), and `HostDevicePanelFinish` clears the
 panel, draws that with a full refresh and takes the panel's high voltages down

@@ -346,6 +346,13 @@ FHostSettingsList(RefArg /*rcvr*/)
 	}
 	if (HostWindowOption("clearGhosts", &value))
 		AddArraySlot(list, RefVar(Item("clearGhosts", "Clear ghosts", kButton, 0)));
+	// (a button done in NewtonScript: HostSettings.ns's ShutDown)
+	if (HostQuickSheetCanPowerOff())
+	{
+		RefVar shutDown(Item("shutDown", "Shut down", kButton, 0));
+		SetFrameSlot(shutDown, RefVar(Intern((char*) "action")), RefVar(Intern((char*) "ShutDown")));
+		AddArraySlot(list, shutDown);
+	}
 	return list;
 }
 

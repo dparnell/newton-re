@@ -20,6 +20,7 @@
 #include "SortTables.h"		// gSortTables
 #include "Locale.h"
 #include "hal/Power.h"
+#include "hal/host/HostPower.h"
 #include "power/PowerManager.h"
 #include "power/host/HostBatteryDriver.h"
 #include "Notebook.h"
@@ -1037,6 +1038,13 @@ FEventPause(RefArg /*rcvr*/, RefArg tickle)
 Ref
 FPowerOff(RefArg rcvr)
 {
+	// DEVIATION (host addition): a shut down goes through the whole of the
+	// power off, and stops here (hal/host/HostPower.h)
+	if (HostPowerDoneInsteadOfSleep())
+	{
+		gLastWakeupTime = GetGlobalTime();
+		return RSSYMbecause;
+	}
 	long reason = SleepUntilNextWakeup();
 	FMinimumBatteryCheck(rcvr);
 	if (!EQRef(GetPreference(RSSYMblessedapp), RSSYMsetup))

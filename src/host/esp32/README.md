@@ -291,7 +291,7 @@ before the Newton sleeps - Prefs' **Sleep** time is its auto-lock
   and its light is off; the top edge is the pen's like the rest of the
   screen.  The time is redrawn when the minute changes, not before.
 - From the console: `GetGlobalVar('|QuickSheet:host|):Pulled()`, `:Lock()`,
-  `:Unlock()`; `!shot` and tools/tdeck/panelshot.py show what the panel
+  `:Unlock()`, `:ShutDown()`; `!shot` and tools/tdeck/panelshot.py show what the panel
   was sent.
 - A view opened with `:Open()` must not have `vVisible` in its template's
   viewFlags: `TView::Show` (the ROM's) does nothing for a view visible

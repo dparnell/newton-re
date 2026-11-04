@@ -41,7 +41,15 @@
 				while locked it sleeps again once the user has left it
 				alone a few seconds (docs/host-lock-screen.md, "Sleep").
 
-				DEVIATION (host addition): the ROM has no lock screen.
+				Shutting down is here too, on every host: the sheet's and
+				the Host preferences panel's Shut down.  The ROM's own power
+				off runs, every application asked and told as for a sleep,
+				and where the machine would sleep the host's hook goes
+				instead (hal/host/HostPower.h): newton's run ends, a T-Deck
+				switches off (docs/host-lock-screen.md, "Shutting down").
+
+				DEVIATION (host addition): the ROM has no lock screen, and
+				no off but sleep.
 */
 
 #ifndef __HOSTQUICKSHEET_H
@@ -51,7 +59,8 @@ void	HostQuickSheetSetLockHook(void (*locked)(bool on));	// before boot: told wh
 void	HostInstallQuickSheet(void);		// in the newt world, once its globals are built (before the Host panel's): HostScreenLocked, QuickSheet:host, the ScreenLock functions, its power-off function
 bool	HostQuickSheetInstalled(void);		// whether it was installed
 void	HostQuickSheetPulled(void);			// in the newt world's task: the sheet pulled down (opened, or closed if open)
-void	HostQuickSheetSetPowerOff(bool (*off)(bool really));	// before boot: a board that can switch itself off (the sheet then has Power off); the hook, not really: ==> whether it could now; really: with the off screen drawn, does not return, or ==> false
+void	HostQuickSheetSetPowerOff(bool (*off)(bool really), const char* hint);	// before boot: how this host shuts down.  The hook, not really: ==> whether it could now; really: ==> whether it is going, or does not return.  hint: a screen that keeps its picture is left saying this, how to start it again (drawn before the hook is called); nil: no such screen
+bool	HostQuickSheetCanPowerOff(void);	// whether Shut down can be offered
 void	HostQuickSheetSetLockSleeps(bool sleeps);	// before boot: the machine asleep while the screen is locked (HostLockSleeps)
 
 #endif	/* __HOSTQUICKSHEET_H */

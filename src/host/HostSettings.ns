@@ -184,6 +184,10 @@
 		page.viewBounds := {left: 0, top: 0, right: 0, bottom: page.height};
 	end,
 
+	// Shut down (the quick sheet's frame does it, for its button too)
+	ShutDown: func(panelView)
+		GetGlobalVar('|QuickSheet:host|):ShutDown(),
+
 	// The font chooser: every family the host has in a list, those the
 	// font menus offer ticked (the ROM's protoTextList with several
 	// selections), Done keeping what is ticked - and turning the host's

@@ -1390,6 +1390,22 @@ HostCellularPowered(void)
 }
 
 
+void
+HostCellularPowerGoing(void)
+{
+	if (gPowerSwitch == nullptr || gPoweredOff)
+		return;
+	HostCellState state;
+	{
+		std::lock_guard<std::mutex> hold(gLock);
+		state = gStatus.state;
+	}
+	char reply[64];
+	if (state != kHostCellNone && state != kHostCellStarting)
+		HostCellularCommand("AT+CPOF", reply, sizeof(reply), 5000);
+}
+
+
 bool
 HostCellularSetPower(bool on)
 {

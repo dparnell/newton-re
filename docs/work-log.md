@@ -9,6 +9,20 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-04: Shut down on every host
+
+Only the T-Deck Max could switch off, from its quick sheet, and nothing inside
+the Newton could end a run on the other hosts. Now the Host preferences page has
+**Shut down** everywhere, and the quick sheet's Power off is the same thing
+under the same name (`docs/host-lock-screen.md`, "Shutting down"). It runs the
+ROM's whole power off, so the applications are asked and told, and `FPowerOff`
+calls the host's hook where the machine would sleep: newton's run ends, the Max
+opens its BATFET as before, and the Pro, which had no off at all, goes into deep
+sleep with its side button to wake it. Both boards tell the 4G module first.
+Tried on both boards (the Max on its battery with `DevicePowerSet('battery,
+true)`) and in a window on Windows; the reMarkable, Android, macOS and Linux run
+code that is shared or already ends a run this way, and were not tried.
+
 ## 2026-11-04: beaming on the T-Deck boards
 
 Beam on a Pro or Max said "Error -26005 encountered": the fix of 2026-09-30

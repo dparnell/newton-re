@@ -26,6 +26,9 @@ static std::atomic<bool>	gHostPowerWindow(false);
 static std::atomic<ULong>	gHostWakeAfter(0);			// a test's wake, in milliseconds (0: none)
 static std::atomic<ULong>	gHostUserActivity(0);		// pen samples and keys from the user
 
+static std::atomic<bool (*)(void)>	gHostInsteadOfSleep(nullptr);
+static std::atomic<bool>	gHostGoingOff(false);
+
 void	(*gHostSleepWait)(ULong milliseconds) = nullptr;
 void	(*gHostSleepWake)(void) = nullptr;
 
@@ -81,6 +84,32 @@ ULong
 HostUserActivity(void)
 {
 	return gHostUserActivity.load();
+}
+
+
+void
+HostPowerInsteadOfSleep(bool (*instead)(void))
+{
+	gHostInsteadOfSleep.store(instead);
+	gHostGoingOff.store(false);
+}
+
+
+Boolean
+HostPowerDoneInsteadOfSleep(void)
+{
+	bool (*instead)(void) = gHostInsteadOfSleep.exchange(nullptr);
+	if (instead == nullptr)
+		return false;
+	gHostGoingOff.store(instead());
+	return true;
+}
+
+
+Boolean
+HostPowerGoingOff(void)
+{
+	return gHostGoingOff.load();
 }
 
 

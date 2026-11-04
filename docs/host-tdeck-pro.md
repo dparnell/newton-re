@@ -1036,6 +1036,30 @@ every 10 ms. With the USB away and everything on, **46 mA locked** against
 go, the console's `!tap` waking the Newton afterwards - asleep, it answers
 no NewtonScript).
 
+### Shut down
+
+The Host page's and the quick sheet's **Shut down**
+(`docs/host-lock-screen.md`, "Shutting down") put the chip into deep sleep
+(`DeepSleep` in `tdeck_board.cpp`), with the side button (GPIO 0, an RTC pin) to
+wake it, which starts the program from the beginning. The Max cuts the battery
+off instead, but on the Max the side button is the charger's QON; the Pro's is
+only GPIO 0, so a Pro cut off could be started by nothing but USB.
+
+- The panel is finished first, showing the off screen.
+- The 4G module, LoRa radio, GPS and touch panel's lines are GPIOs here, which
+  would float in deep sleep, so they are held low (`gpio_hold_en`,
+  `gpio_deep_sleep_hold_en`), and the keyboard's light with them.
+- The light sleep's GPIO wakes are taken off: they are low on chips now off.
+- `esp_deep_sleep_start` runs on a task of its own, the Newton's stacks being
+  in PSRAM.
+- At the next start `HostDeviceBoardStart` lets the pins go. GPIO 0 has to be
+  given back with `rtc_gpio_deinit`, or the Newton never sees the button again.
+
+Tried on the owner's board on USB, 2026-11-04: COM4 went away after "switching
+off", the side button started the board, and the same button then put the Newton
+to sleep as usual. It works on USB as on battery. What it draws asleep has not
+been measured.
+
 ### The Newton no longer looks every 10 ms
 
 The Newton went idle about 95 times a second at rest: the board's console
