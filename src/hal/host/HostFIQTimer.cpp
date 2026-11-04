@@ -65,6 +65,8 @@ FIQDeadline(Int64* when)
 		Int64 delta = { 0, (ULong) ahead };
 		CompAdd(&delta, when);
 	}
+	else
+		when->hi = 0, when->lo = 0;		// (due: HostInterruptSources.h)
 	return true;
 }
 

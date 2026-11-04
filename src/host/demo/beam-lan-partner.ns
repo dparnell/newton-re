@@ -1,0 +1,26 @@
+// The desktop's side of beaming to and from another machine on the network
+// - a T-Deck, a reMarkable - by hand (docs/comms/README.md, "Beaming over
+// the network"; there is no ctest: the other end is a real machine).
+//
+//   newton --ir-lan --erase --store tmp/beamlan/partner.store --headless 280 \
+//       --script src/host/demo/beam-lan-partner.ns
+//
+// It receives automatically, as with the In/Out Box's "Receive beams
+// automatically" on, so the other machine beams a note to it; it stays up
+// long enough for the sender to finish (beam-autoreceive.ns quits at once,
+// and the sender's item then keeps its -38505), then beams "Back from the
+// desktop" to whoever is listening: the other machine's In Box Receive, or
+// its own automatic receive.
+HostInclude("beamhelpers.ns");
+SetUserConfig('zapAutoReceive, true);
+AddDeferredCall(functions.StartIRSniffing, nil);
+call waitFor with ("beam-lan-partner: a note in the In Box", func() beamInBox:Query(nil):Entry() <> nil, func() begin
+	local e := beamInBox:Query(nil):Entry();
+	Print({received: e.title, text: e.body.text});
+	Print("beam-lan-partner: the note is in the In Box");
+	AddDelayedCall(func()
+		call beamSendNote with ("Back from the desktop", "hello from the desktop", func() begin
+			Print("beam-lan-partner: done");
+			HostQuit();
+		end), nil, 15000);
+end, 270);

@@ -425,7 +425,8 @@ HostInterfaceAddresses(uint32_t* addresses, int maxCount, int* count)
 	}
 #elif defined(ESP_PLATFORM)
 	// (the ESP32-S3 host, src/host/esp32: lwIP has no getifaddrs, and the
-	//  board's Wi-Fi is not brought up yet - no interface to offer)
+	//  board has the one interface, its Wi-Fi - no list to offer: a
+	//  caller joins and sends on the default, INADDR_ANY)
 	n = 0;
 #else
 	struct ifaddrs* all = NULL;

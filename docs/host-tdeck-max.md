@@ -173,12 +173,13 @@ Working, on the owner's board: the boot (56 s the first time, building the
 store; 9 s after), the panel, touch, the three keys, keyboard and its light,
 sound out and in, frontlight, motor, fuel gauge and charger, WiFi radio start,
 the LoRa radio's start and the mesh node, the GPS answering (no fix tried), the
-4G module answering (`noSIM`).
+4G module answering (`noSIM`), a WiFi join, beaming to and from a desktop and
+a Pro over it (`docs/comms/README.md`, "Beaming over the network").
 
 Not done or not tried:
 
 - a call or SMS (no SIM), so the speaker's switch to the modem;
-- a GPS fix, a LoRa exchange with another node, a WiFi join;
+- a GPS fix, a LoRa exchange with another node;
 - on battery: everything so far ran on USB, where the chip does not light-sleep.
   Whether the touch chip's INT pulse is long enough to wake it is not known;
 - the BHI260AP (its 1.8 V line stays off; it needs its firmware uploaded);

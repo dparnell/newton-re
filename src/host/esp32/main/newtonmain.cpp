@@ -46,6 +46,9 @@
 #include <time.h>
 #include "host/HostWifi.h"
 #include "NewtonGestalt.h"
+#include "hal/host/HostIRChip.h"
+#include "comms/CommManager.h"
+#include "comms/SharpIRTool.h"
 #include "comms/host/HostLink.h"
 #include "comms/host/HostCellProvider.h"
 #include "comms/host/HostMeshApp.h"
@@ -346,6 +349,14 @@ DisplayNow(const unsigned char** grays, long* width, long* height)
 }
 
 
+// a beam under way on the IR port's LAN medium (gHostIRBeaming)
+static void
+BeamingOverWifi(Boolean beaming)
+{
+	HostDeviceWifiBeaming(beaming);
+}
+
+
 // the world's boot (gNewtHostBoot): the desktop's, headless - the object
 // system, the display, the toolbox (host/HostViews.cpp), the timers - and
 // the eval handler in the world's task
@@ -370,6 +381,15 @@ DeviceBoot(void)
 		HostDevicePanelChanged();
 	}
 	InitFIQTimer();
+	// DEVIATION: the built-in IR is the Voyager chip's, and the board has no
+	// IR at all: its port is the LAN medium, so Beam reaches any newton on
+	// the network with beaming over the network on - on here until the Host
+	// preferences say otherwise, where a desktop's starts off.  With no
+	// Wi-Fi to be on, a port with nobody in front of it (Beam: "No response")
+	gHostIRBeaming = BeamingOverWifi;
+	NewtonErr irErr = HostIRChipInstall(gHostDeviceWifi ? "lan" : nil);
+	if (irErr != noErr)
+		printf("newton: no IR port (%ld)\n", (long) irErr);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "DeviceMilliseconds")), RefVar(MakeCFunction((void*) FDeviceMilliseconds, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "DeviceMemory")), RefVar(MakeCFunction((void*) FDeviceMemory, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "DevicePanelSet")), RefVar(MakeCFunction((void*) FDevicePanelSet, 2, nil)));
@@ -566,6 +586,11 @@ NewtonMainOnDevice(const void* image, size_t size)
 		HostSetNewFlash(kFlashSize, false);
 	}
 	HostConfigureNewtWorld(nil, kObjectHeapSize, kDisplayWidth, kDisplayHeight, kDisplayDepth);
+	// the ROM's IR services (the comm manager registers them as it starts in
+	// the newt world): without them Beam's endpoint answers -26005, no such
+	// service.  (The others newton.cpp adds - the serial port, the modem and
+	// fax - have no hardware on the board.)
+	CMAddROMServices(RegisterIRCommServices);
 	gNewtHostBoot = DeviceBoot;
 	gNewtHostPreMain = DevicePreMain;
 	NewtInstallUserMain();

@@ -15,11 +15,13 @@
 #include "Options.h"
 #include "SerialOptions.h"
 #include "NewtonTime.h"
+#include "CompMath.h"
 #include "hal/Timer.h"
 #include "UserTasks.h"
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "HostInterruptSources.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -109,6 +111,15 @@ LinkStatus(TSerialChip* chip)
 }
 
 
+static int gBeamingTold = 0;					// (each true one up, each false one down)
+
+static void
+BeamingTold(Boolean beaming)
+{
+	gBeamingTold += beaming ? 1 : -1;
+}
+
+
 static void
 LanScenario(void)
 {
@@ -132,6 +143,7 @@ LanScenario(void)
 
 	static FakeTool tools[3];
 	SCCChannelInts handlers = { TxInt, StatusInt, RxInt, SpecialInt };
+	gHostIRBeaming = BeamingTold;
 	for (int i = 0; i < 3; i++)
 	{
 		memset(&tools[i], 0, sizeof(tools[i]));
@@ -143,6 +155,7 @@ LanScenario(void)
 	FakeTool* a = &tools[0];
 	FakeTool* b = &tools[1];
 	FakeTool* c = &tools[2];
+	EXPECT(gBeamingTold == 3);				// (a tool on each: the Wi-Fi kept awake)
 
 	// A to whoever is there: B and C both hear it, A not its own
 	Send(a, "hello");
@@ -167,18 +180,43 @@ LanScenario(void)
 	Send(a, "again");
 	EXPECT(Heard(b, "again"));
 	EXPECT(Heard(c, "again"));
+	// a chip with work is due, however long the clock took to read: a
+	// deadline of "now", read after the caller's now, was never reached on
+	// a machine slow enough for the two reads to differ (the T-Deck's)
+	Int64 before, due;
+	Sleep(2 * kMilliseconds);				// (each chip polled: its next look is ahead of the clock)
+	GetClock(&before);
+	Sleep(1 * kMilliseconds);
+	chips[0]->PutByte('x');
+	EXPECT(HostInterruptSourcesDeadline(&due) && CompCompare(&due, &before) <= 0);
+	EXPECT(Heard(b, "x"));
+	EXPECT(Heard(c, "x"));
+	// a chip no tool has is not looked at, and what was sent meanwhile is
+	// not kept for the next tool: light is not stored
+	EXPECT(chips[2]->RemoveChipHandler(c) == noErr);
+	Send(a, "gone");
+	EXPECT(Heard(b, "gone"));
+	EXPECT(chips[2]->InstallChipHandler(c, &handlers) == noErr);
+	chips[2]->SetInterruptEnable(true);
+	EXPECT(Heard(c, ""));
 
 	for (int i = 0; i < 3; i++)
-	{
 		EXPECT(chips[i]->RemoveChipHandler(&tools[i]) == noErr);
+	// with no tool nothing is due, so a machine on a battery can sleep
+	Sleep(50 * kMilliseconds);
+	Int64 when;
+	EXPECT(!HostInterruptSourcesDeadline(&when));
+	EXPECT(gBeamingTold == 0);				// (and let sleep again)
+	gHostIRBeaming = nil;
+	for (int i = 0; i < 3; i++)
 		chips[i]->Delete();
-	}
 }
 
 
 static void
 Scenario(void)
 {
+	LanScenario();			// (first: it asks that nothing is left polling)
 	TSerialChip* a = nil;
 	TSerialChip* b = nil;
 	EXPECT(HostIRChipMake("listen:0", &a) == noErr && a != nil);
@@ -265,7 +303,6 @@ Scenario(void)
 	EXPECT(b->RemoveChipHandler(&toolB) == noErr);
 	a->Delete();
 	b->Delete();
-	LanScenario();
 	HostStopTasks();
 }
 

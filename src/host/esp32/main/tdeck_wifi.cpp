@@ -86,6 +86,8 @@ static QueueHandle_t	gRequests = NULL;
 static QueueHandle_t	gEvents = NULL;			// (an int: what ESP-IDF said)
 static KnownList		gKnown;
 static bool				gRadioOff = false;		// switched off (HostDeviceWifiSetRadio): nothing joined
+static volatile int		gPowerSave = WIFI_PS_MAX_MODEM;	// the mode chosen (HostDeviceWifiSetPowerSave)
+static volatile bool	gBeaming = false;		// (HostDeviceWifiBeaming: none meanwhile)
 enum { kEventJoined = 1, kEventLost };
 
 
@@ -312,7 +314,8 @@ Answer(Request* request)
 		break;
 
 	case kPowerSave:
-		request->result = esp_wifi_set_ps((wifi_ps_type_t) request->max) == ESP_OK;
+		gPowerSave = (int) request->max;
+		request->result = gBeaming || esp_wifi_set_ps((wifi_ps_type_t) request->max) == ESP_OK;
 		printf("newton: WiFi power save %s\n", request->max == WIFI_PS_NONE ? "off" : request->max == WIFI_PS_MIN_MODEM ? "min modem" : "max modem");
 		break;
 	}
@@ -430,7 +433,7 @@ HostDeviceWifiStart(void)
 	esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, OnEvent, NULL);
 	if (esp_wifi_set_mode(WIFI_MODE_STA) != ESP_OK || esp_wifi_start() != ESP_OK)
 		return false;
-	esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
+	esp_wifi_set_ps((wifi_ps_type_t) gPowerSave);
 	gRequests = xQueueCreate(4, sizeof(Request*));
 	gEvents = xQueueCreate(8, sizeof(int));
 	gState = kDeviceWifiSearching;
@@ -527,6 +530,19 @@ HostDeviceWifiSetPowerSave(int mode)
 	request.kind = kPowerSave;
 	request.max = mode;
 	return Ask(request) > 0;
+}
+
+
+// A beam under way (the IR port's LAN medium): IrDA and Sharp IR answer in a
+// fraction of a second, and asleep between beacons the radio hears a
+// multicast only at the next DTIM - measured with a note beamed from a
+// desktop, it never arrived; sent from here, 16.6 s against 4.5 s.  (ESP-IDF
+// takes this from any task, so it does not wait behind a scan.)
+void
+HostDeviceWifiBeaming(bool beaming)
+{
+	gBeaming = beaming;
+	esp_wifi_set_ps(beaming ? WIFI_PS_NONE : (wifi_ps_type_t) gPowerSave);
 }
 
 

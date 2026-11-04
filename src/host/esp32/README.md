@@ -197,6 +197,18 @@ the chip out of light sleep and ESP-IDF's profile of its power locks and
 modes (`PM_PROFILING`), `!tasks` each task's time on the processor since
 it was last asked, `!reset` restarts the board.
 
+## Beaming (2026-11-04)
+
+Beam goes over the network: the board has no IR, so its port is the LAN
+medium from the start (`HostIRChipInstall("lan")`, `RegisterIRCommServices`
+in `newtonmain.cpp`; the Host preferences' "Beam over the network" turns it
+off) and reaches any newton on the same network with beaming over the
+network on.  Nothing polls until a tool has the port, and the Wi-Fi's power
+save is off only while one does (`HostDeviceWifiBeaming`) - so a board with
+"Receive beams automatically" on stays awake.  Without Wi-Fi started Beam
+says "No response."  `docs/comms/README.md`, "Beaming over the network",
+has what a board needed and how to try it against a desktop.
+
 ## A faster start (2026-10-11)
 
 The OS is up **3.2 s** after the boot starts (a minute before): the

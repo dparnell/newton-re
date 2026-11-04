@@ -129,6 +129,9 @@ public:
 	Boolean				Hears(UByte modulation);
 	Boolean				Heard(UByte modulation, UByte b);
 	NewtonErr			OpenLan(const char* spec);
+	Boolean				JoinLan(void);
+	void				LanClaimed(void);
+	void				LanBeaming(Boolean beaming);
 	void				PollLan(void);
 	Boolean				LanFresh(uint32_t instance, uint32_t sequence);
 
@@ -159,6 +162,10 @@ public:
 	UByte				fHalfModulation;
 	Int64				fNextPoll;
 	// the LAN medium
+	Boolean				fLanWanted;			// the medium is the LAN's (the group is joined when a tool first claims the port)
+	Boolean				fLanKeptTo;			// to the one interface fLanInterfaces[0] (else every one there is on joining)
+	Int64				fLanRetry;			// not joined with a tool waiting: when to try again
+	Boolean				fLanBeaming;		// gHostIRBeaming has been told a tool has the port
 	int					fLan;				// the group's socket, or -1
 	uint32_t			fLanInterfaces[kLanInterfaces];	// sent out of each (none: the default)
 	int					fLanInterfaceCount;
@@ -178,6 +185,7 @@ PROTOCOL_CLASSINFO(THostIRChip, "TSerialChip", "v2.0", 0x30000, 0, nil)
 static THostIRChip*	gIRChips[kMaxIRChips];
 static THostIRChip*	gInstalledIRChip = nil;
 static int			gTraceIR = -1;			// NEWTON_TRACE_IR: what each chip sends, hears and loses
+void				(*gHostIRBeaming)(Boolean beaming) = nil;
 
 
 static bool
@@ -226,6 +234,10 @@ THostIRChip::New()
 	fHalfRecord = false;
 	fHalfModulation = 0;
 	fNextPoll.hi = fNextPoll.lo = 0;
+	fLanWanted = false;
+	fLanKeptTo = false;
+	fLanRetry.hi = fLanRetry.lo = 0;
+	fLanBeaming = false;
 	fLan = -1;
 	fLanInterfaceCount = 0;
 	fInstance = 0;
@@ -243,6 +255,7 @@ THostIRChip::New()
 void
 THostIRChip::CloseMedium(void)
 {
+	LanBeaming(false);
 	if (fPeer >= 0)
 		HostSocketClose(fPeer);
 	if (fListener >= 0)
@@ -250,6 +263,8 @@ THostIRChip::CloseMedium(void)
 	if (fLan >= 0)
 		HostSocketClose(fLan);
 	fPeer = fListener = fLan = -1;
+	fLanWanted = false;
+	fLanKeptTo = false;
 	fPeerAddress = 0;
 	fPeerPort = 0;
 	fPort = 0;
@@ -274,6 +289,8 @@ THostIRChip::InstallChipHandler(void* serialTool, SCCChannelInts* intHandlers)
 		return -1;
 	fHandlers = *intHandlers;
 	fTool = serialTool;
+	if (fLanWanted)
+		LanClaimed();
 	return noErr;
 }
 
@@ -283,6 +300,7 @@ THostIRChip::RemoveChipHandler(void* serialTool)
 {
 	if (serialTool != fTool)
 		return -1;
+	LanBeaming(false);
 	fTool = nil;
 	fIntEnabled = false;
 	memset(&fHandlers, 0, sizeof(fHandlers));
@@ -544,15 +562,19 @@ THostIRChip::Heard(UByte modulation, UByte b)
 // The interrupt is looked for every few milliseconds while there is a
 // peer (or one to find) - bytes that arrive while nobody listens are lost
 // then, not kept - and at once when the tool has work (with no medium at
-// all only then: what it sends goes nowhere, and nothing comes).
+// all only then: what it sends goes nowhere, and nothing comes).  The LAN
+// medium has no peer to find, so it is looked at only while a tool has the
+// port, or what one sent is still to go: nobody hears it otherwise, and a
+// battery's machine must not wake two hundred times a second for that.
 Boolean
 THostIRChip::Due(Int64* when)
 {
 	Boolean work = fTool != nil && fIntEnabled && (fTxIntPending || fRxReady > 0);
-	if (fPeer < 0 && fListener < 0 && fPeerAddress == 0 && fLan < 0 && !work)
+	Boolean lan = fLanWanted && (fTool != nil || fWireCount > 0);
+	if (fPeer < 0 && fListener < 0 && fPeerAddress == 0 && !lan && !work)
 		return false;
 	if (work)
-		GetClock(when);
+		when->hi = 0, when->lo = 0;		// (due: HostInterruptSources.h)
 	else
 		*when = fNextPoll;
 	return true;
@@ -564,8 +586,20 @@ THostIRChip::Due(Int64* when)
 void
 THostIRChip::Poll(void)
 {
-	if (fLan >= 0)
+	if (fLanWanted)
 	{
+		if (fLan < 0)
+		{
+			Int64 now;
+			GetClock(&now);
+			if (fTool == nil || CompCompare(&now, &fLanRetry) < 0 || !JoinLan())
+			{
+				fWireCount = 0;				// (no network yet: the light goes nowhere)
+				return;
+			}
+		}
+		if (fTool != nil)
+			LanBeaming(true);				// (the medium changed under the tool: HostIRChipSetPeer)
 		PollLan();
 		return;
 	}
@@ -681,7 +715,11 @@ ParseAddress(const char* text, uint32_t* address)
 
 // ":PORT", ":PORT@ADDRESS", "@ADDRESS" or nothing: the group's port
 // (kLanPort when none is given) and the one interface to keep to (every
-// interface that can multicast when none is).
+// interface that can multicast when none is).  The group is not joined
+// yet: that waits for a tool to claim the port (LanClaimed), when there may
+// be a network - a board's Wi-Fi has not joined anything when the OS boots -
+// and when two boards of one image, started alike, no longer draw the same
+// instance.
 NewtonErr
 THostIRChip::OpenLan(const char* spec)
 {
@@ -697,25 +735,55 @@ THostIRChip::OpenLan(const char* spec)
 		spec = end;
 	}
 	fLanInterfaceCount = 0;
+	fLanKeptTo = false;
 	if (*spec == '@')
 	{
 		if (!ParseAddress(spec + 1, &fLanInterfaces[0]))
 			return -1;
 		fLanInterfaceCount = 1;
+		fLanKeptTo = true;
 	}
-	else
+	fPort = (unsigned short) port;
+	fLanWanted = true;
+	return noErr;
+}
+
+
+// A tool has the port on the LAN medium, or no longer: gHostIRBeaming told.
+void
+THostIRChip::LanBeaming(Boolean beaming)
+{
+	if (beaming == fLanBeaming)
+		return;
+	fLanBeaming = beaming;
+	if (gHostIRBeaming != nil)
+		gHostIRBeaming(beaming);
+}
+
+
+// The group joined.  ==> whether it was; if not, the next try is a second
+// away (Poll, while a tool has the port).
+Boolean
+THostIRChip::JoinLan(void)
+{
+	if (!fLanKeptTo)
 	{
 		int count = 0;
+		fLanInterfaceCount = 0;
 		if (HostInterfaceAddresses(fLanInterfaces, kLanInterfaces, &count) == kHostSocketOK)
 			fLanInterfaceCount = count;
 	}
 	int joined = 0;
-	if (HostUDPMulticastOpen(kLanGroup, (uint16_t) port, fLanInterfaces, fLanInterfaceCount, &fLan, &joined) != kHostSocketOK)
+	if (HostUDPMulticastOpen(kLanGroup, fPort, fLanInterfaces, fLanInterfaceCount, &fLan, &joined) != kHostSocketOK)
 	{
 		fLan = -1;
-		return -1;
+		GetClock(&fLanRetry);
+		Int64 wait = { 0, (ULong) kSeconds };
+		CompAdd(&wait, &fLanRetry);
+		if (TraceIR())
+			printf("[ir %d] LAN medium: the group not joined yet\n", ChipIndex(this));
+		return false;
 	}
-	fPort = (unsigned short) port;
 	// which newton this is: the clock's fine bits and an address, which
 	// differ between two started together
 	Int64 clock;
@@ -730,13 +798,36 @@ THostIRChip::OpenLan(const char* spec)
 	fLossSeed = fInstance;
 	if (TraceIR())
 	{
-		printf("[ir %d] LAN medium: group 239.255.78.119:%ld, instance %08x, %d interface(s), joined on %d:", ChipIndex(this), port,
+		printf("[ir %d] LAN medium: group 239.255.78.119:%u, instance %08x, %d interface(s), joined on %d:", ChipIndex(this), (unsigned) fPort,
 			fInstance, fLanInterfaceCount, joined);
 		for (int i = 0; i < fLanInterfaceCount; i++)
 			printf(" %u.%u.%u.%u", fLanInterfaces[i] >> 24, (fLanInterfaces[i] >> 16) & 0xff, (fLanInterfaces[i] >> 8) & 0xff, fLanInterfaces[i] & 0xff);
 		printf("\n");
 	}
-	return noErr;
+	return true;
+}
+
+
+// A tool has the port: the group joined if it is not yet, and what the
+// socket kept while nobody polled it let go - light is not kept for later.
+void
+THostIRChip::LanClaimed(void)
+{
+	fRxHead = fRxCount = fRxReady = 0;
+	LanBeaming(true);
+	if (fLan < 0)
+	{
+		JoinLan();
+		return;
+	}
+	UByte datagram[kLanHeader + 2 * kLanMaxPairs + 64];
+	for (int n = 0; n < 256; n++)
+	{
+		size_t got = 0;
+		uint32_t from = 0;
+		if (HostUDPReceive(fLan, datagram, sizeof(datagram), &got, &from) != kHostSocketOK || got == 0)
+			break;
+	}
 }
 
 
@@ -839,13 +930,14 @@ THostIRChip::PollLan(void)
 		PutWord(datagram + 14, fPartner);
 		memcpy(datagram + kLanHeader, fWire + sent, 2 * pairs);
 		size_t size = kLanHeader + 2 * pairs;
+		int result = kHostSocketOK;
 		if (fLanInterfaceCount == 0)
-			HostUDPMulticastSend(fLan, kLanGroup, fPort, 0, datagram, size);
+			result = HostUDPMulticastSend(fLan, kLanGroup, fPort, 0, datagram, size);
 		for (int i = 0; i < fLanInterfaceCount; i++)
-			HostUDPMulticastSend(fLan, kLanGroup, fPort, fLanInterfaces[i], datagram, size);
+			result = HostUDPMulticastSend(fLan, kLanGroup, fPort, fLanInterfaces[i], datagram, size);
 		if (TraceIR())
 		{
-			printf("[ir %d] sent", ChipIndex(this));
+			printf("[ir %d] sent (%d, error %d)", ChipIndex(this), result, result != kHostSocketOK ? HostSocketLastError() : 0);
 			for (long i = 1; i < 2 * pairs; i += 2)
 				printf(" %02x", fWire[sent + i]);
 			printf("\n");
@@ -980,7 +1072,7 @@ HostIRChipPort(TSerialChip* chip)
 Boolean
 HostIRChipConnected(TSerialChip* chip)
 {
-	if (chip != nil && ((THostIRChip*) chip)->fLan >= 0)
+	if (chip != nil && ((THostIRChip*) chip)->fLanWanted)
 		return true;			// (the group is always there)
 	return chip != nil && ((THostIRChip*) chip)->fPeer >= 0 && !((THostIRChip*) chip)->fConnecting;
 }
@@ -1029,5 +1121,5 @@ HostIRChipSetPeer(const char* peer)
 Boolean
 HostIRChipOnLan(void)
 {
-	return gInstalledIRChip != nil && gInstalledIRChip->fLan >= 0;
+	return gInstalledIRChip != nil && gInstalledIRChip->fLanWanted;
 }
