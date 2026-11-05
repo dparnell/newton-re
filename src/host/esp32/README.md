@@ -175,6 +175,11 @@ PSRAM on the board), with `CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY`
 and the WiFi's and lwIP's buffers in PSRAM.  162 KB of internal RAM is
 free at the start, 53 KB with the OS up (13 KB before).
 
+**Handwriting**: the Handwriting Recognition slip offers the unistroke engine
+as on the desktops (`docs/recognition/engines.md`). `DevicePreMain` has to call
+`HostInstallWordEngines` for that, with host/HostWordEngines.cpp and its `.ns`
+in `main/CMakeLists.txt`.
+
 **The clock**: the board has none that keeps time while it is off, so it
 starts at 1970 (the Newton's 31/12).  Once a network is joined, SNTP
 (`pool.ntp.org`, polled hourly by ESP-IDF) sets the board's clock, and

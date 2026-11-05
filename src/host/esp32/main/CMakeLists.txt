@@ -235,6 +235,18 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${INPUT})
 target_sources(${COMPONENT_LIB} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/HostDeveloperSource.cpp ${NEWTON_SRC}/host/HostDeveloper.cpp)
 set_source_files_properties(${NEWTON_SRC}/host/HostDeveloper.cpp PROPERTIES COMPILE_OPTIONS "${all_quoted};-iquote${NEWTON_SRC}/host")
 
+# host/HostWordEngines.ns, the host's handwriting engines in the Handwriting
+# Recognition slip and Setup's handwriting page (host/HostWordEngines.cpp:
+# HostWordEngines(), which the letter-set box asks; without it the unistroke
+# engine is built and installed, but no button offers it)
+set(INPUT ${NEWTON_SRC}/host/HostWordEngines.ns)
+set(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp)
+set(NAME gHostWordEnginesSource)
+include(${NEWTON_SRC}/cmake/EmbedText.cmake)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${INPUT})
+target_sources(${COMPONENT_LIB} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp ${NEWTON_SRC}/host/HostWordEngines.cpp)
+set_source_files_properties(${NEWTON_SRC}/host/HostWordEngines.cpp PROPERTIES COMPILE_OPTIONS "${all_quoted};-iquote${NEWTON_SRC}/host")
+
 target_compile_definitions(${COMPONENT_LIB} PRIVATE forQ=1 NDEBUG)
 target_compile_options(${COMPONENT_LIB} PRIVATE
     -include${NEWTON_SRC}/host/host_compat.h
