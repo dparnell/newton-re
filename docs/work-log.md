@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-05: the unistroke engine on the T-Deck
+
+The owner noticed the T-Deck had no unistroke recogniser. It was there all
+along, compiled and installed asleep: what the board lacked was
+`HostInstallWordEngines`, which makes `HostWordEngines()`. `newton.cpp` calls it
+and `DevicePreMain` never did, and since `host/HostWordEngines.cpp` is not in
+`KEPT_IN_HOST` it was not even built. The letter-set box asks `GlobalFnExists`
+first, so nothing failed: the slip just had two buttons. The board now embeds
+and compiles it in `main/CMakeLists.txt`, as it does HostDeveloper.
+
+Checked on the T-Deck Pro: the slip has the button at 240x320 with its example,
+a tap on it puts 'UNIS' in use and survives a restart, and shift, h, e, l, l, o
+drawn on a new note typed "Hello". Not checked: the T-Deck Max (the same image),
+Setup's handwriting page at this size, and a real finger's strokes.
+
 ## 2026-11-04: Shut down on every host
 
 Only the T-Deck Max could switch off, from its quick sheet, and nothing inside

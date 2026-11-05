@@ -119,6 +119,12 @@ changes ROM behaviour is a `DEVIATION`.
    the page.  A map's class is its flags, 4 being kMapProto; `romsrc.py`
    now sets it for a map with `_proto` among its tags.)
 
+   Every host's PreMain has to call `HostInstallWordEngines`, which is
+   what makes `HostWordEngines()`.  A host that does not is quiet about
+   it: the engine is built and installed asleep, but the box's
+   `GlobalFnExists` test finds no function and offers no button (the
+   T-Deck's `DevicePreMain` until 2026-11-05).
+
    Before `romsrc/` could be changed, the slip was patched at boot only:
    `host/HostWordEngines.ns` (embedded in newton, run by
    `HostInstallWordEngines` after the Host panel) registers a copy of the

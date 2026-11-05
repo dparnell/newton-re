@@ -58,6 +58,7 @@
 #include "HostSoundDriver.h"
 #include "HostAudio.h"
 #include "host/HostDeveloper.h"
+#include "host/HostWordEngines.h"
 #include "print/host/HostIPP.h"
 #include "host/HostFontProvider.h"
 #include <stdio.h>
@@ -446,6 +447,7 @@ DevicePreMain(void)
 	HostInstallQuickSheet();			// (host/HostQuickSheet.h: the sheet pulled down from the top edge - tdeck_input.cpp - and the lock screen)
 	HostInstallSettings();				// (the Host preferences panel: the panel's quick updates and clean-ups)
 	HostInstallDeveloper();				// (the Developer preferences panel: the profile to the console)
+	HostInstallWordEngines();			// (the host's handwriting engines in the Handwriting Recognition slip and Setup's page: host/HostWordEngines.h)
 }
 
 

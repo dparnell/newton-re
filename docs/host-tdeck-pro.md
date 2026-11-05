@@ -195,10 +195,11 @@ the panel's gray modes, if it has them).
 ### Input
 
 - **Touch is a finger, not a pen.** Taps and drags work as a pen's do, but
-  a finger cannot write: the handwriting recogniser (a quarter of the code)
-  is of little use, and ink notes are coarse. With the keyboard it makes
-  sense to leave recognition out of a device build, or keep it for drawn
-  shapes only.
+  a finger writes joined-up words badly: the ROM's recognisers (a quarter
+  of the code) are of little use, and ink notes are coarse. The unistroke
+  engine, a letter a stroke, suits a finger better; the Handwriting
+  Recognition slip and Setup's handwriting page offer it as on the
+  desktops (`docs/recognition/engines.md`).
 - **The keyboard** is a TCA8418 matrix: its key events map to the Newton's
   keyboard codes as the host's keyboard does (`host/HostKeyboard.cpp`).
 
