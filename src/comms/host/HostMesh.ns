@@ -205,7 +205,7 @@
 		------------------------------------------------------------------*/
 
 		Mesh: func() GetGlobalVar('|HostMesh:host|),
-		Soup: func() GetUnionSoup(:Mesh().soupName),
+		Soup: func() GetUnionSoupAlways(:Mesh().soupName),
 
 		// the conversations: the Public channel first, then the rest newest
 		// first - {thread, name, text, sender, time, dir, state, unread}
@@ -1492,7 +1492,11 @@
 		The application's work outside its views
 	----------------------------------------------------------------------*/
 
-	Soup: func() GetUnionSoup(soupName),
+	// (GetUnionSoupAlways: GetUnionSoup is nil while no store has a member
+	// - none is made until the first entry is added - once the union soup
+	// RegUnionSoup made at the start is no longer kept; adding to it then
+	// failed, "Error in AutoPutAway script" on the T-Deck Max)
+	Soup: func() GetUnionSoupAlways(soupName),
 
 	KeepIndex: func()
 	begin

@@ -9,6 +9,17 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-16: "Error in AutoPutAway script" for a text on the T-Deck Max
+
+A text arriving on the Max raised "Error in AutoPutAway script
+Messages:host": the application's `Soup()` was `GetUnionSoup`, which is nil
+while no store has a member of the soup.  `RegUnionSoup` makes none (the
+first `AddToDefaultStore` does); on the desktop the empty union soup it made
+stays cached in `gUnionSoups`, but on the Max it was no longer kept, so no
+text could be stored.  Messages and Mesh now use `GetUnionSoupAlways`.
+Proven on the board by patching the running application and putting the
+stuck text away; why the Max drops the cached union soup is not yet known.
+
 ## 2026-11-15: "There is no dial tone." on a cellular call
 
 A call from the board's Phone transport said "There is no dial tone." -
