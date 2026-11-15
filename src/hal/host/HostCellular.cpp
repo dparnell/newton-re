@@ -1333,6 +1333,11 @@ HostCellularRun(const HostCellularLink* link)
 				SetCall(kHostCellCallIdle, nullptr);
 				SetState(kHostCellNone);
 				gPendingCount = 0;
+				{
+					// (what was asked of the module that went away is not done)
+					std::lock_guard<std::mutex> hold(gLock);
+					gRequestCount = 0;
+				}
 				configured = false;
 			}
 		}
@@ -1449,7 +1454,10 @@ static bool
 Ask(RequestKind kind, const char* number, const char* text, long id = 0)
 {
 	std::lock_guard<std::mutex> hold(gLock);
-	if (!gStarted || gRequestCount == kRequestQueue)
+	// (none while no module answers: the engine takes requests only from a
+	// module it has configured, so they would pile up unseen until the
+	// queue was full and every later one - a dial too - refused)
+	if (!gStarted || gStatus.state == kHostCellNone || gRequestCount == kRequestQueue)
 		return false;
 	Request* request = &gRequests[(gRequestHead + gRequestCount++) % kRequestQueue];
 	request->kind = kind;
@@ -1460,10 +1468,20 @@ Ask(RequestKind kind, const char* number, const char* text, long id = 0)
 }
 
 
+// (only when registered on a network: a module still searching, or with
+// no SIM, answers ATD with an error after the Newton has been told the
+// call is under way)
 bool
 HostCellularDial(const char* number)
 {
-	return number != nullptr && number[0] != 0 && Ask(kRequestDial, number, nullptr);
+	if (number == nullptr || number[0] == 0)
+		return false;
+	{
+		std::lock_guard<std::mutex> hold(gLock);
+		if (gStatus.state != kHostCellHome && gStatus.state != kHostCellRoaming)
+			return false;
+	}
+	return Ask(kRequestDial, number, nullptr);
 }
 
 

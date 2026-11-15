@@ -200,7 +200,31 @@ the provider the default and listening; a call made as the Call slip makes
 it (`NewItem`, `ItemSubmit`: the Calls app's `StartSend`), a keypad tone and
 the speaker switched in it, hung up from the Newton and logged; one hung up
 by the far end; one refused busy; one rung in with caller ID, taken (Take
-Call) and hung up by the caller.
+Call) and hung up by the caller; one to a card whose number has no digits,
+refused with "No phone number was provided.".
+
+**"There is no dial tone."** (2026-11-15) is what the ROM's transport makes
+of any dial its provider refused (`MakeOutgoingDone`: the `outg` option's
+`opFailure`, -54021, becomes `kModemErrNoDialTone`) - a landline modem's
+one reason.  The owner met it on a call made from the board: a mobile
+network has no dial tone, and the host's tool refuses for reasons of its
+own.  Three changes:
+- The engine (`hal/host/HostCellular.cpp`) takes requests only from a
+  module it has configured, and asked none while no module answered: they
+  queued unseen, the call shown as under way, until six had piled up and
+  every later request - a dial too - was refused.  `Ask` now refuses at
+  once while no module answers (state `'none`), and the queue is emptied
+  when the module stops answering.
+- `HostCellularDial` refuses unless the module is registered on a network
+  (`'home` or `'roaming`): one still searching, or with no SIM, answers
+  `ATD` with an error after the Newton was told the call was under way.
+- DEVIATION in `basicCallTransport.MakeOutgoingDone`: a provider whose
+  config says `hostDialError` (the Cellular one) has the error replaced by
+  `HostCellDialError(number)`'s - the ROM's own messages: no module
+  answering "No modem is connected or your modem isn't responding
+  properly." (`kModemErrNoResponse`), not registered "Service is not
+  available." (-8301), no digits "No phone number was provided."
+  (`kCommErrNoPhoneNumber`); otherwise the ROM's message stands.
 
 On the board the Phone transport is "Listening" on the Cellular provider
 from the start.  A real call each way is the owner's to make.

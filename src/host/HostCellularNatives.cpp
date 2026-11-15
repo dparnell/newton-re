@@ -16,6 +16,7 @@
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "Unicode.h"
+#include "CommErrors.h"
 #include <string.h>
 #include <time.h>
 
@@ -62,6 +63,40 @@ FHostCellDial(RefArg /*rcvr*/, RefArg number)
 	char digits[kHostCellNumberSize];
 	HostUTF8Of(number, digits, sizeof(digits));
 	return HostCellularDial(digits) ? TRUEREF : NILREF;
+}
+
+
+// Why the module would not dial number (nil, or a number with nothing
+// dialable in it): the error the Phone transport reports in place of the
+// ROM's "There is no dial tone." - which is what it makes of any dial its
+// provider refused (basicCallTransport.MakeOutgoingDone; DEVIATION there).
+// The messages are the ROM's own (errorTable): no module answering is
+// kModemErrNoResponse, a module not registered on a network (no SIM, a
+// locked one, still searching) "Service is not available." (-8301), no
+// number kCommErrNoPhoneNumber; otherwise nil (the ROM's message stands).
+static Ref
+FHostCellDialError(RefArg /*rcvr*/, RefArg number)
+{
+	if (!HostCellularStarted())
+		return MAKEINT(kModemErrNoResponse);
+	HostCellStatusInfo info;
+	HostCellularStatus(&info);
+	if (info.state == kHostCellNone || info.state == kHostCellStarting)
+		return MAKEINT(kModemErrNoResponse);
+	if (info.state != kHostCellHome && info.state != kHostCellRoaming)
+		return MAKEINT(-8301);
+	bool dialable = false;
+	if (IsString(number))
+	{
+		char digits[kHostCellNumberSize];
+		HostUTF8Of(number, digits, sizeof(digits));
+		for (const char* p = digits; *p != 0; p++)
+			if ((*p >= '0' && *p <= '9') || *p == '+' || *p == '*' || *p == '#')
+				dialable = true;
+	}
+	if (!dialable)
+		return MAKEINT(kCommErrNoPhoneNumber);
+	return NILREF;
 }
 
 
@@ -185,6 +220,7 @@ HostRegisterCellularFunctions(void)
 	SetSlot(functions, "HostCellAvailable", RefVar(MakeCFunction((void*) FHostCellAvailable, 0, nil)));
 	SetSlot(functions, "HostCellStatus", RefVar(MakeCFunction((void*) FHostCellStatus, 0, nil)));
 	SetSlot(functions, "HostCellDial", RefVar(MakeCFunction((void*) FHostCellDial, 1, nil)));
+	SetSlot(functions, "HostCellDialError", RefVar(MakeCFunction((void*) FHostCellDialError, 1, nil)));
 	SetSlot(functions, "HostCellAnswer", RefVar(MakeCFunction((void*) FHostCellAnswer, 0, nil)));
 	SetSlot(functions, "HostCellHangUp", RefVar(MakeCFunction((void*) FHostCellHangUp, 0, nil)));
 	SetSlot(functions, "HostCellSendText", RefVar(MakeCFunction((void*) FHostCellSendText, 2, nil)));

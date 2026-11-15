@@ -227,6 +227,18 @@ basicCallTransport := {
 		if (error = -54021) then begin
 				error := kModemErrNoDialTone
 			end;
+		// DEVIATION (host addition): a refused dial (-54021, the option's
+		//  opFailure) is "There is no dial tone." - a landline modem's reason,
+		//  and the only one the ROM's providers had.  A mobile network gives no
+		//  dial tone, and the host's cellular provider (comms/host/HostCell.ns,
+		//  config.hostDialError) refuses for reasons of its own: no module
+		//  answering, no network, no number - HostCellDialError says which.
+		if (error = kModemErrNoDialTone) and transportProvider and transportProvider.config
+		and transportProvider.config.hostDialError and currentItem then begin
+				local why := HostCellDialError(currentItem.numberToDial);
+				if why then
+					error := why
+			end;
 		GetRoot().(appSymbol):DialingComplete(error)
 	end,
 	// The status text, with the name of the other party or of the service.

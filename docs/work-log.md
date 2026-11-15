@@ -9,6 +9,17 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-15: "There is no dial tone." on a cellular call
+
+A call from the board's Phone transport said "There is no dial tone." -
+the ROM's reading of any dial its provider refused.  The host's cellular
+engine queued requests while no module answered and refused all of them
+once six had piled up; it now refuses at once then, refuses a dial until
+the module is registered, and the transport says which of those it was
+(`HostCellDialError`, DEVIATION in `MakeOutgoingDone`).  ctest
+`host.NewtonPhoneCall` waits for registration and checks a refused dial's
+message (docs/host-tdeck-pro-phone.md).
+
 ## 2026-11-05: the unistroke engine on the T-Deck
 
 The owner noticed the T-Deck had no unistroke recogniser. It was there all
