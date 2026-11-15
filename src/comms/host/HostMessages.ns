@@ -167,7 +167,7 @@
 			The messages
 		------------------------------------------------------------------*/
 
-		Soup: func() GetUnionSoup(GetGlobalVar('|HostMessages:host|).soupName),
+		Soup: func() GetUnionSoupAlways(GetGlobalVar('|HostMessages:host|).soupName),
 
 		// the conversations, newest first: {thread, number, name, text, time, dir, state, unread}
 		Reload: func()
@@ -856,7 +856,11 @@
 		if StrLen(digits) > 8 then SubStr(digits, StrLen(digits) - 8, 8) else digits;
 	end,
 
-	Soup: func() GetUnionSoup(soupName),
+	// (GetUnionSoupAlways: GetUnionSoup is nil while no store has a member
+	// - none is made until the first entry is added - once the union soup
+	// RegUnionSoup made at the start is no longer kept; adding to it then
+	// failed, "Error in AutoPutAway script" on the T-Deck Max)
+	Soup: func() GetUnionSoupAlways(soupName),
 
 	// a message the transport received
 	Received: func(item)
