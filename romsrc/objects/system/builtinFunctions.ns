@@ -6863,6 +6863,16 @@ builtinFunctions := {
 		text := Stringer([Array: text, Substr(phone, l2, nil)]);
 		if a3 then begin
 				l2 := 0;
+				// ROM BUG (fixed): the trim runs to the length of phone, not of
+				//  what is left of it, and indexes past the end when no digit is
+				//  left: StripDigits("0412244808", 10, true) throws -48205.
+				//  MungePhone asks that when the user's area code is the whole
+				//  number (the owner's own mobile number as the area code, and a
+				//  call to it from the Calls application: the routing slip did
+				//  not open).  The fix stops at the end of what is left; with
+				//  NEWTON_ROM_BUGS=1 (RomBugFixed() nil) the ROM's code runs.
+				if RomBugFixed() then
+					len := StrLen(text);
 				(while (l2 < len) do begin
 						if (if (text[l2] >= $0) then (text[l2] <= $9)) then begin
 								if (if (l2 > 0) then (text[(l2 - 1)] = $()) then begin

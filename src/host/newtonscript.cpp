@@ -71,6 +71,7 @@
 #include "HostStores.h"
 #include "HostObjectsFile.h"
 #include "FunctionProfiler.h"
+#include "RomBugs.h"
 
 #ifndef NEWTON_DEFAULT_OBJECTS
 #define NEWTON_DEFAULT_OBJECTS "romsrc-objects.bin"
@@ -78,6 +79,16 @@
 
 
 // Host: ROMConstant(name) - the ROM's R constant by name
+// RomBugFixed(), as the newt world registers it (newt/NewtWorld.cpp): the
+// fixes of the ROM's own NewtonScript bugs in romsrc/ ask it (StripDigits
+// among them), and a script here may call those functions
+static Ref
+FRomBugFixed(RefArg /*rcvr*/)
+{
+	return RomBugFixed() ? TRUEREF : NILREF;
+}
+
+
 static Ref
 FROMConstant(RefArg /*rcvr*/, RefArg name)
 {
@@ -202,6 +213,7 @@ main(int argc, char** argv)
 	HostMountStores();
 	HostInitREP(stdout, stdin);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "ROMConstant")), RefVar(MakeCFunction((void*) FROMConstant, 1, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "RomBugFixed")), RefVar(MakeCFunction((void*) FRomBugFixed, 0, nil)));
 	if (roundTripIn != nil)
 		return RunRoundTrip(roundTripIn, roundTripOut);
 	if (compileIn != nil)

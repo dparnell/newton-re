@@ -63,7 +63,8 @@ python tools/newton-rom/analysis/rombugs.py --markdown docs/rom-bugs-list.md
 
 A bug in the ROM's NewtonScript (`romsrc/functions/`) is fixed the same
 way: the host gives NewtonScript a global function, `RomBugFixed()`
-(registered by `TNewtWorld::PreMain`, `src/newt/NewtWorld.cpp`), true
+(registered by `TNewtWorld::PreMain`, `src/newt/NewtWorld.cpp`, and by
+`newtonscript` for scripts run there), true
 unless `NEWTON_ROM_BUGS=1`, and the fix reads
 `if RomBugFixed() then <fixed> else <the ROM's code>`. Booted from the
 ROM image (`--rom`), the ROM's own functions run, unchanged. The first is

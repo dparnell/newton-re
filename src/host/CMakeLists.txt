@@ -99,6 +99,15 @@ set_tests_properties(host.ViewsDemo PROPERTIES TIMEOUT 120)
 add_test(NAME host.ScaledMapDemo COMMAND newtonscript --display 320x480 ${CMAKE_CURRENT_SOURCE_DIR}/demo/scaledmap.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.ScaledMapDemo PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "the map is 360 by 179.*scaledmap: written")
 # NewtonScript tracing: vars.trace 'functions, true and a one-slot frame (demo/trace.ns)
+# StripDigits with nothing left of the number (MungePhone, the user's area
+# code the whole number): the ROM's trim indexes past the end (ROM BUG,
+# fixed - romsrc/objects/system/builtinFunctions.ns)
+add_test(NAME host.StripDigits COMMAND newtonscript ${CMAKE_CURRENT_SOURCE_DIR}/demo/stripdigits.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.StripDigits PROPERTIES TIMEOUT 60 ENVIRONMENT NEWTON_ROM_BUGS=0
+                     PASS_REGULAR_EXPRESSION "stripdigits: 9555 1234.*stripdigits: 0 left.*stripdigits: done")
+add_test(NAME host.StripDigits.romBugs COMMAND newtonscript ${CMAKE_CURRENT_SOURCE_DIR}/demo/stripdigits.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.StripDigits.romBugs PROPERTIES TIMEOUT 60 ENVIRONMENT NEWTON_ROM_BUGS=1
+                     PASS_REGULAR_EXPRESSION "stripdigits: 9555 1234.*-48205")
 add_test(NAME host.NewtonScriptTrace COMMAND newtonscript ${CMAKE_CURRENT_SOURCE_DIR}/demo/trace.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonScriptTrace PROPERTIES TIMEOUT 60
                      PASS_REGULAR_EXPRESSION "trace: functions.*call with..3.*=> 8.*trace: everything.*<= ..[0-9A-F]+...trTwice.*=> 10.*trace: one slot.*0 <= ..[0-9A-F]+...counter.*counter := 1.*trace: done")

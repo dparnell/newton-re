@@ -9,6 +9,16 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-16: calls to the T-Deck Max never rang
+
+The Phone transport was `'idle` with `'phoneAutoReceive` off: an endpoint
+that failed to open at the start is shut down by the ROM while
+`'Connecting`, which turns waiting for calls off and keeps it off.  The
+cellular provider now starts listening itself and retries, the preference
+put back (`HostCell.ns` `Listen`).  On the way: Place Call to a number
+equal to the location's area code threw in `StripDigits` (ROM BUG, fixed;
+`RomBugFixed()` now in `newtonscript` too).  docs/host-tdeck-pro-phone.md.
+
 ## 2026-11-16: "Error in AutoPutAway script" for a text on the T-Deck Max
 
 A text arriving on the Max raised "Error in AutoPutAway script
