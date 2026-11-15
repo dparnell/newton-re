@@ -62,7 +62,35 @@
 			end;
 			if transport:GetConfig('phoneAutoReceive)
 			and GetUserConfig('currentDialSpeaker) = providerSymbol then
-				transport:StartAutoReceive();
+				:Listen(transport, kListenTries);
 		end, nil);
+	end,
+
+	// DEVIATION (host addition): waiting for calls started, and tried again
+	// when it fails.  The transport's Shutdown, after an endpoint that did not
+	// open while 'Connecting, turns 'phoneAutoReceive off - and it is kept: the
+	// phone never listened again, even after a restart (the T-Deck Max,
+	// 2026-11-16: calls to it went unanswered, the transport 'idle).  A
+	// MessagePad's modem missing was the user's to fix; the host's module is
+	// there, and an open that fails at the start (a board still starting) is
+	// tried again every kListenRetryMs, the preference put back each time.
+	kListenTries: 8,
+	kListenRetryMs: 15000,
+	Listen: func(transport, tries)
+	begin
+		transport:StartAutoReceive();
+		if transport.status = 'Listening then
+			return true;
+		// (the user may have chosen another service meanwhile; the preference
+		// kept even after the last try, so that the next start tries again)
+		if GetUserConfig('currentDialSpeaker) <> providerSymbol then
+			return nil;
+		transport:SetConfig('phoneAutoReceive, true);
+		if tries > 1 then begin
+			AddDelayedCall(func() if transport:GetConfig('phoneAutoReceive) and transport.status <> 'Listening
+				and GetUserConfig('currentDialSpeaker) = providerSymbol then :Listen(transport, tries - 1),
+				nil, kListenRetryMs);
+		end;
+		nil;
 	end
 }

@@ -129,6 +129,29 @@ pcSteps := [
 		RemoveSlot(pcTransport, 'Notify);
 		call pcCheck with ("why it was refused", StrEqual(pcAlert, "No phone number was provided."),
 			"the alert said " & pcAlert);
+		// an endpoint that does not open at the start: the ROM's Shutdown
+		// (status 'Connecting) turns waiting for calls off for good; the
+		// provider puts it back and tries again (HostCell.ns Listen)
+		pcTransport:SetConfig('phoneAutoReceive, nil);
+		pcTransport:Shutdown();
+		pcTransport:SetConfig('phoneAutoReceive, true);
+		pcTransport.StartAutoReceive := func() begin
+			RemoveSlot(self, 'StartAutoReceive);
+			status := 'Connecting;
+			:Shutdown();
+		end;
+		GetGlobalVar('|HostCell:host|):Listen(pcTransport, 3);
+		call pcCheck with ("the failed start off", pcTransport.status <> 'Listening, "listening at once");
+		call waitFor with ("phonecall: listening again", func() (call pcStatus with ()) = 'Listening
+			and pcTransport:GetConfig('phoneAutoReceive), next, 40);
+	end,
+	func(next) begin
+		HostCellCommand("AT+FAKERING=\"+61400000001\"");
+		call waitFor with ("phonecall: ringing after the retry", func() (call pcStatus with ()) = 'RingingFrom, next, 30);
+	end,
+	func(next) begin
+		pcTransport:CancelRequest('completed);
+		HostCellCommand("AT+FAKEHANGUP");
 		Print("phonecall: done, " & pcFailures & " failed");
 		HostQuit();
 	end];

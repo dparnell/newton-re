@@ -1,0 +1,11 @@
+// StripDigits(phone, count, trim) with nothing left of the number - what
+// MungePhone asks when the user's area code is the whole number (a call to
+// the owner's own mobile, its number given as the area code: the T-Deck
+// Max, 2026-11-16).  The ROM's trim runs to the length of phone, not of
+// what is left, and indexes past the end (ROM BUG, fixed:
+// romsrc/objects/system/builtinFunctions.ns); with NEWTON_ROM_BUGS=1 it
+// throws -48205 (ctests host.StripDigits and host.StripDigits.romBugs).
+
+Print("stripdigits: " & StripDigits("(03) 9555 1234", 2, true));
+Print("stripdigits: " & StrLen(StripDigits("0412244808", 10, true)) & " left");
+Print("stripdigits: done");

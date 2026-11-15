@@ -226,6 +226,23 @@ own.  Three changes:
   available." (-8301), no digits "No phone number was provided."
   (`kCommErrNoPhoneNumber`); otherwise the ROM's message stands.
 
+**Calls that never rang** (2026-11-16, the T-Deck Max): the transport was
+`'idle`, its `'phoneAutoReceive` off.  The endpoint had not opened at the
+start, and the ROM's `Shutdown`, called while `'Connecting`, turns waiting
+for calls off - a preference kept in the store, so the phone stayed deaf
+across restarts.  DEVIATION: the provider (`HostCell.ns`, `Listen`) starts
+waiting for calls itself and, when it fails, puts the preference back and
+tries again every 15 s, up to eight times (the preference kept after the
+last, so the next start tries too).  `host.NewtonPhoneCall` fakes the
+failed start and checks that a call then rings.
+
+**Place Call to the owner's own number** threw in `StripDigits` (the
+routing slip did not open): the Max's location had the owner's mobile
+number, 0412244808, as its area code, so `MungePhone` stripped the whole
+number and `StripDigits`' trim indexed past the end - a ROM BUG, fixed
+(`romsrc/objects/system/builtinFunctions.ns`, ctests `host.StripDigits`
+and `.romBugs`).  An Australian mobile wants no area code there.
+
 On the board the Phone transport is "Listening" on the Cellular provider
 from the start.  A real call each way is the owner's to make.
 
