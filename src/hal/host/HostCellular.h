@@ -47,6 +47,11 @@
 											other party's (nil: withheld or no
 											call), seconds the call's so far
 					HostCellDial(number)	==> true when asked
+					HostCellDialError(number)
+											why HostCellDial would refuse
+											number - an error for the Phone
+											transport's alert (no module,
+											no network, no number) - or nil
 					HostCellAnswer()		==> true when asked
 					HostCellHangUp()		==> true when asked
 					HostCellSendText(number, text)

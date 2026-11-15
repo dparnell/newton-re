@@ -4,7 +4,8 @@
 // calls from the start; a call made as the Names card's Call slip makes it
 // (the transport's item, ItemSubmit), keypad tones and the loudspeaker in
 // it, hung up from the Newton; one hung up by the far end; one refused
-// busy; one rung in with caller ID, taken (Take Call) and hung up.  The
+// busy; one rung in with caller ID, taken (Take Call) and hung up; one
+// to a card whose number has no digits, refused saying so.  The
 // module is tools/modem/fakecell.py on --cell-port; its own commands
 // (AT+FAKERING, AT+FAKEHANGUP) make the far end do its part
 // (ctest host.NewtonPhoneCall):
@@ -17,6 +18,7 @@ HostInclude("common.ns");
 pcFailures := 0;
 pcTransport := nil;
 pcLogged := 0;
+pcAlert := nil;
 
 pcCheck := func(what, ok, why) begin
 	if ok then
@@ -57,7 +59,8 @@ end;
 
 pcSteps := [
 	func(next) call waitFor with ("phonecall: listening",
-		func() (pcTransport := GetRoot().|PhoneHome:Newton|) and (call pcStatus with ()) = 'Listening, next, 90),
+		func() (pcTransport := GetRoot().|PhoneHome:Newton|) and (call pcStatus with ()) = 'Listening
+			and HostCellStatus().state = 'home, next, 90),
 	func(next) begin
 		call pcCheck with ("the provider", StrEqual(GetTAPICommFrame(GetUserConfig('currentDialSpeaker)).name, "Cellular"),
 			"the provider is " & GetUserConfig('currentDialSpeaker));
@@ -110,7 +113,22 @@ pcSteps := [
 		call waitFor with ("phonecall: the caller hung up", func() (call pcStatus with ()) = 'Listening
 			and (call cellCallState with ()) = 'idle, next, 30);
 	end,
+	// a dial the provider refuses says why - here a card whose number has no
+	// digits in it - not the ROM's "There is no dial tone." (a mobile
+	// network has none: basicCallTransport.MakeOutgoingDone, DEVIATION)
 	func(next) begin
+		call pcCheck with ("a number dialable", HostCellDialError("5551234") = nil,
+			"refused with " & HostCellDialError("5551234"));
+		// (the transport's alert, kept rather than shown)
+		pcTransport.Notify := func(level, title, message) pcAlert := message;
+		call pcCall with ("abc");
+		call waitFor with ("phonecall: the undialable number refused", func() pcAlert
+			and pcTransport.currentItem = nil, next, 30);
+	end,
+	func(next) begin
+		RemoveSlot(pcTransport, 'Notify);
+		call pcCheck with ("why it was refused", StrEqual(pcAlert, "No phone number was provided."),
+			"the alert said " & pcAlert);
 		Print("phonecall: done, " & pcFailures & " failed");
 		HostQuit();
 	end];

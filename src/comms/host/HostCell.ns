@@ -39,7 +39,8 @@
 			supportsAnswerIncoming: true,
 			supportsSpeaker: true,
 			supportsLineCurrentSense: true,
-			dialsAsWritten: true		// (the number as the card has it: romsrc's SendRequest, DEVIATION)
+			dialsAsWritten: true,		// (the number as the card has it: romsrc's SendRequest, DEVIATION)
+			hostDialError: true		// (a refused dial says why, not "no dial tone": romsrc's MakeOutgoingDone, DEVIATION)
 		}
 	},
 
