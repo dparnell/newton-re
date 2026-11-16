@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
@@ -164,6 +165,139 @@ const size_t		kLineSize = 512;
 static QueueHandle_t	gLines = NULL;
 
 
+/*------------------------------------------------------------------------------
+	The console's history: stdout and stderr are streams of our own that
+	write through to the USB console and keep a copy of the last kHistorySize
+	bytes in PSRAM, which !log prints - so a trace printed when nobody was
+	watching (an error that came up once) can be read afterwards.  Anything
+	printed goes in: the Newton's output, the drivers' [cell] lines, the
+	REP's echo and answers; !log's own printing does not.
+------------------------------------------------------------------------------*/
+
+const size_t		kHistorySize = 32768;
+static char*		gHistory = NULL;
+static size_t		gHistoryEnd = 0;			// where the next byte goes
+static bool			gHistoryFull = false;		// (gHistoryEnd has wrapped at least once)
+static portMUX_TYPE	gHistoryLock = portMUX_INITIALIZER_UNLOCKED;
+
+
+static ssize_t
+HistoryWrite(void* cookie, const char* data, size_t size)
+{
+	int fd = (int) (intptr_t) cookie;
+	if (gHistory != NULL)
+	{
+		portENTER_CRITICAL(&gHistoryLock);
+		const char* from = data;
+		size_t left = size;
+		if (left > kHistorySize)
+		{
+			from += left - kHistorySize;
+			left = kHistorySize;
+		}
+		while (left > 0)
+		{
+			size_t run = kHistorySize - gHistoryEnd;
+			if (run > left)
+				run = left;
+			memcpy(gHistory + gHistoryEnd, from, run);
+			from += run;
+			left -= run;
+			gHistoryEnd += run;
+			if (gHistoryEnd == kHistorySize)
+			{
+				gHistoryEnd = 0;
+				gHistoryFull = true;
+			}
+		}
+		portEXIT_CRITICAL(&gHistoryLock);
+	}
+	// (all of it, or the console would see a short write as an error)
+	size_t done = 0;
+	while (done < size)
+	{
+		ssize_t wrote = write(fd, data + done, size - done);
+		if (wrote <= 0)
+			break;
+		done += wrote;
+	}
+	return (ssize_t) size;
+}
+
+
+static FILE*
+HistoryStream(int fd)
+{
+	cookie_io_functions_t io = { NULL, HistoryWrite, NULL, NULL };
+	FILE* stream = fopencookie((void*) (intptr_t) fd, "w", io);
+	if (stream != NULL)
+		setvbuf(stream, NULL, _IONBF, 0);
+	return stream;
+}
+
+
+// stdout and stderr made history streams: before any other task is made
+// (each copies the global ones at its start)
+static void
+HistoryStart(void)
+{
+	gHistory = (char*) heap_caps_malloc(kHistorySize, MALLOC_CAP_SPIRAM);
+	if (gHistory == NULL)
+		return;
+	FILE* out = HistoryStream(STDOUT_FILENO);
+	FILE* err = HistoryStream(STDERR_FILENO);
+	if (out == NULL || err == NULL)
+		return;
+	fflush(stdout);
+	fflush(stderr);
+	_GLOBAL_REENT->_stdout = out;
+	_GLOBAL_REENT->_stderr = err;
+	stdout = out;
+	stderr = err;
+}
+
+
+// the console's !log: the history, oldest first, straight to the console
+static void
+HistoryDump(void)
+{
+	if (gHistory == NULL)
+	{
+		const char kNone[] = "newton: no console history (no PSRAM for it)\n";
+		write(STDOUT_FILENO, kNone, sizeof(kNone) - 1);
+		return;
+	}
+	char* copy = (char*) heap_caps_malloc(kHistorySize, MALLOC_CAP_SPIRAM);
+	if (copy == NULL)
+		return;
+	size_t size;
+	portENTER_CRITICAL(&gHistoryLock);
+	if (gHistoryFull)
+	{
+		memcpy(copy, gHistory + gHistoryEnd, kHistorySize - gHistoryEnd);
+		memcpy(copy + kHistorySize - gHistoryEnd, gHistory, gHistoryEnd);
+		size = kHistorySize;
+	}
+	else
+	{
+		memcpy(copy, gHistory, gHistoryEnd);
+		size = gHistoryEnd;
+	}
+	portEXIT_CRITICAL(&gHistoryLock);
+	const char kBegin[] = "log-begin\n", kEnd[] = "\nlog-end\n";
+	write(STDOUT_FILENO, kBegin, sizeof(kBegin) - 1);
+	for (size_t done = 0; done < size; )
+	{
+		ssize_t wrote = write(STDOUT_FILENO, copy + done, size - done);
+		if (wrote <= 0)
+			break;
+		done += wrote;
+	}
+	write(STDOUT_FILENO, kEnd, sizeof(kEnd) - 1);
+	heap_caps_free(copy);
+}
+
+
 static void
 ConsoleReader(void*)
 {
@@ -184,7 +318,9 @@ ConsoleReader(void*)
 		// shows (tdeck_panel.cpp), !time <seconds since 1970, GMT> the clock
 		// set by hand (the Newton's too: tdeck_wifi.cpp), !tap <x> <y> the
 		// finger on the display at (x, y) for 100 ms (as the touch panel puts
-		// it, so a modal dialog can be answered from here), !reset a restart
+		// it, so a modal dialog can be answered from here), !log the console's
+		// last 32 KB (above: what was printed when nobody watched), !reset a
+		// restart
 		else if (strncmp(line, "!prof", 5) == 0)
 			HostDeviceProfileDump();
 		else if (strncmp(line, "!sound", 6) == 0)
@@ -205,6 +341,8 @@ ConsoleReader(void*)
 			vTaskDelay(pdMS_TO_TICKS(100));
 			HostWindowPenUp();
 		}
+		else if (strncmp(line, "!log", 4) == 0)
+			HistoryDump();
 		else if (strncmp(line, "!reset", 6) == 0)
 			esp_restart();
 		else
@@ -305,6 +443,7 @@ app_main(void)
 	esp_vfs_usb_serial_jtag_use_driver();
 	setvbuf(stdin, NULL, _IONBF, 0);
 	setvbuf(stdout, NULL, _IONBF, 0);
+	HistoryStart();						// (the console's history, for !log)
 	vTaskDelay(pdMS_TO_TICKS(1500));		// (time for a terminal to open the port)
 
 	printf("newton: ESP32-S3, PSRAM %u KB\n", (unsigned) (esp_psram_get_size() >> 10));

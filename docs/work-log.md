@@ -9,6 +9,14 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-16: the T-Decks' console keeps a history
+
+An error on the Max (-63007908 after a Names card's phone icon) came up
+once and not again, and its trace went to a console nobody was capturing.
+stdout and stderr are now streams that keep the console's last 32 KB in
+PSRAM as well, and `!log` prints it (esp32main.cpp; src/host/esp32/README.md).
+Tried on the Max: the boot's output and the REP's answers came back.
+
 ## 2026-11-16: the T-Deck Max rings
 
 A call to the Max was heard as one beep a ring: the ROM's Phone transport

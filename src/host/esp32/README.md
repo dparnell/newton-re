@@ -200,7 +200,15 @@ GMT>` sets the clock by hand (as a sync from the network does), `!tap <x>
 which stops the NewtonScript console, answered from it), `!pm` what keeps
 the chip out of light sleep and ESP-IDF's profile of its power locks and
 modes (`PM_PROFILING`), `!tasks` each task's time on the processor since
-it was last asked, `!reset` restarts the board.
+it was last asked, `!log` prints the console's last 32 KB (between
+`log-begin` and `log-end`), `!reset` restarts the board.
+
+**The console's history.** stdout and stderr are streams of the board's
+own (`fopencookie`, made before any other task) that write through to the
+USB console and keep a copy of the last 32 KB in PSRAM. So the trace of an
+error that came up once while no one was capturing - the board's
+`NEWTON_TRACE_EXCEPTIONS` is on - can still be read with `!log`
+afterwards, until a restart.
 
 ## Beaming (2026-11-04)
 
