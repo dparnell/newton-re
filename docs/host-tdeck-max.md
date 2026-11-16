@@ -152,9 +152,12 @@ slots of a frame though it is set up mono**, 43200 samples a second, so
 `HearTask` keeps every second one. Without that, a recording plays back at half
 speed. The rate printed by `!sound` is there to catch it.
 
-During a call (`HostCellularSetCallHandler`, dialling or connected) the speaker
-is switched to the modem and the amplifier held on. **Not tried**: the board has
-no SIM in it yet.
+During a call (`HostCellularSetCallHandler`: ringing, dialling or connected)
+the speaker is switched to the modem and the amplifier held on. While an
+incoming call rings, the A7682E plays its own ring tone on it (tried with a SIM
+on 2026-11-16). Until then the speaker stayed the codec's while ringing, and
+all that was heard was the ROM's single `funBeep` for each ring: the ROM's
+Phone transport was written for a landline modem and has no ring tone.
 
 ## The frontlight and the motor
 

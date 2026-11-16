@@ -22,9 +22,10 @@
 				silence; left unasked for kIdleMs it stops.
 
 				The loudspeaker has a second source: the A7682E's voice
-				output, through a switch (kLineAudioFromModem).  During a call
-				(HostDeviceAudioCall) the switch is the modem's and the
-				amplifier stays on, whatever the Newton plays.
+				output, through a switch (kLineAudioFromModem).  During a call,
+				ringing included (HostDeviceAudioCall), the switch is the
+				modem's and the amplifier stays on, whatever the Newton plays:
+				the module plays its own ring tone.
 
 				The pins: the schematic (sheet 8) says I2S_ASDOUT is IO17
 				and I2S_DSDIN IO40, the codec's own names, so that the ESP32's
@@ -418,7 +419,8 @@ HostMicrophoneClose(void)
 }
 
 
-// a call up or down (tdeck_modem.cpp): the loudspeaker the modem's meanwhile
+// a call (ringing, dialling or connected) up or down (tdeck_modem.cpp): the
+// loudspeaker the modem's meanwhile
 void
 HostDeviceAudioCall(bool on)
 {

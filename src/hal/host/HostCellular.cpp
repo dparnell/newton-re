@@ -181,7 +181,8 @@ SetCall(HostCellCallState state, const char* number, HostCellEventKind ending = 
 {
 	static bool voice = false;
 	SetCallState(state, number, ending);
-	bool now = state == kHostCellCallActive || state == kHostCellCallDialing;
+	// (ringing too: the module plays its own ring on the speaker it is given)
+	bool now = state == kHostCellCallActive || state == kHostCellCallDialing || state == kHostCellCallIncoming;
 	if (now != voice)
 	{
 		voice = now;
