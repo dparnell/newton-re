@@ -9,6 +9,15 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-16: the T-Deck Max rings
+
+A call to the Max was heard as one beep a ring: the ROM's Phone transport
+plays `funBeep` on each ring (it was written for a landline modem), and the
+loudspeaker was switched to the A7682E only while dialling or connected.
+The engine now tells the board the voice path is up while ringing too
+(`SetCall`, HostCellular.cpp), and the module's own ring tone is heard.
+Tried on the board with a call answered.  docs/host-tdeck-max.md.
+
 ## 2026-11-16: calls to the T-Deck Max never rang
 
 The Phone transport was `'idle` with `'phoneAutoReceive` off: an endpoint

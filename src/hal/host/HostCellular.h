@@ -183,7 +183,7 @@ extern void	(*gHostCellularNews)(void);
 // that the Newton's side, starting meanwhile, counts it as there
 void	HostCellularWillRun(void);
 void	HostCellularSetClockHandler(void (*handler)(long long utcSeconds, long offsetMinutes, bool hasOffset));
-// told when the voice path comes up (dialling or connected) or goes down, on
+// told when the voice path comes up (dialling, ringing or connected) or goes down, on
 // the engine's thread: a board whose loudspeaker the module shares switches it
 void	HostCellularSetCallHandler(void (*handler)(bool voice));
 // A module whose supply the host can switch (a board's, to save its
