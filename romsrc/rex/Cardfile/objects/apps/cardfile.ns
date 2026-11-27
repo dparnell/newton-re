@@ -1231,6 +1231,18 @@ cardfile := {
 	// The application's size for the screen: 240 wide, a dragger border of 8 on a
 	// screen wider than 240 (none on a small one), 202 high for owner cards, 220
 	// for the default layout, else as high as the screen allows (at most 424).
+	// DEVIATION (host addition, docs/names-card-items.md): the height the card
+	// view gives the data items shown on a card's face (romsrc's
+	// export18Item_3): two lines when an application registered one for
+	// person cards (showOnCard), else none - the ROM's 220 exactly.
+	CardFaceItemsHeight: func() begin
+		local viewDefs;
+		if (viewDefs := GetViewDefs('person)) then
+			foreach key, value in viewDefs do
+				if (value.type = 'editor) and value.showOnCard then
+					return 2 * (FontHeight(tsFancy + tsSize(10)) + 2) + 6;
+		0
+	end,
 	kGetAppSize: func(a1, a2) begin
 		local l1, least, bounds, viewFormat;
 		if ((screenSize := GetAppParams()).appAreaWidth <= 240) then begin
@@ -1239,7 +1251,12 @@ cardfile := {
 				l1 := 8
 			end;
 		if ((a1.superSymbol = 'ownerNames) or (a2 = 'default)) then begin
-				least := (if (a1.superSymbol = 'ownerNames) then 202 else 220)
+				least := (if (a1.superSymbol = 'ownerNames) then 202 else 220);
+				// DEVIATION (host addition): room under the card for the items
+				//  that ask to be on its face (CardFaceItemsHeight)
+				if (a2 = 'default) then begin
+						least := Min(least + a1:CardFaceItemsHeight(), screenSize.appAreaHeight - (l1 * 2))
+					end
 			end else begin
 				least := (screenSize.appAreaHeight - (l1 * 2));
 				if (l1 > 0) then begin
@@ -1801,7 +1818,7 @@ cardfile := {
 				l3 := (((box.bottom - box.top) - 202) - l5)
 			end else begin
 				if (a1 = 'default) then begin
-						l3 := (((box.bottom - box.top) - 220) - l5)
+						l3 := (((box.bottom - box.top) - (220 + self:CardFaceItemsHeight())) - l5)
 					end else begin
 						l3 := (((box.bottom - box.top) + l4.bounds.top) + l5)
 					end

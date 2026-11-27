@@ -10,8 +10,9 @@
 // keyboard calling the number typed; a call answered on the lock screen
 // (unlocking it) and one declined there (left locked); Do not disturb
 // holding a stranger's call and text, letting a card's call through, and
-// its summary; a repeated caller ringing (and held, that switched off); its schedule's start and stop, a hand's off kept; Names' DND
-// button letting a card through; each screen snapshotted
+// its summary; a repeated caller ringing (and held, that switched off); its schedule's start and stop, a hand's off kept; a Names
+// card's Do not disturb item - offered by Add, its editor letting the card
+// through, shown under the card; each screen snapshotted
 // (phone-<width>x<height>-<n>.pgm), so a run at each display size shows the
 // layout made for it.  The module is tools/modem/fakecell.py on --cell-port
 // (ctests host.NewtonPhone.*):
@@ -427,7 +428,9 @@ phSteps := [
 		call phSnap with ();
 		sheet.scheduleSlip:Close();
 		DoNotDisturbSetSchedule({on: nil, start: 22 * 60, stop: 7 * 60});
-		// Names' DND button: Bob's card shown, let through from it
+		// Names: Bob's card shown; its Do not disturb item (a card item,
+		// host/HostCardItems.ns) offered by Add, its editor's checkbox
+		// letting him through, the item then under his card
 		local names := GetRoot().cardfile;
 		local bob := nil;
 		foreach c in phApp.contacts do if StrEqual(c.name, "Bob Smith") then bob := c.card;
@@ -437,18 +440,74 @@ phSteps := [
 	end,
 	func(next) begin
 		local names := GetRoot().cardfile;
-		local button := nil;
+		local add := nil;
 		foreach v in names.statusBar:ChildViewFrames() do
-			if IsString(v.text) and StrEqual(v.text, "DND") then button := v;
-		call phCheck with ("Names' DND button", button, "none in its status bar");
+			if IsString(v.text) and StrPos(v.text, "Add", 0) then add := v;
+		local offered := nil;
+		if add then begin
+			add:buttonClickScript();
+			foreach item in add.popup do
+				if IsFrame(item) and StrEqual(item.item, "Do not disturb") then offered := item;
+			if add.viewCObject then add:hilite(nil);
+			DismissPopup();
+		end;
+		call phCheck with ("Add offers Do not disturb", offered, "not in the Add picker");
+		names:ShowEditSlip('|dnd:host|, nil, nil, nil, nil);
+		AddDelayedCall(next, nil, 500);
+	end,
+	func(next) begin
+		local names := GetRoot().cardfile;
+		local slip := names.editSlipLayout;
+		local box := nil;
+		local find;
+		find := func(v) if v.viewCObject then
+			foreach w in v:ChildViewFrames() do begin
+				if IsString(w.text) and StrPos(w.text, "during Do not disturb", 0) then box := w;
+				call find with (w);
+			end;
+		if slip then call find with (slip);
+		call phCheck with ("its editor", box, "no checkbox in the edit slip");
 		call phSnap with ();
-		if button then begin
-			button:buttonClickScript();
-			button:pickActionScript(0);
+		if box then begin
+			SetValue(box, 'viewValue, true);
+			box:valueChanged();
 		end;
 		local bob := nil;
 		foreach c in phApp.contacts do if StrEqual(c.name, "Bob Smith") then bob := c.card;
 		call phCheck with ("Bob let through from Names", bob.hostDNDAllowed, "he is not");
+		if slip and slip.closeBox then slip.closeBox:buttonClickScript();
+		names:ShowLayout('default);
+		names:ShowFoundItem(bob, nil);
+		AddDelayedCall(next, nil, 500);
+	end,
+	func(next) begin
+		local names := GetRoot().cardfile;
+		local face := nil;
+		local walk;
+		walk := func(v) begin
+			if v.viewCObject then
+				foreach w in v:ChildViewFrames() do begin
+					if w.showOnCardItems then face := w;
+					call walk with (w);
+				end;
+		end;
+		call walk with (names);
+		call phCheck with ("under his card", face and face.shapeArray and Length(face.shapeArray) > 0,
+			"nothing drawn under the card");
+		call phSnap with ();
+		// a tap on it opens its editor
+		if face then begin
+			local box := face:GlobalBox();
+			HostPenTap(box.left + 60, box.top + 6);
+		end;
+		call waitFor with ("phone: the item tapped", func() HostPenReplayDone() and GetRoot().cardfile.editSlipLayout
+			and GetRoot().cardfile.editSlipLayout.viewCObject, next, 10);
+	end,
+	func(next) begin
+		local names := GetRoot().cardfile;
+		call phCheck with ("its editor from the card", names.editSlipLayout and names.editSlipLayout.viewCObject
+			and names.editSlipLayout.selectedLayout = '|dnd:host|, "it is not open");
+		if names.editSlipLayout and names.editSlipLayout.closeBox then names.editSlipLayout.closeBox:buttonClickScript();
 		names:Close();
 		AddDelayedCall(next, nil, 200);
 	end,

@@ -1,0 +1,50 @@
+// Card items: an application's own data on a Names card, shown and edited by
+// Names (host/HostQuickSheet.h installs this file at boot, before the quick
+// sheet - its Do not disturb item is the first user; compiled into the
+// program as HostCardItemsSource.cpp by src/cmake/EmbedText.cmake; the frame
+// is kept in the global CardItems:host).  The design and the pattern for an
+// application: docs/names-card-items.md.
+//
+// The mechanism is NewtonOS 2.x's own, as Apple documented it for packages:
+// a view definition registered for a card class (RegisterViewDef) with type
+// 'editor is a data item of that class's cards - Names offers it in its Add
+// picker when the card has none of its data, lists it in All Info (its
+// kViewsToDisplay), opens it in the edit slip when it is tapped, and puts
+// its text in Find and routing - each through the definition's infoFrame
+// (checkPrefix, checkPaths, format / formatFunc / shapeFunc, actionFunc).
+// What the host adds:
+//
+//   - RegCardItem(viewDef, classes) / UnRegCardItem(symbol, classes): the
+//     definition registered for each card class that is to have it (by
+//     default those with phone numbers: 'person, 'company and 'owner);
+//   - DEVIATION: a definition that says showOnCard is also shown on the
+//     card's face, in a text-lines view under the business card
+//     (romsrc/rex/Cardfile/objects/system/export18.ns, export18Item_3) -
+//     the ROM's business cards show only the name, company, addresses and
+//     phones.
+
+{
+	kClasses: ['person, 'company, 'owner],
+
+	Start: func()
+	begin
+		DefGlobalFn('RegCardItem, func(viewDef, classes) GetGlobalVar('|CardItems:host|):Reg(viewDef, classes));
+		DefGlobalFn('UnRegCardItem, func(symbol, classes) GetGlobalVar('|CardItems:host|):UnReg(symbol, classes));
+	end,
+
+	// a view definition registered for each class (nil: kClasses) ==> its symbol
+	Reg: func(viewDef, classes)
+	begin
+		if not IsFrame(viewDef) or not IsSymbol(viewDef.symbol) then return nil;
+		foreach cls in (if classes then classes else kClasses) do
+			RegisterViewDef(viewDef, cls);
+		viewDef.symbol;
+	end,
+
+	UnReg: func(symbol, classes)
+	begin
+		foreach cls in (if classes then classes else kClasses) do
+			UnRegisterViewDef(symbol, cls);
+		true;
+	end
+}

@@ -223,11 +223,20 @@ add_custom_command(
             -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/HostQuickSheet.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     VERBATIM)
+# host/HostCardItems.ns, card items: an application's data on a Names card
+# (installed with the quick sheet, which uses them), compiled in the same way
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostCardItemsSource.cpp
+    COMMAND ${CMAKE_COMMAND} -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/HostCardItems.ns
+            -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/HostCardItemsSource.cpp -DNAME=gHostCardItemsSource
+            -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/HostCardItems.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    VERBATIM)
 add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostOrientation.cpp HostSettings.cpp HostFontProvider.cpp
                ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp HostDeveloper.cpp
                ${CMAKE_CURRENT_BINARY_DIR}/HostDeveloperSource.cpp HostWordEngines.cpp
                ${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp HostHeapCheck.cpp
-               HostQuickSheet.cpp ${CMAKE_CURRENT_BINARY_DIR}/HostQuickSheetSource.cpp HostAppDefaults.cpp)
+               HostQuickSheet.cpp ${CMAKE_CURRENT_BINARY_DIR}/HostQuickSheetSource.cpp ${CMAKE_CURRENT_BINARY_DIR}/HostCardItemsSource.cpp HostAppDefaults.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 install(TARGETS newton DESTINATION bin)
@@ -248,7 +257,7 @@ if(ANDROID)
                 ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp HostDeveloper.cpp
                 ${CMAKE_CURRENT_BINARY_DIR}/HostDeveloperSource.cpp HostWordEngines.cpp
                 ${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp HostHeapCheck.cpp
-                HostQuickSheet.cpp ${CMAKE_CURRENT_BINARY_DIR}/HostQuickSheetSource.cpp HostAppDefaults.cpp)
+                HostQuickSheet.cpp ${CMAKE_CURRENT_BINARY_DIR}/HostQuickSheetSource.cpp ${CMAKE_CURRENT_BINARY_DIR}/HostCardItemsSource.cpp HostAppDefaults.cpp)
     set_target_properties(newton_android PROPERTIES OUTPUT_NAME newton)
     target_link_libraries(newton_android PRIVATE newton_android_main newt host_views host_window hal_host_sound hal_timers hal_host_serial)
     target_link_options(newton_android PRIVATE -u ANativeActivity_onCreate)

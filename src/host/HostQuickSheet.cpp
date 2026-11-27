@@ -15,6 +15,7 @@
 #include "hal/host/HostPower.h"
 
 extern const char gHostQuickSheetSource[];		// HostQuickSheet.ns (HostQuickSheetSource.cpp, generated)
+extern const char gHostCardItemsSource[];	// HostCardItems.ns (HostCardItemsSource.cpp, generated)
 
 static void	(*gLockHook)(bool on) = nil;
 static bool	gInstalled = false;
@@ -144,6 +145,19 @@ HostInstallQuickSheet(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostPowerOff")), RefVar(MakeCFunction((void*) FHostPowerOff, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostPowerOffStopped")), RefVar(MakeCFunction((void*) FHostPowerOffStopped, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostPowerOffHint")), RefVar(MakeCFunction((void*) FHostPowerOffHint, 0, nil)));
+	// (the card items first: the quick sheet's Do not disturb item uses them)
+	newton_try
+	{
+		RefVar fn(ParseString(RefVar(MakeString(gHostCardItemsSource))));
+		RefVar items(InterpretBlock(fn, RefVar()));
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "CardItems:host")), items);
+		NSSend(items, RefVar(Intern((char*) "Start")));
+	}
+	newton_catch_all
+	{
+		fprintf(stderr, "[host] the card items were not installed: %s\n", CurrentException()->name);
+	}
+	end_try;
 	newton_try
 	{
 		RefVar fn(ParseString(RefVar(MakeString(gHostQuickSheetSource))));

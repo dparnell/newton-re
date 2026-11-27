@@ -67,8 +67,9 @@
 // schedule (the sheet's Schedule button: hostDNDSchedule {on, start, stop},
 // minutes of the day) turns it on at start and off at stop every day - each
 // time crossed, so a hand that turned it off within the hours is not
-// overruled until the next day (DNDCheck).  Names' status bar has a DND
-// button (RegAuxButton) that lets the card shown through.  A call from a
+// overruled until the next day (DNDCheck).  A Names card has a Do not
+// disturb item (dndCardItem, through RegCardItem - host/HostCardItems.ns):
+// in Add, in All Info and on the card's face, its editor a checkbox.  A call from a
 // number whose call was held in the last kRepeatMinutes rings (repeated
 // callers: DoNotDisturbHoldsCall), unless the Options slip says not
 // (hostDNDRepeatOff).
@@ -126,9 +127,9 @@
 		DefGlobalFn('DoNotDisturbAllow, func(card, allow) GetGlobalVar('|QuickSheet:host|):DNDAllow(card, allow));
 		DefGlobalFn('DoNotDisturbSchedule, func() GetGlobalVar('|QuickSheet:host|):DNDSchedule());
 		DefGlobalFn('DoNotDisturbSetSchedule, func(schedule) GetGlobalVar('|QuickSheet:host|):SetDNDSchedule(schedule));
-		// Names' status bar: the card shown let through, or not
-		RegAuxButton('|DNDNames:host|, {destApp: 'cardfile, _proto: @226,		// protoTextButton
-			text: "DND", buttonClickScript: func() GetGlobalVar('|QuickSheet:host|):NamesButton(self)});
+		// a Names card's Do not disturb item (host/HostCardItems.ns)
+		if GetGlobalFn('RegCardItem) then
+			call GetGlobalFn('RegCardItem) with (dndCardItem, nil);
 		// (the schedule, once the user configuration is there)
 		AddDeferredCall(func() GetGlobalVar('|QuickSheet:host|):DNDCheck(), nil);
 	end,
@@ -238,6 +239,43 @@
 		if log then foreach r in log collect Clone(r) else [];
 	end,
 
+	// The Do not disturb item of a Names card (docs/names-card-items.md): its
+	// data the slot hostDNDAllowed; "Rings during Do not disturb" under the
+	// card and in All Info when it is set; its editor a checkbox, changed at
+	// once (DNDAllow) - unticked, the slot is taken away, so Add offers the
+	// item again
+	dndCardItem: {
+		symbol: '|dnd:host|,
+		name: "Do not disturb",
+		type: 'editor,
+		protection: 'public,
+		showOnCard: true,
+		noKeyboard: true,													// (a checkbox: no keyboard in its slip)
+		_proto: @8240,
+		stepAllocateContext: [],											// (no path fields: @8240 aims them at the data otherwise, and would find the slip's)														// (Names' edit-slip group of fields)
+		infoFrame: {
+			checkPrefix: [true, nil],
+			checkPaths: ['hostDNDAllowed],
+			formatFunc: func(values) if values[0] then "Rings during Do not disturb" else ""
+		},
+		stepChildren: [
+			{_proto: @164,													// protoCheckbox
+			 viewBounds: {left: 10, top: 8, right: -10, bottom: 26}, viewJustify: 48,	// (vjParentFullH)
+			 text: "Allow calls and texts during Do not disturb",
+			 buttonValue: true, viewValue: nil,
+			 viewSetupFormScript: func() begin
+				viewValue := target and target.hostDNDAllowed;
+				inherited:?viewSetupFormScript();
+			 end,
+			 valueChanged: func() begin
+				if target then GetGlobalVar('|QuickSheet:host|):DNDAllow(target, viewValue);
+			 end},
+			{_proto: @218,													// protoStaticText
+			 viewBounds: {left: 10, top: 32, right: -10, bottom: 72}, viewJustify: 48,
+			 viewFont: 9216,
+			 text: "Its calls ring and its texts beep while Do not disturb is on."}]
+	},
+
 	// a card let through (its slot hostDNDAllowed) or not ==> whether it is
 	DNDAllow: func(card, allow)
 	begin
@@ -246,26 +284,6 @@
 		else if HasSlot(card, 'hostDNDAllowed) then RemoveSlot(card, 'hostDNDAllowed);
 		if IsSoupEntry(card) then EntryChangeXmit(card, nil);
 		card.hostDNDAllowed and true;
-	end,
-
-	// Names' DND button: the card shown - "Allow during Do not disturb",
-	// ticked when it is - in a picker
-	NamesButton: func(button)
-	begin
-		local names := GetRoot().cardfile;
-		local card := if names then names.target;
-		if not IsFrame(card) or not IsSoupEntry(card) or not card.phones or Length(card.phones) = 0 then begin
-			GetRoot():Notify(3, "Do not disturb", "Show a card with a phone number first: its calls and texts can then be let through Do not disturb.");
-			return nil;
-		end;
-		button.dndCard := card;
-		button.pickActionScript := func(index) begin
-			if index = 0 and dndCard then
-				GetGlobalVar('|QuickSheet:host|):DNDAllow(dndCard, not dndCard.hostDNDAllowed);
-			dndCard := nil;
-		end;
-		button.pickCancelledScript := func() dndCard := nil;
-		DoPopup([{item: "Allow during Do not disturb", mark: if card.hostDNDAllowed then $\uFC0B else $ }], 0, 0, button);
 	end,
 
 	/*----------------------------------------------------------------------

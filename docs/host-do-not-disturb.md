@@ -42,10 +42,11 @@ a time catches up.  Kept in the user configuration: `hostDNDSchedule`
 acted on), `hostDNDBySchedule`.
 
 **Let through**: a Names card whose slot `hostDNDAllowed` is true.  Set:
-- in **Names**: its status bar has a **DND** button (the ROM's
-  `RegAuxButton` - Names lists a package's buttons in its status bar), a
-  picker for the card shown, "Allow during Do not disturb", ticked when it
-  is;
+- in **Names**: the card's **Do not disturb** item (a card item,
+  `docs/names-card-items.md`) - Add offers it, its editor is a checkbox
+  "Allow calls and texts during Do not disturb", and "Rings during Do not
+  disturb" is shown under the card (a tap opens the editor) and in All
+  Info;
 - in **Phone's Contacts**, a long press on the card, "Allow during Do not
   disturb" (again: "Don't allow ..."); the list says "DND allowed" beside
   its number.  A call or text from any of that card's numbers (matched by
@@ -111,10 +112,10 @@ checked: beaming).  This is how
 will take (Apple's advice: the package's signature in it,
 `'|allowed:MySig|`); the `host` prefix is the host's.  What NewtonOS 2.1's
 Names offers beyond that, for a package to show or edit its slots:
-`RegAuxButton(symbol, {destApp: 'cardfile, ...})` (a button in its status
-bar, as here), a layout of its own in the Show picker (`AddLayout`,
-`RegisterViewDef` on the card's data class), and the user's own Custom
-fields (their labels in the Names soup's `'customFields` info).
+a data item of its own, shown and edited by Names - in Add, All Info, its
+edit slip and (a host addition) on the card's face: `docs/names-card-items.md`;
+a button in Names' status bar (`RegAuxButton(symbol, {destApp: 'cardfile,
+...})`); and the user's own Custom fields.
 
 NOT YET: held texts
 from a card let through by its name rather than its number.

@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-27: Card items - an application's data on a Names card
+
+NewtonOS 2.x's own extension of Names (a view definition of type
+`'editor` registered for the card's class: Add, All Info, the edit slip,
+Find) is the system, as the owner chose; the host adds `RegCardItem` and,
+a DEVIATION, items that say `showOnCard` shown under the business card
+(romsrc's export18 and a taller card view, `CardFaceItemsHeight`).  Do not
+disturb is the first item, in place of its Names status-bar button.  Found
+on the way: an editor of its own views must say `stepAllocateContext: []`,
+or `@8240` throws (`addPath`) when the slip is opened from a tap.
+docs/names-card-items.md.
+
 ## 2026-11-27: Do not disturb lets repeated callers through
 
 A second call from the same number within 3 minutes rings

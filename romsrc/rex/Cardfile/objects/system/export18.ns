@@ -1,9 +1,11 @@
 // The Names card layout (@8210, the 'default layout): the A-Z tabs (none for
-// owner cards) above the current card, shown in its business card layout.
+// owner cards) above the current card, shown in its business card layout -
+// and under it (DEVIATION, host addition) the data items of the card's class
+// that ask to be shown on the card's face (export18Item_3).
 
 export18 := {
 	name: card,
-	stepChildren: [stepChildren: export18Item, export18Item_2],
+	stepChildren: [stepChildren: export18Item, export18Item_2, export18Item_3],
 	// Owner cards have no A-Z tabs.
 	viewSetupFormScript: func() begin
 		if (superSymbol = 'ownerNames) then begin
@@ -42,4 +44,35 @@ export18Item_2 := {
 	viewBounds: {left: 0, top: 0, right: 240, bottom: 160},
 	viewChildren: [|Array|: {_proto: @8208, viewJustify: vjParentCenterH}],
 	preAllocatedContext: 'entryView
+};
+
+// DEVIATION (host addition, docs/names-card-items.md): the data items an
+// application registered for the card's class (RegisterViewDef, type 'editor)
+// whose view definition says showOnCard, under the business card - the ROM's
+// business cards show only the name, company, addresses and phones, and
+// such an item was seen only in All Info.  A text-lines view (@8242), as
+// All Info's: each item's data formatted by its infoFrame, a bullet before
+// it, a tap opening its editor; a card with none of their data shows
+// nothing.
+export18Item_3 := {
+	viewSetupFormScript: func() begin
+		local items, viewDefs;
+		layouts := {};
+		items := [];
+		if (if target then (viewDefs := GetViewDefs(target.class))) then begin
+				foreach key, value in viewDefs do
+					if (value.type = 'editor) and value.showOnCard then
+						AddArraySlot(items, key);
+				layouts.(target.class) := items
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	layouts: nil,
+	showOnCardItems: true,
+	showBullet: true,
+	showMultipleData: true,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewBounds: {left: 8, top: 4, right: -8, bottom: 34},
+	viewFont: tsFancy + tsSize(10),
+	_proto: @8242
 };

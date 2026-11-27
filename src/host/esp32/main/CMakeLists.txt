@@ -222,6 +222,14 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${INPUT})
 target_sources(${COMPONENT_LIB} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp ${NEWTON_SRC}/host/HostSettings.cpp)
 set_source_files_properties(${NEWTON_SRC}/host/HostSettings.cpp PROPERTIES COMPILE_OPTIONS "${all_quoted};-iquote${NEWTON_SRC}/host")
 
+# host/HostCardItems.ns, card items: an application's data on a Names card
+# (installed by host/HostQuickSheet.cpp)
+set(INPUT ${NEWTON_SRC}/host/HostCardItems.ns)
+set(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostCardItemsSource.cpp)
+set(NAME gHostCardItemsSource)
+include(${NEWTON_SRC}/cmake/EmbedText.cmake)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${INPUT})
+target_sources(${COMPONENT_LIB} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/HostCardItemsSource.cpp)
 # host/HostQuickSheet.ns, the quick sheet pulled down from the top edge and
 # the lock screen (host/HostQuickSheet.cpp; tdeck_input.cpp sees the pull)
 set(INPUT ${NEWTON_SRC}/host/HostQuickSheet.ns)
