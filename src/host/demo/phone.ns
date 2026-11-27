@@ -257,6 +257,13 @@ phSteps := [
 		call waitFor with ("phone: the last call ended", func() phPhone.active = nil and (call phTransport with ()).status = 'Listening, next, 30);
 	end,
 	func(next) begin
+		// a dial that throws (the T-Deck Max's old StripDigits did, in the
+		// routing of the number) is reported, and leaves no call behind
+		local saved := phPhone.DialNumber;
+		phPhone.DialNumber := func(number, name, card, numbers) Throw('|evt.ex.fr|, {errorCode: -48205});
+		phPhone:Dial("5551234", nil, nil, nil);
+		phPhone.DialNumber := saved;
+		call phCheck with ("a dial that throws", phPhone.active = nil and Visible(phApp.keypadView), "a call is left");
 		Print("phone: done, " & phFailures & " failed");
 		HostQuit();
 	end];

@@ -501,6 +501,13 @@ are reserved; a call with a wrong number of arguments is -48803 with no
 trace; a text drawn in modeCopy erases its box (a key's border under a
 label) - modeOr (1) draws only the glyphs.
 
+**On the Max** (2026-11-27) a tap on Call first did nothing: the dial
+threw in `StripDigits` - the board's baked objects (`objects.baked`) were
+older than that ROM bug's fix (2026-11-16), and the location's area code
+is the owner's own number.  Baked again, the call went out.  A dial that
+throws is now said so ("The call could not be made") and leaves no call
+on the screen; bake again after any change to `romsrc/`.
+
 NOT YET: answering on the lock screen itself (it is unlocked first);
 keypad tones from the keyboard during a call; a second call (call waiting,
 hold); tried on a board.

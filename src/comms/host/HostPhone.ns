@@ -1210,7 +1210,26 @@
 	// A call made through the Phone transport, as the Call slip makes one: the
 	// transport's item, addressed to the number (the card's, when there is
 	// one), submitted.  numbers: a card's several - which one is asked first
+	// (a dial that throws - the ROM's routing of the number, the
+	// transport's submitting - is said so, not left as a tap that did
+	// nothing: the T-Deck Max, 2026-11-27, its baked StripDigits before its
+	// fix)
 	Dial: func(number, name, card, numbers)
+	begin
+		try
+			:DialNumber(number, name, card, numbers)
+		onexception |evt.ex| do begin
+			local ex := CurrentException();
+			local error := if ex.error then ex.error else if ex.data and IsFrame(ex.data) and ex.data.errorCode then ex.data.errorCode;
+			Print("Phone: the call could not be made: " & ex.name);
+			active := nil;
+			local base := :AppView();
+			if base and base.viewCObject then base:Layout();
+			GetRoot():Notify(3, "Phone", "The call could not be made" & (if error then " (error " & NumberStr(error) & ")." else "."));
+		end;
+	end,
+
+	DialNumber: func(number, name, card, numbers)
 	begin
 		local base := :AppView();
 		if numbers and Length(numbers) > 1 and base and base.listView then begin
