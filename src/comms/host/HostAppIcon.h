@@ -20,4 +20,9 @@
 // once the NewtonScript world is up (a PreMain hook's)
 void	HostRemoveAppIcon(const char* appSymbol);
 
+// the Extras drawer's Calls icon, which the Phone application
+// (HostPhone.ns, TakeIcon) takes where there is a cellular module, given
+// back to the ROM's Calls application where there is none
+void	HostRestoreCallsIcon(void);
+
 #endif

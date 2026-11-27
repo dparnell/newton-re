@@ -1,0 +1,271 @@
+// The Phone application (comms/host/HostPhone.ns) over the host's cellular
+// module: the Extras drawer's Calls icon taken for it; a number typed on its
+// keypad (and on the keyboard), the card it is shown, the call made with the
+// pen on Call, the call screen's keypad sending a tone, Mute and Speaker,
+// End; the recent calls listing it; a call coming in with the application
+// open (its caller's card's name), answered with the pen and hung up by
+// the caller; one with it closed opening it, missed and listed so; one
+// declined; the contacts searched and one called with a tap; Return on the
+// keyboard calling the number typed; each screen snapshotted
+// (phone-<width>x<height>-<n>.pgm), so a run at each display size shows the
+// layout made for it.  The module is tools/modem/fakecell.py on --cell-port
+// (ctests host.NewtonPhone.*):
+//
+//   python tools/modem/fakecell.py \
+//       --spawn build/host/host/newton --cell-port 0 --display 240x320 --erase \
+//       --store phone.store --headless 200 --script src/host/demo/phone.ns
+
+HostInclude("common.ns");
+phFailures := 0;
+phApp := nil;
+phPhone := nil;
+phShot := 0;
+phCalls := 0;
+
+phCheck := func(what, ok, why) begin
+	if ok then
+		Print("phone: " & what & " ok")
+	else begin
+		Print("phone: " & what & " FAILED - " & why);
+		phFailures := phFailures + 1;
+	end;
+end;
+
+phSnap := func() begin
+	RefreshViews();
+	local p := GetAppParams();
+	phShot := phShot + 1;
+	ScreenSnapshot("phone-" & NumberStr(p.appAreaWidth + p.appAreaLeft) & "x"
+		& NumberStr(p.appAreaHeight + p.appAreaTop) & "-" & NumberStr(phShot) & ".pgm");
+end;
+
+phTransport := func() GetRoot().|PhoneHome:Newton|;
+
+// the calls the Calls soup holds
+phLogCount := func() begin
+	local soup := GetUnionSoup("Calls");
+	if not soup then return 0;
+	local cursor := Query(soup, {type: 'index});
+	local n := 0;
+	while cursor:Entry() do begin
+		n := n + 1;
+		cursor:Next();
+	end;
+	n;
+end;
+
+// a tap at a hit the view drew ({left, top, right, bottom, ch or action})
+phTapHit := func(view, key, slot) begin
+	RefreshViews();
+	local box := view:GlobalBox();
+	foreach h in view.hits do
+		if h.(slot) = key or (IsString(key) and IsString(h.(slot)) and StrEqual(h.(slot), key)) then begin
+			HostPenTap(box.left + (h.left + h.right) div 2, box.top + (h.top + h.bottom) div 2);
+			return true;
+		end;
+	Print("phone: no " & key & " drawn");
+	nil;
+end;
+
+phCallState := func() HostCellStatus().callState;
+phActive := func(state) phPhone.active and phPhone.active.state = state;
+
+phIcon := func() begin
+	local cursor := Query(GetUnionSoup(@307.name), {type: 'index});
+	local e;
+	local found := {phone: nil, calls: nil};
+	while e := cursor:Entry() do begin
+		if e.app = '|Phone:host| then found.phone := e;
+		if e.app = 'callapp then found.calls := e;
+		cursor:Next();
+	end;
+	found;
+end;
+
+phSteps := [
+	// (a fresh store's Setup assistant closed first, once it is up)
+	func(next) begin
+		local start := Ticks();
+		local poll;
+		poll := func() begin
+			if GetRoot().setup and GetRoot().setup.viewCObject then begin
+				GetRoot().setup:Close();
+				AddDelayedCall(next, nil, 500);
+			end else if Ticks() - start > 20 * 60 then
+				call next with ()
+			else
+				AddDelayedCall(poll, nil, 250);
+		end;
+		call poll with ();
+	end,
+	func(next) call waitFor with ("phone: the application",
+		func() GetRoot().|Phone:host| and HostCellStatus().state = 'home
+			and (call phTransport with ()) and (call phTransport with ()).status = 'Listening, next, 90),
+	func(next) begin
+		phApp := GetRoot().|Phone:host|;
+		phPhone := GetGlobalVar('|HostPhone:host|);
+		local icons := call phIcon with ();
+		call phCheck with ("the Calls icon taken", icons.phone and icons.phone.hostCalls and not icons.calls
+			and StrEqual(icons.phone.text, "Phone"), "it is " & (if icons.phone then icons.phone.text else "not there"));
+		GetUnionSoup("Names"):AddToDefaultStoreXmit({class: 'person, cardType: 0,
+			name: {class: 'person, first: "Alice", last: "Ng"}, sorton: "Ng Alice",
+			phones: [SetClass(Clone("0400 000 002"), '|string.phone.mobile|)]}, nil);
+		GetUnionSoup("Names"):AddToDefaultStoreXmit({class: 'person, cardType: 0,
+			name: {class: 'person, first: "Bob", last: "Smith"}, sorton: "Smith Bob",
+			phones: [SetClass(Clone("5551234"), '|string.phone.work|)]}, nil);
+		phApp:Open();
+		call phCheck with ("open at the keypad", phApp.page = 'keypad and Visible(phApp.keypadView), "the page is " & phApp.page);
+		call phSnap with ();
+		// a number typed on the keypad with the pen: Alice's
+		phCalls := call phLogCount with ();
+		foreach ch in ["0", "4", "0", "0", "0", "0", "0", "0", "0", "2"] do
+			phApp:AddKey(ch);
+		local s := phApp:Suggestion();
+		call phCheck with ("the number's card", s and StrEqual(s.name, "Alice Ng") and StrEqual(s.label, "mobile"),
+			"it is " & (if s then s.name else "none"));
+		call phSnap with ();
+		call phTapHit with (phApp.keypadView, 'dial, 'ch);
+		call waitFor with ("phone: the call made", func() (call phActive with ('connected)) and (call phCallState with ()) = 'active, next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("the call screen", Visible(phApp.callView) and not Visible(phApp.tabBar)
+			and StrEqual(phPhone.active.name, "Alice Ng"), "it is not shown");
+		call phCheck with ("no status slip", not (call phTransport with ()).statusDialog
+			or not (call phTransport with ()).statusDialog.viewCObject, "the transport's slip is up");
+		call phSnap with ();
+		call phTapHit with (phApp.callView, 'mute, 'action);
+		call waitFor with ("phone: muted", func() HostPenReplayDone() and phPhone.active.muted, next, 10);
+	end,
+	func(next) begin
+		call phTapHit with (phApp.callView, 'keypad, 'action);
+		call waitFor with ("phone: the call's keypad", func() HostPenReplayDone() and phPhone.active.keypad, next, 10);
+	end,
+	func(next) begin
+		call phTapHit with (phApp.callView, "5", 'action);
+		call waitFor with ("phone: a tone", func() HostPenReplayDone() and phPhone.active.tones, next, 10);
+	end,
+	func(next) begin
+		call phCheck with ("the tone typed", StrEqual(phPhone.active.tones, "5"), "it is " & phPhone.active.tones);
+		call phSnap with ();
+		call phTapHit with (phApp.callView, 'keypad, 'action);
+		call waitFor with ("phone: the keypad hidden", func() HostPenReplayDone() and not phPhone.active.keypad, next, 10);
+	end,
+	func(next) begin
+		call phTapHit with (phApp.callView, 'speaker, 'action);
+		call waitFor with ("phone: the speaker off", func() HostPenReplayDone() and not phPhone.active.speaker, next, 10);
+	end,
+	func(next) begin
+		call phTapHit with (phApp.callView, 'hangUp, 'action);
+		call waitFor with ("phone: hung up", func() (call phCallState with ()) = 'idle and (call phTransport with ()).status = 'Listening
+			and phPhone.active = nil, next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("the call logged", (call phLogCount with ()) > phCalls,
+			(call phLogCount with ()) & " calls, " & phCalls & " before");
+		call phCheck with ("back at the keypad", phApp.viewCObject and phApp.page = 'keypad and Visible(phApp.keypadView),
+			"the page is " & phApp.page);
+		phApp:ShowPage('recents);
+		local first := if phApp.recents and Length(phApp.recents) > 0 then phApp.recents[0];
+		call phCheck with ("the recent call", first and first.kind = 'made and StrEqual(first.name, "Alice Ng"),
+			"it is " & (if first then first.name & " " & first.kind else "none"));
+		call phSnap with ();
+		// a call coming in, the application open: the caller's card named
+		HostCellCommand("AT+FAKERING=\"+61400000002\"");
+		call waitFor with ("phone: ringing", func() call phActive with ('ringing), next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("the caller's card", StrEqual(phPhone.active.name, "Alice Ng"), "it is " & phPhone.active.name);
+		call phSnap with ();
+		call phTapHit with (phApp.callView, 'answer, 'action);
+		call waitFor with ("phone: answered", func() (call phActive with ('connected)) and (call phCallState with ()) = 'active, next, 30);
+	end,
+	func(next) begin
+		HostCellCommand("AT+FAKEHANGUP");
+		call waitFor with ("phone: the caller hung up", func() phPhone.active = nil
+			and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	func(next) begin
+		local first := phApp.recents[0];
+		call phCheck with ("the call taken listed", first.kind = 'taken, "it is " & first.kind);
+		// one with the application closed: it opens; missed, it stays open at
+		// the recent calls
+		phApp:Close();
+		HostCellCommand("AT+FAKERING=\"+61499999999\"");
+		call waitFor with ("phone: ringing, the application opened", func() (call phActive with ('ringing))
+			and phApp.viewCObject, next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("an unknown caller", StrEqual(phPhone.active.number, "+61499999999") and not phPhone.active.name,
+			"it is " & phPhone.active.number);
+		HostCellCommand("AT+FAKEHANGUP");
+		call waitFor with ("phone: missed", func() phPhone.active = nil and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("open at the recent calls", phApp.viewCObject and phApp.page = 'recents, "it is not");
+		local first := phApp.recents[0];
+		call phCheck with ("the missed call listed", first.kind = 'missed and StrEqual(first.name, "+61499999999"),
+			"it is " & first.name & " " & first.kind);
+		call phSnap with ();
+		HostCellCommand("AT+FAKERING=\"+61499999999\"");
+		call waitFor with ("phone: ringing again", func() call phActive with ('ringing), next, 30);
+	end,
+	func(next) begin
+		call phTapHit with (phApp.callView, 'decline, 'action);
+		call waitFor with ("phone: declined", func() phPhone.active = nil and (call phTransport with ()).status = 'Listening
+			and (call phCallState with ()) = 'idle, next, 30);
+	end,
+	func(next) begin
+		local first := phApp.recents[0];
+		call phCheck with ("the declined call listed", first.kind = 'declined, "it is " & first.kind);
+		// the contacts: both cards; searched, one
+		phApp:ShowPage('contacts);
+		call phCheck with ("the contacts", Length(phApp.contacts) = 2 and StrEqual(phApp.contacts[0].name, "Alice Ng"),
+			Length(phApp.contacts) & " of them");
+		call phSnap with ();
+		SetValue(phApp.searchLine.entryLine, 'text, Clone("smi"));
+		phApp:SearchChanged();
+		call phCheck with ("searched", Length(phApp.contacts) = 1 and StrEqual(phApp.contacts[0].name, "Bob Smith"),
+			Length(phApp.contacts) & " found");
+		call phSnap with ();
+		// a tap on Bob calls him
+		RefreshViews();
+		local box := phApp.listView:GlobalBox();
+		HostPenTap(box.left + 60, box.top + phApp.listView:RowHeight() div 2);
+		call waitFor with ("phone: Bob called", func() (call phActive with ('connected)) and (call phCallState with ()) = 'active, next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("Bob's call", StrEqual(phPhone.active.name, "Bob Smith"), "it is " & phPhone.active.name);
+		phPhone:CallAction('hangUp);
+		call waitFor with ("phone: Bob hung up", func() phPhone.active = nil and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	func(next) begin
+		// the keyboard: a number typed into the keypad's line, Return calls it
+		phApp:ShowPage('keypad);
+		SetValue(phApp.numberLine, 'text, Clone(""));
+		// (5 5 5 1 2 3 4 by their ADB key codes, then Return)
+		foreach code in [0x17, 0x17, 0x17, 0x12, 0x13, 0x14, 0x15] do
+			call typeKey with (code);
+		call waitFor with ("phone: typed", func() StrEqual(phApp:Typed(), "5551234"), next, 10);
+	end,
+	func(next) begin
+		call phCheck with ("the typed number's card", phApp:Suggestion() and StrEqual(phApp:Suggestion().name, "Bob Smith"), "none");
+		call typeKey with (0x24);
+		call waitFor with ("phone: Return called", func() (call phActive with ('connected)) and (call phCallState with ()) = 'active, next, 30);
+	end,
+	func(next) begin
+		phPhone:CallAction('hangUp);
+		call waitFor with ("phone: the last call ended", func() phPhone.active = nil and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	func(next) begin
+		Print("phone: done, " & phFailures & " failed");
+		HostQuit();
+	end];
+
+phStep := 0;
+phNext := func() begin
+	local step := phSteps[phStep];
+	phStep := phStep + 1;
+	call step with (phNext);
+end;
+
+call phNext with ();

@@ -20,6 +20,7 @@
 extern const char gHostCellSource[];		// HostCell.ns (HostCellSource.cpp, generated)
 extern const char gHostTextSource[];		// HostText.ns (HostTextSource.cpp, generated)
 extern const char gHostMessagesSource[];	// HostMessages.ns (HostMessagesSource.cpp, generated)
+extern const char gHostPhoneSource[];		// HostPhone.ns (HostPhoneSource.cpp, generated)
 
 
 // A source evaluated, kept in the global and started
@@ -48,9 +49,12 @@ HostCellProviderStart(void)
 	{
 		// (no module: Messages nowhere to be seen, though the store had it)
 		HostRemoveAppIcon("Messages:host");
+		// (and the Extras drawer's Calls icon the ROM's Calls again)
+		HostRestoreCallsIcon();
 		return;
 	}
 	StartSource(gHostCellSource, "HostCell:host", "the cellular provider");
 	StartSource(gHostTextSource, "HostText:host", "the text message transport");
 	StartSource(gHostMessagesSource, "HostMessages:host", "the Messages application");
+	StartSource(gHostPhoneSource, "HostPhone:host", "the Phone application");
 }

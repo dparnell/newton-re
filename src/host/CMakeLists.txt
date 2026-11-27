@@ -709,6 +709,23 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                              PASS_REGULAR_EXPRESSION "fakecell: text to 0400000002: Also - bring the cable.*messages: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|FAILED|Traceback|Exception")
     endforeach()
+    # the Phone application (comms/host/HostPhone.ns), in the Calls icon's
+    # place, at each kind of screen: a number typed on its keypad and called,
+    # the call screen's Mute, keypad tone, Speaker and End; a call coming in
+    # answered, one missed, one declined, each in the recent calls; the
+    # contacts searched and one called; Return on the keyboard calling the
+    # number typed (phone-<w>x<h>-<n>.pgm) - docs/host-tdeck-pro-phone.md
+    foreach(size 240x320 320x480 480x320 810x1080)
+        add_test(NAME host.NewtonPhone.${size}
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakecell.py
+                         --spawn $<TARGET_FILE:newton> --cell-port 0 --serial-port none --display ${size} --erase
+                         --store ${CMAKE_CURRENT_BINARY_DIR}/phone-${size}.store --headless 200
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/phone.ns
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(host.NewtonPhone.${size} PROPERTIES TIMEOUT 300
+                             PASS_REGULAR_EXPRESSION "fakecell: the microphone muted.*fakecell: tone 5 in the call.*phone: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|FAILED|Traceback|Exception")
+    endforeach()
     # the Mesh application (comms/host/HostMesh.ns) on a pretend LoRa air
     # (newton --mesh-air) with tools/mesh's meshpeer as another node, Ada, at
     # each kind of screen: her channel hello filed, a conversation begun

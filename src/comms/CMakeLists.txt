@@ -99,6 +99,14 @@ add_custom_command(
             -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/host/HostMessages.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     VERBATIM)
+# host/HostPhone.ns, the Phone application, likewise
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostPhoneSource.cpp
+    COMMAND ${CMAKE_COMMAND} -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/host/HostPhone.ns
+            -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/HostPhoneSource.cpp -DNAME=gHostPhoneSource
+            -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/host/HostPhone.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    VERBATIM)
 # host/HostMesh.ns, the Mesh application (LoRa mesh), likewise
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostMeshSource.cpp
@@ -123,6 +131,7 @@ add_library(comms_script STATIC
     ${CMAKE_CURRENT_BINARY_DIR}/HostCellSource.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/HostTextSource.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/HostMessagesSource.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/HostPhoneSource.cpp
     host/HostMeshApp.cpp
     host/HostAppIcon.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/HostMeshSource.cpp

@@ -115,6 +115,13 @@ FHostCellHangUp(RefArg /*rcvr*/)
 
 
 static Ref
+FHostCellMute(RefArg /*rcvr*/, RefArg on)
+{
+	return HostCellularSetMute(NOTNIL(on)) ? TRUEREF : NILREF;
+}
+
+
+static Ref
 FHostCellSendText(RefArg /*rcvr*/, RefArg number, RefArg text)
 {
 	char digits[kHostCellNumberSize];
@@ -223,6 +230,7 @@ HostRegisterCellularFunctions(void)
 	SetSlot(functions, "HostCellDialError", RefVar(MakeCFunction((void*) FHostCellDialError, 1, nil)));
 	SetSlot(functions, "HostCellAnswer", RefVar(MakeCFunction((void*) FHostCellAnswer, 0, nil)));
 	SetSlot(functions, "HostCellHangUp", RefVar(MakeCFunction((void*) FHostCellHangUp, 0, nil)));
+	SetSlot(functions, "HostCellMute", RefVar(MakeCFunction((void*) FHostCellMute, 1, nil)));
 	SetSlot(functions, "HostCellSendText", RefVar(MakeCFunction((void*) FHostCellSendText, 2, nil)));
 	SetSlot(functions, "HostCellSendState", RefVar(MakeCFunction((void*) FHostCellSendState, 1, nil)));
 	SetSlot(functions, "HostCellNextText", RefVar(MakeCFunction((void*) FHostCellNextText, 0, nil)));
