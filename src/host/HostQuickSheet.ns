@@ -60,9 +60,15 @@
 // came in - Phone, Messages, Mesh - ask DoNotDisturbHolds whether to stay
 // quiet (a Names card marked hostDNDAllowed, its number the sender's, is let
 // through) and record what they kept quiet about (DoNotDisturbRecord).
-// Turned off, a slip sums up what came in meanwhile.  The setting and the
-// record are kept in the user configuration (hostDoNotDisturb, hostDNDSince,
-// hostDNDLog), so a restart in the middle loses neither.
+// Turned off, a slip sums up what came in meanwhile (the screen locked: a
+// notification on the lock screen, the slip at the unlock).  The setting and
+// the record are kept in the user configuration (hostDoNotDisturb,
+// hostDNDSince, hostDNDLog), so a restart in the middle loses neither.  A
+// schedule (the sheet's Schedule button: hostDNDSchedule {on, start, stop},
+// minutes of the day) turns it on at start and off at stop every day - each
+// time crossed, so a hand that turned it off within the hours is not
+// overruled until the next day (DNDCheck).  Names' status bar has a DND
+// button (RegAuxButton) that lets the card shown through.
 //
 // Shutting down (ShutDown: the sheet's button, the Host preferences panel's):
 // the ROM's PowerOff, so that the applications are asked and told as for a
@@ -113,6 +119,14 @@
 		DefGlobalFn('DoNotDisturbHolds, func(number) GetGlobalVar('|QuickSheet:host|):DNDHolds(number));
 		DefGlobalFn('DoNotDisturbRecord, func(appSymbol, event) GetGlobalVar('|QuickSheet:host|):DNDRecord(appSymbol, event));
 		DefGlobalFn('DoNotDisturbHeld, func() GetGlobalVar('|QuickSheet:host|):DNDHeld());
+		DefGlobalFn('DoNotDisturbAllow, func(card, allow) GetGlobalVar('|QuickSheet:host|):DNDAllow(card, allow));
+		DefGlobalFn('DoNotDisturbSchedule, func() GetGlobalVar('|QuickSheet:host|):DNDSchedule());
+		DefGlobalFn('DoNotDisturbSetSchedule, func(schedule) GetGlobalVar('|QuickSheet:host|):SetDNDSchedule(schedule));
+		// Names' status bar: the card shown let through, or not
+		RegAuxButton('|DNDNames:host|, {destApp: 'cardfile, _proto: @226,		// protoTextButton
+			text: "DND", buttonClickScript: func() GetGlobalVar('|QuickSheet:host|):NamesButton(self)});
+		// (the schedule, once the user configuration is there)
+		AddDeferredCall(func() GetGlobalVar('|QuickSheet:host|):DNDCheck(), nil);
 	end,
 
 	/*----------------------------------------------------------------------
@@ -128,6 +142,7 @@
 	SetDND: func(on)
 	begin
 		local was := :DNDOn();
+		SetUserConfig('hostDNDBySchedule, nil);
 		if on and not was then begin
 			SetUserConfig('hostDNDLog, []);
 			SetUserConfig('hostDNDSince, Time());
@@ -198,6 +213,172 @@
 		if log then foreach r in log collect Clone(r) else [];
 	end,
 
+	// a card let through (its slot hostDNDAllowed) or not ==> whether it is
+	DNDAllow: func(card, allow)
+	begin
+		if not IsFrame(card) then return nil;
+		if allow then card.hostDNDAllowed := true
+		else if HasSlot(card, 'hostDNDAllowed) then RemoveSlot(card, 'hostDNDAllowed);
+		if IsSoupEntry(card) then EntryChangeXmit(card, nil);
+		card.hostDNDAllowed and true;
+	end,
+
+	// Names' DND button: the card shown - "Allow during Do not disturb",
+	// ticked when it is - in a picker
+	NamesButton: func(button)
+	begin
+		local names := GetRoot().cardfile;
+		local card := if names then names.target;
+		if not IsFrame(card) or not IsSoupEntry(card) or not card.phones or Length(card.phones) = 0 then begin
+			GetRoot():Notify(3, "Do not disturb", "Show a card with a phone number first: its calls and texts can then be let through Do not disturb.");
+			return nil;
+		end;
+		button.dndCard := card;
+		button.pickActionScript := func(index) begin
+			if index = 0 and dndCard then
+				GetGlobalVar('|QuickSheet:host|):DNDAllow(dndCard, not dndCard.hostDNDAllowed);
+			dndCard := nil;
+		end;
+		button.pickCancelledScript := func() dndCard := nil;
+		DoPopup([{item: "Allow during Do not disturb", mark: if card.hostDNDAllowed then $\uFC0B else $ }], 0, 0, button);
+	end,
+
+	/*----------------------------------------------------------------------
+		Do not disturb's schedule
+	----------------------------------------------------------------------*/
+
+	kDNDStep: 15,							// (the schedule's times, in steps of so many minutes)
+	scheduleGen: 0,							// (the delayed check in force: an older one does nothing)
+	scheduleSlip: nil,
+
+	DNDSchedule: func()
+	begin
+		local s := GetUserConfig('hostDNDSchedule);
+		if IsFrame(s) then {on: s.on, start: s.start, stop: s.stop} else {on: nil, start: 22 * 60, stop: 7 * 60};
+	end,
+
+	SetDNDSchedule: func(schedule)
+	begin
+		SetUserConfig('hostDNDSchedule, {on: schedule.on and true, start: schedule.start mod 1440, stop: schedule.stop mod 1440});
+		SetUserConfig('hostDNDLastEdge, nil);
+		:DNDCheck();
+		:DNDSchedule();
+	end,
+
+	// The schedule followed: the latest of today's (or yesterday's) start and
+	// stop that has passed, if it has not been acted on yet, acted on - on at
+	// start; off at stop, if the schedule turned it on - and a check put off
+	// until the next one (a delayed call; the unlock and the sheet check
+	// too, for a machine that slept through one)
+	DNDCheck: func()
+	begin
+		scheduleGen := scheduleGen + 1;
+		local s := :DNDSchedule();
+		if not s.on or s.start = s.stop then return nil;
+		local now := Time();
+		local day := now div 1440 * 1440;
+		local lastStart := day + s.start;
+		if lastStart > now then lastStart := lastStart - 1440;
+		local lastEnd := day + s.stop;
+		if lastEnd > now then lastEnd := lastEnd - 1440;
+		local edge := Max(lastStart, lastEnd);
+		local applied := GetUserConfig('hostDNDLastEdge);
+		if not applied or edge > applied then begin
+			SetUserConfig('hostDNDLastEdge, edge);
+			if edge = lastStart then begin
+				if not :DNDOn() then begin
+					:SetDND(true);
+					SetUserConfig('hostDNDBySchedule, true);
+				end;
+			end else if :DNDOn() and GetUserConfig('hostDNDBySchedule) then
+				:SetDND(nil);
+		end;
+		local next := Min(lastStart, lastEnd) + 1440;
+		if Max(lastStart, lastEnd) + 1440 < next then next := Max(lastStart, lastEnd) + 1440;
+		local gen := scheduleGen;
+		AddDelayedCall(func() begin
+			local sheet := GetGlobalVar('|QuickSheet:host|);
+			if sheet.scheduleGen = gen then sheet:DNDCheck();
+		end, nil, (next - now) * 60000 + 2000);
+	end,
+
+	// a time of day (minutes) as the user's clock writes it: "10:00 pm"
+	TimeOfDay: func(minutes) TimeStr(Time() div 1440 * 1440 + minutes mod 1440, @66.shortTimeStrSpec),
+
+	// The schedule's slip: "On a schedule, every day", then From and Until,
+	// each with - and + a kDNDStep apart; each change kept at once
+	OpenSchedule: func()
+	begin
+		if scheduleSlip and scheduleSlip.viewCObject then return scheduleSlip;
+		local box := GetRoot():LocalBox();
+		local width := Min(box.right - box.left - 16, 280);
+		scheduleSlip := BuildContext({_proto: @179,								// protoFloatNGo
+			viewBounds: RelBounds(0, box.top + 30, width, 150),
+			dndSchedule: true,
+			viewQuitScript: func() begin
+				GetGlobalVar('|QuickSheet:host|).scheduleSlip := nil;
+				inherited:?viewQuitScript();
+			end,
+			stepChildren: [
+				{viewClass: 74, viewFlags: 513, viewFormat: 0,						// (drawn, and tapped, by itself)
+				 viewBounds: {left: 8, top: 6, right: -26, bottom: -6}, viewJustify: 0xF0,
+				 hits: nil,
+				 viewDrawScript: func() begin
+					local sheet := GetGlobalVar('|QuickSheet:host|);
+					local s := sheet:DNDSchedule();
+					local b := :LocalBox();
+					local w := b.right - b.left;
+					local bh := FontHeight(sheet.kBold);
+					local lh := FontHeight(sheet.kFont);
+					hits := [];
+					:DrawShape(MakeText("Do not disturb's schedule", 0, 0, w, bh), {font: sheet.kBold});
+					// the switch: a box, crossed when on
+					local y := bh + 10;
+					local bs := 14;
+					:DrawShape(MakeRect(0, y, bs, y + bs), {penSize: 1});
+					if s.on then
+						:DrawShape([MakeLine(2, y + 2, bs - 2, y + bs - 2), MakeLine(2, y + bs - 2, bs - 2, y + 2)], {penSize: 2});
+					:DrawShape(MakeText("On every day, as below", bs + 6, y, w, y + lh), {font: sheet.kFont});
+					AddArraySlot(hits, {left: 0, top: y - 4, right: w, bottom: y + bs + 4, action: 'toggle});
+					y := y + bs + 12;
+					foreach row in [{label: "From", slot: 'start}, {label: "Until", slot: 'stop}] do begin
+						local bw := 30;
+						local rh := 24;
+						:DrawShape(MakeText(row.label, 0, y + (rh - lh) div 2, 44, y + (rh - lh) div 2 + lh), {font: sheet.kFont});
+						:DrawShape(MakeText(sheet:TimeOfDay(s.(row.slot)), 46, y + (rh - bh) div 2, w - 2 * bw - 12, y + (rh - bh) div 2 + bh), {font: sheet.kBold});
+						foreach k in [{x: w - 2 * bw - 6, text: "-", delta: -1}, {x: w - bw, text: "+", delta: 1}] do begin
+							:DrawShape(MakeRoundRect(k.x, y, k.x + bw, y + rh, 8), {penSize: 1, penPattern: 5, fillPattern: 1});
+							local tw := StrFontWidth(k.text, sheet.kBold);
+							:DrawShape(MakeText(k.text, k.x + (bw - tw) div 2, y + (rh - bh) div 2, k.x + (bw + tw) div 2 + 2, y + (rh - bh) div 2 + bh),
+								{font: sheet.kBold, transferMode: 1});
+							AddArraySlot(hits, {left: k.x, top: y, right: k.x + bw, bottom: y + rh, action: row.slot, delta: k.delta});
+						end;
+						y := y + rh + 8;
+					end;
+				 end,
+				 viewClickScript: func(unit) begin
+					InkOff(unit);
+					local box := :GlobalBox();
+					local x := GetPoint(0, unit) - box.left;
+					local y := GetPoint(1, unit) - box.top;
+					local sheet := GetGlobalVar('|QuickSheet:host|);
+					if hits then
+						foreach h in hits do
+							if x >= h.left and x < h.right and y >= h.top and y < h.bottom then begin
+								local s := sheet:DNDSchedule();
+								if h.action = 'toggle then s.on := not s.on
+								else s.(h.action) := (s.(h.action) + h.delta * sheet.kDNDStep + 1440) mod 1440;
+								sheet:SetDNDSchedule(s);
+								:Dirty();
+								return true;
+							end;
+					true;
+				 end},
+				{_proto: @166}]});												// protoClosebox
+		scheduleSlip:Open();
+		scheduleSlip;
+	end,
+
 	// "2 missed calls" and the like, for a kind and a count
 	DNDCount: func(n, kind)
 		NumberStr(n) & " " & (if kind = 'missedCall then (if n = 1 then "missed call" else "missed calls")
@@ -209,6 +390,16 @@
 	// each kind, then each, newest first, as many as fit - in a slip
 	DNDSummary: func()
 	begin
+		// (the screen locked - the schedule's end in the night: on the lock
+		// screen, the slip at the unlock)
+		if lockView then begin
+			local count := Length(:DNDHeld());
+			if :Notify('|DoNotDisturb:host|, {key: 'summary, title: "Do not disturb is off",
+				text: if count = 0 then "Nothing came in." else NumberStr(count) & " held: tap and unlock to see them.",
+				Opened: func() GetGlobalVar('|QuickSheet:host|):DNDSummary(),
+				Unlocked: func() GetGlobalVar('|QuickSheet:host|):DNDSummary()}) then
+				return nil;
+		end;
 		local held := :DNDHeld();
 		local since := GetUserConfig('hostDNDSince);
 		SetUserConfig('hostDNDLog, nil);
@@ -413,6 +604,7 @@
 	Pulled: func()
 	begin
 		if lockView then return;
+		:DNDCheck();
 		if sheetView then :CloseSheet() else :OpenSheet();
 	end,
 
@@ -514,7 +706,8 @@
 	begin
 		local switches := [{label: "Do not disturb",
 			Get: func() GetGlobalVar('|QuickSheet:host|):DNDOn(),
-			Set: func(on) GetGlobalVar('|QuickSheet:host|):SetDND(on)}];
+			Set: func(on) GetGlobalVar('|QuickSheet:host|):SetDND(on),
+			button: {text: "Schedule", Click: func() GetGlobalVar('|QuickSheet:host|):OpenSchedule()}}];
 		local have := [];
 		foreach item in HostSettingsList() do AddArraySlot(have, item.setting);
 		if SetContains(have, 'cellPower) then AddArraySlot(switches, :SettingSwitch("4G module", 'cellPower));
@@ -535,9 +728,16 @@
 			 viewFont: kBold, text: "Quick settings"}];
 		local top := 28;
 		foreach s in :Switches() do begin
+			// (a switch's button - Do not disturb's Schedule - at the right)
+			if s.button then
+				AddArraySlot(children,
+					{_proto: @226,											// protoTextButton
+					 viewBounds: {left: -84, top: top - 1, right: -10, bottom: top + 17}, viewJustify: 32,	// (vjParentRightH)
+					 text: s.button.text, sheetRole: 'schedule, switchButton: s.button,
+					 buttonClickScript: func() call switchButton.Click with ()});
 			AddArraySlot(children,
 				{_proto: @164,												// protoCheckbox
-				 viewBounds: {left: 10, top: top, right: -10, bottom: top + 18},
+				 viewBounds: {left: 10, top: top, right: if s.button then -92 else -10, bottom: top + 18},
 				 viewJustify: 48,
 				 text: s.label & " on",
 				 buttonValue: true,
@@ -659,6 +859,7 @@
 		if lockView then lockView:Close();
 		lockView := nil;
 		HostScreenLocked(nil);
+		:DNDCheck();
 		local given := notes;
 		notes := [];
 		local opened := nil;

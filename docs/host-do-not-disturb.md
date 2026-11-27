@@ -19,10 +19,29 @@ on", on every host.  While it is on:
 - **A mesh message** likewise in Mesh.  A mesh sender has no phone number,
   so no card can let one through.
 
-**Let through**: a Names card whose slot `hostDNDAllowed` is true - set in
-Phone's Contacts with a long press on the card, "Allow during Do not
-disturb" (again: "Don't allow ..."); the list says "DND allowed" beside
-its number.  A call or text from any of that card's numbers (matched by
+**The schedule** (2026-11-27): the sheet's **Schedule** button, beside the
+switch, opens a slip - "On every day, as below", From and Until with - and
++ a quarter of an hour apart, each change kept at once.  Every day at
+From it turns Do not disturb on, and at Until off again (the summary
+shown; the screen locked, a notification on the lock screen that shows it
+at the unlock) - but only if the schedule turned it on.  It acts each time
+a time is *crossed*, not on whether it is within the hours: turned off by
+hand at night, it stays off until the next night; turned on by hand in the
+day, the morning's Until does not turn it off.  The schedule is followed
+by one delayed call for the next of the two times, and checked again at
+each unlock and each opening of the sheet, so a machine that slept through
+a time catches up.  Kept in the user configuration: `hostDNDSchedule`
+`{on, start, stop}` (minutes of the day), `hostDNDLastEdge` (the time last
+acted on), `hostDNDBySchedule`.
+
+**Let through**: a Names card whose slot `hostDNDAllowed` is true.  Set:
+- in **Names**: its status bar has a **DND** button (the ROM's
+  `RegAuxButton` - Names lists a package's buttons in its status bar), a
+  picker for the card shown, "Allow during Do not disturb", ticked when it
+  is;
+- in **Phone's Contacts**, a long press on the card, "Allow during Do not
+  disturb" (again: "Don't allow ..."); the list says "DND allowed" beside
+  its number.  A call or text from any of that card's numbers (matched by
 the last eight digits) rings or beeps as ever.
 
 **The summary**: turned off, a slip lists what came in meanwhile - "Since
@@ -48,6 +67,9 @@ first.
 | `DoNotDisturbHolds(number)` | `true` or `nil` | whether news from this number (a string; `nil` when there is none) is to be kept quiet: on, and no card let through has the number |
 | `DoNotDisturbRecord(appSymbol, event)` | `true` | records something kept quiet: `event` is `{kind, title, text}` - `kind` `'missedCall`, `'text` or `'mesh` (any other symbol is counted as "notifications"), `title` in bold in the summary, `text` below it |
 | `DoNotDisturbHeld()` | an array, oldest first | what has been recorded: `{appSymbol, kind, title, text, time}` (copies) |
+| `DoNotDisturbAllow(card, allow)` | whether it is now | a Names card let through (`hostDNDAllowed`) or not, the entry saved |
+| `DoNotDisturbSchedule()` | `{on, start, stop}` | the schedule (minutes of the day; 10 pm to 7 am, off, when none was set) |
+| `DoNotDisturbSetSchedule(schedule)` | the schedule kept | sets it, and acts on the latest time crossed at once |
 
 The pattern (Messages' `Received`):
 
@@ -61,11 +83,29 @@ else
 
 Don't treat what was held as seen: Messages and Mesh leave it unread.
 
-ctest: `host.NewtonPhone.<size>` (`src/host/demo/phone.ns`): on, a
+ctest: `host.NewtonPhone.<size>` (`src/host/demo/phone.ns`): the
+schedule's start turning it on and its stop off (the summary), a hand's
+off kept through a check; Names' DND button letting Bob through; on, a
 stranger's call declined unseen (Phone not opened, missed in Recents) and
 a text with no alert, both recorded; Alice's card let through and her call
 ringing; off, the summary saying "1 missed call, 1 text." with two lines,
 and the record cleared.
 
-NOT YET: a schedule (on at night); repeated calls let through; held texts
+## Cards and attributes of one's own
+
+A Names card is a soup entry - a frame - and any application may add
+slots of its own to it: Names' editors write the slot they show, so a slot
+it does not know stays on the card, and goes with the soup entry in a
+backup (a card sent as a vCard keeps only what that format holds; not
+checked: beaming).  This is how
+`hostDNDAllowed` is kept.  A package's slot should have a name no other
+will take (Apple's advice: the package's signature in it,
+`'|allowed:MySig|`); the `host` prefix is the host's.  What NewtonOS 2.1's
+Names offers beyond that, for a package to show or edit its slots:
+`RegAuxButton(symbol, {destApp: 'cardfile, ...})` (a button in its status
+bar, as here), a layout of its own in the Show picker (`AddLayout`,
+`RegisterViewDef` on the card's data class), and the user's own Custom
+fields (their labels in the Names soup's `'customFields` info).
+
+NOT YET: repeated calls let through; held texts
 from a card let through by its name rather than its number.

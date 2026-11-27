@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-27: Do not disturb's schedule, and Names' DND button
+
+A Schedule button beside the quick sheet's switch: From and Until, every
+day, acted on as each is crossed (a hand's change is not overruled until
+the next), one delayed call for the next and a check at each unlock and
+opening of the sheet; the summary at the end on the lock screen if it is
+locked.  Names' status bar has a DND button (`RegAuxButton`) letting the
+card shown through.  docs/host-do-not-disturb.md.  Found on the way: a
+symbol keeps the spelling it was first made with (symbols ignore case) -
+the schedule slip's slot `step`, made at boot, turned the profiler demo's
+method `Step` into `step` in its report, and `host.NewtonScriptProfileReport`
+(which compares names with case) failed; the slot is `delta` now.
+
 ## 2026-11-27: Do not disturb
 
 A switch on the quick sheet (every host): while it is on, Phone declines

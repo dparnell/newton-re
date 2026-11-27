@@ -276,9 +276,8 @@
 		// hostDNDAllowed on the Names card) or not
 		AllowThroughDND: func(card, allow)
 		begin
-			if allow then card.hostDNDAllowed := true
-			else if HasSlot(card, 'hostDNDAllowed) then RemoveSlot(card, 'hostDNDAllowed);
-			EntryChangeXmit(card, nil);
+			if GetGlobalFn('DoNotDisturbAllow) then
+				call GetGlobalFn('DoNotDisturbAllow) with (card, allow);
 			:Reload();
 			if listView then listView:Dirty();
 		end,
