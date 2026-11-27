@@ -80,7 +80,7 @@ Copy(char* to, const char* from, long size)
 	The engine's state: written by its thread, read by anyone, under gLock
 ------------------------------------------------------------------------------*/
 
-enum RequestKind { kRequestDial, kRequestAnswer, kRequestHangUp, kRequestSendText, kRequestDigits, kRequestSpeaker };
+enum RequestKind { kRequestDial, kRequestAnswer, kRequestHangUp, kRequestSendText, kRequestDigits, kRequestSpeaker, kRequestMute };
 
 struct Request
 {
@@ -1217,6 +1217,10 @@ Perform(const Request& request)
 		// (AT+CSDVC: 1 the handset, 3 the loudspeaker)
 		Exec(request.id != 0 ? "AT+CSDVC=3" : "AT+CSDVC=1", nullptr, 0, 2000);
 		break;
+	case kRequestMute:
+		// (AT+CMUT: the microphone off in the call, 1, or on again, 0)
+		Exec(request.id != 0 ? "AT+CMUT=1" : "AT+CMUT=0", nullptr, 0, 2000);
+		break;
 	}
 }
 
@@ -1511,6 +1515,13 @@ bool
 HostCellularSetSpeaker(bool on)
 {
 	return Ask(kRequestSpeaker, nullptr, nullptr, on ? 1 : 0);
+}
+
+
+bool
+HostCellularSetMute(bool on)
+{
+	return Ask(kRequestMute, nullptr, nullptr, on ? 1 : 0);
 }
 
 

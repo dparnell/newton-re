@@ -189,6 +189,13 @@ set(NAME gHostMessagesSource)
 include(${NEWTON_SRC}/cmake/EmbedText.cmake)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${INPUT})
 target_sources(${COMPONENT_LIB} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/HostMessagesSource.cpp)
+# comms/host/HostPhone.ns, the Phone application
+set(INPUT ${NEWTON_SRC}/comms/host/HostPhone.ns)
+set(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostPhoneSource.cpp)
+set(NAME gHostPhoneSource)
+include(${NEWTON_SRC}/cmake/EmbedText.cmake)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${INPUT})
+target_sources(${COMPONENT_LIB} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/HostPhoneSource.cpp)
 # comms/host/HostMesh.ns, the Mesh application
 set(INPUT ${NEWTON_SRC}/comms/host/HostMesh.ns)
 set(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostMeshSource.cpp)

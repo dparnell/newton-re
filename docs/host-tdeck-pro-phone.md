@@ -423,6 +423,88 @@ Delete); scrolling by the status bar's arrows (the application has
 slip (it has Show); a message longer than one SMS; removing
 the Extras icon on a host with no module (a store moved to one).
 
+## Phone: the application (2026-11-27)
+
+Making a call through the ROM's own pieces meant a Names card, its Action
+button, Call, the routing slip and Place Call, and a call coming in was a
+small status slip with Take Call; the Calls icon opened a log of
+phone-message forms.  The owner found it cumbersome on the T-Decks and asked
+for a modern phone application: **Phone** (`src/comms/host/HostPhone.ns`,
+started with Messages by `HostCellProviderStart` wherever there is a
+cellular module) takes the Extras drawer's Calls icon.  The owner chose to
+replace the ROM's application rather than sit beside it, a phone's layout
+drawn in the Newton's type, and all of it at once.
+
+- **Three tabs** along the bottom - Keypad, Recents, Contacts (Recents
+  counts the missed calls not yet seen) - and a close box.
+- **Keypad**: the number in Geneva 18 bold (a `protoInputLine`, so the
+  keyboard types into it and Return calls), twelve keys with their
+  letters, a black Call button and a backspace (held: cleared); 0 held is
+  `+`.  Under the number, the card it belongs to ("Alice Ng  mobile", by
+  the number's last eight digits, as Messages tells conversations apart);
+  letters typed find a card by name instead, and Call calls its first
+  number.  Call with nothing typed puts the last number called back.
+- **Recents**: the Calls soup, newest first - made, taken, missed (bold,
+  a dot) and declined, the card's name and the number's kind, how long; a
+  tap calls back, a long press offers Call and Text (Messages) for the
+  number and Delete from Recents.
+- **Contacts**: the Names cards that have numbers, by name, a badge of
+  initials, searched by the Search line (name or digits); a tap calls (a
+  card with several numbers asks which), a long press offers Call and Text
+  for each.
+- Lists are dragged with a finger (a press that moves), and the button
+  bar's scroll arrows - the T-Deck Max's outer touch keys - move a page.
+- **The call screen** over everything while there is a call: how it
+  stands ("Calling…", the time), the name and number, a badge of initials;
+  Mute (`AT+CMUT`, the engine's new `HostCellularSetMute`, native
+  `HostCellMute`), Keypad (tones, `SendDigit`, the digits sent shown) and
+  Speaker (the transport's `SetSpeaker`); End.  **A call coming in** opens
+  the application at it - Decline, Answer - and a call that rang out is
+  missed: the application stays open at Recents.  Opened for a call, it
+  closes again after it.  While the screen is locked, the ring and a
+  missed call are left on the lock screen; the application is open behind
+  it at the call.
+- **Any screen**, as Messages: the keys at most 64 high and the keypad at
+  most 330 wide, the rest measured from the area and the fonts.
+
+**Under it, the ROM** (DEVIATIONs, all in `HostPhone.ns`): a call is the
+Phone transport's item, made and submitted as the Call slip makes one;
+answered with `receiveRequestComplete`, declined (`'userCancel`) and ended
+(`'completed`) with `CancelRequest`.  Three things are added to the ROM's
+objects at start: the transport's `UpdateStatusSlots` passes each status on
+to the application (called through the endpoint's `_parent`, so `self`
+there may be the endpoint - the hook names the transport), its
+`UpdateStatusDialog` opens no status slip, and the ROM's Calls
+application's `AddItem` - which opens that application to file any call
+to be logged (`saveAsLog`) - marks the item instead, and the application
+files the call itself when it ends (`LogCall`: a `calllog` entry with the
+transport's slots, unless the Phone preferences say not to log).  The
+Calls soup is registered as the ROM's Calls defines it, since a fresh
+store has none until that application first opens.  The icon keeps what
+it was (`hostCalls`), and a host with no module gives it back to the ROM's
+Calls (`HostRestoreCallsIcon`, `comms/host/HostAppIcon.h`).
+
+A call made from a Names card's Call slip shows the same call screen.
+
+ctests `host.NewtonPhone.240x320`, `.320x480`, `.480x320`, `.810x1080`
+(`src/host/demo/phone.ns`, fakecell; snapshots `phone-<w>x<h>-<n>.pgm`):
+the icon; a number typed, its card named, called with the pen; Mute, a
+tone, the keypad hidden, Speaker, End; the call logged and in Recents; a
+call coming in answered and hung up by the caller; one with the
+application closed, opening it, missed; one declined; the contacts
+searched and Bob called with a tap; digits typed on the keyboard and
+Return.
+
+Found on the way: NewtonScript slot names are case-insensitive (`rows`
+and a method `Rows` are one slot; `app` and `App` too); `'call` and `'in`
+are reserved; a call with a wrong number of arguments is -48803 with no
+trace; a text drawn in modeCopy erases its box (a key's border under a
+label) - modeOr (1) draws only the glyphs.
+
+NOT YET: answering on the lock screen itself (it is unlocked first);
+keypad tones from the keyboard during a call; a second call (call waiting,
+hold); tried on a board.
+
 ## Open questions
 
 - Whether a speaker and microphone are fitted to the module's audio pins

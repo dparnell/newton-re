@@ -17,8 +17,9 @@
 #define __COMMS_HOSTCELLPROVIDER_H
 
 // HostCell.ns (the telephone provider), HostText.ns (the text message
-// transport) and HostMessages.ns (the Messages application) evaluated and
-// started when the host has a cellular module
+// transport), HostMessages.ns (the Messages application) and HostPhone.ns
+// (the Phone application, in the Calls icon's place) evaluated and started
+// when the host has a cellular module
 // (hal/host/HostCellular.h's engine started); a program calls it once the
 // NewtonScript world is up (its PreMain hook).
 void	HostCellProviderStart(void);

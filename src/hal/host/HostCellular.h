@@ -54,6 +54,9 @@
 											no network, no number) - or nil
 					HostCellAnswer()		==> true when asked
 					HostCellHangUp()		==> true when asked
+					HostCellMute(on)		==> true when asked: the
+											microphone off in the call (on
+											again with nil)
 					HostCellSendText(number, text)
 											==> an id for HostCellSendState,
 											or nil
@@ -209,6 +212,7 @@ bool	HostCellularAnswer(void);
 bool	HostCellularHangUp(void);
 bool	HostCellularSendDigits(const char* digits);	// keypad tones in a call (0-9, *, #, A-D)
 bool	HostCellularSetSpeaker(bool on);			// the call's audio to the loudspeaker, or the handset
+bool	HostCellularSetMute(bool on);				// the microphone off in the call (or on again)
 long	HostCellularSendText(const char* number, const char* text);	// ==> an id (0: not queued)
 HostCellSendState	HostCellularSendState(long id);
 // The call events and the received messages are given to each reader, every

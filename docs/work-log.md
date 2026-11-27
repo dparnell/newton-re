@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-27: Phone, in the Calls icon's place
+
+The owner found calls cumbersome on the T-Decks (a Names card, Action,
+Call, the routing slip, Place Call; Take Call on a small slip).  Phone
+(`src/comms/host/HostPhone.ns`) is a modern phone application in the
+Newton's type - Keypad, Recents, Contacts; a call screen with Mute, Keypad,
+Speaker and End; Decline and Answer for a call coming in - over the ROM's
+own Phone transport and Calls soup, taking the Extras drawer's Calls icon
+where there is a cellular module (given back where there is none).  The
+engine gained mute (`AT+CMUT`, `HostCellMute`; fakecell answers it).
+ctests `host.NewtonPhone.*` at four screen sizes.  Not yet tried on a
+board.  docs/host-tdeck-pro-phone.md, "Phone: the application".
+
 ## 2026-11-16: the T-Decks' console keeps a history
 
 An error on the Max (-63007908 after a Names card's phone icon) came up

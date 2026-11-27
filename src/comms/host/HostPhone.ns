@@ -1,0 +1,1585 @@
+// Phone: making and taking calls the way a modern phone does, for a host
+// with a cellular module (comms/host/HostCellProvider.h starts it with the
+// telephone provider; compiled into the host as HostPhoneSource.cpp by
+// src/cmake/EmbedText.cmake, evaluated at boot, the frame kept in the
+// global HostPhone:host).
+//
+// DEVIATION (host addition): in place of the ROM's Calls application (a
+// newtApp of phone-message forms, a call started from a Names card's
+// routing slip - the owner found it cumbersome on the T-Decks, 2026-11-27)
+// the Extras drawer's Calls icon opens this one: a keypad, the recent calls
+// and the Names file's numbers on three tabs, a call shown on a screen of
+// its own (Mute, Keypad, Speaker, End) and a call coming in on another
+// (Decline, Answer).  Under it everything is the ROM's: a call is the Phone
+// transport's (|PhoneHome:Newton|) item, submitted as the Call slip submits
+// one; it is taken with the transport's receiveRequestComplete and ended
+// with its CancelRequest; the recent calls are the Calls soup the ROM's
+// Calls application logs every call in, each entry as it makes one.  The
+// ROM is told only three things more: the transport's status changes are
+// passed on (UpdateStatusSlots); its status slip is not opened, the call
+// screen being shown instead (UpdateStatusDialog); and the ROM's Calls
+// application, which opens itself to file a call (AddItem), leaves the
+// call to be filed here (LogCall).
+//
+// Any screen, as Messages: nothing is laid out at a fixed size.  The
+// application takes the area GetAppParams gives it (again when the screen
+// turns) and Layout places its views; the keypad, the lists and the call
+// screen are drawn by the application, measured from the area and the
+// fonts, the keys at most kMaxKey high and the keypad at most
+// kMaxKeypadWidth wide.  The design: docs/host-tdeck-pro-phone.md, "Phone".
+
+{
+	appSymbol: '|Phone:host|,
+	callsSoupName: "Calls",					// (the Phone transport's log: @calls)
+
+	app: {
+		viewClass: 74,							// clView
+		viewFlags: 5,							// vVisible, vApplication
+		viewFormat: 1,							// white
+		viewBounds: {left: 0, top: 0, right: 240, bottom: 320},
+		declareSelf: 'base,
+		viewFont: 10240,
+		appSymbol: '|Phone:host|,
+		title: "Phone",
+		ReOrientToScreen: func() :Relayout(),
+
+		kFont: 10240,							// the system font, 10 point
+		kBold: 1058816,							// bold (face 1: 1 << 20)
+		kSmall: 9216,							// 9 point
+		kNumber: 1067010,						// Geneva 18 bold: the number typed
+		kName: 1067010,							// ... and the caller's name
+		kDigitFonts: [1073154, 1067010, 1063938, 1059840],	// Geneva 24, 18, 14 bold; espy 12 bold
+		kMaxKey: 64,
+		kMaxKeypadWidth: 330,
+		kHoldTicks: 36,							// (a press held this long is a long press: 0.6 s)
+		kDragPixels: 6,							// (a press moved this far is a drag)
+
+		page: 'keypad,							// 'keypad, 'recents or 'contacts
+		recents: nil,							// the calls, newest first
+		contacts: nil,							// the cards with numbers, by name
+		listScroll: 0,							// (pixels scrolled, the list shown)
+		pressed: nil,							// (the key or button held, drawn inverted)
+
+		// (the child views, found by their role once they exist)
+		numberLine: nil, keypadView: nil, listView: nil, searchLine: nil,
+		tabBar: nil, callView: nil,
+
+		viewSetupFormScript: func()
+		begin
+			local p := GetAppParams();
+			viewBounds := RelBounds(p.appAreaLeft, p.appAreaTop, p.appAreaWidth, p.appAreaHeight);
+		end,
+
+		viewSetupDoneScript: func()
+		begin
+			foreach v in :ChildViewFrames() do
+				if v.role then
+					self.(v.role) := v;
+			:Phone():Withdraw('missed);
+			:Reload();
+			:Layout();
+		end,
+
+		viewQuitScript: func()
+		begin
+			numberLine := keypadView := listView := searchLine := tabBar := callView := nil;
+			pressed := nil;
+			:Phone().openedForCall := nil;
+		end,
+
+		Phone: func() GetGlobalVar('|HostPhone:host|),
+
+		Relayout: func()
+		begin
+			local p := GetAppParams();
+			SetValue(self, 'viewBounds, RelBounds(p.appAreaLeft, p.appAreaTop, p.appAreaWidth, p.appAreaHeight));
+			:Layout();
+		end,
+
+		// the bar of tabs' height
+		TabHeight: func() FontHeight(kBold) + 16,
+
+		// Every view placed in the application's area as it is now: the call
+		// screen over all of it while there is a call; otherwise the page
+		// chosen above the bar of tabs
+		Layout: func()
+		begin
+			local box := :LocalBox();
+			local w := box.right - box.left;
+			local h := box.bottom - box.top;
+			local inCall := :Phone().active <> nil;
+			local tabH := :TabHeight();
+			local pageH := h - tabH;
+			SetValue(callView, 'viewBounds, RelBounds(0, 0, w, h));
+			SetValue(tabBar, 'viewBounds, RelBounds(0, pageH, w, tabH));
+			// the keypad: the number over the keys
+			local numberH := FontHeight(kNumber) + 8;
+			local kw := Min(w, kMaxKeypadWidth);
+			SetValue(numberLine, 'viewBounds, RelBounds((w - kw) div 2 + 8, 6, kw - 16, numberH));
+			SetValue(keypadView, 'viewBounds, RelBounds(0, 6 + numberH, w, pageH - 6 - numberH));
+			// the contacts: the search line over the list
+			local searchH := FontHeight(kFont) + 10;
+			local listTop := if page = 'contacts then searchH + 8 else 0;
+			SetValue(searchLine, 'viewBounds, RelBounds(8, 4, w - 16, searchH));
+			SetValue(listView, 'viewBounds, RelBounds(0, listTop, w, pageH - listTop));
+			if inCall then begin
+				callView:Show();
+				foreach v in [tabBar, numberLine, keypadView, listView, searchLine] do
+					v:Hide();
+				callView:StartTimer();
+			end else begin
+				callView:StopTimer();
+				callView:Hide();
+				tabBar:Show();
+				if page = 'keypad then begin
+					numberLine:Show(); keypadView:Show();
+				end else begin
+					numberLine:Hide(); keypadView:Hide();
+				end;
+				if page = 'keypad then listView:Hide() else listView:Show();
+				if page = 'contacts then searchLine:Show() else searchLine:Hide();
+				// (the keyboard types into the page's line)
+				if page = 'keypad then
+					SetKeyView(numberLine, StrLen(numberLine.text))
+				else if page = 'contacts then
+					SetKeyView(searchLine.entryLine, StrLen(:SearchText()));
+			end;
+			:Redraw();
+		end,
+
+		Redraw: func()
+		begin
+			foreach v in [keypadView, listView, tabBar, callView] do
+				if v then v:Dirty();
+		end,
+
+		ShowPage: func(newPage)
+		begin
+			if newPage <> page then
+				listScroll := 0;
+			page := newPage;
+			if page = 'recents then
+				:Phone().missedUnseen := 0;
+			:Reload();
+			:Layout();
+		end,
+
+		/*------------------------------------------------------------------
+			The calls and the cards
+		------------------------------------------------------------------*/
+
+		Reload: func()
+		begin
+			local phone := :Phone();
+			recents := phone:RecentCalls();
+			contacts := phone:Contacts(:SearchText());
+		end,
+
+		// the number typed
+		Typed: func() if numberLine and numberLine.text then numberLine.text else "",
+
+		// what the number typed is like: the card whose number it is, or -
+		// letters typed - the first card whose name has them
+		// ==> {name, number, label} or nil
+		Suggestion: func()
+		begin
+			local typed := :Typed();
+			local phone := :Phone();
+			if StrLen(typed) = 0 then
+				return nil;
+			if phone:HasLetters(typed) then begin
+				foreach c in phone:Contacts(typed) do
+					return {name: c.name, number: c.numbers[0].number, label: c.numbers[0].label, card: c.card};
+				return nil;
+			end;
+			local digits := phone:Digits(typed);
+			if StrLen(digits) < 3 then
+				return nil;
+			phone:Lookup(typed);
+		end,
+
+		// Call: the number typed - or, the keypad empty, the last number
+		// called put in it, as a phone does
+		CallTyped: func()
+		begin
+			local phone := :Phone();
+			local typed := TrimString(Clone(:Typed()));
+			if StrLen(typed) = 0 then begin
+				local last := phone.lastDialled;
+				if last then
+					SetValue(numberLine, 'text, Clone(last));
+				:NumberChanged();
+				return nil;
+			end;
+			local s := :Suggestion();
+			if phone:HasLetters(typed) then begin
+				if s then phone:Dial(s.number, s.name, s.card, nil);
+				return nil;
+			end;
+			phone:Dial(typed, if s then s.name, if s then s.card, nil);
+		end,
+
+		// a key of the keypad: its character added to the number
+		AddKey: func(ch)
+		begin
+			local text := Clone(:Typed());
+			SetValue(numberLine, 'text, text & ch);
+			:NumberChanged();
+			SetKeyView(numberLine, StrLen(numberLine.text));
+		end,
+
+		Backspace: func(all)
+		begin
+			local text := :Typed();
+			local n := StrLen(text);
+			SetValue(numberLine, 'text, if all or n <= 1 then Clone("") else SubStr(text, 0, n - 1));
+			:NumberChanged();
+			SetKeyView(numberLine, StrLen(numberLine.text));
+		end,
+
+		NumberChanged: func() if keypadView then keypadView:Dirty(),
+
+		// what is searched for (the search line's entry's)
+		SearchText: func()
+			if searchLine and searchLine.entryLine and searchLine.entryLine.text then searchLine.entryLine.text else "",
+
+		SearchChanged: func()
+		begin
+			listScroll := 0;
+			contacts := :Phone():Contacts(:SearchText());
+			if listView then listView:Dirty();
+		end,
+
+		// the Up and Down of the button bar (the T-Deck Max's touch keys):
+		// the list a page on
+		viewScrollUpScript: func()
+		begin
+			if page <> 'keypad and listView then begin
+				listScroll := Max(0, listScroll - (listView:LocalBox()).bottom * 3 div 4);
+				listView:Dirty();
+			end;
+			true;
+		end,
+
+		viewScrollDownScript: func()
+		begin
+			if page <> 'keypad and listView then begin
+				listScroll := listScroll + (listView:LocalBox()).bottom * 3 div 4;
+				listView:Dirty();
+			end;
+			true;
+		end,
+
+		// a row's actions on a long press: call or text each number, delete a
+		// recent call
+		RowMenu: func(view, row)
+		begin
+			local items := [];
+			local actions := [];
+			foreach n in row.numbers do begin
+				AddArraySlot(items, "Call " & (if n.label then n.label & " " else "") & n.number);
+				AddArraySlot(actions, {what: 'dial, number: n.number});
+			end;
+			foreach n in row.numbers do begin
+				AddArraySlot(items, "Text " & n.number);
+				AddArraySlot(actions, {what: 'text, number: n.number});
+			end;
+			if row.entry then begin
+				AddArraySlot(items, "Delete from Recents");
+				AddArraySlot(actions, {what: 'delete});
+			end;
+			view.menuRow := row;
+			view.menuActions := actions;
+			DoPopup(items, 20, 0, view);
+		end,
+
+		RowAction: func(row, action)
+		begin
+			local phone := :Phone();
+			if action.what = 'dial then
+				phone:Dial(action.number, row.name, row.card, nil)
+			else if action.what = 'text then
+				phone:TextTo(action.number, row.name)
+			else if action.what = 'delete and row.entry then begin
+				EntryRemoveFromSoupXmit(row.entry, nil);
+				:Reload();
+				listView:Dirty();
+			end;
+		end,
+
+		/*------------------------------------------------------------------
+			Drawing helpers (the application's own: any size)
+		------------------------------------------------------------------*/
+
+		// text centred in a box
+		Centred: func(view, text, font, left, top, right, bottom, style)
+		begin
+			local tw := StrFontWidth(text, font);
+			local th := FontHeight(font);
+			local x := left + (right - left - tw) div 2;
+			local y := top + (bottom - top - th) div 2;
+			view:DrawShape(MakeText(text, x, y, x + tw + 2, y + th), if style then style else {font: font, transferMode: 1});
+		end,
+
+		// a handset, s pixels square, its corner at x, y
+		Handset: func(x, y, s)
+		begin
+			local pts := [3, 6, 8, 2, 12, 8, 9, 11, 15, 17, 18, 14, 24, 18, 20, 23, 14, 22, 7, 16, 3, 10];
+			local scaled := Array(Length(pts), 0);
+			for i := 0 to Length(pts) - 1 do
+				scaled[i] := (if i mod 2 = 0 then x else y) + pts[i] * s div 26;
+			MakePolygon(scaled);
+		end,
+
+		// the font of the keys' digits: the largest that fits keyH
+		DigitFont: func(keyH)
+		begin
+			foreach f in kDigitFonts do
+				if FontHeight(f) + FontHeight(kSmall) <= keyH - 2 then
+					return f;
+			kDigitFonts[Length(kDigitFonts) - 1];
+		end,
+
+		// the initials of a name ("Ada Lovelace" "AL"), or a number's "#"
+		Initials: func(name)
+		begin
+			if not StrFilled(name) then return "#";
+			local result := "";
+			local take := true;
+			for i := 0 to StrLen(name) - 1 do begin
+				local c := name[i];
+				if c = $  then take := true
+				else if take then begin
+					if StrLen(result) < 2 then result := result & Upcase(Clone(Stringer([c])));
+					take := nil;
+				end;
+			end;
+			result;
+		end,
+
+		// "2:38 PM" today, "Yesterday", the date before
+		WhenText: func(time)
+		begin
+			if not time then return "";
+			local today := Time() div 1440;
+			local day := time div 1440;
+			if day = today then :TimeText(time)
+			else if day = today - 1 then "Yesterday"
+			else ShortDate(time);
+		end,
+
+		TimeText: func(time)
+		begin
+			local minutes := time mod 1440;
+			local hour := minutes div 60;
+			local minute := minutes mod 60;
+			local suffix := if hour >= 12 then " PM" else " AM";
+			hour := hour mod 12;
+			if hour = 0 then hour := 12;
+			NumberStr(hour) & ":" & (if minute < 10 then "0" else "") & NumberStr(minute) & suffix;
+		end,
+
+		// a call's length, "1:05" (or "1:02:05")
+		Duration: func(seconds)
+		begin
+			local h := seconds div 3600;
+			local m := (seconds mod 3600) div 60;
+			local s := seconds mod 60;
+			(if h > 0 then NumberStr(h) & ":" & (if m < 10 then "0" else "") else "")
+				& NumberStr(m) & ":" & (if s < 10 then "0" else "") & NumberStr(s);
+		end,
+
+		// A press on a view: tracked until the pen lifts.  ==> 'tap, 'hold (held
+		// kHoldTicks without moving: the pen may still be down) or 'drag (moved
+		// kDragPixels up or down - onDrag told each move, with how far)
+		Track: func(unit, onDrag)
+		begin
+			InkOff(unit);
+			local x0 := GetPoint(0, unit);
+			local y0 := GetPoint(1, unit);
+			local start := Ticks();
+			local dragging := nil;
+			local lastY := y0;
+			repeat begin
+				local y := GetPoint(5, unit);
+				local x := GetPoint(4, unit);
+				if not dragging and (Abs(y - y0) >= kDragPixels or Abs(x - x0) >= kDragPixels * 2) then
+					dragging := true;
+				if dragging and onDrag and y <> lastY then begin
+					call onDrag with (lastY - y);
+					RefreshViews();
+				end;
+				lastY := y;
+				if not dragging and Ticks() - start >= kHoldTicks then
+					return 'hold;
+				Sleep(2);
+			end until StrokeDone(unit);
+			if dragging then 'drag else 'tap;
+		end,
+
+		stepChildren: [
+			// the number typed: the keyboard types into it too (Return calls)
+			{
+				_proto: @185,						// protoInputLine
+				role: 'numberLine,
+				viewBounds: {left: 8, top: 6, right: 232, bottom: 34},
+				viewJustify: 0x800002,				// (centred, one line)
+				viewFormat: 0,
+				viewFont: 1067010,
+				text: "",
+				viewChangedScript: func(slot, view)
+				begin
+					inherited:?viewChangedScript(slot, view);
+					if slot = 'text then :Parent():NumberChanged();
+				end,
+				viewKeyDownScript: func(ch, flags)
+				begin
+					if ch = $\n or ch = $\u000D or ch = $\u0003 then begin
+						:Parent():CallTyped();
+						return true;
+					end;
+					nil;
+				end
+			},
+
+			// the keys, what the number is like, the Call button
+			{
+				viewClass: 74, viewFlags: 513, viewFormat: 0, role: 'keypadView,
+				viewBounds: {left: 0, top: 40, right: 240, bottom: 290},
+				kKeys: [["1", ""], ["2", "ABC"], ["3", "DEF"], ["4", "GHI"], ["5", "JKL"], ["6", "MNO"],
+					["7", "PQRS"], ["8", "TUV"], ["9", "WXYZ"], ["*", ""], ["0", "+"], ["#", ""]],
+				hits: nil,							// (the keys as last drawn: {left, top, right, bottom, ch})
+
+				viewDrawScript: func()
+				begin
+					local base := :Parent();
+					local b := :LocalBox();
+					local w := b.right;
+					local h := b.bottom;
+					local kw := Min(w, base.kMaxKeypadWidth);
+					local x0 := (w - kw) div 2;
+					// what the number is: a card's name, under the number
+					local sh := FontHeight(base.kBold) + 4;
+					local s := base:Suggestion();
+					if s then begin
+						local text := s.name & (if s.label then "  " & s.label else "");
+						if base:Phone():HasLetters(base:Typed()) then
+							text := text & "  " & s.number;
+						base:Centred(self, StyledStrTruncate(text, w - 16, base.kBold), base.kBold, 0, 0, w, sh, nil);
+					end;
+					// four rows of keys and the row of the Call button
+					local gap := Max(4, h div 60);
+					local rowH := Min((h - sh - gap) div 5, base.kMaxKey + gap);
+					local keyH := rowH - gap;
+					local keyW := (kw - 4 * gap) div 3;
+					local top := sh + (h - sh - rowH * 5) div 4;		// (the room left mostly below)
+					local digitFont := base:DigitFont(keyH);
+					hits := [];
+					for i := 0 to 11 do begin
+						local k := kKeys[i];
+						local left := x0 + gap + (i mod 3) * (keyW + gap);
+						local kt := top + (i div 3) * rowH;
+						local down := base.pressed = k[0];
+						:DrawShape(MakeRoundRect(left, kt, left + keyW, kt + keyH, Min(10, keyH div 3)),
+							{penSize: 1, penPattern: 5, fillPattern: if down then 5 else 1});
+						local mode := if down then 3 else 1;
+						local dh := FontHeight(digitFont);
+						local lh := if StrLen(k[1]) > 0 then FontHeight(base.kSmall) else 0;
+						local dt := kt + (keyH - dh - lh) div 2;
+						base:Centred(self, k[0], digitFont, left, dt, left + keyW, dt + dh, {font: digitFont, transferMode: mode});
+						if lh > 0 then
+							base:Centred(self, k[1], base.kSmall, left, dt + dh - 1, left + keyW, dt + dh - 1 + lh, {font: base.kSmall, transferMode: mode});
+						AddArraySlot(hits, {left: left, top: kt, right: left + keyW, bottom: kt + keyH, ch: k[0]});
+					end;
+					// Call: black, in the middle of the last row; the backspace
+					// beside it while there is a number
+					local ct := top + 4 * rowH;
+					local cw := keyW + keyW div 3;
+					local cl := (w - cw) div 2;
+					local down := base.pressed = 'dial;
+					:DrawShape(MakeRoundRect(cl, ct, cl + cw, ct + keyH, keyH div 2),
+						{penSize: 1, penPattern: 5, fillPattern: if down then 1 else 5});
+					local hs := Min(keyH - 12, 22);
+					local label := "Call";
+					local lw := StrFontWidth(label, base.kBold);
+					local gx := cl + (cw - hs - 6 - lw) div 2;
+					:DrawShape(base:Handset(gx, ct + (keyH - hs) div 2, hs), {penPattern: 0, fillPattern: if down then 5 else 1});
+					base:Centred(self, label, base.kBold, gx + hs + 6, ct, gx + hs + 6 + lw, ct + keyH,
+						{font: base.kBold, transferMode: if down then 1 else 3});
+					AddArraySlot(hits, {left: cl, top: ct, right: cl + cw, bottom: ct + keyH, ch: 'dial});
+					if StrLen(base:Typed()) > 0 then begin
+						local bl := x0 + gap + 2 * (keyW + gap) + keyW div 4;
+						local br := bl + keyW div 2;
+						local bm := ct + keyH div 2;
+						local bh := Min(keyH div 2, 18);
+						local arrow := MakePolygon([bl, bm, bl + bh div 2, bm - bh div 2, br, bm - bh div 2, br, bm + bh div 2, bl + bh div 2, bm + bh div 2, bl, bm]);
+						local down := base.pressed = 'back;
+						:DrawShape(arrow, {penSize: 1, penPattern: 5, fillPattern: if down then 5 else 1});
+						local cx := (bl + bh div 2 + br) div 2;
+						local r := bh div 5;
+						:DrawShape([MakeLine(cx - r, bm - r, cx + r, bm + r), MakeLine(cx - r, bm + r, cx + r, bm - r)],
+							{penSize: 2, penPattern: if down then 1 else 5});
+						AddArraySlot(hits, {left: bl - 6, top: ct, right: br + 6, bottom: ct + keyH, ch: 'back});
+					end;
+					// (the suggestion's line: tapped, its number put in)
+					AddArraySlot(hits, {left: 0, top: 0, right: w, bottom: sh, ch: 'suggestion});
+				end,
+
+				KeyAt: func(x, y)
+				begin
+					if hits then
+						foreach k in hits do
+							if x >= k.left and x < k.right and y >= k.top and y < k.bottom then
+								return k.ch;
+					nil;
+				end,
+
+				viewClickScript: func(unit)
+				begin
+					local base := :Parent();
+					local box := :GlobalBox();
+					local ch := :KeyAt(GetPoint(0, unit) - box.left, GetPoint(1, unit) - box.top);
+					if not ch then return true;
+					if ch = 'suggestion then begin
+						InkOff(unit);
+						local s := base:Suggestion();
+						if s then begin
+							SetValue(base.numberLine, 'text, Clone(s.number));
+							base:NumberChanged();
+						end;
+						return true;
+					end;
+					base.pressed := ch;
+					:Dirty();
+					RefreshViews();
+					local how := base:Track(unit, nil);
+					base.pressed := nil;
+					:Dirty();
+					if ch = 'dial then
+						base:CallTyped()
+					else if ch = 'back then
+						base:Backspace(how = 'hold)
+					else if ch = "0" and how = 'hold then
+						base:AddKey("+")
+					else
+						base:AddKey(ch);
+					true;
+				end
+			},
+
+			// the contacts' search line
+			{
+				_proto: @189,						// protoLabelInputLine
+				role: 'searchLine,
+				viewBounds: {left: 8, top: 4, right: 232, bottom: 22},
+				label: "Search",
+				labelFont: 1058816,
+				entryFont: 10240,
+				text: "",
+				textChanged: func()
+				begin
+					inherited:?textChanged();
+					:Parent():SearchChanged();
+				end
+			},
+
+			// the recent calls, or the contacts: rows a finger drags up and down;
+			// a tap calls, a long press offers the row's numbers
+			{
+				viewClass: 74, viewFlags: 545, viewFormat: 0, role: 'listView,	// (vClipping)
+				viewBounds: {left: 0, top: 0, right: 240, bottom: 290},
+				rows: nil,							// (what is listed: {name, numbers, entry, card, kind, when, ...})
+				menuRow: nil, menuActions: nil,
+
+				RowHeight: func() FontHeight(:Parent().kBold) + FontHeight(:Parent().kSmall) + 14,
+
+				ListedRows: func()
+				begin
+					local base := :Parent();
+					if base.page = 'recents then base.recents else base.contacts;
+				end,
+
+				viewDrawScript: func()
+				begin
+					local base := :Parent();
+					local b := :LocalBox();
+					local w := b.right;
+					local rowH := :RowHeight();
+					rows := :ListedRows();
+					if not rows or Length(rows) = 0 then begin
+						local empty := if base.page = 'recents then ["No calls yet.", "Calls made and received are listed here."]
+							else if StrFilled(base:SearchText()) then ["No one found.", "Names whose cards have phone numbers are listed here."]
+							else ["No one to call yet.", "Names whose cards have phone numbers are listed here."];
+						:DrawShape(MakeText(empty[0], 12, 16, w - 12, 16 + FontHeight(base.kBold)), {font: base.kBold});
+						local y := 20 + FontHeight(base.kBold);
+						foreach line in base:Phone():WrapText(empty[1], w - 24, base.kFont) do begin
+							:DrawShape(MakeText(line, 12, y, w - 12, y + FontHeight(base.kFont)), {font: base.kFont});
+							y := y + FontHeight(base.kFont) + 2;
+						end;
+						return;
+					end;
+					// (not scrolled past the end)
+					local most := Max(0, Length(rows) * rowH - b.bottom);
+					if base.listScroll > most then base.listScroll := most;
+					local i := base.listScroll div rowH;
+					local y := i * rowH - base.listScroll;
+					while i < Length(rows) and y < b.bottom do begin
+						:DrawRow(rows[i], y, w, rowH, base.pressed = i);
+						y := y + rowH;
+						i := i + 1;
+					end;
+					// (where the list is: a thin bar at the right while it is longer than the view)
+					if most > 0 then begin
+						local barH := Max(16, b.bottom * b.bottom div (Length(rows) * rowH));
+						local barT := (b.bottom - barH) * base.listScroll div most;
+						:DrawShape(MakeRoundRect(w - 4, barT, w - 1, barT + barH, 2), {penPattern: 0, fillPattern: 3});
+					end;
+				end,
+
+				DrawRow: func(row, y, w, rowH, down)
+				begin
+					local base := :Parent();
+					if down then
+						:DrawShape(MakeRect(0, y, w, y + rowH), {penPattern: 0, fillPattern: 5});
+					local mode := if down then 3 else 1;
+					local bh := FontHeight(base.kBold);
+					local sh := FontHeight(base.kSmall);
+					local textL := 34;
+					// a round badge of initials (the contacts), or the call's
+					// direction (the recent calls)
+					local d := Min(rowH - 10, 24);
+					local cx := 6;
+					local cy := y + (rowH - d) div 2;
+					if base.page = 'contacts then begin
+						:DrawShape(MakeOval(cx, cy, cx + d, cy + d), {penSize: 1, penPattern: if down then 1 else 5, fillPattern: if down then 5 else 1});
+						base:Centred(self, base:Initials(row.name), base.kSmall, cx, cy, cx + d, cy + d, {font: base.kSmall, transferMode: mode});
+					end else
+						:DrawArrow(row.kind, cx + d div 2, y + rowH div 2, d div 2 - 2, down);
+					local when := if row.when then base:WhenText(row.when) else "";
+					local whenW := if StrLen(when) > 0 then StrFontWidth(when, base.kSmall) + 8 else 0;
+					local title := row.name;
+					local titleFont := if row.kind = 'missed then base.kBold else base.kBold;
+					:DrawShape(MakeText(StyledStrTruncate(title, w - textL - whenW - 8, titleFont), textL, y + 5, w - whenW, y + 5 + bh),
+						{font: titleFont, transferMode: mode});
+					if whenW > 0 then
+						:DrawShape(MakeText(when, w - whenW, y + 7, w, y + 7 + sh), {font: base.kSmall, transferMode: mode});
+					:DrawShape(MakeText(StyledStrTruncate(row.detail, w - textL - 8, base.kSmall), textL, y + 7 + bh, w - 6, y + 7 + bh + sh),
+						{font: base.kSmall, transferMode: mode});
+					:DrawShape(MakeLine(textL, y + rowH - 1, w - 4, y + rowH - 1), {penSize: 1, penPattern: 3});
+				end,
+
+				// a call's direction: an arrow out (made), in (taken), in and
+				// crossed (missed), or a bar across (declined)
+				DrawArrow: func(kind, cx, cy, r, down)
+				begin
+					local ink := {penSize: 2, penPattern: if down then 1 else 5};
+					if kind = 'made then
+						:DrawShape([MakeLine(cx - r, cy + r, cx + r, cy - r), MakeLine(cx, cy - r, cx + r, cy - r), MakeLine(cx + r, cy - r, cx + r, cy)], ink)
+					else if kind = 'declined then
+						:DrawShape([MakeLine(cx + r, cy - r, cx - r, cy + r), MakeLine(cx - r, cy, cx - r, cy + r), MakeLine(cx - r, cy + r, cx, cy + r),
+							MakeLine(cx - r, cy - r, cx + r, cy - r)], ink)
+					else begin
+						:DrawShape([MakeLine(cx + r, cy - r, cx - r, cy + r), MakeLine(cx - r, cy, cx - r, cy + r), MakeLine(cx - r, cy + r, cx, cy + r)], ink);
+						if kind = 'missed then
+							:DrawShape(MakeOval(cx + r - 4, cy - r - 1, cx + r + 2, cy - r + 5), {penPattern: 0, fillPattern: if down then 1 else 5});
+					end;
+				end,
+
+				viewClickScript: func(unit)
+				begin
+					local base := :Parent();
+					local box := :GlobalBox();
+					rows := :ListedRows();
+					if not rows then return true;
+					local rowH := :RowHeight();
+					local i := (GetPoint(1, unit) - box.top + base.listScroll) div rowH;
+					local row := if i >= 0 and i < Length(rows) then rows[i];
+					local view := self;
+					if row then begin
+						base.pressed := i;
+						:Dirty();
+						RefreshViews();
+					end;
+					local how := base:Track(unit, func(dy) begin
+						base.pressed := nil;
+						base.listScroll := Max(0, base.listScroll + dy);
+						view:Dirty();
+					end);
+					base.pressed := nil;
+					:Dirty();
+					if row and how = 'tap then
+						base:Phone():Dial(row.numbers[0].number, row.name, row.card, if Length(row.numbers) > 1 then row.numbers)
+					else if row and how = 'hold then
+						base:RowMenu(self, row);
+					true;
+				end,
+
+				pickActionScript: func(index)
+				begin
+					if menuActions and index >= 0 and index < Length(menuActions) then
+						:Parent():RowAction(menuRow, menuActions[index]);
+					menuRow := menuActions := nil;
+				end,
+				pickCancelledScript: func() menuRow := menuActions := nil
+			},
+
+			// the bar of tabs: Keypad, Recents, Contacts - the one shown black - and a close box
+			{
+				viewClass: 74, viewFlags: 513, viewFormat: 0, role: 'tabBar,
+				viewBounds: {left: 0, top: 290, right: 240, bottom: 320},
+				kTabs: [['keypad, "Keypad"], ['recents, "Recents"], ['contacts, "Contacts"]],
+
+				CloseWidth: func() Max(26, (:LocalBox()).bottom),
+
+				viewDrawScript: func()
+				begin
+					local base := :Parent();
+					local b := :LocalBox();
+					local w := b.right;
+					local h := b.bottom;
+					local cw := :CloseWidth();
+					local tw := (w - cw) div 3;
+					:DrawShape(MakeLine(0, 0, w, 0), {penSize: 1});
+					local missed := base:Phone().missedUnseen;
+					for i := 0 to 2 do begin
+						local t := kTabs[i];
+						local left := i * tw;
+						local on := base.page = t[0];
+						if on then
+							:DrawShape(MakeRoundRect(left + 3, 4, left + tw - 3, h - 4, (h - 8) div 2), {penPattern: 0, fillPattern: 5});
+						local label := t[1];
+						if t[0] = 'recents and missed and missed > 0 then
+							label := label & " " & NumberStr(missed);
+						base:Centred(self, StyledStrTruncate(label, tw - 8, base.kBold), base.kBold, left, 0, left + tw, h,
+							{font: base.kBold, transferMode: if on then 3 else 1});
+					end;
+					// the close box: an X
+					local cx := w - cw div 2;
+					local cy := h div 2;
+					local r := Min(5, h div 4);
+					:DrawShape([MakeLine(cx - r, cy - r, cx + r, cy + r), MakeLine(cx - r, cy + r, cx + r, cy - r)], {penSize: 2});
+					:DrawShape(MakeLine(w - cw, 6, w - cw, h - 6), {penSize: 1, penPattern: 3});
+				end,
+
+				viewClickScript: func(unit)
+				begin
+					InkOff(unit);
+					local base := :Parent();
+					local b := :LocalBox();
+					local cw := :CloseWidth();
+					local x := GetPoint(0, unit) - (:GlobalBox()).left;
+					if x >= b.right - cw then
+						base:Close()
+					else begin
+						local i := Min(2, x div ((b.right - cw) div 3));
+						base:ShowPage(kTabs[i][0]);
+					end;
+					true;
+				end
+			},
+
+			// the call: who, how it stands, and what can be done with it
+			{
+				viewClass: 74, viewFlags: 513, viewFormat: 1, role: 'callView,
+				viewBounds: {left: 0, top: 0, right: 240, bottom: 320},
+				hits: nil,							// (the buttons as last drawn: {left, top, right, bottom, action})
+				ticking: nil,
+
+				StartTimer: func()
+				begin
+					if not ticking then begin
+						ticking := true;
+						:SetupIdle(1000);
+					end;
+				end,
+				StopTimer: func()
+				begin
+					if ticking then begin
+						ticking := nil;
+						:SetupIdle(0);
+					end;
+				end,
+				viewIdleScript: func()
+				begin
+					local phone := :Parent():Phone();
+					phone:Follow(phone:Transport());
+					:Dirty();
+					if ticking then 1000;
+				end,
+				viewQuitScript: func() ticking := nil,
+
+				viewDrawScript: func()
+				begin
+					local base := :Parent();
+					local phone := base:Phone();
+					local c := phone.active;
+					hits := [];
+					if not c then return;
+					local b := :LocalBox();
+					local w := b.right;
+					local h := b.bottom;
+					// the bottom row: End - or Decline and Answer
+					local btnH := Min(Max(FontHeight(base.kBold) + 20, h div 9), 52);
+					local btnTop := h - btnH - Max(10, h div 30);
+					if c.state = 'ringing then begin
+						local bw := Min((w - 36) div 2, 150);
+						local gap := w - 2 * bw;
+						:Button('decline, "Decline", gap div 3, btnTop, gap div 3 + bw, btnTop + btnH, nil);
+						:Button('answer, "Answer", w - gap div 3 - bw, btnTop, w - gap div 3, btnTop + btnH, true);
+					end else if c.state <> 'ended then begin
+						local bw := Min(w - 60, 180);
+						:Button('hangUp, "End", (w - bw) div 2, btnTop, (w + bw) div 2, btnTop + btnH, true);
+					end;
+					// who: the status, the name, the number
+					local sh := FontHeight(base.kFont);
+					local nh := FontHeight(base.kName);
+					local y := Max(8, h div 24);
+					base:Centred(self, phone:CallStatusText(), base.kFont, 0, y, w, y + sh, nil);
+					y := y + sh + 4;
+					local name := if StrFilled(c.name) then c.name else if StrFilled(c.number) then c.number else "Unknown";
+					base:Centred(self, StyledStrTruncate(name, w - 16, base.kName), base.kName, 0, y, w, y + nh, nil);
+					y := y + nh + 2;
+					if StrFilled(c.name) and StrFilled(c.number) then begin
+						base:Centred(self, c.number, base.kFont, 0, y, w, y + sh, nil);
+					end;
+					y := y + sh + 8;
+					local room := btnTop - y - 8;
+					if c.keypad and c.state = 'connected then
+						:DrawTonePad(y, w, room)
+					else begin
+						// the badge of initials, then (in a call) Mute, Keypad, Speaker
+						local controls := c.state <> 'ringing and c.state <> 'ended;
+						local ctlH := if controls then Min(Max(FontHeight(base.kBold) + 26, room div 3), 64) else 0;
+						local d := Min(room - ctlH - 12, Min(w div 3, 96));
+						if d >= 24 then begin
+							local top := y + (room - ctlH - d) div 2;
+							:DrawShape(MakeOval((w - d) div 2, top, (w + d) div 2, top + d), {penSize: 2, penPattern: 5, fillPattern: 1});
+							local f := if d >= 60 then base.kName else base.kBold;
+							base:Centred(self, base:Initials(c.name), f, (w - d) div 2, top, (w + d) div 2, top + d, nil);
+						end;
+						if controls then begin
+							local cw := Min((w - 32) div 3, 84);
+							local gap := (w - 3 * cw) div 4;
+							local ct := btnTop - ctlH - Max(8, room div 12);
+							:Toggle('mute, "Mute", gap, ct, gap + cw, ct + ctlH, c.muted);
+							:Toggle('keypad, "Keypad", 2 * gap + cw, ct, 2 * gap + 2 * cw, ct + ctlH, nil);
+							:Toggle('speaker, "Speaker", 3 * gap + 2 * cw, ct, 3 * gap + 3 * cw, ct + ctlH, c.speaker);
+						end;
+					end;
+				end,
+
+				// a button: black (primary) or framed, the one held inverted
+				Button: func(action, label, left, top, right, bottom, primary)
+				begin
+					local base := :Parent();
+					local down := base.pressed = action;
+					local black := if down then not primary else primary;
+					:DrawShape(MakeRoundRect(left, top, right, bottom, (bottom - top) div 2),
+						{penSize: 2, penPattern: 5, fillPattern: if black then 5 else 1});
+					base:Centred(self, label, base.kBold, left, top, right, bottom, {font: base.kBold, transferMode: if black then 3 else 1});
+					AddArraySlot(hits, {left: left, top: top, right: right, bottom: bottom, action: action});
+				end,
+
+				// a toggle: framed, black while on; its glyph over its name
+				Toggle: func(action, label, left, top, right, bottom, on)
+				begin
+					local base := :Parent();
+					local down := base.pressed = action;
+					local black := if down then not on else on;
+					:DrawShape(MakeRoundRect(left, top, right, bottom, 10),
+						{penSize: 1, penPattern: 5, fillPattern: if black then 5 else 1});
+					local lh := FontHeight(base.kBold);
+					local gh := bottom - top - lh - 12;
+					local ink := {penSize: 2, penPattern: if black then 1 else 5};
+					local cx := (left + right) div 2;
+					local gt := top + 5;
+					local s := Min(gh, 20);
+					if s >= 8 then begin
+						if action = 'keypad then begin
+							for r := 0 to 2 do
+								for col := 0 to 2 do begin
+									local dx := cx - s div 2 + col * s div 2;
+									local dy := gt + (gh - s) div 2 + r * s div 2;
+									:DrawShape(MakeOval(dx - 2, dy - 2, dx + 2, dy + 2), {penPattern: 0, fillPattern: if black then 1 else 5});
+								end;
+						end else if action = 'speaker then begin
+							local my := gt + gh div 2;
+							:DrawShape(MakePolygon([cx - s div 2, my - s div 6, cx - s div 6, my - s div 6, cx + s div 6, my - s div 2,
+								cx + s div 6, my + s div 2, cx - s div 6, my + s div 6, cx - s div 2, my + s div 6]),
+								{penPattern: 0, fillPattern: if black then 1 else 5});
+							:DrawShape(MakeLine(cx + s div 3, my - s div 4, cx + s div 3, my + s div 4), ink);
+						end else begin
+							// mute: a microphone, struck through
+							local my := gt + (gh - s) div 2;
+							:DrawShape(MakeRoundRect(cx - s div 5, my, cx + s div 5, my + s * 2 div 3, s div 5), ink);
+							:DrawShape(MakeLine(cx, my + s * 2 div 3, cx, my + s), ink);
+							:DrawShape(MakeLine(cx - s div 2, my, cx + s div 2, my + s), ink);
+						end;
+					end;
+					base:Centred(self, label, base.kBold, left, bottom - lh - 6, right, bottom - 4, {font: base.kBold, transferMode: if black then 3 else 1});
+					AddArraySlot(hits, {left: left, top: top, right: right, bottom: bottom, action: action});
+				end,
+
+				// the keypad in a call (tones), and Hide
+				DrawTonePad: func(y, w, room)
+				begin
+					local base := :Parent();
+					local c := base:Phone().active;
+					local hideH := FontHeight(base.kBold) + 8;
+					local gap := 4;
+					local rowH := (room - hideH - gap) div 4;
+					local keyH := rowH - gap;
+					local kw := Min(w - 16, 260);
+					local keyW := (kw - 2 * gap) div 3;
+					local x0 := (w - kw) div 2;
+					local font := base:DigitFont(keyH + FontHeight(base.kSmall));
+					local keys := ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
+					for i := 0 to 11 do begin
+						local left := x0 + (i mod 3) * (keyW + gap);
+						local top := y + (i div 3) * rowH;
+						local down := base.pressed = keys[i];
+						:DrawShape(MakeRoundRect(left, top, left + keyW, top + keyH, Min(8, keyH div 3)),
+							{penSize: 1, penPattern: 5, fillPattern: if down then 5 else 1});
+						base:Centred(self, keys[i], font, left, top, left + keyW, top + keyH, {font: font, transferMode: if down then 3 else 1});
+						AddArraySlot(hits, {left: left, top: top, right: left + keyW, bottom: top + keyH, action: keys[i]});
+					end;
+					local ht := y + 4 * rowH;
+					local label := if StrFilled(c.tones) then c.tones else "Hide keypad";
+					base:Centred(self, StyledStrTruncate(label, w - 16, base.kBold), base.kBold, 0, ht, w, ht + hideH, nil);
+					AddArraySlot(hits, {left: 0, top: ht, right: w, bottom: ht + hideH, action: 'keypad});
+				end,
+
+				viewClickScript: func(unit)
+				begin
+					local base := :Parent();
+					local box := :GlobalBox();
+					local x := GetPoint(0, unit) - box.left;
+					local y := GetPoint(1, unit) - box.top;
+					local action := nil;
+					if hits then
+						foreach k in hits do
+							if x >= k.left and x < k.right and y >= k.top and y < k.bottom then
+								action := k.action;
+					if not action then begin
+						InkOff(unit);
+						return true;
+					end;
+					base.pressed := action;
+					:Dirty();
+					RefreshViews();
+					base:Track(unit, nil);
+					base.pressed := nil;
+					:Dirty();
+					base:Phone():CallAction(action);
+					true;
+				end
+			}
+		]
+	},
+
+	/*----------------------------------------------------------------------
+		The call (outside the views: the transport's, followed)
+	----------------------------------------------------------------------*/
+
+	// the call shown: {dir 'outgoing/'incoming, number, name, state 'dialling/'ringing/
+	// 'answering/'connected/'ending/'ended, speaker, muted, keypad, tones,
+	// seconds} or nil
+	active: nil,
+	lastDialled: nil,
+	missedUnseen: 0,
+	openedForCall: nil,						// (the application opened by the call: closed again after it)
+	following: nil,
+
+	Transport: func() GetRoot().|PhoneHome:Newton|,
+	AppView: func() GetRoot().(appSymbol),
+
+	// the transport's status changed (its UpdateStatusSlots): followed once
+	// the transport's own work is done
+	StatusChanged: func(transport)
+	begin
+		if following then return;
+		following := true;
+		AddDeferredCall(func() begin
+			following := nil;
+			:Follow(transport);
+		end, nil);
+	end,
+
+	// the call made what the transport's status says
+	Follow: func(t)
+	begin
+		if not t then return;
+		local status := t.status;
+		local item := t.currentItem;
+		local c := active;
+		local was := if c then c.state;
+		if status = 'RingingFrom and item then begin
+			if not c or c.dir <> 'incoming then begin
+				local number := if item.phoneNumber then item.phoneNumber else "";
+				local who := :Lookup(number);
+				c := active := :NewCall('incoming, number, if who then who.name, 'ringing);
+			end;
+		end else if (not c or c.state = 'ended) and item and item.state <> 'Received
+		and (status = 'Connecting or status = 'DialingTo or status = 'DialingDoneTo) then begin
+			// (a call made elsewhere: a Names card's Call slip)
+			local number := if StrFilled(item.numberToDial) then item.numberToDial else item.phoneNumber;
+			c := active := :NewCall('outgoing, number, item.name, 'dialling);
+		end else if c and c.state <> 'ended then begin
+			if status = 'AnswerInProgress then c.state := 'answering
+			else if status = 'DialingDoneFrom then c.state := 'connected
+			else if status = 'Connecting or status = 'DialingTo then c.state := 'dialling
+			else if status = 'DialingDoneTo then
+				c.state := if HostCellStatus().callState = 'active then 'connected else 'dialling
+			else if status = 'HangingUp or status = 'cancelling or status = 'Disconnecting then c.state := 'ending
+			else if status = 'Listening or status = 'idle then begin
+				:Ended(c);
+				return;
+			end;
+		end;
+		if c and item and c.state <> 'ended then
+			c.item := item;
+		if c and c.state = 'connected then begin
+			c.connected := true;
+			local cell := HostCellStatus();
+			if cell.callState = 'active and cell.seconds then c.seconds := cell.seconds;
+		end;
+		if c and c.state <> was then
+			:Shown(was);
+	end,
+
+	// the call screen brought up to date (or brought up: a call coming in
+	// opens the application)
+	Shown: func(was)
+	begin
+		local base := :AppView();
+		local c := active;
+		if c and c.state = 'ringing and was <> 'ringing and :ScreenLocked() then
+			:NotifyLocked('ringing, "Incoming call", if StrFilled(c.name) then c.name else c.number,
+				func() nil);
+		if c and not was and base and not base.viewCObject then begin
+			openedForCall := true;
+			base:Open();
+			return;
+		end;
+		if base and base.viewCObject then
+			base:Layout();
+	end,
+
+	// a call's record: {dir 'outgoing/'incoming, number, name, state, speaker,
+	// muted, keypad, tones (the keypad's, sent), seconds, connected (it was),
+	// reason (how it ended, for the log), item (the transport's), time}
+	NewCall: func(dir, number, name, state)
+		{dir: dir, number: number, name: name, state: state, speaker: true, muted: nil,
+		 keypad: nil, tones: nil, seconds: 0, connected: nil, reason: nil, item: nil, time: Time()},
+
+	// The call kept in the Calls soup, as the ROM's Calls application keeps
+	// one (the transport's log - callapp:AddItem, which opens the ROM's
+	// application to file it, is kept from it: HookTransport), unless the
+	// Phone preferences say not to log calls: a calllog entry with the
+	// transport's slots - who, the number (numberToDial for one made,
+	// callDate for one received), when, how long (startTime and endTime in
+	// seconds) and how it ended (hangupreason)
+	LogCall: func(c)
+	begin
+		local t := :Transport();
+		if not c.item or not c.item.hostLog then return nil;
+		if t and t:GetConfig('phonenocalllogging) then return nil;
+		local soup := GetUnionSoupAlways(callsSoupName);
+		if not soup then return nil;
+		local ended := TimeInSeconds();
+		local out := c.dir = 'outgoing;
+		soup:AddToDefaultStoreXmit({class: 'calllog, name: if c.name then c.name else "",
+			phoneNumber: c.number, numberToDial: if out then c.number else "",
+			callDate: if out then nil else c.time, timestamp: c.time,
+			startTime: if c.connected then ended - c.seconds else 0, endTime: ended,
+			hangupreason: if c.reason then c.reason else if c.connected then 'completed,
+			category: '|PhoneHome:Newton|, serviceProvider: c.item.serviceProvider,
+			toRef: c.item.toRef, fromRef: nil, notes: nil, saveAsLog: true}, nil);
+	end,
+
+	// the call over: "Call ended" a moment, then the page it came from - or,
+	// the application opened for it, closed again (a call missed leaves it
+	// open at the recent calls)
+	Ended: func(c)
+	begin
+		local missed := c.dir = 'incoming and (c.state = 'ringing);
+		c.state := 'ended;
+		try
+			:LogCall(c)
+		onexception |evt.ex| do
+			Print("Phone: the call could not be logged");
+		:Withdraw('ringing);
+		if missed then begin
+			missedUnseen := missedUnseen + 1;
+			if :ScreenLocked() then
+				:NotifyLocked('missed, "Missed call", if StrFilled(c.name) then c.name else c.number,
+					func() GetGlobalVar('|HostPhone:host|):ShowRecents());
+		end;
+		local base := :AppView();
+		if base and base.viewCObject then begin
+			base:Reload();
+			base:Layout();
+		end;
+		AddDelayedCall(func() begin
+			if active = c then begin
+				active := nil;
+				local base := :AppView();
+				if base and base.viewCObject then begin
+					if openedForCall and not missed then
+						base:Close()
+					else if missed then
+						base:ShowPage('recents)
+					else begin
+						base:Reload();
+						base:Layout();
+					end;
+				end;
+				openedForCall := nil;
+			end;
+		end, nil, 2000);
+	end,
+
+	ShowRecents: func()
+	begin
+		local base := :AppView();
+		if not base then return;
+		if not base.viewCObject then base:Open();
+		base:ShowPage('recents);
+	end,
+
+	// what the call screen says over the name
+	CallStatusText: func()
+	begin
+		local c := active;
+		local base := :AppView();
+		if not c then ""
+		else if c.state = 'ringing then "Incoming call"
+		else if c.state = 'dialling then "Calling\u2026\u"
+		else if c.state = 'answering then "Answering\u2026\u"
+		else if c.state = 'ending then "Ending\u2026\u"
+		else if c.state = 'ended then "Call ended" & (if c.seconds > 0 then "  " & base:Duration(c.seconds) else "")
+		else base:Duration(c.seconds) & (if c.muted then "  (muted)" else "");
+	end,
+
+	// a button of the call screen
+	CallAction: func(action)
+	begin
+		local t := :Transport();
+		local c := active;
+		if not c or not t then return nil;
+		if action = 'answer then begin
+			if c.state = 'ringing and t.status = 'RingingFrom then begin
+				c.state := 'answering;
+				t:receiveRequestComplete();
+			end;
+		end else if action = 'decline then begin
+			c.state := 'ending;
+			c.reason := 'userCancel;
+			if t.status = 'RingingFrom then
+				t:CancelRequest('userCancel);
+			:Follow(t);
+		end else if action = 'hangUp then begin
+			c.state := 'ending;
+			if t.currentItem then
+				t:CancelRequest('completed)
+			else
+				HostCellHangUp();
+			:Follow(t);
+		end else if action = 'speaker then begin
+			try
+				t:SetSpeaker(not c.speaker)
+			onexception |evt.ex| do nil;
+			c.speaker := not c.speaker;
+		end else if action = 'mute then begin
+			if GetGlobalFn('HostCellMute) and call GetGlobalFn('HostCellMute) with (not c.muted) then
+				c.muted := not c.muted;
+		end else if action = 'keypad then
+			c.keypad := not c.keypad
+		else if IsString(action) and c.state = 'connected then begin
+			// a tone
+			try
+				t.callEndpoint:SendDigit(action, nil)
+			onexception |evt.ex| do nil;
+			c.tones := (if c.tones then c.tones else "") & action;
+		end;
+		local base := :AppView();
+		if base and base.viewCObject then
+			base.callView:Dirty();
+	end,
+
+	// A call made through the Phone transport, as the Call slip makes one: the
+	// transport's item, addressed to the number (the card's, when there is
+	// one), submitted.  numbers: a card's several - which one is asked first
+	Dial: func(number, name, card, numbers)
+	begin
+		local base := :AppView();
+		if numbers and Length(numbers) > 1 and base and base.listView then begin
+			base:RowMenu(base.listView, {name: name, card: card, numbers: numbers});
+			return nil;
+		end;
+		local t := :Transport();
+		if not t then return nil;
+		if active and active.state <> 'ended then begin
+			GetRoot():Notify(3, "Phone", "There is a call already.");
+			return nil;
+		end;
+		// (refused at once, saying why, as the transport would after the fact)
+		local why := HostCellDialError(number);
+		if why then begin
+			t:HandleError(why);
+			return nil;
+		end;
+		lastDialled := number;
+		local fields := t:NewItem(nil);
+		local ref := GetDataDefs('|nameRef.phone|):MakeNameRef(if card then card else {}, '|nameRef.phone|);
+		ref.phone := number;
+		fields.toRef := [ref];
+		local info := GetDataDefs('|nameRef.phone|):GetRoutingInfo(ref)[0];
+		if not StrFilled(name) then begin
+			local who := :Lookup(number);
+			if who then name := who.name;
+		end;
+		fields.name := if StrFilled(name) then name else info.name;
+		fields.phoneNumber := info.rawNumber;
+		fields.title := t:GetItemTitle(fields);
+		fields.state := 'ready;
+		active := :NewCall('outgoing, number, name, 'dialling);
+		if base and base.viewCObject then begin
+			SetValue(base.numberLine, 'text, Clone(""));
+			base:Layout();
+			RefreshViews();
+		end;
+		t:ItemSubmit(fields);
+		:Follow(t);
+	end,
+
+	// Messages opened at a number's conversation (or a new message to it)
+	TextTo: func(number, name)
+	begin
+		local messages := GetGlobalVar('|HostMessages:host|);
+		local base := GetRoot().|Messages:host|;
+		if not messages or not base then return nil;
+		if not base.viewCObject then base:Open();
+		local thread := messages:ThreadKey(number);
+		base:Reload();
+		if base:ThreadFor(thread) then
+			base:OpenThread(thread)
+		else begin
+			base:Compose();
+			local ref := GetDataDefs('|nameRef.phone|):MakeNameRef({}, '|nameRef.phone|);
+			ref.phone := number;
+			if StrFilled(name) then ref.name := name;
+			base.toPicker.selected := [ref];
+			base:Redraw();
+		end;
+	end,
+
+	/*----------------------------------------------------------------------
+		The recent calls (the Calls soup) and the cards (the Names soup)
+	----------------------------------------------------------------------*/
+
+	// the calls the Phone transport logged, newest first: {name, detail,
+	// numbers, kind 'made/'taken/'missed/'declined, when, entry}
+	RecentCalls: func()
+	begin
+		local list := [];
+		local soup := GetUnionSoupAlways(callsSoupName);
+		if not soup then return list;
+		local names := :NumberIndex();
+		local cursor := Query(soup, {type: 'index});
+		local e;
+		local base := :AppView();
+		while e := cursor:Entry() do begin
+			local number := if StrFilled(e.phoneNumber) then e.phoneNumber
+				else if StrFilled(e.numberToDial) then e.numberToDial;
+			if number then begin
+				local incoming := e.callDate <> nil and not StrFilled(e.numberToDial);
+				local answered := IsInteger(e.startTime) and e.startTime <> 0;
+				local kind := if not incoming then 'made
+					else if answered then 'taken
+					else if e.hangupreason = 'userCancel then 'declined
+					else 'missed;
+				local who := names.(Intern("n" & :ThreadKey(number)));
+				local name := if StrFilled(e.name) then e.name else if who then who.name else number;
+				local seconds := if answered and IsInteger(e.endTime) and e.endTime > e.startTime then e.endTime - e.startTime else 0;
+				local detail := (if kind = 'made then "Outgoing" else if kind = 'taken then "Incoming"
+					else if kind = 'declined then "Declined" else "Missed")
+					& (if who and who.label then " \u00B7\u " & who.label else if name <> number then " \u00B7\u " & number else "")
+					& (if seconds > 0 then " \u00B7\u " & base:Duration(seconds) else "");
+				AddArraySlot(list, {name: name, detail: detail, kind: kind, entry: e,
+					when: if e.callDate then e.callDate else e.timestamp,
+					order: if IsInteger(e.endTime) and e.endTime <> 0 then e.endTime else 0,
+					card: if who then who.card,
+					numbers: [{number: number, label: if who then who.label}]});
+			end;
+			cursor:Next();
+		end;
+		Sort(list, '|>|, 'order);
+	end,
+
+	// the cards with phone numbers, by name - those whose name or number has
+	// what is searched for: {name, detail, numbers [{number, label}], card}
+	Contacts: func(search)
+	begin
+		local list := [];
+		local soup := GetUnionSoupAlways("Names");
+		if not soup then return list;
+		local want := if StrFilled(search) then Downcase(Clone(TrimString(Clone(search))));
+		local wantDigits := if want then :Digits(want);
+		local cursor := Query(soup, {type: 'index});
+		local e;
+		while e := cursor:Entry() do begin
+			local numbers := :CardNumbers(e);
+			if Length(numbers) > 0 then begin
+				local name := :CardName(e);
+				local keep := not want or StrPos(Downcase(Clone(name)), want, 0);
+				if not keep and StrLen(wantDigits) >= 2 then
+					foreach n in numbers do
+						if StrPos(:Digits(n.number), wantDigits, 0) then keep := true;
+				if keep then
+					AddArraySlot(list, {name: name, card: e, numbers: numbers,
+						detail: (if numbers[0].label then numbers[0].label & " " else "") & numbers[0].number
+							& (if Length(numbers) > 1 then "  +" & NumberStr(Length(numbers) - 1) & " more" else ""),
+						sortKey: Downcase(Clone(name))});
+			end;
+			cursor:Next();
+		end;
+		Sort(list, '|str<|, 'sortKey);
+	end,
+
+	// a card's name: first and last, or its company
+	CardName: func(card)
+	begin
+		local n := card.name;
+		local text := "";
+		if IsFrame(n) then begin
+			if StrFilled(n.first) then text := n.first;
+			if StrFilled(n.last) then text := if StrLen(text) > 0 then text & " " & n.last else n.last;
+		end else if IsString(n) then
+			text := n;
+		if StrLen(text) = 0 and StrFilled(card.company) then text := card.company;
+		if StrLen(text) = 0 then "No name" else text;
+	end,
+
+	// a card's numbers: [{number, label}] - the label its kind's ("mobile")
+	CardNumbers: func(card)
+	begin
+		local numbers := [];
+		if card.phones then
+			foreach p in card.phones do
+				if IsString(p) and StrLen(:Digits(p)) > 0 then begin
+					local cls := SPrintObject(ClassOf(p));
+					local label := nil;
+					local dot := StrPos(cls, "phone.", 0);
+					if dot then begin
+						label := SubStr(cls, dot + 6, StrLen(cls) - dot - 6);
+						if StrEqual(label, "homefax") then label := "home fax";
+					end;
+					AddArraySlot(numbers, {number: p, label: label});
+				end;
+		numbers;
+	end,
+
+	// every number on a card, by its last eight digits: {nXXXXXXXX: {name, label, card}}
+	NumberIndex: func()
+	begin
+		local index := {};
+		local soup := GetUnionSoupAlways("Names");
+		if not soup then return index;
+		local cursor := Query(soup, {type: 'index});
+		local e;
+		while e := cursor:Entry() do begin
+			local name := nil;
+			foreach n in :CardNumbers(e) do begin
+				if not name then name := :CardName(e);
+				local key := Intern("n" & :ThreadKey(n.number));
+				if not index.(key) then
+					index.(key) := {name: name, label: n.label, card: e, number: n.number};
+			end;
+			cursor:Next();
+		end;
+		index;
+	end,
+
+	// the card whose number this is ==> {name, label, card, number} or nil
+	Lookup: func(number)
+	begin
+		if StrLen(:Digits(number)) = 0 then return nil;
+		:NumberIndex().(Intern("n" & :ThreadKey(number)));
+	end,
+
+	// a number's last eight digits (as Messages tells conversations apart)
+	ThreadKey: func(number)
+	begin
+		local digits := :Digits(number);
+		if StrLen(digits) > 8 then SubStr(digits, StrLen(digits) - 8, 8) else digits;
+	end,
+
+	Digits: func(text)
+	begin
+		local digits := "";
+		if text then
+			for i := 0 to StrLen(text) - 1 do begin
+				local c := text[i];
+				if c >= $0 and c <= $9 then
+					digits := digits & c;
+			end;
+		digits;
+	end,
+
+	HasLetters: func(text)
+	begin
+		if text then
+			for i := 0 to StrLen(text) - 1 do
+				if IsAlphaNumeric(text[i]) and not (text[i] >= $0 and text[i] <= $9) then
+					return true;
+		nil;
+	end,
+
+	// the text in lines no wider than width in font
+	WrapText: func(text, width, font)
+	begin
+		local lines := [];
+		local line := "";
+		local word := "";
+		local words := [];
+		for i := 0 to StrLen(text) - 1 do
+			if text[i] = $  then begin
+				AddArraySlot(words, word);
+				word := "";
+			end else
+				word := word & text[i];
+		AddArraySlot(words, word);
+		foreach w in words do begin
+			local tryLine := if StrLen(line) = 0 then w else line & " " & w;
+			if StrFontWidth(tryLine, font) <= width or StrLen(line) = 0 then
+				line := tryLine
+			else begin
+				AddArraySlot(lines, line);
+				line := w;
+			end;
+		end;
+		AddArraySlot(lines, line);
+		lines;
+	end,
+
+	/*----------------------------------------------------------------------
+		The lock screen (host/HostQuickSheet.h, docs/host-lock-screen.md):
+		a call coming in, or missed, while the screen is locked is left
+		there - the application is open behind it at the call
+	----------------------------------------------------------------------*/
+
+	ScreenLocked: func()
+		GetGlobalFn('ScreenLockIsLocked) and call GetGlobalFn('ScreenLockIsLocked) with (),
+
+	NotifyLocked: func(key, title, text, opened)
+		GetGlobalFn('ScreenLockNotify) and call GetGlobalFn('ScreenLockNotify) with (appSymbol,
+			{key: key, title: title, text: text, Opened: opened}),
+
+	Withdraw: func(key)
+		if GetGlobalFn('ScreenLockWithdraw) then
+			call GetGlobalFn('ScreenLockWithdraw) with (appSymbol, key),
+
+	/*----------------------------------------------------------------------
+		Starting: the application, its icon, the transport followed
+	----------------------------------------------------------------------*/
+
+	// a handset for the Extras drawer
+	MakeIcon: func()
+	begin
+		local bitmap := MakeBitmap(28, 26, nil);
+		DrawIntoBitmap(app:Handset(1, 0, 26), {penSize: 1, penPattern: 5, fillPattern: 5}, bitmap);
+		bitmap;
+	end,
+
+	// The transport told two things more (DEVIATION): its status changes
+	// passed on, and no status slip while the application shows the call
+	// (its Take Call, keypad and Hang Up are the call screen's); and the
+	// ROM's Calls application kept closed
+	HookTransport: func()
+	begin
+		// the ROM's Calls application kept from opening to file a call (its
+		// AddItem opens it for an item to be logged): the item marked for
+		// LogCall instead
+		local calls := GetRoot().callapp;
+		if calls and not calls.hostPhoneHooked then begin
+			calls.hostPhoneHooked := true;
+			calls.AddItem := func(entry, message, why)
+			begin
+				if message and message.saveAsLog and GetGlobalVar('|HostPhone:host|) then begin
+					message.saveAsLog := nil;
+					message.hostLog := true;
+				end;
+				inherited:AddItem(entry, message, why);
+			end;
+		end;
+		local t := :Transport();
+		if not t or t.hostPhoneHooked then return;
+		t.hostPhoneHooked := true;
+		t.UpdateStatusSlots := func(newStatus, configuration, values)
+		begin
+			local result := inherited:UpdateStatusSlots(newStatus, configuration, values);
+			// (self may be the call's endpoint, which reaches the
+			// transport's methods through its _parent)
+			local phone := GetGlobalVar('|HostPhone:host|);
+			if phone then phone:StatusChanged(phone:Transport());
+			result;
+		end;
+		t.UpdateStatusDialog := func(setup)
+		begin
+			local phone := GetGlobalVar('|HostPhone:host|);
+			if phone and phone:AppView() then
+				self:CancelStatusNotify()
+			else
+				inherited:UpdateStatusDialog(setup);
+		end;
+	end,
+
+	// The Extras drawer's Calls icon opens this application (the ROM's
+	// stays in the store, put back where there is no module:
+	// HostRestoreCallsIcon, HostAppIcon.h)
+	TakeIcon: func()
+	begin
+		local extras := GetUnionSoup(@307.name);
+		if not extras then return nil;
+		local cursor := Query(extras, {type: 'index});
+		local e;
+		local calls := nil;
+		local mine := nil;
+		while e := cursor:Entry() do begin
+			if e.app = 'callapp then calls := e;
+			if e.app = appSymbol then mine := e;
+			cursor:Next();
+		end;
+		if mine then return mine;
+		if calls then begin
+			calls.hostCalls := {text: calls.text, icon: calls.icon, iconPro: calls.iconPro};
+			calls.app := appSymbol;
+			calls.text := "Phone";
+			calls.icon := :MakeIcon();
+			RemoveSlot(calls, 'iconPro);
+			EntryChangeXmit(calls, nil);
+			calls;
+		end else
+			extras:AddToDefaultStoreXmit({class: 'ROMFormEntry, text: "Phone", app: appSymbol,
+				icon: :MakeIcon(), labels: nil, sequence: 3, _tagList: ['_icon, '_noBackup]}, nil);
+	end,
+
+	Start: func()
+	begin
+		// the Calls soup, as the ROM's Calls application defines it (its
+		// allSoups.calls: a fresh store has none until that application is
+		// first opened)
+		RegUnionSoup('callapp, {name: callsSoupName, userName: "Calls", ownerApp: 'callapp,
+			ownerAppName: "Calls", userDescr: "Calls placed and received",
+			indexes: [{structure: 'slot, path: 'timestamp, type: 'int},
+				{structure: 'slot, path: 'hangupreason, type: 'symbol},
+				{structure: 'slot, path: 'labels, type: 'tags}]});
+		if not GetRoot().(appSymbol) then
+			GetRoot().(appSymbol) := BuildContext(app);
+		:TakeIcon();
+		:HookTransport();
+		// (the transport, should it come later than this)
+		AddDeferredCall(func() :HookTransport(), nil);
+	end
+}

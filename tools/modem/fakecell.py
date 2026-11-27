@@ -32,7 +32,8 @@ Purpose
       to a number given with --refuse it answers +CMS ERROR: 500;
     - in a call: AT+VTS=<digit> (a keypad tone - "fakecell: tone 5 in the
       call with N"); AT+CSDVC=1 or 3 (the audio to the handset or the
-      loudspeaker);
+      loudspeaker); AT+CMUT=1 or 0 ("fakecell: the microphone muted" or
+      "on again");
     - anything else ERROR (AT+FCLASS=? among them: an LTE module carries no
       fax, the owner's to be checked on the real one).
 
@@ -270,6 +271,13 @@ class Module:
                 self.say("ERROR")
                 return
             log("the audio to the %s" % ("loudspeaker" if device == "3" else "handset"))
+            self.ok()
+        elif ubody.startswith("+CMUT="):
+            on = body.split("=", 1)[1]
+            if on not in ("0", "1") or self.call is None:
+                self.say("ERROR")
+                return
+            log("the microphone %s" % ("muted" if on == "1" else "on again"))
             self.ok()
         elif ubody.startswith("+CMGR="):
             self.read_slot(int(body.split("=", 1)[1]))
