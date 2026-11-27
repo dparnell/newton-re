@@ -10,7 +10,7 @@
 // keyboard calling the number typed; a call answered on the lock screen
 // (unlocking it) and one declined there (left locked); Do not disturb
 // holding a stranger's call and text, letting a card's call through, and
-// its summary; its schedule's start and stop, a hand's off kept; Names' DND
+// its summary; a repeated caller ringing (and held, that switched off); its schedule's start and stop, a hand's off kept; Names' DND
 // button letting a card through; each screen snapshotted
 // (phone-<width>x<height>-<n>.pgm), so a run at each display size shows the
 // layout made for it.  The module is tools/modem/fakecell.py on --cell-port
@@ -339,9 +339,33 @@ phSteps := [
 			and phPhone.active = nil and (call phCallState with ()) = 'idle
 			and (call phTransport with ()).status = 'Listening, next, 30);
 	end,
+	// ... and the same stranger calling again at once: a repeated caller rings
 	func(next) begin
+		HostCellCommand("AT+FAKERING=\"+61499999999\"");
+		call waitFor with ("phone: a repeated caller rings", func() call phActive with ('ringing), next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("not held again", Length(DoNotDisturbHeld()) = 1, Length(DoNotDisturbHeld()) & " held");
+		phPhone:CallAction('decline);
+		call waitFor with ("phone: the repeated call declined", func() phPhone.active = nil
+			and (call phTransport with ()).status = 'Listening and (call phCallState with ()) = 'idle, next, 30);
+	end,
+	// repeated callers not let through (the Options slip's switch): held
+	func(next) begin
+		SetUserConfig('hostDNDRepeatOff, true);
+		HostCellCommand("AT+FAKERING=\"+61499999999\"");
+		call waitFor with ("phone: the third call held", func() Length(DoNotDisturbHeld()) = 2
+			and phPhone.active = nil and (call phCallState with ()) = 'idle
+			and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	func(next) begin
+		SetUserConfig('hostDNDRepeatOff, nil);
+		// (the record as it was for what follows: the first call only)
+		local held := DoNotDisturbHeld();
+		SetUserConfig('hostDNDLog, [held[0]]);
+		phApp:Close();
 		call phCheck with ("not opened for it", not phApp.viewCObject, "Phone opened");
-		call phCheck with ("counted missed", phPhone.missedUnseen = phMissedBefore + 1, "the count is " & phPhone.missedUnseen);
+		call phCheck with ("counted missed", phPhone.missedUnseen = phMissedBefore + 2, "the count is " & phPhone.missedUnseen);
 		phApp:Reload();
 		call phCheck with ("listed missed", phApp.recents[0].kind = 'missed and StrEqual(phApp.recents[0].name, "+61499999999"),
 			"it is " & phApp.recents[0].name & " " & phApp.recents[0].kind & ", then " & phApp.recents[1].name & " " & phApp.recents[1].kind);

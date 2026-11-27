@@ -19,8 +19,15 @@ on", on every host.  While it is on:
 - **A mesh message** likewise in Mesh.  A mesh sender has no phone number,
   so no card can let one through.
 
-**The schedule** (2026-11-27): the sheet's **Schedule** button, beside the
-switch, opens a slip - "On every day, as below", From and Until with - and
+**Repeated callers** (2026-11-27): a call from a number whose call was
+held in the last 3 minutes (`kRepeatMinutes`, by the number's last eight
+digits) rings - someone calling twice is likely to matter.  A withheld
+number never does.  The Options slip's first switch, "Let a second call
+within 3 minutes ring", turns it off (`hostDNDRepeatOff`); on by default.
+Only calls: texts are never let through for repeating.
+
+**The schedule** (2026-11-27): the sheet's **Options** button, beside the
+switch, opens a slip - repeated callers' switch, then "On every day, as below", From and Until with - and
 + a quarter of an hour apart, each change kept at once.  Every day at
 From it turns Do not disturb on, and at Until off again (the summary
 shown; the screen locked, a notification on the lock screen that shows it
@@ -65,7 +72,8 @@ first.
 | `DoNotDisturbIsOn()` | `true` or `nil` | whether it is on |
 | `DoNotDisturbSet(on)` | whether it is on now | turns it on (the record begun afresh) or off (the summary shown) |
 | `DoNotDisturbHolds(number)` | `true` or `nil` | whether news from this number (a string; `nil` when there is none) is to be kept quiet: on, and no card let through has the number |
-| `DoNotDisturbRecord(appSymbol, event)` | `true` | records something kept quiet: `event` is `{kind, title, text}` - `kind` `'missedCall`, `'text` or `'mesh` (any other symbol is counted as "notifications"), `title` in bold in the summary, `text` below it |
+| `DoNotDisturbHoldsCall(number)` | `true` or `nil` | the same for a call, a repeated caller let through |
+| `DoNotDisturbRecord(appSymbol, event)` | `true` | records something kept quiet: `event` is `{kind, title, text, number}` (`number` optional: a held call's, for repeated callers) - `kind` `'missedCall`, `'text` or `'mesh` (any other symbol is counted as "notifications"), `title` in bold in the summary, `text` below it |
 | `DoNotDisturbHeld()` | an array, oldest first | what has been recorded: `{appSymbol, kind, title, text, time}` (copies) |
 | `DoNotDisturbAllow(card, allow)` | whether it is now | a Names card let through (`hostDNDAllowed`) or not, the entry saved |
 | `DoNotDisturbSchedule()` | `{on, start, stop}` | the schedule (minutes of the day; 10 pm to 7 am, off, when none was set) |
@@ -83,7 +91,8 @@ else
 
 Don't treat what was held as seen: Messages and Mesh leave it unread.
 
-ctest: `host.NewtonPhone.<size>` (`src/host/demo/phone.ns`): the
+ctest: `host.NewtonPhone.<size>` (`src/host/demo/phone.ns`): a held
+stranger calling again at once ringing, and held with the switch off; the
 schedule's start turning it on and its stop off (the summary), a hand's
 off kept through a check; Names' DND button letting Bob through; on, a
 stranger's call declined unseen (Phone not opened, missed in Recents) and
@@ -107,5 +116,5 @@ bar, as here), a layout of its own in the Show picker (`AddLayout`,
 `RegisterViewDef` on the card's data class), and the user's own Custom
 fields (their labels in the Names soup's `'customFields` info).
 
-NOT YET: repeated calls let through; held texts
+NOT YET: held texts
 from a card let through by its name rather than its number.

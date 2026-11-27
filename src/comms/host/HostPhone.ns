@@ -1057,7 +1057,7 @@
 					c.dnd := true;
 					c.item := item;
 					c.state := 'ending;
-					call GetGlobalFn('DoNotDisturbRecord) with (appSymbol, {kind: 'missedCall,
+					call GetGlobalFn('DoNotDisturbRecord) with (appSymbol, {kind: 'missedCall, number: number,
 						title: "Missed call", text: if StrFilled(c.name) then c.name else if StrFilled(number) then number else "Unknown"});
 					t:CancelRequest('userCancel);
 					return;
@@ -1191,9 +1191,11 @@
 		end, nil, 2000);
 	end,
 
-	// whether Do not disturb keeps a call from this number quiet
+	// whether Do not disturb keeps a call from this number quiet (a repeated
+	// caller rings)
 	DNDHolds: func(number)
-		GetGlobalFn('DoNotDisturbHolds) and call GetGlobalFn('DoNotDisturbHolds) with (number),
+		if GetGlobalFn('DoNotDisturbHoldsCall) then call GetGlobalFn('DoNotDisturbHoldsCall) with (number)
+		else GetGlobalFn('DoNotDisturbHolds) and call GetGlobalFn('DoNotDisturbHolds) with (number),
 
 	ShowRecents: func()
 	begin

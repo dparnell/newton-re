@@ -68,7 +68,10 @@
 // minutes of the day) turns it on at start and off at stop every day - each
 // time crossed, so a hand that turned it off within the hours is not
 // overruled until the next day (DNDCheck).  Names' status bar has a DND
-// button (RegAuxButton) that lets the card shown through.
+// button (RegAuxButton) that lets the card shown through.  A call from a
+// number whose call was held in the last kRepeatMinutes rings (repeated
+// callers: DoNotDisturbHoldsCall), unless the Options slip says not
+// (hostDNDRepeatOff).
 //
 // Shutting down (ShutDown: the sheet's button, the Host preferences panel's):
 // the ROM's PowerOff, so that the applications are asked and told as for a
@@ -117,6 +120,7 @@
 		DefGlobalFn('DoNotDisturbIsOn, func() GetGlobalVar('|QuickSheet:host|):DNDOn());
 		DefGlobalFn('DoNotDisturbSet, func(on) GetGlobalVar('|QuickSheet:host|):SetDND(on));
 		DefGlobalFn('DoNotDisturbHolds, func(number) GetGlobalVar('|QuickSheet:host|):DNDHolds(number));
+		DefGlobalFn('DoNotDisturbHoldsCall, func(number) GetGlobalVar('|QuickSheet:host|):DNDHoldsCall(number));
 		DefGlobalFn('DoNotDisturbRecord, func(appSymbol, event) GetGlobalVar('|QuickSheet:host|):DNDRecord(appSymbol, event));
 		DefGlobalFn('DoNotDisturbHeld, func() GetGlobalVar('|QuickSheet:host|):DNDHeld());
 		DefGlobalFn('DoNotDisturbAllow, func(card, allow) GetGlobalVar('|QuickSheet:host|):DNDAllow(card, allow));
@@ -157,6 +161,26 @@
 	// whether news from this number (nil: none known) is to be kept quiet
 	DNDHolds: func(number) :DNDOn() and not :DNDAllowed(number),
 
+	// ... for a call: as DNDHolds, but a repeated caller - one whose call was
+	// held in the last kRepeatMinutes, by the number's last eight digits -
+	// rings (unless repeated callers are not let through)
+	kRepeatMinutes: 3,
+	DNDHoldsCall: func(number)
+	begin
+		if not :DNDHolds(number) then return nil;
+		if not :DNDRepeatOn() then return true;
+		local key := :LastDigits(number);
+		if StrLen(key) = 0 then return true;
+		local now := Time();
+		foreach r in :DNDHeld() do
+			if r.kind = 'missedCall and IsString(r.number) and StrEqual(:LastDigits(r.number), key)
+			and now - r.time <= kRepeatMinutes then
+				return nil;
+		true;
+	end,
+
+	DNDRepeatOn: func() not GetUserConfig('hostDNDRepeatOff),
+
 	// a Names card marked to be let through has this number (by its last
 	// eight digits, as Messages and Phone tell numbers apart)
 	DNDAllowed: func(number)
@@ -195,6 +219,7 @@
 		if log then
 			foreach r in log do AddArraySlot(kept, r);
 		AddArraySlot(kept, {appSymbol: appSymbol, kind: event.kind,
+			number: if IsString(event.number) then Clone(event.number),
 			title: if IsString(event.title) then Clone(event.title) else "",
 			text: if IsString(event.text) then Clone(event.text) else "", time: Time()});
 		while Length(kept) > kMostHeld do begin
@@ -313,7 +338,7 @@
 		local box := GetRoot():LocalBox();
 		local width := Min(box.right - box.left - 16, 280);
 		scheduleSlip := BuildContext({_proto: @179,								// protoFloatNGo
-			viewBounds: RelBounds(0, box.top + 30, width, 150),
+			viewBounds: RelBounds(0, box.top + 30, width, 186),
 			dndSchedule: true,
 			viewQuitScript: func() begin
 				GetGlobalVar('|QuickSheet:host|).scheduleSlip := nil;
@@ -331,16 +356,20 @@
 					local bh := FontHeight(sheet.kBold);
 					local lh := FontHeight(sheet.kFont);
 					hits := [];
-					:DrawShape(MakeText("Do not disturb's schedule", 0, 0, w, bh), {font: sheet.kBold});
-					// the switch: a box, crossed when on
+					:DrawShape(MakeText("Do not disturb", 0, 0, w, bh), {font: sheet.kBold});
+					// the switches: a box, crossed when on
 					local y := bh + 10;
 					local bs := 14;
-					:DrawShape(MakeRect(0, y, bs, y + bs), {penSize: 1});
-					if s.on then
-						:DrawShape([MakeLine(2, y + 2, bs - 2, y + bs - 2), MakeLine(2, y + bs - 2, bs - 2, y + 2)], {penSize: 2});
-					:DrawShape(MakeText("On every day, as below", bs + 6, y, w, y + lh), {font: sheet.kFont});
-					AddArraySlot(hits, {left: 0, top: y - 4, right: w, bottom: y + bs + 4, action: 'toggle});
-					y := y + bs + 12;
+					foreach box in [{text: "Let a second call within " & NumberStr(sheet.kRepeatMinutes) & " minutes ring",
+							on: sheet:DNDRepeatOn(), action: 'repeats},
+						{text: "On every day, as below", on: s.on, action: 'toggle}] do begin
+						:DrawShape(MakeRect(0, y, bs, y + bs), {penSize: 1});
+						if box.on then
+							:DrawShape([MakeLine(2, y + 2, bs - 2, y + bs - 2), MakeLine(2, y + bs - 2, bs - 2, y + 2)], {penSize: 2});
+						:DrawShape(MakeText(sheet:Fit(box.text, w - bs - 6, sheet.kFont), bs + 6, y, w, y + lh), {font: sheet.kFont});
+						AddArraySlot(hits, {left: 0, top: y - 4, right: w, bottom: y + bs + 4, action: box.action});
+						y := y + bs + 12;
+					end;
 					foreach row in [{label: "From", slot: 'start}, {label: "Until", slot: 'stop}] do begin
 						local bw := 30;
 						local rh := 24;
@@ -365,6 +394,11 @@
 					if hits then
 						foreach h in hits do
 							if x >= h.left and x < h.right and y >= h.top and y < h.bottom then begin
+								if h.action = 'repeats then begin
+									SetUserConfig('hostDNDRepeatOff, if sheet:DNDRepeatOn() then true);
+									:Dirty();
+									return true;
+								end;
 								local s := sheet:DNDSchedule();
 								if h.action = 'toggle then s.on := not s.on
 								else s.(h.action) := (s.(h.action) + h.delta * sheet.kDNDStep + 1440) mod 1440;
@@ -707,7 +741,7 @@
 		local switches := [{label: "Do not disturb",
 			Get: func() GetGlobalVar('|QuickSheet:host|):DNDOn(),
 			Set: func(on) GetGlobalVar('|QuickSheet:host|):SetDND(on),
-			button: {text: "Schedule", Click: func() GetGlobalVar('|QuickSheet:host|):OpenSchedule()}}];
+			button: {text: "Options", Click: func() GetGlobalVar('|QuickSheet:host|):OpenSchedule()}}];
 		local have := [];
 		foreach item in HostSettingsList() do AddArraySlot(have, item.setting);
 		if SetContains(have, 'cellPower) then AddArraySlot(switches, :SettingSwitch("4G module", 'cellPower));
@@ -732,7 +766,7 @@
 			if s.button then
 				AddArraySlot(children,
 					{_proto: @226,											// protoTextButton
-					 viewBounds: {left: -84, top: top - 1, right: -10, bottom: top + 17}, viewJustify: 32,	// (vjParentRightH)
+					 viewBounds: {left: -84, top: top - 1, right: -10, bottom: top + 17}, viewJustify: 38,	// (vjParentRightH, its text centred both ways as a protoTextButton's: vjCenterH + vjCenterV)
 					 text: s.button.text, sheetRole: 'schedule, switchButton: s.button,
 					 buttonClickScript: func() call switchButton.Click with ()});
 			AddArraySlot(children,

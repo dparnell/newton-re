@@ -9,6 +9,14 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-27: Do not disturb lets repeated callers through
+
+A second call from the same number within 3 minutes rings
+(`DoNotDisturbHoldsCall`; a switch in the quick sheet's Options slip, on
+by default).  The sheet's button, now Options, had its label off centre:
+its viewJustify (vjParentRightH) had replaced protoTextButton's centring,
+now kept beside it.  docs/host-do-not-disturb.md.
+
 ## 2026-11-27: Do not disturb's schedule, and Names' DND button
 
 A Schedule button beside the quick sheet's switch: From and Until, every
