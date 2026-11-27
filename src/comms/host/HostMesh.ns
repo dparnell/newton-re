@@ -1818,12 +1818,21 @@
 			text: m.text, time: if m.age then Time() - m.age else Time(), dir: 'incoming, state: 'unread};
 		local base := :Base();
 		local locked := :ScreenLocked();
-		if base and base.currentThread and StrEqual(base.currentThread, thread) and not locked then
+		// (Do not disturb: kept unread and quiet, for its summary - a mesh
+		// sender has no number for a card to let through)
+		local held := GetGlobalFn('DoNotDisturbHolds) and call GetGlobalFn('DoNotDisturbHolds) with (nil);
+		if base and base.currentThread and StrEqual(base.currentThread, thread) and not locked and not held then
 			entry.state := 'read;
 		:Soup():AddToDefaultStoreXmit(entry, nil);
 		:Refresh();
 		// (the screen locked: the lock screen tells it)
-		if base and not locked then
+		if held then begin
+			local card := if not m.channel then :SavedCard(thread);
+			local from := if m.channel then m.channel else if card then card.name
+				else if StrFilled(m.name) then m.name else :ShortKey(thread);
+			call GetGlobalFn('DoNotDisturbRecord) with (appSymbol, {kind: 'mesh, title: "Mesh: " & from,
+				text: (if m.channel and StrFilled(m.name) then m.name & ": " else "") & m.text});
+		end else if base and not locked then
 			PlaySound(@102)
 		else
 			:Tell(m, thread);

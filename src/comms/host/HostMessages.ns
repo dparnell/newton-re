@@ -872,7 +872,10 @@
 			dir: 'incoming, state: 'unread};
 		local base := GetRoot().(appSymbol);
 		local locked := :ScreenLocked();
-		if base and base.viewCObject and base.currentThread and StrEqual(base.currentThread, entry.thread) and not locked then
+		// (Do not disturb: kept unread and quiet, for its summary - a card
+		// let through is told as ever)
+		local held := GetGlobalFn('DoNotDisturbHolds) and call GetGlobalFn('DoNotDisturbHolds) with (number);
+		if base and base.viewCObject and base.currentThread and StrEqual(base.currentThread, entry.thread) and not locked and not held then
 			entry.state := 'read;
 		:Soup():AddToDefaultStoreXmit(entry, nil);
 		if base and base.viewCObject then begin
@@ -882,7 +885,10 @@
 		// (the user told: an alert, or - Messages open - the list or the
 		// conversation shows it, and a beep says so; the screen locked, the
 		// lock screen tells it)
-		if base and base.viewCObject and not locked then
+		if held then
+			call GetGlobalFn('DoNotDisturbRecord) with (appSymbol, {kind: 'text,
+				title: "Text from " & (if entry.name then entry.name else number), text: text})
+		else if base and base.viewCObject and not locked then
 			PlaySound(@102)
 		else
 			:Tell(entry);

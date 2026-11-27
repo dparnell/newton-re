@@ -8,7 +8,9 @@
 // the caller; one with it closed opening it, missed and listed so; one
 // declined; the contacts searched and one called with a tap; Return on the
 // keyboard calling the number typed; a call answered on the lock screen
-// (unlocking it) and one declined there (left locked); each screen snapshotted
+// (unlocking it) and one declined there (left locked); Do not disturb
+// holding a stranger's call and text, letting a card's call through, and
+// its summary; each screen snapshotted
 // (phone-<width>x<height>-<n>.pgm), so a run at each display size shows the
 // layout made for it.  The module is tools/modem/fakecell.py on --cell-port
 // (ctests host.NewtonPhone.*):
@@ -23,6 +25,7 @@ phApp := nil;
 phPhone := nil;
 phShot := 0;
 phCalls := 0;
+phMissedBefore := 0;
 
 phCheck := func(what, ok, why) begin
 	if ok then
@@ -322,7 +325,63 @@ phSteps := [
 		GetGlobalVar('|QuickSheet:host|):Unlock();
 		call waitFor with ("phone: unlocked", func() not ScreenLockIsLocked(), next, 10);
 	end,
+	// Do not disturb (the quick sheet's): a call from a stranger declined
+	// unseen and a text kept quiet, both held for the summary; Alice's card
+	// let through, her call rings; turned off, the summary
 	func(next) begin
+		phApp:Close();
+		DoNotDisturbSet(true);
+		call phCheck with ("Do not disturb on", DoNotDisturbIsOn(), "it is off");
+		phMissedBefore := phPhone.missedUnseen;
+		HostCellCommand("AT+FAKERING=\"+61499999999\"");
+		call waitFor with ("phone: a call held", func() Length(DoNotDisturbHeld()) = 1
+			and phPhone.active = nil and (call phCallState with ()) = 'idle
+			and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("not opened for it", not phApp.viewCObject, "Phone opened");
+		call phCheck with ("counted missed", phPhone.missedUnseen = phMissedBefore + 1, "the count is " & phPhone.missedUnseen);
+		phApp:Reload();
+		call phCheck with ("listed missed", phApp.recents[0].kind = 'missed and StrEqual(phApp.recents[0].name, "+61499999999"),
+			"it is " & phApp.recents[0].name & " " & phApp.recents[0].kind & ", then " & phApp.recents[1].name & " " & phApp.recents[1].kind);
+		HostCellCommand("AT+FAKETEXT=\"+61499999999\",\"Are you there?\"");
+		call waitFor with ("phone: a text held", func() Length(DoNotDisturbHeld()) = 2, next, 30);
+	end,
+	func(next) begin
+		local messages := GetGlobalVar('|HostMessages:host|);
+		call phCheck with ("no alert for the text", not messages.alertSlip, "an alert slip is up");
+		// Alice let through (her card, from the contacts' menu)
+		phApp:Open();
+		phApp:ShowPage('contacts);
+		local alice := nil;
+		foreach c in phApp.contacts do if StrEqual(c.name, "Alice Ng") then alice := c;
+		phApp:AllowThroughDND(alice.card, true);
+		call phCheck with ("Alice allowed", StrPos(phApp.contacts[0].detail, "DND allowed", 0),
+			"it says " & phApp.contacts[0].detail);
+		call phSnap with ();
+		phApp:Close();
+		HostCellCommand("AT+FAKERING=\"+61400000002\"");
+		call waitFor with ("phone: Alice rings through", func() (call phActive with ('ringing)) and phApp.viewCObject, next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("not held", Length(DoNotDisturbHeld()) = 2, Length(DoNotDisturbHeld()) & " held");
+		phPhone:CallAction('decline);
+		call waitFor with ("phone: Alice declined", func() phPhone.active = nil
+			and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	func(next) begin
+		DoNotDisturbSet(nil);
+		local slip := GetGlobalVar('|QuickSheet:host|).dndSlip;
+		call phCheck with ("the summary", slip and slip.viewCObject and Length(slip.lines) = 2
+			and EndsWith(slip.summary, ": 1 missed call, 1 text."), "it says " & (if slip then slip.summary));
+		call phCheck with ("the record cleared", Length(DoNotDisturbHeld()) = 0, "some left");
+		call phSnap with ();
+		if slip then slip:Close();
+		AddDelayedCall(next, nil, 200);
+	end,
+	func(next) begin
+		phApp:Open();
+		phApp:ShowPage('keypad);
 		// a dial that throws (the T-Deck Max's old StripDigits did, in the
 		// routing of the number) is reported, and leaves no call behind
 		local saved := phPhone.DialNumber;

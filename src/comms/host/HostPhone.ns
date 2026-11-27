@@ -272,6 +272,17 @@
 			true;
 		end,
 
+		// a card let through Do not disturb (its calls ring, its texts beep:
+		// hostDNDAllowed on the Names card) or not
+		AllowThroughDND: func(card, allow)
+		begin
+			if allow then card.hostDNDAllowed := true
+			else if HasSlot(card, 'hostDNDAllowed) then RemoveSlot(card, 'hostDNDAllowed);
+			EntryChangeXmit(card, nil);
+			:Reload();
+			if listView then listView:Dirty();
+		end,
+
 		// a row's actions on a long press: call or text each number, delete a
 		// recent call
 		RowMenu: func(view, row)
@@ -290,6 +301,11 @@
 				AddArraySlot(items, "Delete from Recents");
 				AddArraySlot(actions, {what: 'delete});
 			end;
+			if row.card and page = 'contacts then begin
+				AddArraySlot(items, if row.card.hostDNDAllowed then "Don't allow during Do not disturb"
+					else "Allow during Do not disturb");
+				AddArraySlot(actions, {what: 'dnd});
+			end;
 			view.menuRow := row;
 			view.menuActions := actions;
 			DoPopup(items, 20, 0, view);
@@ -302,6 +318,8 @@
 				phone:Dial(action.number, row.name, row.card, nil)
 			else if action.what = 'text then
 				phone:TextTo(action.number, row.name)
+			else if action.what = 'dnd and row.card then
+				:AllowThroughDND(row.card, not row.card.hostDNDAllowed)
 			else if action.what = 'delete and row.entry then begin
 				EntryRemoveFromSoupXmit(row.entry, nil);
 				:Reload();
@@ -1034,6 +1052,17 @@
 				local number := if item.phoneNumber then item.phoneNumber else "";
 				local who := :Lookup(number);
 				c := active := :NewCall('incoming, number, if who then who.name, 'ringing);
+				// (Do not disturb: declined at once - the caller to voicemail -
+				// and kept for its summary; a card let through rings)
+				if :DNDHolds(number) then begin
+					c.dnd := true;
+					c.item := item;
+					c.state := 'ending;
+					call GetGlobalFn('DoNotDisturbRecord) with (appSymbol, {kind: 'missedCall,
+						title: "Missed call", text: if StrFilled(c.name) then c.name else if StrFilled(number) then number else "Unknown"});
+					t:CancelRequest('userCancel);
+					return;
+				end;
 			end;
 		end else if (not c or c.state = 'ended) and item and item.state <> 'Received
 		and (status = 'Connecting or status = 'DialingTo or status = 'DialingDoneTo) then begin
@@ -1078,7 +1107,7 @@
 					{text: "Decline", Chosen: func() GetGlobalVar('|HostPhone:host|):CallAction('decline)},
 					{text: "Answer", primary: true, unlock: true,
 					 Chosen: func() GetGlobalVar('|HostPhone:host|):CallAction('answer)}]});
-		if c and not was and base and not base.viewCObject then begin
+		if c and not was and not c.dnd and base and not base.viewCObject then begin
 			openedForCall := true;
 			base:Open();
 			return;
@@ -1104,7 +1133,9 @@
 	LogCall: func(c)
 	begin
 		local t := :Transport();
-		if not c.item or not c.item.hostLog then return nil;
+		// (one Do not disturb declined is declined before the ROM marks it:
+		// logged, as the ROM logs every call that rings - EventIncoming)
+		if not c.item or not (c.item.hostLog or c.dnd) then return nil;
 		if t and t:GetConfig('phonenocalllogging) then return nil;
 		local soup := GetUnionSoupAlways(callsSoupName);
 		if not soup then return nil;
@@ -1124,7 +1155,7 @@
 	// open at the recent calls)
 	Ended: func(c)
 	begin
-		local missed := c.dir = 'incoming and (c.state = 'ringing);
+		local missed := c.dir = 'incoming and (c.state = 'ringing or c.dnd);
 		c.state := 'ended;
 		try
 			:LogCall(c)
@@ -1133,7 +1164,7 @@
 		:Withdraw('ringing);
 		if missed then begin
 			missedUnseen := missedUnseen + 1;
-			if :ScreenLocked() then
+			if :ScreenLocked() and not c.dnd then
 				:NotifyLocked('missed, "Missed call", if StrFilled(c.name) then c.name else c.number,
 					func() GetGlobalVar('|HostPhone:host|):ShowRecents());
 		end;
@@ -1160,6 +1191,10 @@
 			end;
 		end, nil, 2000);
 	end,
+
+	// whether Do not disturb keeps a call from this number quiet
+	DNDHolds: func(number)
+		GetGlobalFn('DoNotDisturbHolds) and call GetGlobalFn('DoNotDisturbHolds) with (number),
 
 	ShowRecents: func()
 	begin
@@ -1349,7 +1384,9 @@
 					& (if seconds > 0 then " \u00B7\u " & base:Duration(seconds) else "");
 				AddArraySlot(list, {name: name, detail: detail, kind: kind, entry: e,
 					when: if e.callDate then e.callDate else e.timestamp,
-					order: if IsInteger(e.endTime) and e.endTime <> 0 then e.endTime else 0,
+					// (filed order - a soup's ids only grow - not the clock's, which
+					// the network may set back meanwhile)
+					order: e._uniqueID,
 					card: if who then who.card,
 					numbers: [{number: number, label: if who then who.label}]});
 			end;
@@ -1380,7 +1417,8 @@
 				if keep then
 					AddArraySlot(list, {name: name, card: e, numbers: numbers,
 						detail: (if numbers[0].label then numbers[0].label & " " else "") & numbers[0].number
-							& (if Length(numbers) > 1 then "  +" & NumberStr(Length(numbers) - 1) & " more" else ""),
+							& (if Length(numbers) > 1 then "  +" & NumberStr(Length(numbers) - 1) & " more" else "")
+							& (if e.hostDNDAllowed then "  \u00B7\u DND allowed" else ""),
 						sortKey: Downcase(Clone(name))});
 			end;
 			cursor:Next();
@@ -1558,6 +1596,16 @@
 		local t := :Transport();
 		if not t or t.hostPhoneHooked then return;
 		t.hostPhoneHooked := true;
+		// (a ring Do not disturb holds: the transport's beep for it not
+		// played - its dismissCall - the call declined when followed)
+		t.EventIncoming := func()
+		begin
+			local phone := GetGlobalVar('|HostPhone:host|);
+			local transport := GetRoot().|PhoneHome:Newton|;
+			if phone and transport and transport.status <> 'RingingFrom and phone:DNDHolds(HostCellStatus().number) then
+				transport.dismissCall := true;
+			inherited:EventIncoming();
+		end;
 		t.UpdateStatusSlots := func(newStatus, configuration, values)
 		begin
 			local result := inherited:UpdateStatusSlots(newStatus, configuration, values);

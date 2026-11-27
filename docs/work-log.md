@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-27: Do not disturb
+
+A switch on the quick sheet (every host): while it is on, Phone declines
+calls unseen (to voicemail) and lists them missed, Messages and Mesh file
+what comes in unread with no beep or slip, and each is recorded; turned
+off, a slip sums up what came in.  A Names card can be let through from
+Phone's Contacts.  The setting and the record are kept in the user
+configuration.  Global functions for any application
+(`DoNotDisturbHolds`, `DoNotDisturbRecord`, ...).  Found on the way:
+Recents sorted by the call's end time put the newest call last when the
+network set the clock back - now by filing order.  ctests
+`host.NewtonPhone.*`.  docs/host-do-not-disturb.md.
+
 ## 2026-11-27: Phone, in the Calls icon's place
 
 The owner found calls cumbersome on the T-Decks (a Names card, Action,

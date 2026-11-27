@@ -489,6 +489,13 @@ Calls (`HostRestoreCallsIcon`, `comms/host/HostAppIcon.h`).
 
 A call made from a Names card's Call slip shows the same call screen.
 
+**Do not disturb** (2026-11-27, `docs/host-do-not-disturb.md`): a call
+held by it is declined at once, unseen, and listed as missed; a card can
+be let through from Contacts (a long press: "Allow during Do not
+disturb").  Recents is sorted by the order calls were filed (`_uniqueID`),
+not by their times: the network setting the clock back an hour mid-run
+put the newest call below older ones.
+
 ctests `host.NewtonPhone.240x320`, `.320x480`, `.480x320`, `.810x1080`
 (`src/host/demo/phone.ns`, fakecell; snapshots `phone-<w>x<h>-<n>.pgm`):
 the icon; a number typed, its card named, called with the pen; Mute, a

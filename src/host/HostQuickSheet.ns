@@ -53,6 +53,17 @@
 // after the serial line's wake anyway) - it sleeps again once the user has
 // left it alone kAwakeLocked seconds.
 //
+// Do not disturb (the sheet's switch; the global functions DoNotDisturbIsOn,
+// DoNotDisturbSet, DoNotDisturbHolds, DoNotDisturbRecord and
+// DoNotDisturbHeld - docs/host-do-not-disturb.md): while it is on, the
+// applications that would ring, beep or put up a slip for something that
+// came in - Phone, Messages, Mesh - ask DoNotDisturbHolds whether to stay
+// quiet (a Names card marked hostDNDAllowed, its number the sender's, is let
+// through) and record what they kept quiet about (DoNotDisturbRecord).
+// Turned off, a slip sums up what came in meanwhile.  The setting and the
+// record are kept in the user configuration (hostDoNotDisturb, hostDNDSince,
+// hostDNDLog), so a restart in the middle loses neither.
+//
 // Shutting down (ShutDown: the sheet's button, the Host preferences panel's):
 // the ROM's PowerOff, so that the applications are asked and told as for a
 // sleep, with the host's end in place of the sleep (HostPowerOff(true)).  An
@@ -62,7 +73,6 @@
 {
 	kFont: 10240,							// the system font, 10 point
 	kBold: 1058816,							// ... bold (face 1: 1 << 20)
-	kBig: 1062912,							// ... bold, 14 point
 	offView: nil,							// the off screen (ShowOff), while it is up
 	shuttingDown: nil,						// (ShutDown: on the way)
 	kBig: 1067008,							// ... 18 point, bold
@@ -98,6 +108,180 @@
 		DefGlobalFn('RegScreenLockChange, func(callbackID, fn) GetGlobalVar('|QuickSheet:host|):RegChange(callbackID, fn));
 		DefGlobalFn('UnRegScreenLockChange, func(callbackID) GetGlobalVar('|QuickSheet:host|):UnRegChange(callbackID));
 		RegPowerOff('|QuickSheet:host|, func(what, why) GetGlobalVar('|QuickSheet:host|):PowerOffAsked(what, why));
+		DefGlobalFn('DoNotDisturbIsOn, func() GetGlobalVar('|QuickSheet:host|):DNDOn());
+		DefGlobalFn('DoNotDisturbSet, func(on) GetGlobalVar('|QuickSheet:host|):SetDND(on));
+		DefGlobalFn('DoNotDisturbHolds, func(number) GetGlobalVar('|QuickSheet:host|):DNDHolds(number));
+		DefGlobalFn('DoNotDisturbRecord, func(appSymbol, event) GetGlobalVar('|QuickSheet:host|):DNDRecord(appSymbol, event));
+		DefGlobalFn('DoNotDisturbHeld, func() GetGlobalVar('|QuickSheet:host|):DNDHeld());
+	end,
+
+	/*----------------------------------------------------------------------
+		Do not disturb
+	----------------------------------------------------------------------*/
+
+	kMostHeld: 100,							// (events kept: the oldest dropped past it)
+	dndSlip: nil,							// (the summary, while it is up)
+
+	DNDOn: func() if GetUserConfig('hostDoNotDisturb) then true,
+
+	// on or off; turned off, the summary of what came in meanwhile
+	SetDND: func(on)
+	begin
+		local was := :DNDOn();
+		if on and not was then begin
+			SetUserConfig('hostDNDLog, []);
+			SetUserConfig('hostDNDSince, Time());
+			SetUserConfig('hostDoNotDisturb, true);
+		end else if was and not on then begin
+			SetUserConfig('hostDoNotDisturb, nil);
+			:DNDSummary();
+		end;
+		:DNDOn();
+	end,
+
+	// whether news from this number (nil: none known) is to be kept quiet
+	DNDHolds: func(number) :DNDOn() and not :DNDAllowed(number),
+
+	// a Names card marked to be let through has this number (by its last
+	// eight digits, as Messages and Phone tell numbers apart)
+	DNDAllowed: func(number)
+	begin
+		local key := :LastDigits(number);
+		if StrLen(key) = 0 then return nil;
+		local soup := GetUnionSoup("Names");
+		if not soup then return nil;
+		local cursor := Query(soup, {type: 'index});
+		local e;
+		while e := cursor:Entry() do begin
+			if e.hostDNDAllowed and e.phones then
+				foreach p in e.phones do
+					if IsString(p) and StrEqual(:LastDigits(p), key) then return true;
+			cursor:Next();
+		end;
+		nil;
+	end,
+
+	LastDigits: func(number)
+	begin
+		local digits := "";
+		if IsString(number) then
+			for i := 0 to StrLen(number) - 1 do
+				if number[i] >= $0 and number[i] <= $9 then digits := digits & number[i];
+		if StrLen(digits) > 8 then SubStr(digits, StrLen(digits) - 8, 8) else digits;
+	end,
+
+	// something kept quiet: {kind 'missedCall/'text/'mesh (or the application's
+	// own), title, text}, kept with the time
+	DNDRecord: func(appSymbol, event)
+	begin
+		if not IsFrame(event) then return nil;
+		local log := GetUserConfig('hostDNDLog);
+		local kept := [];
+		if log then
+			foreach r in log do AddArraySlot(kept, r);
+		AddArraySlot(kept, {appSymbol: appSymbol, kind: event.kind,
+			title: if IsString(event.title) then Clone(event.title) else "",
+			text: if IsString(event.text) then Clone(event.text) else "", time: Time()});
+		while Length(kept) > kMostHeld do begin
+			local rest := [];
+			for i := 1 to Length(kept) - 1 do AddArraySlot(rest, kept[i]);
+			kept := rest;
+		end;
+		SetUserConfig('hostDNDLog, kept);
+		true;
+	end,
+
+	// what has been kept quiet, oldest first
+	DNDHeld: func()
+	begin
+		local log := GetUserConfig('hostDNDLog);
+		if log then foreach r in log collect Clone(r) else [];
+	end,
+
+	// "2 missed calls" and the like, for a kind and a count
+	DNDCount: func(n, kind)
+		NumberStr(n) & " " & (if kind = 'missedCall then (if n = 1 then "missed call" else "missed calls")
+			else if kind = 'text then (if n = 1 then "text" else "texts")
+			else if kind = 'mesh then (if n = 1 then "mesh message" else "mesh messages")
+			else (if n = 1 then "notification" else "notifications")),
+
+	// The summary: what came in while Do not disturb was on - how many of
+	// each kind, then each, newest first, as many as fit - in a slip
+	DNDSummary: func()
+	begin
+		local held := :DNDHeld();
+		local since := GetUserConfig('hostDNDSince);
+		SetUserConfig('hostDNDLog, nil);
+		SetUserConfig('hostDNDSince, nil);
+		if dndSlip and dndSlip.viewCObject then dndSlip:Close();
+		local counts := {};
+		local order := [];
+		foreach r in held do begin
+			local k := if r.kind then r.kind else 'other;
+			if not counts.(k) then begin
+				counts.(k) := 0;
+				AddArraySlot(order, k);
+			end;
+			counts.(k) := counts.(k) + 1;
+		end;
+		local summary := "Nothing came in.";
+		if Length(held) > 0 then begin
+			summary := "";
+			foreach k in order do
+				summary := (if StrLen(summary) > 0 then summary & ", " else "") & :DNDCount(counts.(k), k);
+			summary := summary & ".";
+		end;
+		if since then summary := "Since " & :WhenText(since) & ": " & summary;
+		local lines := [];
+		for i := Length(held) - 1 to 0 by -1 do begin
+			local r := held[i];
+			AddArraySlot(lines, {when: :WhenText(r.time), title: r.title, text: r.text});
+		end;
+		local box := GetRoot():LocalBox();
+		local width := Min(box.right - box.left - 16, 300);
+		local height := Min(box.bottom - box.top - 40, 70 + Max(1, Length(lines)) * (FontHeight(kFont) + FontHeight(kSmall) + 6));
+		dndSlip := BuildContext({_proto: @179,								// protoFloatNGo (centred across the screen)
+			viewBounds: RelBounds(0, box.top + 20, width, height),
+			dndSummary: true,
+			title: "While Do not disturb was on",
+			summary: summary, lines: lines,
+			viewQuitScript: func() begin
+				GetGlobalVar('|QuickSheet:host|).dndSlip := nil;
+				inherited:?viewQuitScript();
+			end,
+			stepChildren: [
+				{viewClass: 74, viewFlags: 1, viewFormat: 0,
+				 viewBounds: {left: 8, top: 6, right: -26, bottom: -6}, viewJustify: 0xF0,	// (the slip's width and height, inset)
+				 viewDrawScript: func() begin
+					local sheet := GetGlobalVar('|QuickSheet:host|);
+					local slip := :Parent();
+					local b := :LocalBox();
+					local w := b.right - b.left;
+					local bh := FontHeight(sheet.kBold);
+					local lh := FontHeight(sheet.kFont);
+					local sh := FontHeight(sheet.kSmall);
+					:DrawShape(MakeText(sheet:Fit(slip.title, w, sheet.kBold), 0, 0, w, bh), {font: sheet.kBold});
+					:DrawShape(MakeText(sheet:Fit(slip.summary, w, sheet.kFont), 0, bh + 4, w, bh + 4 + lh), {font: sheet.kFont});
+					local y := bh + lh + 12;
+					local shown := 0;
+					// each: when and what in bold, its words below
+					foreach line in slip.lines do begin
+						local rowH := lh + (if StrLen(line.text) > 0 then sh + 1 else 0);
+						if y + rowH > b.bottom - (if shown < Length(slip.lines) - 1 then lh + 2 else 0) then break;
+						local ww := StrFontWidth(line.when, sheet.kSmall) + 6;
+						:DrawShape(MakeText(line.when, 0, y + 1, ww, y + 1 + sh), {font: sheet.kSmall});
+						:DrawShape(MakeText(sheet:Fit(line.title, w - ww, sheet.kBold), ww, y, w, y + lh), {font: sheet.kBold});
+						if StrLen(line.text) > 0 then
+							:DrawShape(MakeText(sheet:Fit(line.text, w - ww, sheet.kSmall), ww, y + lh, w, y + lh + sh), {font: sheet.kSmall});
+						y := y + rowH + 5;
+						shown := shown + 1;
+					end;
+					if shown < Length(slip.lines) then
+						:DrawShape(MakeText("and " & NumberStr(Length(slip.lines) - shown) & " more", 0, y, w, y + lh), {font: sheet.kFont});
+				 end},
+				{_proto: @166}]});										// protoClosebox
+		dndSlip:Open();
+		dndSlip;
 	end,
 
 	// the machine about to sleep (RegPowerOff): the screen locked and drawn
@@ -328,7 +512,9 @@
 	// the board's switches, in the sheet's order
 	Switches: func()
 	begin
-		local switches := [];
+		local switches := [{label: "Do not disturb",
+			Get: func() GetGlobalVar('|QuickSheet:host|):DNDOn(),
+			Set: func(on) GetGlobalVar('|QuickSheet:host|):SetDND(on)}];
 		local have := [];
 		foreach item in HostSettingsList() do AddArraySlot(have, item.setting);
 		if SetContains(have, 'cellPower) then AddArraySlot(switches, :SettingSwitch("4G module", 'cellPower));
