@@ -457,7 +457,9 @@ drawn in the Newton's type, and all of it at once.
 - **The call screen** over everything while there is a call: how it
   stands ("Calling…", the time), the name and number, a badge of initials;
   Mute (`AT+CMUT`, the engine's new `HostCellularSetMute`, native
-  `HostCellMute`), Keypad (tones, `SendDigit`, the digits sent shown) and
+  `HostCellMute`), Keypad (tones, `SendDigit`, the digits sent shown; the
+  keyboard's digits, `*` and `#` send tones too, open or not - the call
+  screen is a key view, `textFlags` 0x8400) and
   Speaker (the transport's `SetSpeaker`); End.  **A call coming in** opens
   the application at it - Decline, Answer - and a call that rang out is
   missed: the application stays open at Recents.  Opened for a call, it
@@ -490,7 +492,7 @@ A call made from a Names card's Call slip shows the same call screen.
 ctests `host.NewtonPhone.240x320`, `.320x480`, `.480x320`, `.810x1080`
 (`src/host/demo/phone.ns`, fakecell; snapshots `phone-<w>x<h>-<n>.pgm`):
 the icon; a number typed, its card named, called with the pen; Mute, a
-tone, the keypad hidden, Speaker, End; the call logged and in Recents; a
+tone tapped and one typed on the keyboard, the keypad hidden, Speaker, End; the call logged and in Recents; a
 call coming in answered and hung up by the caller; one with the
 application closed, opening it, missed; one declined; the contacts
 searched and Bob called with a tap; digits typed on the keyboard and
@@ -510,7 +512,7 @@ is the owner's own number.  Baked again, the call went out.  A dial that
 throws is now said so ("The call could not be made") and leaves no call
 on the screen; bake again after any change to `romsrc/`.
 
-NOT YET: keypad tones from the keyboard during a call; a second call (call waiting,
+NOT YET: a second call (call waiting,
 hold); tried on a board.
 
 ## Open questions

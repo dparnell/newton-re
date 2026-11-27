@@ -127,6 +127,8 @@
 				foreach v in [tabBar, numberLine, keypadView, listView, searchLine] do
 					v:Hide();
 				callView:StartTimer();
+				// (the keyboard's keys to the call: tones)
+				try SetKeyView(callView, 0) onexception |evt.ex| do nil;
 			end else begin
 				callView:StopTimer();
 				callView:Hide();
@@ -781,6 +783,7 @@
 			// the call: who, how it stands, and what can be done with it
 			{
 				viewClass: 74, viewFlags: 513, viewFormat: 1, role: 'callView,
+				textFlags: 0x8400,					// (a key view, its keys one at a time: tones from the keyboard)
 				viewBounds: {left: 0, top: 0, right: 240, bottom: 320},
 				hits: nil,							// (the buttons as last drawn: {left, top, right, bottom, action})
 				ticking: nil,
@@ -807,6 +810,19 @@
 					if ticking then 1000;
 				end,
 				viewQuitScript: func() ticking := nil,
+
+				// a key on the keyboard in a call: a digit, * or # a tone (as the
+				// call's keypad sends one)
+				viewKeyDownScript: func(ch, flags)
+				begin
+					local phone := :Parent():Phone();
+					local c := phone.active;
+					if c and c.state = 'connected and ((ch >= $0 and ch <= $9) or ch = $* or ch = $#) then begin
+						phone:CallAction(Stringer([ch]));
+						return true;
+					end;
+					nil;
+				end,
 
 				viewDrawScript: func()
 				begin

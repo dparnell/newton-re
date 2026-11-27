@@ -1,7 +1,8 @@
 // The Phone application (comms/host/HostPhone.ns) over the host's cellular
 // module: the Extras drawer's Calls icon taken for it; a number typed on its
 // keypad (and on the keyboard), the card it is shown, the call made with the
-// pen on Call, the call screen's keypad sending a tone, Mute and Speaker,
+// pen on Call, the call screen's keypad sending a tone (and the keyboard
+// another), Mute and Speaker,
 // End; the recent calls listing it; a call coming in with the application
 // open (its caller's card's name), answered with the pen and hung up by
 // the caller; one with it closed opening it, missed and listed so; one
@@ -168,6 +169,11 @@ phSteps := [
 		call phSnap with ();
 		call phTapHit with (phApp.callView, 'keypad, 'action);
 		call waitFor with ("phone: the keypad hidden", func() HostPenReplayDone() and not phPhone.active.keypad, next, 10);
+	end,
+	func(next) begin
+		// a tone from the keyboard (the 7 key, ADB 0x1A)
+		call typeKey with (0x1A);
+		call waitFor with ("phone: a tone from the keyboard", func() StrEqual(phPhone.active.tones, "57"), next, 10);
 	end,
 	func(next) begin
 		call phTapHit with (phApp.callView, 'speaker, 'action);
