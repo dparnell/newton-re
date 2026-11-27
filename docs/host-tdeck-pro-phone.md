@@ -461,9 +461,10 @@ drawn in the Newton's type, and all of it at once.
   Speaker (the transport's `SetSpeaker`); End.  **A call coming in** opens
   the application at it - Decline, Answer - and a call that rang out is
   missed: the application stays open at Recents.  Opened for a call, it
-  closes again after it.  While the screen is locked, the ring and a
-  missed call are left on the lock screen; the application is open behind
-  it at the call.
+  closes again after it.  **While the screen is locked** the call is
+  left on the lock screen with Decline and Answer (the lock screen's
+  notification `actions`, 2026-11-27): Answer unlocks to the call screen,
+  Decline leaves it locked; a missed call is left there too.
 - **Any screen**, as Messages: the keys at most 64 high and the keypad at
   most 330 wide, the rest measured from the area and the fonts.
 
@@ -493,7 +494,8 @@ tone, the keypad hidden, Speaker, End; the call logged and in Recents; a
 call coming in answered and hung up by the caller; one with the
 application closed, opening it, missed; one declined; the contacts
 searched and Bob called with a tap; digits typed on the keyboard and
-Return.
+Return; a call answered on the lock screen (unlocking it) and one declined
+there (left locked).
 
 Found on the way: NewtonScript slot names are case-insensitive (`rows`
 and a method `Rows` are one slot; `app` and `App` too); `'call` and `'in`
@@ -508,8 +510,7 @@ is the owner's own number.  Baked again, the call went out.  A dial that
 throws is now said so ("The call could not be made") and leaves no call
 on the screen; bake again after any change to `romsrc/`.
 
-NOT YET: answering on the lock screen itself (it is unlocked first);
-keypad tones from the keyboard during a call; a second call (call waiting,
+NOT YET: keypad tones from the keyboard during a call; a second call (call waiting,
 hold); tried on a board.
 
 ## Open questions

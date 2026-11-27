@@ -1053,9 +1053,15 @@
 	begin
 		local base := :AppView();
 		local c := active;
+		// (locked: the call on the lock screen, answered or declined there -
+		// Answer unlocks, to the call screen)
 		if c and c.state = 'ringing and was <> 'ringing and :ScreenLocked() then
-			:NotifyLocked('ringing, "Incoming call", if StrFilled(c.name) then c.name else c.number,
-				func() nil);
+			call GetGlobalFn('ScreenLockNotify) with (appSymbol,
+				{key: 'ringing, title: "Incoming call", text: if StrFilled(c.name) then c.name else c.number,
+				 actions: [
+					{text: "Decline", Chosen: func() GetGlobalVar('|HostPhone:host|):CallAction('decline)},
+					{text: "Answer", primary: true, unlock: true,
+					 Chosen: func() GetGlobalVar('|HostPhone:host|):CallAction('answer)}]});
 		if c and not was and base and not base.viewCObject then begin
 			openedForCall := true;
 			base:Open();
@@ -1484,8 +1490,9 @@
 
 	/*----------------------------------------------------------------------
 		The lock screen (host/HostQuickSheet.h, docs/host-lock-screen.md):
-		a call coming in, or missed, while the screen is locked is left
-		there - the application is open behind it at the call
+		a call coming in while the screen is locked is left there with
+		Decline and Answer (Answer unlocks; the application is open behind
+		it at the call), and a call missed is left there
 	----------------------------------------------------------------------*/
 
 	ScreenLocked: func()

@@ -30,6 +30,10 @@
 // unread messages wants.  They are listed newest first between the date and
 // the slider, as many as fit, "and N more" below them.  One tapped is
 // chosen (its frame thick, "Unlock to open"); a tap on it again leaves it.
+// A notification may carry actions - buttons along its foot, such as a
+// call's Decline and Answer: a tap on one runs it at once (its Chosen),
+// unlocking first when it says unlock (the notification itself then taken
+// off, so neither Opened nor Unlocked).
 // At the unlock they are all taken off and given back to the applications:
 // the one chosen its Opened method, the rest their Unlocked - an
 // application shows then what it would have shown had the screen not been
@@ -487,6 +491,25 @@
 		:TellWatchers(nil);
 	end,
 
+	// one of a notification's actions run: unlocking first if it says so
+	// (the notification taken off, so that neither its Opened nor its
+	// Unlocked is sent; the others are given back as at any unlock)
+	Act: func(record, action)
+	begin
+		if action.unlock then begin
+			notes := foreach r in notes collect if r <> record then r;
+			local kept := [];
+			foreach r in notes do if r then AddArraySlot(kept, r);
+			notes := kept;
+			:Unlock();
+		end;
+		try
+			action:?Chosen()
+		onexception |evt.ex| do
+			Print("[lock] " & SPrintObject(record.appSymbol) & "'s action threw");
+		:NotesChanged();
+	end,
+
 	// a notification's words fitted to a width: the text wrapped at its
 	// spaces (a word too long for a line broken), at most so many lines, the
 	// last cut short with "..." when there is more
@@ -579,7 +602,10 @@
 				local when := if r.chosen then "Unlock to open" else sheet:WhenText(r.time);
 				local whenW := StrFontWidth(when, sheet.kSmall);
 				local lines := if StrLen(text) > 0 then sheet:WrapText(text, w - 2 * kPad, sheet.kFont, kTextLines) else [];
-				local rowH := kPad + titleH + 2 + lineH * Length(lines) + kPad;
+				local actions := if IsArray(r.note.actions) then r.note.actions else [];
+				local buttonH := if Length(actions) > 0 then lineH + 12 else 0;
+				local rowH := kPad + titleH + 2 + lineH * Length(lines) + kPad
+					+ (if buttonH > 0 then buttonH + kPad else 0);
 				local room := if i = Length(sheet.notes) - 1 then h else h - moreH;
 				if y + rowH > room then break;
 				:DrawShape(MakeRoundRect(0, y, w, y + rowH, 6),
@@ -593,7 +619,28 @@
 					:DrawShape(MakeText(line, kPad, ly, w - kPad, ly + lineH), {font: sheet.kFont});
 					ly := ly + lineH;
 				end;
-				AddArraySlot(rows, {top: y, bottom: y + rowH, record: r});
+				// the actions: buttons side by side along the foot, the
+				// primary one black
+				local buttons := [];
+				if buttonH > 0 then begin
+					local n := Length(actions);
+					local bw := (w - kPad * (n + 1)) div n;
+					local bt := ly + kPad div 2;
+					foreach j, a in actions do begin
+						local bl := kPad + j * (bw + kPad);
+						local primary := a.primary;
+						:DrawShape(MakeRoundRect(bl, bt, bl + bw, bt + buttonH, buttonH div 2),
+							{penSize: 1, penPattern: 5, fillPattern: if primary then 5 else 1});
+						local label := if IsString(a.text) then a.text else "";
+						local lw := StrFontWidth(label, sheet.kBold);
+						local lx := bl + (bw - lw) div 2;
+						local lt := bt + (buttonH - titleH) div 2;
+						:DrawShape(MakeText(label, lx, lt, lx + lw + 2, lt + titleH),
+							{font: sheet.kBold, transferMode: if primary then 3 else 1});
+						AddArraySlot(buttons, {left: bl, top: bt, right: bl + bw, bottom: bt + buttonH, action: a});
+					end;
+				end;
+				AddArraySlot(rows, {top: y, bottom: y + rowH, record: r, buttons: buttons});
 				y := y + rowH + kGap;
 				shown := shown + 1;
 			end;
@@ -605,8 +652,26 @@
 		viewClickScript: func(unit)
 		begin
 			InkOff(unit);
-			:Tapped(GetPoint(1, unit) - (:GlobalBox()).top);				// (firstY)
+			local box := :GlobalBox();
+			local x := GetPoint(0, unit) - box.left;						// (firstX)
+			local y := GetPoint(1, unit) - box.top;						// (firstY)
+			if not :Acted(x, y) then
+				:Tapped(y);
 			true;
+		end,
+		// a tap at x, y on one of a notification's actions: run (==> true),
+		// or nil - no action there
+		Acted: func(x, y)
+		begin
+			if not rows then return nil;
+			foreach row in rows do
+				if row.buttons then
+					foreach b in row.buttons do
+						if x >= b.left and x < b.right and y >= b.top and y < b.bottom then begin
+							GetGlobalVar('|QuickSheet:host|):Act(row.record, b.action);
+							return true;
+						end;
+			nil;
 		end,
 		// a tap at y (in the list): the notification there chosen, or left
 		// (==> the notification, or nil: none there)

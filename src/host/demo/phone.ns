@@ -6,7 +6,8 @@
 // open (its caller's card's name), answered with the pen and hung up by
 // the caller; one with it closed opening it, missed and listed so; one
 // declined; the contacts searched and one called with a tap; Return on the
-// keyboard calling the number typed; each screen snapshotted
+// keyboard calling the number typed; a call answered on the lock screen
+// (unlocking it) and one declined there (left locked); each screen snapshotted
 // (phone-<width>x<height>-<n>.pgm), so a run at each display size shows the
 // layout made for it.  The module is tools/modem/fakecell.py on --cell-port
 // (ctests host.NewtonPhone.*):
@@ -64,6 +65,24 @@ phTapHit := func(view, key, slot) begin
 			return true;
 		end;
 	Print("phone: no " & key & " drawn");
+	nil;
+end;
+
+// a button of a notification on the lock screen, as drawn: {x, y} on the
+// screen, or nil
+phLockButton := func(label) begin
+	local sheet := GetGlobalVar('|QuickSheet:host|);
+	if not sheet.lockView then return nil;
+	RefreshViews();
+	foreach c in sheet.lockView:ChildViewFrames() do
+		if c.lockRole = 'notes and c.rows then begin
+			local box := c:GlobalBox();
+			foreach row in c.rows do
+				if row.buttons then
+					foreach b in row.buttons do
+						if StrEqual(b.action.text, label) then
+							return {x: box.left + (b.left + b.right) div 2, y: box.top + (b.top + b.bottom) div 2};
+		end;
 	nil;
 end;
 
@@ -255,6 +274,47 @@ phSteps := [
 	func(next) begin
 		phPhone:CallAction('hangUp);
 		call waitFor with ("phone: the last call ended", func() phPhone.active = nil and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	// the screen locked: a call coming in is left on the lock screen with
+	// Decline and Answer; Answer unlocks to the call
+	func(next) begin
+		ScreenLockNow();
+		HostCellCommand("AT+FAKERING=\"+61400000002\"");
+		call waitFor with ("phone: ringing, locked", func() (call phActive with ('ringing))
+			and call phLockButton with ("Answer"), next, 30);
+	end,
+	func(next) begin
+		call phSnap with ();
+		local b := call phLockButton with ("Answer");
+		HostPenTap(b.x, b.y);
+		call waitFor with ("phone: answered on the lock screen", func() (call phActive with ('connected))
+			and not ScreenLockIsLocked() and (call phCallState with ()) = 'active, next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("the call screen after the unlock", phApp.viewCObject and Visible(phApp.callView), "it is not shown");
+		HostCellCommand("AT+FAKEHANGUP");
+		call waitFor with ("phone: the locked call over", func() phPhone.active = nil
+			and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	// ... and Decline leaves it locked
+	func(next) begin
+		ScreenLockNow();
+		HostCellCommand("AT+FAKERING=\"+61499999999\"");
+		call waitFor with ("phone: ringing, locked again", func() (call phActive with ('ringing))
+			and call phLockButton with ("Decline"), next, 30);
+	end,
+	func(next) begin
+		local b := call phLockButton with ("Decline");
+		HostPenTap(b.x, b.y);
+		call waitFor with ("phone: declined on the lock screen", func() phPhone.active = nil
+			and (call phCallState with ()) = 'idle and (call phTransport with ()).status = 'Listening, next, 30);
+	end,
+	func(next) begin
+		call phCheck with ("still locked", ScreenLockIsLocked(), "it unlocked");
+		local titles := foreach n in ScreenLockNotifications() collect n.title;
+		call phCheck with ("no call left on the lock screen", not SetContains(titles, "Incoming call"), "it is still there");
+		GetGlobalVar('|QuickSheet:host|):Unlock();
+		call waitFor with ("phone: unlocked", func() not ScreenLockIsLocked(), next, 10);
 	end,
 	func(next) begin
 		// a dial that throws (the T-Deck Max's old StripDigits did, in the

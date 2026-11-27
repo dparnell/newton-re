@@ -65,7 +65,11 @@ QuickDraw's screen-update locks - hence the `ScreenLock` prefix.)
  text:     "See you at eight",           // a string, wrapped to two lines at most
  time:     Time(),                       // optional: minutes, as Time() gives; now if left out
  Opened:   func() ...,                   // optional: chosen on the lock screen, at the unlock
- Unlocked: func() ...}                   // optional: not chosen, at the unlock
+ Unlocked: func() ...,                   // optional: not chosen, at the unlock
+ actions:  [{text: "Answer",             // optional: buttons along the notification's foot
+             primary: true,              //   drawn black
+             unlock: true,               //   unlock first (the notification then taken off)
+             Chosen: func() ...}]}       //   run when tapped
 ```
 
 - `key` is compared as `=` compares (strings by their characters).
@@ -79,6 +83,15 @@ QuickDraw's screen-update locks - hence the `ScreenLock` prefix.)
   sent, once, and only if the notification is still on the lock screen at
   the unlock (withdrawn: neither).  The chosen notification's `Opened` is
   sent last, so that what it opens is on top.
+- `actions` (2026-11-27, for Phone's Decline and Answer) are buttons side
+  by side along the notification's foot, the `primary` one black.  A tap on
+  one sends its `Chosen` (`action:?Chosen()`, in its own exception
+  handler) at once, while the screen stays locked - unless the action says
+  `unlock`: then the notification is taken off (neither its `Opened` nor
+  its `Unlocked` is sent), the screen unlocks as by the slider (the others
+  handed back), and `Chosen` is sent after.  An application withdraws the
+  notification itself when what it offered is over (a call no longer
+  ringing).
 - The lock screen keeps at most 20 notifications; past that the oldest is
   dropped (without `Unlocked`).
 - Nothing is queued while the screen is not locked: `ScreenLockNotify`
